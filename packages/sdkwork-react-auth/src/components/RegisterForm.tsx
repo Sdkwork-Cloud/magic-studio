@@ -1,7 +1,6 @@
-
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { Button } from 'sdkwork-react-commons'
-import { authService } from '../services/authService'
+import { useRouter, ROUTES } from 'sdkwork-react-core';
+import { Button } from 'sdkwork-react-commons';
+import { authService } from '../services/authService';
 import React, { useState } from 'react';
 import { Mail, Lock, CheckCircle2, Check } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -14,7 +13,7 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     const { t } = useTranslation();
-    const { login } = useAuthStore();
+    const { loginWithEmail } = useAuthStore();
     const { navigate } = useRouter();
     
     const [email, setEmail] = useState('');
@@ -40,9 +39,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
         setIsLoading(true);
         try {
-            await authService.register(email, password);
-            // Auto login after register
-            await login('email', { email, password });
+            const username = email.split('@')[0];
+            await authService.register(username, password, email);
+            await loginWithEmail(email, password);
             if (onSuccess) {
                 onSuccess();
             } else {
@@ -91,7 +90,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                 error={errors.confirm}
             />
 
-            {/* Protocol / Terms Agreement */}
             <div className="flex items-start gap-2 pt-1">
                 <div 
                     className="relative flex items-center h-4 mt-0.5 cursor-pointer group"

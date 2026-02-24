@@ -27,10 +27,11 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
+    "@sdkwork/app-sdk": "workspace:*",
     "sdkwork-react-commons": "workspace:*",
     "sdkwork-react-core": "workspace:*",
     "sdkwork-react-i18n": "workspace:*"
-  },
+},
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -21,6 +21,7 @@
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@google/genai": "catalog:",
     "@monaco-editor/react": "^4.7.0",
+    "@sdkwork/app-sdk": "workspace:*",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-clipboard-manager": "catalog:",
     "@tauri-apps/plugin-dialog": "catalog:",

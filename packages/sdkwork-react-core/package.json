@@ -34,6 +34,10 @@
     "./utils": {
       "import": "./dist/utils/index.js",
       "types": "./dist/utils/index.d.ts"
+    },
+    "./sdk": {
+      "import": "./dist/sdk/index.js",
+      "types": "./dist/sdk/index.d.ts"
     }
   },
   "files": [
@@ -89,6 +93,7 @@
   },
   "dependencies": {
     "@google/genai": "catalog:",
+    "@sdkwork/app-sdk": "workspace:*",
     "sdkwork-react-types": "workspace:*",
     "sdkwork-react-fs": "workspace:*",
     "sdkwork-react-commons": "workspace:*"

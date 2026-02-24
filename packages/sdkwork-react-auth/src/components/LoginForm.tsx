@@ -1,7 +1,6 @@
-
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { Button } from 'sdkwork-react-commons'
-import { authService } from '../services/authService'
+import { useRouter, ROUTES } from 'sdkwork-react-core';
+import { Button } from 'sdkwork-react-commons';
+import { authService } from '../services/authService';
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Smartphone, Key, User, QrCode, RefreshCw, Check } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -18,27 +17,24 @@ type LoginMethod = 'account' | 'phone' | 'wechat';
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess, hideWechatTab = false }) => {
     const { t } = useTranslation();
-    const { login: storeLogin } = useAuthStore(); 
+    const { loginWithEmail, loginWithPhone } = useAuthStore();
     const { navigate } = useRouter();
     
     const [method, setMethod] = useState<LoginMethod>('account');
     const [isLoading, setIsLoading] = useState(false);
     
-    // Form State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     
-    // SMS Timer
     const [timer, setTimer] = useState(0);
     
-    // Validation
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        let interval: any;
+        let interval: ReturnType<typeof setInterval>;
         if (timer > 0) {
             interval = setInterval(() => setTimer(t => t - 1), 1000);
         }
@@ -63,7 +59,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
         e.preventDefault();
         setErrors({});
         
-        // Basic Validation
         if (method === 'account') {
             if (!email) { setErrors({ email: t('auth.invalid_email') }); return; }
             if (!password) { setErrors({ password: t('auth.password_short') }); return; }
@@ -75,8 +70,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
 
         setIsLoading(true);
         try {
-            const loginMethod = method === 'account' ? 'email' : (method === 'phone' ? 'phone' : 'wechat');
-            await storeLogin(loginMethod, { email, password, phone, code, rememberMe }); 
+            if (method === 'account') {
+                await loginWithEmail(email, password);
+            } else if (method === 'phone') {
+                await loginWithPhone(phone, code);
+            }
+            
             if (onSuccess) {
                 onSuccess();
             } else {
@@ -89,7 +88,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
         }
     };
 
-    // Filter tabs based on props
     const allTabs = [
         { id: 'account', label: t('auth.tab_account'), icon: User },
         { id: 'phone', label: t('auth.tab_phone'), icon: Smartphone },
@@ -100,7 +98,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* Tabs */}
             <div className="flex bg-[#18181b] p-1 rounded-xl border border-[#27272a]">
                 {tabs.map(tab => (
                     <button
@@ -120,7 +117,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
                 ))}
             </div>
 
-            {/* WeChat QR Mode */}
             {method === 'wechat' && !hideWechatTab ? (
                 <div className="flex flex-col items-center justify-center py-8 space-y-4 h-[300px]">
                     <div className="relative group cursor-pointer">
@@ -200,7 +196,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
                         </>
                     )}
                     
-                    {/* Remember Me & Forgot Password Row */}
                     <div className="flex items-center justify-between">
                          <div 
                             className="flex items-center gap-2 cursor-pointer group"
