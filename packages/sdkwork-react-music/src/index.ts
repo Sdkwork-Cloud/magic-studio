@@ -1,0 +1,11 @@
+export { default as MusicPage } from './pages/MusicPage';
+export { default as MusicChatPage } from './pages/MusicChatPage';
+export { MusicLeftGeneratorPanel } from './components/MusicLeftGeneratorPanel';
+export { MusicModelSelector } from './components/MusicModelSelector';
+export { MusicGeneratorModal } from './components/MusicGeneratorModal';
+export { MusicStoreProvider, useMusicStore } from './store/musicStore';
+export * from './store';
+export * from './entities/music.entity';
+export * from './constants';
+export * from './services/musicService';
+export * from './i18n';

@@ -1,0 +1,5 @@
+{
+  "name": "Magic Studio",
+  "description": "A cross-platform terminal application built with React, Tauri architecture standards, and xterm.js.",
+  "requestFramePermissions": []
+}

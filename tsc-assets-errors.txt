@@ -1,0 +1,12 @@
+packages/sdkwork-react-assets/src/components/AssetGrid.tsx(2,23): error TS2307: Cannot find module '../../entities/asset.entity' or its corresponding type declarations.
+packages/sdkwork-react-assets/src/components/AssetGrid.tsx(142,26): error TS2304: Cannot find name 'Trash2'.
+packages/sdkwork-react-assets/src/components/ChooseAssetModal.tsx(42,46): error TS2367: This comparison appears to be unintentional because the types 'AssetType' and '"unknown"' have no overlap.
+packages/sdkwork-react-assets/src/components/generate/GenerationChatWindow.tsx(109,61): error TS18048: 'task.results.length' is possibly 'undefined'.
+packages/sdkwork-react-assets/src/components/generate/GenerationChatWindow.tsx(112,46): error TS18048: 'task.results' is possibly 'undefined'.
+packages/sdkwork-react-assets/src/index.ts(10,15): error TS2724: '"./components/CreationChatInput/CreationChatInput"' has no exported member named 'CreationChatInputProps'. Did you mean 'CreationChatInput'?
+packages/sdkwork-react-assets/src/pages/AssetsPage.tsx(6,34): error TS2307: Cannot find module 'sdkwork-react-drive' or its corresponding type declarations.
+packages/sdkwork-react-assets/src/services/MockAssetDatabase.ts(206,7): error TS2322: Type '{ id: string; uuid: string; type: MediaResourceType.CHARACTER; name: string; size: number; createdAt: number; updatedAt: number; path: string; extension: string; mimeType: string; category: "avatar"; metadata: { ...; }; tags: { ...; }; }[]' is not assignable to type 'DigitalHumanAsset[]'.
+  Type '{ id: string; uuid: string; type: MediaResourceType.CHARACTER; name: string; size: number; createdAt: number; updatedAt: number; path: string; extension: string; mimeType: string; category: "avatar"; metadata: { ...; }; tags: { ...; }; }' is not assignable to type 'DigitalHumanAsset'.
+    Type '{ id: string; uuid: string; type: MediaResourceType.CHARACTER; name: string; size: number; createdAt: number; updatedAt: number; path: string; extension: string; mimeType: string; category: "avatar"; metadata: { ...; }; tags: { ...; }; }' is not assignable to type '{ type: MediaResourceType.CHARACTER; category?: "character" | "avatar" | "avatar-animation" | "full-body" | undefined; metadata?: { modelName?: string | undefined; version?: string | undefined; ... 8 more ...; style?: "anime" | ... 3 more ... | undefined; } | undefined; }'.
+      The types of 'metadata.rigType' are incompatible between these types.
+        Type 'string' is not assignable to type '"body" | "face" | "full" | undefined'.

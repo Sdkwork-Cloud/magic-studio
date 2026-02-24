@@ -1,0 +1,170 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+*/node_modules
+.pnpm-store
+
+# Build outputs
+dist
+dist-zip
+dist-ssr
+*.local
+build
+.next
+out
+.nuxt
+.cache
+.vuepress/dist
+.serverless
+
+# Turbo
+.turbo
+
+# IDE and Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# ==================== Tauri ====================
+# Tauri build outputs
+src-tauri/target
+src-tauri/target/**/*
+src-tauri/Cargo.lock
+
+# Tauri Wix files
+src-tauri/wix/
+
+# Tauri generated icons
+src-tauri/icons/*.png
+src-tauri/icons/*.ico
+src-tauri/icons/*.icns
+!src-tauri/icons/icon.png
+
+# Tauri dev tools
+src-tauri/.tauri
+
+# ==================== Rust ====================
+# Rust target directory
+target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+Cargo.lock
+**/Cargo.lock
+
+# ==================== Desktop App ====================
+# Electron
+release/
+app/dist/
+electron-builder.yml
+
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# ==================== Misc ====================
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Scripts (project specific)
+scripts
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Lock files (optional - uncomment if you want to ignore)
+# pnpm-lock.yaml
+# package-lock.json
+# yarn.lock
+
+# Generated files
+*.generated.*
+*.generated.ts
+*.generated.js
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+secrets/
+.secrets/
+credentials.json
+service-account.json
+
+# Large media files (optional)
+# *.mp4
+# *.mov
+# *.avi
+# *.mkv
+# *.wav
+# *.flac
+
+# Documentation builds
+docs/.vitepress/dist
+docs/.vitepress/cache

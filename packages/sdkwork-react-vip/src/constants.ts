@@ -1,0 +1,90 @@
+
+import { PlanTier, VipPlan } from './entities/vip.entity';
+
+const COMMON_FEATURES = {
+  POINTS: (amount: number) => ({ id: 'pts', text: `${amount.toLocaleString()} Credits / Month`, included: true }),
+  SPEED: (text: string) => ({ id: 'speed', text: text, included: true }),
+  MODEL: (text: string) => ({ id: 'model', text: text, included: true }),
+  SYNC: { id: 'sync', text: 'Cloud Workspace Sync', included: true },
+  SUPPORT: { id: 'support', text: 'Priority Support', included: true },
+};
+
+export const VIP_PLANS: VipPlan[] = [
+  {
+    id: PlanTier.FREE,
+    name: 'Free',
+    price: 0,
+    currency: '¥',
+    billingCycle: 'Forever',
+    points: 0,
+    buttonText: 'Current Plan',
+    features: [
+      { id: 'f1', text: 'Daily Free Credits', included: true },
+      { id: 'f2', text: 'Standard Generation Speed', included: true },
+      { id: 'f3', text: 'Community Support', included: true },
+      { id: 'f4', text: 'Local History Only', included: true },
+      { id: 'f5', text: 'GPT-3.5 / Basic Models', included: true },
+    ]
+  },
+  {
+    id: PlanTier.BASIC,
+    name: 'Basic',
+    price: 1,
+    originalPrice: 41,
+    currency: '¥',
+    billingCycle: '7 Days',
+    points: 1080,
+    tags: [{ text: 'Trial Offer', color: 'blue' }],
+    buttonText: '¥1 Trial for 7 Days',
+    description: 'Then ¥69/month auto-renew',
+    features: [
+      { id: 'b1', text: '1,080 Credits / Month', included: true },
+      { id: 'b2', text: 'Fast Generation Queue', included: true },
+      { id: 'b3', text: 'Cloud Sync (2 Devices)', included: true },
+      { id: 'b4', text: 'Remove Watermarks', included: true },
+      { id: 'b5', text: 'Access to GPT-4', included: true },
+    ]
+  },
+  {
+    id: PlanTier.STANDARD,
+    name: 'Standard',
+    price: 119,
+    originalPrice: 199,
+    currency: '¥',
+    billingCycle: 'Month',
+    points: 4000,
+    tags: [{ text: 'Most Popular', color: 'cyan' }],
+    buttonText: '¥119 Get 60% OFF',
+    description: 'Auto-renew, cancel anytime',
+    isPopular: true,
+    features: [
+      { id: 's1', text: '4,000 Credits / Month', included: true },
+      { id: 's2', text: 'Turbo Generation Speed', included: true },
+      { id: 's3', text: 'Unlimited Cloud Sync', included: true },
+      { id: 's4', text: 'Priority Feature Access', included: true },
+      { id: 's5', text: 'GPT-4 Turbo & Claude 3 Opus', included: true },
+      { id: 's6', text: 'Voice-to-Code Mode', included: true },
+    ]
+  },
+  {
+    id: PlanTier.PREMIUM,
+    name: 'Premium',
+    price: 299,
+    originalPrice: 499,
+    currency: '¥',
+    billingCycle: 'Month',
+    points: 15000,
+    tags: [{ text: 'Best Value', color: 'orange' }],
+    buttonText: '¥299 Get 60% OFF',
+    description: 'For professional developers',
+    features: [
+      { id: 'p1', text: '15,000 Credits / Month', included: true },
+      { id: 'p2', text: 'Max Speed (Real-time)', included: true },
+      { id: 'p3', text: 'Team Collaboration', included: true },
+      { id: 'p4', text: 'Dedicated GPU Instance', included: true },
+      { id: 'p5', text: 'Early Access to vNext Models', included: true },
+      { id: 'p6', text: 'API Access Key', included: true },
+      { id: 'p7', text: '24/7 Dedicated Support', included: true },
+    ]
+  }
+];
