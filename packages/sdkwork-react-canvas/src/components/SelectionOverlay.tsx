@@ -2,7 +2,7 @@
 import React from 'react';
 import { Group, Ungroup, Trash2, AlignLeft, AlignCenter, AlignRight, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
-import { Rect } from 'sdkwork-react-commons';
+import { Rect } from '@sdkwork/react-commons';
 
 interface SelectionOverlayProps {
     bounds: Rect | null;

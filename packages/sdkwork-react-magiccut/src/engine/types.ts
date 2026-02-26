@@ -1,6 +1,6 @@
 
 import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities/magicCut.entity';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { ShaderManager } from './gl/ShaderManager';
 import { ResourceManager } from './renderer/ResourceManager';
 import { TextureLRUCache } from './TextureLRUCache';

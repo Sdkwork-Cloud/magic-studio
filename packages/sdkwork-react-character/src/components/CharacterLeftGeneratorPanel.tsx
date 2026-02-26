@@ -7,14 +7,14 @@ import {
     Mic2 as _Mic2, Upload as _Upload, Trash2, Wand2, Paintbrush as _Paintbrush, AlertCircle,
     Sparkles, Play as _Play, Pause as _Pause, Loader2, Flame
 } from 'lucide-react';
-import { Button, ImageUpload as _ImageUpload } from 'sdkwork-react-commons';
-import { ChooseVoiceSpeaker as _ChooseVoiceSpeaker, PRESET_VOICES } from 'sdkwork-react-voicespeaker'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Button, ImageUpload as _ImageUpload } from '@sdkwork/react-commons';
+import { ChooseVoiceSpeaker as _ChooseVoiceSpeaker, PRESET_VOICES } from '@sdkwork/react-voicespeaker'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export type CharacterViewMode = 'full-body' | 'three-view' | 'portrait';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { PromptTextInput } from 'sdkwork-react-assets';
-import { AIImageGeneratorModal } from 'sdkwork-react-image';
-import { genAIService } from 'sdkwork-react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { PromptTextInput } from '@sdkwork/react-assets';
+import { AIImageGeneratorModal } from '@sdkwork/react-image';
+import { genAIService } from '@sdkwork/react-core';
 
 // UI Helper
 const Label: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (

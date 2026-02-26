@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-magiccut",
+  "name": "@sdkwork/react-magiccut",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,17 +25,18 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-audio": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-fs": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*",
-    "sdkwork-react-image": "workspace:*",
-    "sdkwork-react-music": "workspace:*",
-    "sdkwork-react-sfx": "workspace:*",
-    "sdkwork-react-video": "workspace:*",
-    "sdkwork-react-voicespeaker": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-audio": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-fs": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-music": "workspace:*",
+    "@sdkwork/react-sfx": "workspace:*",
+    "@sdkwork/react-video": "workspace:*",
+    "@sdkwork/react-voicespeaker": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

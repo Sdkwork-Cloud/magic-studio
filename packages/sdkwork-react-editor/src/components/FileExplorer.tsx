@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, FolderOpen, FileArchive } from 'lucide-react';
-import { FileEntry } from 'sdkwork-react-core';
+import { FileEntry } from '@sdkwork/react-core';
 import { useEditorStore } from '../store/editorStore';
-import { pathUtils } from 'sdkwork-react-commons';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { pathUtils } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // Sub-components
 import { ExplorerHeader } from './file-explorer/ExplorerHeader';
@@ -88,7 +88,7 @@ const FileExplorer: React.FC = () => {
           targetParent = specificParent;
       } else if (selectedExplorerPath) {
           try {
-              const stats = await import('sdkwork-react-fs').then(m => m.vfs.stat(selectedExplorerPath));
+              const stats = await import('@sdkwork/react-fs').then(m => m.vfs.stat(selectedExplorerPath));
               if (stats.type === 'directory') {
                   targetParent = selectedExplorerPath;
                   await toggleDirectory(targetParent, true);

@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, List, ListOrdered, CheckSquare, 
     Code, Quote, Image as ImageIcon
 } from 'lucide-react';
-import { filePicker } from 'sdkwork-react-editor';
+import { filePicker } from '@sdkwork/react-editor';
 
 interface BlockFloatingMenuProps {
     editor: Editor;

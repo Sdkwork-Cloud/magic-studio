@@ -1,5 +1,5 @@
 
-import { logger } from 'sdkwork-react-commons'
+import { logger } from '@sdkwork/react-commons'
 import { EffectParameterSchema, ParameterValue } from '../../entities/effect.entity'; 
 /**
  * Automatically binds values to WebGL Uniforms based on type inference and schema.

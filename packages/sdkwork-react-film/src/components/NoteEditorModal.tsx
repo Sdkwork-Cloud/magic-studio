@@ -1,9 +1,9 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, FileText } from 'lucide-react';
-import { NoteEditor } from 'sdkwork-react-notes';
+import { NoteEditor } from '@sdkwork/react-notes';
 
 interface NoteEditorModalProps {
     isOpen: boolean;

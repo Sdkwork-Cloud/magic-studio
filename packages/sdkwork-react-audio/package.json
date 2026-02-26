@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-audio",
+  "name": "@sdkwork/react-audio",
   "version": "0.1.0",
   "description": "Audio generation module for SDKWork React applications",
   "private": true,
@@ -35,11 +35,12 @@
     }
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*",
-    "sdkwork-react-image": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

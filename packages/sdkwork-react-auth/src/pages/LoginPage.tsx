@@ -1,7 +1,7 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React, { useState } from 'react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { Sparkles, Terminal, Globe, Github } from 'lucide-react';
 import { LoginForm, RegisterForm, ForgotPasswordForm, WechatQrPanel } from '../index';
 

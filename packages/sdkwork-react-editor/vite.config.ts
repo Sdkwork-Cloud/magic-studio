@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'sdkwork-react-editor',
+      name: '@sdkwork/react-editor',
       formats: ['es'],
       fileName: 'index'
     },
@@ -24,9 +24,9 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        'sdkwork-react-commons',
-        'sdkwork-react-core',
-        'sdkwork-react-fs',
+        '@sdkwork/react-commons',
+        '@sdkwork/react-core',
+        '@sdkwork/react-fs',
         '@monaco-editor/react'
       ],
       output: {
@@ -34,9 +34,9 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-fs': 'SdkworkReactFs',
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-fs': 'SdkworkReactFs',
           '@monaco-editor/react': 'MonacoEditor'
         }
       }

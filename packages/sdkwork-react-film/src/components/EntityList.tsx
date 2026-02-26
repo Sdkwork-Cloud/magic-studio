@@ -1,5 +1,5 @@
 
-import { FilmCharacter } from 'sdkwork-react-commons'
+import { FilmCharacter } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { Plus, Zap, Loader2 } from 'lucide-react';

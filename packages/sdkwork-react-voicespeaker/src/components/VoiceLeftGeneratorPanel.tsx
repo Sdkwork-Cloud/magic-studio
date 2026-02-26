@@ -8,12 +8,12 @@ import {
     Settings2, UserPlus, Type, Sparkles, Upload, Mic, Copy, User, Trash2
 } from 'lucide-react';
 
-import { Button, UploadedFile, AudioUpload } from 'sdkwork-react-commons';
-import { AudioRecorder } from 'sdkwork-react-audio';
-import { ChooseVoiceSpeaker, PromptTextInput, ChooseAsset, assetService } from 'sdkwork-react-assets';
-import { AIImageGeneratorModal } from 'sdkwork-react-image';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { SettingInput, SettingSelect, SettingSlider, SettingTextArea } from 'sdkwork-react-settings';
+import { Button, UploadedFile, AudioUpload } from '@sdkwork/react-commons';
+import { AudioRecorder } from '@sdkwork/react-audio';
+import { ChooseVoiceSpeaker, PromptTextInput, ChooseAsset, assetService } from '@sdkwork/react-assets';
+import { AIImageGeneratorModal } from '@sdkwork/react-image';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { SettingInput, SettingSelect, SettingSlider, SettingTextArea } from '@sdkwork/react-settings';
 
 type VoiceMode = 'design' | 'clone';
 type InputMethod = 'upload' | 'mic';

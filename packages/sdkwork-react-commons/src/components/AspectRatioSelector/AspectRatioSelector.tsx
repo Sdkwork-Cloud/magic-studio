@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ChevronDown, Monitor, Smartphone, Square, LayoutTemplate, Film, Link as LinkIcon, Sparkles } from 'lucide-react';
 import { Popover } from '../Popover';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type AspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
 export type Resolution = '2k' | '4k';

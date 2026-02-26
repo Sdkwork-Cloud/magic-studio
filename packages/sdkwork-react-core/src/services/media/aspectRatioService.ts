@@ -1,6 +1,6 @@
 
 import { platform } from '../../platform';
-import { logger } from 'sdkwork-react-commons';
+import { logger } from '@sdkwork/react-commons';
 
 export interface MediaDimensions {
     width: number;

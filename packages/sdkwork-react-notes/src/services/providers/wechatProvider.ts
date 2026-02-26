@@ -1,7 +1,6 @@
 
-import { ArticlePayload, PublishResult } from 'sdkwork-react-commons'
+import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
 import { IPublishingProvider } from './types';
-;
 import { MediaAccountConfig } from '../../../settings/entities/settings.entity';
 
 export class WeChatProvider implements IPublishingProvider {

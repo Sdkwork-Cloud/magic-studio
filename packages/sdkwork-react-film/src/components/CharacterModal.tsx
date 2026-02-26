@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, User, Image as ImageIcon, Wand2, Upload, Trash2, Sparkles, Grid3X3, Layers, FolderOpen, Mic2 } from 'lucide-react';
-import { ChooseAssetModal, PromptTextInput } from 'sdkwork-react-assets';
-import { AIImageGeneratorModal } from 'sdkwork-react-image';
-import { Asset } from 'sdkwork-react-commons';
-import { genAIService } from 'sdkwork-react-core';
-import { FilmCharacter, ImageMediaResource, generateUUID } from 'sdkwork-react-commons';
-import { ChooseVoiceSpeaker, PRESET_VOICES } from 'sdkwork-react-voicespeaker';
+import { ChooseAssetModal, PromptTextInput } from '@sdkwork/react-assets';
+import { AIImageGeneratorModal } from '@sdkwork/react-image';
+import { Asset } from '@sdkwork/react-commons';
+import { genAIService } from '@sdkwork/react-core';
+import { FilmCharacter, ImageMediaResource, generateUUID } from '@sdkwork/react-commons';
+import { ChooseVoiceSpeaker, PRESET_VOICES } from '@sdkwork/react-voicespeaker';
 
 interface CharacterModalProps {
     isOpen: boolean;

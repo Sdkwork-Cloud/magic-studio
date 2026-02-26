@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-import { AnyAsset } from 'sdkwork-react-assets';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { AnyAsset } from '@sdkwork/react-assets';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { Film, Image as ImageIcon, Music, Heart, Sparkles, LayoutTemplate, MoreHorizontal, AlertCircle, Loader2, Upload, Type, Trash2 } from 'lucide-react';
-import { assetService } from 'sdkwork-react-assets';
+import { assetService } from '@sdkwork/react-assets';
 import { useResourceSkimming } from '../../hooks/useResourceSkimming';
 import { playerPreviewService } from '../../services';
 import { formatTime } from '../../utils/timeUtils';

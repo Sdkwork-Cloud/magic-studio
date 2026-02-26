@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-commons",
+  "name": "@sdkwork/react-commons",
   "version": "0.1.0",
   "description": "Common UI components and utilities for SDKWork React applications",
   "type": "module",
@@ -55,7 +55,8 @@
     }
   },
   "dependencies": {
-    "sdkwork-react-i18n": "workspace:*"
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -1,4 +1,4 @@
-import { BaseEntity } from 'sdkwork-react-commons';
+import { BaseEntity } from '@sdkwork/react-commons';
 
 export type NoteType = 'doc' | 'article' | 'novel' | 'log' | 'news' | 'code';
 

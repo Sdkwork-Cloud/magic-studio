@@ -1,4 +1,4 @@
-import type { I18nNamespaceResource } from 'sdkwork-react-i18n';
+import type { I18nNamespaceResource } from '@sdkwork/react-i18n';
 
 export const sfxZhCN: I18nNamespaceResource = {
     common: {
@@ -13,6 +13,6 @@ export const sfxZhCN: I18nNamespaceResource = {
     },
     message: {
         noHistory: '暂无历史记录',
-        startCreating: '开始创作，您的作品将显示在这里。',
+        startCreating: '开始创作，您的作品将显示在这里',
     },
 };

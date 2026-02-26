@@ -13,7 +13,7 @@ import {
     AgentsSettings, MediaSettings, StorageSettings, SidebarSettings, OpencodeSettings
 } from '../components';
 import { SETTING_DEFINITIONS, SettingDefinition } from '../data/definitions';
-import { useTranslation, Locale } from 'sdkwork-react-i18n';
+import { useTranslation, Locale } from '@sdkwork/react-i18n';
 
 type SettingsTab = 'general' | 'appearance' | 'sidebar' | 'editor' | 'llm' | 'lsp' | 'agents' | 'opencode' | 'media' | 'storage' | 'about';
 

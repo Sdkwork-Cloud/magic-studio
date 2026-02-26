@@ -1,15 +1,15 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { EditorFile } from '../types';
-import { platform, FileEntry } from 'sdkwork-react-core';
-import { pathUtils } from 'sdkwork-react-commons';
+import { platform, FileEntry } from '@sdkwork/react-core';
+import { pathUtils } from '@sdkwork/react-commons';
 import { GitSyncOptions, PublishOptions } from '../types';
 import { projectService } from '../services/projectService';
 import { filePicker } from '../utils/filePicker';
 import { editorService } from '../services/editorService';
 import { editorSessionService } from '../services/editorSessionService';
-import { compressionService } from 'sdkwork-react-compression';
-import { vfs } from 'sdkwork-react-fs';
+import { compressionService } from '@sdkwork/react-compression';
+import { vfs } from '@sdkwork/react-fs';
 
 interface ClipboardItem {
     path: string;

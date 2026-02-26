@@ -5,7 +5,7 @@ export { MusicModelSelector } from './components/MusicModelSelector';
 export { MusicGeneratorModal } from './components/MusicGeneratorModal';
 export { MusicStoreProvider, useMusicStore } from './store/musicStore';
 export * from './store';
-export * from './entities/music.entity';
+export * from './entities';
 export * from './constants';
 export * from './services/musicService';
 export * from './i18n';

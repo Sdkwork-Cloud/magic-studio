@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-types",
+  "name": "@sdkwork/react-types",
   "version": "0.1.0",
   "description": "Type definitions for SDKWork React applications",
   "type": "module",

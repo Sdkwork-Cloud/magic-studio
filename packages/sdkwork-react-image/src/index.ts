@@ -15,8 +15,8 @@ export {
     GenerationItem,
     GenerateHistory,
     GenerationPreview
-} from 'sdkwork-react-generation-history';
+} from '@sdkwork/react-generation-history';
 export type {
     PreviewMode,
     EditorComponents
-} from 'sdkwork-react-generation-history';
+} from '@sdkwork/react-generation-history';

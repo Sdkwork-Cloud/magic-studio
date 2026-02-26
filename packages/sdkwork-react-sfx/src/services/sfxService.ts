@@ -1,5 +1,5 @@
 import { SfxConfig, GeneratedSfxResult } from '../entities/sfx.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 export const sfxService = {
     generateSfx: async (config: SfxConfig): Promise<GeneratedSfxResult[]> => {

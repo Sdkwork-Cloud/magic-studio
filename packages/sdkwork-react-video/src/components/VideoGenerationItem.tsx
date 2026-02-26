@@ -1,12 +1,12 @@
 
-import { VideoTask } from 'sdkwork-react-commons'
-import { PromptText } from 'sdkwork-react-assets'
+import { VideoTask } from '@sdkwork/react-commons'
+import { PromptText } from '@sdkwork/react-assets'
 import React from 'react';
 ;
 import { 
     Download, Trash2, Copy, Repeat2, Film, AlertCircle 
 } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 ;
 
 interface VideoGenerationItemProps {
@@ -42,7 +42,7 @@ export const VideoGenerationItem: React.FC<VideoGenerationItemProps> = ({ task, 
                                 {new Date(task.createdAt).toLocaleString()}
                              </span>
                              <span className="text-[10px] text-gray-600 border border-[#333] px-1.5 py-0.5 rounded uppercase font-medium bg-[#111]">
-                                {task.config.aspectRatio} ï¿½?{task.config.resolution}
+                                {task.config.aspectRatio} ï¿?{task.config.resolution}
                              </span>
                         </div>
                         <PromptText text={task.config.prompt} className="mt-1" />

@@ -22,3 +22,15 @@ export interface I18nModuleResource {
 }
 
 export type I18nRegistry = Map<string, PackageI18nConfig>;
+
+// Import types only to avoid circular dependency
+import type { Locale } from './types';
+
+export function mapLocaleToSupported(locale: Locale): SupportedLocale {
+    const mapping: Record<string, SupportedLocale> = {
+        'en': 'en-US',
+        'zh-CN': 'zh-CN',
+        'ja': 'en-US',
+    };
+    return mapping[locale] || 'en-US';
+}

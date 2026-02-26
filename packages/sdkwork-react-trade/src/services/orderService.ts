@@ -9,7 +9,7 @@ import type {
   PaymentStatus,
 } from '../entities';
 import { OrderStatus as OrderStatusEnum } from '../entities';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 /**
  * 创建订单参数
@@ -21,13 +21,13 @@ export interface CreateOrderParams {
   title: string;
   /** 订单描述 */
   description?: string;
-  /** 订单金额 (分) */
+  /** 订单金额 (�? */
   amount: number;
   /** 任务类型 */
   taskType?: string;
   /** 任务参数 */
   taskParams?: Record<string, unknown>;
-  /** 工作区 UUID */
+  /** 工作�?UUID */
   workspaceUuid?: string;
   /** 项目 UUID */
   projectUuid?: string;
@@ -62,8 +62,7 @@ export interface IOrderService {
   getOrderById(uuid: string): Promise<Order | null>;
 
   /**
-   * 根据订单号获取订单详情
-   */
+   * 根据订单号获取订单详�?   */
   getOrderByNo(orderNo: string): Promise<Order | null>;
 
   /**
@@ -77,8 +76,7 @@ export interface IOrderService {
   getMyOrderList(params: TradePageRequest): Promise<TradePageResponse<Order>>;
 
   /**
-   * 更新订单状态
-   */
+   * 更新订单状�?   */
   updateOrderStatus(uuid: string, status: OrderStatus): Promise<Order>;
 
   /**
@@ -97,13 +95,11 @@ export interface IOrderService {
   getOrderStatistics(): Promise<OrderStatistics>;
 
   /**
-   * 获取待支付订单列表
-   */
+   * 获取待支付订单列�?   */
   getPendingPaymentOrders(): Promise<Order[]>;
 
   /**
-   * 获取进行中订单列表
-   */
+   * 获取进行中订单列�?   */
   getInProgressOrders(): Promise<Order[]>;
 }
 
@@ -223,8 +219,7 @@ export class OrderService implements IOrderService {
         return 0;
       });
     } else {
-      // 默认按创建时间降序
-      filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      // 默认按创建时间降�?      filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     }
 
     // 分页
@@ -255,8 +250,7 @@ export class OrderService implements IOrderService {
     order.status = status;
     order.updatedAt = new Date().toISOString();
 
-    // 根据状态设置相关时间
-    if (status === OrderStatusEnum.PAID) {
+    // 根据状态设置相关时�?    if (status === OrderStatusEnum.PAID) {
       order.paidAt = order.updatedAt;
       order.paymentStatus = 'SUCCESS' as PaymentStatus;
     } else if (status === OrderStatusEnum.COMPLETED) {

@@ -1,6 +1,6 @@
 import { NormalizedState } from '../store/types';
 import { CutClip, CutTrack } from '../entities/magicCut.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 export interface DetachResult {
     updatedVideoClip: Partial<CutClip>;

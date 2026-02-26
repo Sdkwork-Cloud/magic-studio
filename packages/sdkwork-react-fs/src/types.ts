@@ -1,6 +1,6 @@
 // File system types are now exported from sdkwork-react-types
 // This file re-exports them for backward compatibility
-export type { FileEntry, FileStat, IFileSystemProvider } from 'sdkwork-react-types';
+export type { FileEntry, FileStat, IFileSystemProvider } from '@sdkwork/react-types';
 
 export enum FileChangeType {
   Changed = 1,

@@ -118,7 +118,7 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
         {audioBlob && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Volume2 size={16} />
-            <span>录音已完成 ({Math.round(audioBlob.size / 1024)} KB)</span>
+            <span>录音已完�?({Math.round(audioBlob.size / 1024)} KB)</span>
           </div>
         )}
       </div>

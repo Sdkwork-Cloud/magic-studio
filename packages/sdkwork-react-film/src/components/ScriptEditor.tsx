@@ -1,5 +1,5 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { Sparkles, Loader2, FileText, List, ChevronRight, Hash, Type } from 'lucide-react';

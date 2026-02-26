@@ -1,6 +1,6 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets'
 import { VoiceLeftGeneratorPanel } from '../components/VoiceLeftGeneratorPanel';
 import React, { useState } from 'react';
 import { useVoiceStore } from '../store/voiceStore';

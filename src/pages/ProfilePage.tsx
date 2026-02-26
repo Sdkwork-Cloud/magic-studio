@@ -1,9 +1,9 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
-import { ProfilePage as UserProfilePage } from 'sdkwork-react-user';
-import { useAuthStore } from 'sdkwork-react-auth';
-import { useVipStore } from 'sdkwork-react-vip';
+import { ProfilePage as UserProfilePage } from '@sdkwork/react-user';
+import { useAuthStore } from '@sdkwork/react-auth';
+import { useVipStore } from '@sdkwork/react-vip';
 ;
 ;
 

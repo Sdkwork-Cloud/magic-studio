@@ -1,6 +1,6 @@
 import { AudioTask, AudioGenerationParams } from '../entities/audio.entity';
-import { genAIService } from 'sdkwork-react-core';
-import { generateUUID } from 'sdkwork-react-commons';
+import { genAIService } from '@sdkwork/react-core';
+import { generateUUID } from '@sdkwork/react-commons';
 
 class AudioService {
     async generateAudio(params: AudioGenerationParams): Promise<AudioTask> {

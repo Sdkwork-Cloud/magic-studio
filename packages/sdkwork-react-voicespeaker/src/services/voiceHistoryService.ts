@@ -1,6 +1,6 @@
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { VoiceTask } from '../entities/voice.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 class VoiceHistoryService extends LocalStorageService<VoiceTask> {
     constructor() {

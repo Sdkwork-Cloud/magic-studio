@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, X, Filter, Mic2, Users, Globe, Volume2 } from 'lucide-react';
 import { IVoice, ChooseVoiceSpeakerModalProps } from './types';
 import { VoiceCard } from './VoiceCard';
-import { Button } from 'sdkwork-react-commons';
+import { Button } from '@sdkwork/react-commons';
 import { voiceService } from '../../services';
 
 // Default mock for preview if none provided

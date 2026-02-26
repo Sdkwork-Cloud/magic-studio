@@ -1,5 +1,5 @@
 
-import { BaseEntity } from 'sdkwork-react-commons';
+import { BaseEntity } from '@sdkwork/react-commons';
 
 export interface User extends BaseEntity {
   name: string;

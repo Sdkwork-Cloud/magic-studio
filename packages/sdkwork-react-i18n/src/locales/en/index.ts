@@ -1,4 +1,4 @@
-import { common, sidebar, header } from './common';
+import { common, sidebar, header, download } from './common';
 import { settings } from './settings';
 import { editor } from './editor';
 import { auth } from './auth';
@@ -19,6 +19,7 @@ export const en = {
     common,
     sidebar,
     header,
+    download,
     settings,
     editor,
     auth,

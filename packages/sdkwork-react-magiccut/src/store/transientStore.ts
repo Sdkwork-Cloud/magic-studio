@@ -1,7 +1,7 @@
 
 import { createStore } from 'zustand/vanilla';
 import { DragOperation, InteractionState, SelectionState, MarqueeState, EditTool, EditModeState } from './types';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 
 export interface TimelineState {
     currentTime: number;

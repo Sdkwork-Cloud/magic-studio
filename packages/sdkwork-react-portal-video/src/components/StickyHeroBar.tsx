@@ -1,5 +1,5 @@
 
-import { PortalTab } from 'sdkwork-react-commons'
+import { PortalTab } from '@sdkwork/react-commons'
 import React from 'react';
 import { Sparkles, ArrowUp, Loader2, Maximize2 } from 'lucide-react';
 ;

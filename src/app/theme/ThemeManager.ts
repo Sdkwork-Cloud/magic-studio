@@ -1,8 +1,8 @@
 
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 import { ThemeMode, AppearanceConfig } from './types';
-import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS } from 'sdkwork-react-settings';
-import { settingsService } from 'sdkwork-react-settings';
+import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS } from '@sdkwork/react-settings';
+import { settingsService } from '@sdkwork/react-settings';
 
 class ThemeManager {
   private mediaQuery: MediaQueryList | null = null;

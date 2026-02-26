@@ -2,7 +2,7 @@
 ;
 import { canvasHistoryService } from './canvasHistoryService';
 import { CanvasBoard, CanvasElement } from '../entities/canvas.entity';
-import { IBaseService, ServiceResult, Result, Page, PageRequest, generateUUID, MediaResourceType } from 'sdkwork-react-commons';
+import { IBaseService, ServiceResult, Result, Page, PageRequest, generateUUID, MediaResourceType } from '@sdkwork/react-commons';
 
 class CanvasService implements IBaseService<CanvasBoard> {
 

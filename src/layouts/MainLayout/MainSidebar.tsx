@@ -1,18 +1,18 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Settings, User, Crown, ChevronRight, LayoutGrid
 } from 'lucide-react';
 ;
 import { ROUTES } from '../../router/routes';
-import { useAuthStore } from 'sdkwork-react-auth';
-import { useSettingsStore } from 'sdkwork-react-settings';
-import { PricingModal } from 'sdkwork-react-vip';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { getIconComponent } from 'sdkwork-react-commons';
-import { SidebarItemConfig } from 'sdkwork-react-settings';
-import { SIDEBAR_TEMPLATES } from 'sdkwork-react-settings';
+import { useAuthStore } from '@sdkwork/react-auth';
+import { useSettingsStore } from '@sdkwork/react-settings';
+import { PricingModal } from '@sdkwork/react-vip';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { getIconComponent } from '@sdkwork/react-commons';
+import { SidebarItemConfig } from '@sdkwork/react-settings';
+import { SIDEBAR_TEMPLATES } from '@sdkwork/react-settings';
 
 const MainSidebar: React.FC = () => {
   const [showPricing, setShowPricing] = useState(false);

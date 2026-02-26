@@ -1,5 +1,5 @@
-import { AudioModelType } from './entities/audio.entity';
-import { ModelProvider } from 'sdkwork-react-commons';
+import { AudioModelType } from './entities';
+import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Volume2, Zap, Globe } from 'lucide-react';
 

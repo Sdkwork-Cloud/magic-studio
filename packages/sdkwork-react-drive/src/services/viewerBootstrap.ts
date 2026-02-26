@@ -4,7 +4,7 @@ import { CodeViewer } from '../viewers/impl/CodeViewer';
 import { MediaViewer } from '../viewers/impl/MediaViewer';
 import { DocViewer } from '../viewers/impl/DocViewer';
 import { ImageViewer } from '../viewers/impl/ImageViewer';
-import { pathUtils } from 'sdkwork-react-commons';
+import { pathUtils } from '@sdkwork/react-commons';
 
 export { DriveSidebar } from '../components/DriveSidebar';
 export { DriveGrid } from '../components/DriveGrid';

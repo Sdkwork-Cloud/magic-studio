@@ -3,7 +3,7 @@ import { MagicCutEditorContent } from '../components/MagicCutEditor'
 import { MagicCutEventProvider } from '../providers/MagicCutEventProvider'
 import { MagicCutErrorBoundary } from '../components/ErrorBoundary/MagicCutErrorBoundary'
 import React, { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'sdkwork-react-core';
+import { useRouter } from '@sdkwork/react-core';
 import { useMagicCutStore } from '../store/magicCutStore';
 
 const MagicCutPageContent: React.FC = () => {

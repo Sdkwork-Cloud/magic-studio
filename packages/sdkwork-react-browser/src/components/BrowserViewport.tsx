@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useBrowserStore } from '../store/browserStore';
 import { Globe, AlertTriangle } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 import { listen } from '@tauri-apps/api/event';
 
 export const BrowserViewport: React.FC = () => {

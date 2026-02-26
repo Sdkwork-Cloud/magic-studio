@@ -1,7 +1,7 @@
 
 import { DragInput, DragContext } from '../types';
 ;
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip } from '../../../../entities/magicCut.entity';
 
 export type TrimMode = 'trim-start' | 'trim-end';

@@ -1,6 +1,6 @@
 import { VoiceConfig, GeneratedVoiceResult, VoiceProfile, VoiceTask } from '../entities/voice.entity';
 import { PRESET_VOICES } from '../constants';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 export const voiceService = {
     getVoices: async (): Promise<VoiceProfile[]> => {

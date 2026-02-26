@@ -2,7 +2,7 @@
 import React from 'react';
 import { MapPin, Sun, Moon, Cloud, Home, Edit3 } from 'lucide-react';
 
-import { FilmLocation, useAssetUrl, MediaScene } from 'sdkwork-react-commons';
+import { FilmLocation, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
 
 export interface LocationCardProps {
     location: FilmLocation;

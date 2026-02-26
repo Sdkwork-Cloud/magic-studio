@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Sparkles, X, Wand2, Languages, RotateCw } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AIPromptModalProps {
     onClose: () => void;

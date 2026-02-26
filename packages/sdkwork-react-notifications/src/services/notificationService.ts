@@ -1,4 +1,4 @@
-import { AppNotification, NotificationType } from 'sdkwork-react-commons';
+import { AppNotification, NotificationType } from '@sdkwork/react-commons';
 
 // Simple UUID generator
 const generateUUID = () => {

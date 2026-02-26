@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Modality, Type, Content } from "@google/genai";
-import { audioUtils } from "sdkwork-react-commons";
+import { audioUtils } from "@sdkwork/react-commons";
 
 const API_KEY = process.env.API_KEY || ''; 
 

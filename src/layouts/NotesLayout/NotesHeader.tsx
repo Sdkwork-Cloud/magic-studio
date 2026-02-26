@@ -1,10 +1,10 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React from 'react';
-import { ChevronLeft, BookOpen, Search, Settings } from 'lucide-react';
-;
+import { ChevronLeft, BookOpen, Settings } from 'lucide-react';
 import { ROUTES } from '../../router/routes';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 
 export const NotesHeader: React.FC = () => {
     const { navigate } = useRouter();
@@ -35,10 +35,13 @@ export const NotesHeader: React.FC = () => {
                 </div>
             </div>
 
-            {/* Center: Search (Optional placeholder for future global search) */}
-            <div className="flex-1 max-w-xl mx-4 hidden md:block">
-                 {/* Reserved for global search if needed */}
-            </div>
+            {/* Center: Workspace / Project Selector */}
+            <WorkspaceProjectSelector 
+                variant="portal"
+                showDelete={false}
+                defaultProjectType="APP"
+                compact={true}
+            />
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">

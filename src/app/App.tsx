@@ -1,5 +1,5 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React, { useEffect, Suspense, useMemo } from 'react';
 import { AppProvider } from './AppProvider';
 ;

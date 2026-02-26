@@ -1,13 +1,13 @@
 
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils } from 'sdkwork-react-commons';
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils } from '@sdkwork/react-commons';
 import { platform } from '../../platform';
 import { thumbnailGenerator } from './thumbnailGenerator';
-import { storageConfig } from 'sdkwork-react-fs';
+import { storageConfig } from '@sdkwork/react-fs';
 ;
 import { downloadService } from './downloadService';
-import { AnyMediaResource } from 'sdkwork-react-commons';
-import { logger } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
+import { logger } from '@sdkwork/react-commons';
 
 declare global {
     interface Window {

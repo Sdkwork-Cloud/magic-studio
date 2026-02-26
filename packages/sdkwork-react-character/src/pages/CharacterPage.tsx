@@ -1,7 +1,7 @@
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState } from 'react';
 import { useCharacterStore } from '../store/characterStore';
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets';
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
 
 const CharacterPage: React.FC = () => {
     const { history, deleteTask, setConfig } = useCharacterStore();

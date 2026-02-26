@@ -1,5 +1,5 @@
 
-import { useAssetUrl } from 'sdkwork-react-commons'
+import { useAssetUrl } from '@sdkwork/react-commons';
 import React from 'react';
 import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 ;

@@ -1,5 +1,5 @@
 
-import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp } from 'sdkwork-react-commons'
+import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { Clapperboard, Plus, MapPin, Film } from 'lucide-react';
 

@@ -3,9 +3,9 @@ import {
     Image, Video, Sparkles, Upload, X, ArrowLeft
 } from 'lucide-react';
 import { usePromptOptimizerStore } from '../store';
-import { StyleSelector } from 'sdkwork-react-assets';
-import { IMAGE_STYLES, VIDEO_STYLES } from 'sdkwork-react-commons';
-import { useRouter } from 'sdkwork-react-core';
+import { StyleSelector } from '@sdkwork/react-assets';
+import { IMAGE_STYLES, VIDEO_STYLES } from '@sdkwork/react-commons';
+import { useRouter } from '@sdkwork/react-core';
 import type { PromptType, OptimizationMode } from '../types';
 
 export const PromptOptimizerPage: React.FC = () => {

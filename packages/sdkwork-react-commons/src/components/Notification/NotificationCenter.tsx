@@ -1,5 +1,5 @@
 // NotificationCenter has been moved to sdkwork-react-notifications to avoid circular dependencies
-// Please import from 'sdkwork-react-notifications' instead
+// Please import from '@sdkwork/react-notifications' instead
 // This file is kept for backward compatibility but will be removed in future versions
 
 import React from 'react';

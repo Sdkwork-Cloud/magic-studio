@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 
 export interface Asset {
   id: string;

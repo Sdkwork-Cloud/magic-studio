@@ -1,11 +1,11 @@
 
-import { pathUtils, useTheme } from 'sdkwork-react-commons'
+import { pathUtils, useTheme } from '@sdkwork/react-commons'
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Editor from '@monaco-editor/react';
 import { FileViewerProps } from '../types';
 import { Save, Loader2, Check } from 'lucide-react';
-import { useSettingsStore } from 'sdkwork-react-settings';
+import { useSettingsStore } from '@sdkwork/react-settings';
 
 export const CodeViewer: React.FC<FileViewerProps> = ({ item, url, onSave, isReadOnly, headerElement }) => {
     const { settings } = useSettingsStore();

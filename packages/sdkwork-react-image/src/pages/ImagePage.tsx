@@ -1,10 +1,10 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { ImportData, GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { ImportData, GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
 import React, { useState } from 'react';
 import { useImageStore } from '../store/imageStore';
 import { ImageTask } from '../entities/image.entity'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { generateUUID } from 'sdkwork-react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { generateUUID } from '@sdkwork/react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const ImagePage: React.FC = () => {
     const { history, deleteTask, setConfig, importTask } = useImageStore();

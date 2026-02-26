@@ -3,7 +3,7 @@ import { RenderContext, FBO, RenderOverrideClip } from '../types';
 
 import { CutTimeline, CutTrack, CutClip, CutLayer, CutClipTransform } from '../../entities/magicCut.entity';
 import { TrackRenderer, TextureResult } from './TrackRenderer';
-import { TrackIntervalIndex,AnyMediaResource } from 'sdkwork-react-commons';
+import { TrackIntervalIndex,AnyMediaResource } from '@sdkwork/react-commons';
 import { Matrix3Ops, RenderMatrices } from '../config/RenderConfig';
 import { RenderSortUtils } from '../utils/RenderSortUtils';
 

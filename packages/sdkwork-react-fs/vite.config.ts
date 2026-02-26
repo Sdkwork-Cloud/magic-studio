@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'sdkwork-react-fs',
+      name: '@sdkwork/react-fs',
       formats: ['es'],
       fileName: 'index'
     },
@@ -27,8 +27,8 @@ export default defineConfig({
         '@tauri-apps/api',
         '@tauri-apps/plugin-fs',
         '@tauri-apps/plugin-dialog',
-        'sdkwork-react-types',
-        'sdkwork-react-commons'
+        '@sdkwork/react-types',
+        '@sdkwork/react-commons'
       ],
       output: {
         globals: {
@@ -38,8 +38,8 @@ export default defineConfig({
           '@tauri-apps/api': 'TauriApi',
           '@tauri-apps/plugin-fs': 'TauriPluginFs',
           '@tauri-apps/plugin-dialog': 'TauriPluginDialog',
-          'sdkwork-react-types': 'SdkworkReactTypes',
-          'sdkwork-react-commons': 'SdkworkReactCommons'
+          '@sdkwork/react-types': 'SdkworkReactTypes',
+          '@sdkwork/react-commons': 'SdkworkReactCommons'
         }
       }
     },

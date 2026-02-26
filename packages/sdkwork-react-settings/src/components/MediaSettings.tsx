@@ -3,7 +3,7 @@ import { MediaAccountConfig, MediaPlatformType } from '../entities/settings.enti
 import React, { useState, useMemo } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     MessageCircle, Newspaper, Globe, Video, Plus, Trash2, Edit2, 
     Share2, AlertCircle, CheckCircle2, RefreshCw, Key, Shield,

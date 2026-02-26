@@ -130,7 +130,7 @@ export {
 
 ### Basic Setup
 ```typescript
-import { initializeAssetServices } from 'sdkwork-react-assets';
+import { initializeAssetServices } from '@sdkwork/react-assets';
 
 // Initialize at app startup
 initializeAssetServices();
@@ -138,7 +138,7 @@ initializeAssetServices();
 
 ### Working with Digital Humans
 ```typescript
-import { getAssetService, DigitalHumanAsset } from 'sdkwork-react-assets';
+import { getAssetService, DigitalHumanAsset } from '@sdkwork/react-assets';
 
 const dhService = getAssetService('digital-human');
 const digitalHumans = await dhService.findAll({ page: 0, size: 10 });
@@ -150,7 +150,7 @@ digitalHumans.content.forEach((asset: DigitalHumanAsset) => {
 
 ### Working with Sound Effects
 ```typescript
-import { getAssetService, SfxAsset } from 'sdkwork-react-assets';
+import { getAssetService, SfxAsset } from '@sdkwork/react-assets';
 
 const sfxService = getAssetService('sfx');
 const soundEffects = await sfxService.findAll({ page: 0, size: 20 });

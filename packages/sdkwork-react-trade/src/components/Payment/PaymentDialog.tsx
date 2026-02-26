@@ -3,7 +3,7 @@ import { X, CreditCard, Smartphone, Wallet, Coins, Loader2 } from 'lucide-react'
 import type { Order, PaymentMethod } from '../../entities';
 import { PaymentMethod as PaymentMethodEnum } from '../../entities';
 import { paymentService } from '../../services/paymentService';
-import { cn } from 'sdkwork-react-commons';
+import { cn } from '@sdkwork/react-commons';
 
 interface PaymentDialogProps {
   order: Order;
@@ -33,7 +33,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
   const paymentMethods: PaymentMethodOption[] = [
     {
       id: PaymentMethodEnum.ALIPAY,
-      name: '支付宝',
+      name: '支付�?,
       description: '推荐使用',
       icon: Smartphone,
       enabled: true,
@@ -47,7 +47,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
     },
     {
       id: PaymentMethodEnum.CREDIT_CARD,
-      name: '信用卡',
+      name: '信用�?,
       description: '支持 Visa/Master',
       icon: CreditCard,
       enabled: true,
@@ -62,7 +62,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
     {
       id: PaymentMethodEnum.POINTS,
       name: '积分支付',
-      description: '100 积分=1 元',
+      description: '100 积分=1 �?,
       icon: Coins,
       enabled: true,
     },
@@ -79,22 +79,21 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
         orderUuid: order.uuid,
         method: selectedMethod,
         useBalance: useBalance ? order.amount : undefined,
-        usePoints: usePoints ? 10000 : undefined, // 示例：使用 10000 积分
+        usePoints: usePoints ? 10000 : undefined, // 示例：使�?10000 积分
       });
 
       if (result.success) {
         if (result.redirectUrl) {
           // 第三方支付，跳转
           setRedirectUrl(result.redirectUrl);
-          // 模拟支付回调 (实际场景中应该等待回调)
+          // 模拟支付回调 (实际场景中应该等待回�?
           setTimeout(() => {
             paymentService.simulatePaymentCallback(result.payment!.uuid, true);
             onSuccess?.();
             onClose();
           }, 3000);
         } else {
-          // 余额/积分支付，直接成功
-          onSuccess?.();
+          // 余额/积分支付，直接成�?          onSuccess?.();
           onClose();
         }
       } else {
@@ -192,7 +191,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <label className="flex items-center justify-between cursor-pointer">
               <div className="flex items-center gap-2">
                 <Coins size={16} className="text-gray-400" />
-                <span className="text-sm text-gray-300">使用积分 (100 积分=1 元)</span>
+                <span className="text-sm text-gray-300">使用积分 (100 积分=1 �?</span>
               </div>
               <input
                 type="checkbox"
@@ -238,7 +237,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
             {processing ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                处理中...
+                处理�?..
               </>
             ) : (
               <>

@@ -1,5 +1,5 @@
 
-import { Tabs, type TabItem } from 'sdkwork-react-commons';
+import { Tabs, type TabItem } from '@sdkwork/react-commons';
 import { CutTimeline } from '../../entities/magicCut.entity';
 import React, { useState, useMemo } from 'react';
 import { useMagicCutStore } from '../../store/magicCutStore';

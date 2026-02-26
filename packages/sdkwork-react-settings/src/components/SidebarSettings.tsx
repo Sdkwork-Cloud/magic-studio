@@ -2,7 +2,7 @@
 import { SidebarItemConfig } from '../entities/settings.entity'
 import React from 'react';
 import { useSettingsStore } from '../store/settingsStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { SettingsSection, SettingToggle } from './SettingsWidgets';
 import { SIDEBAR_TEMPLATES } from '../constants';
 import { Check, LayoutTemplate, RotateCcw } from 'lucide-react';

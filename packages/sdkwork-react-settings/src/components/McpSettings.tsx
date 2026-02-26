@@ -3,7 +3,7 @@ import { McpConfig } from '../entities/settings.entity'
 import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     Database, Plus, Trash2, Edit2, AlertCircle, Terminal, Server, Wifi
 } from 'lucide-react';

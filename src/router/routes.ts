@@ -42,6 +42,7 @@ export const ROUTES = {
   VIP: '/vip',
   TASK_MARKET: '/task-market',
   MY_TASKS: '/my-tasks',
+  DOWNLOAD: '/app/download',
 } as const;
 
 export type RoutePath = typeof ROUTES[keyof typeof ROUTES];

@@ -1,5 +1,5 @@
-import { SfxModelType } from './entities/sfx.entity';
-import { ModelProvider } from 'sdkwork-react-commons';
+import { SfxModelType } from './entities';
+import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Waves, Volume2, Music } from 'lucide-react';
 

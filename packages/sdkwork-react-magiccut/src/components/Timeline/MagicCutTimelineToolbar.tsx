@@ -10,14 +10,14 @@ import {
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents, ZoomPayload, TimelineAddClipPayload } from '../../events';
-import { ImageGeneratorModal } from 'sdkwork-react-image';
-import { VideoGeneratorModal } from 'sdkwork-react-video';
-import { AudioGeneratorModal } from 'sdkwork-react-audio';
-import { SfxGeneratorModal } from 'sdkwork-react-sfx';
-import { MusicGeneratorModal } from 'sdkwork-react-music';
+import { ImageGeneratorModal } from '@sdkwork/react-image';
+import { VideoGeneratorModal } from '@sdkwork/react-video';
+import { AudioGeneratorModal } from '@sdkwork/react-audio';
+import { SfxGeneratorModal } from '@sdkwork/react-sfx';
+import { MusicGeneratorModal } from '@sdkwork/react-music';
 import { TIMELINE_CONSTANTS } from '../../constants';
 import { generateUUID } from '../../utils/uuid';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { EditTool } from '../../store/types';
 
 // --- Constants & Math Helpers ---

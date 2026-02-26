@@ -1,14 +1,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { X, Download, AlertCircle, FileText } from 'lucide-react';
-import { vfs } from 'sdkwork-react-fs';
+import { vfs } from '@sdkwork/react-fs';
 import { viewerRegistry } from '../viewers/viewerRegistry';
-import { Button, pathUtils } from 'sdkwork-react-commons';
+import { Button, pathUtils } from '@sdkwork/react-commons';
 import { DriveItem } from '../entities/drive.entity';
 import { driveService } from '../services/driveService';
-import { FileIcon } from 'sdkwork-react-editor';
-import { platform } from 'sdkwork-react-core';
-import { assetService } from 'sdkwork-react-assets';
+import { FileIcon } from '@sdkwork/react-editor';
+import { platform } from '@sdkwork/react-core';
+import { assetService } from '@sdkwork/react-assets';
 
 interface FilePreviewModalProps {
     item: DriveItem;

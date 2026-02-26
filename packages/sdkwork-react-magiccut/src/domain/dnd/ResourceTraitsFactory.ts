@@ -1,7 +1,7 @@
 
 import { IResourceTraits } from './IResourceTraits';
 import { CutTrackType } from '../../entities/magicCut.entity';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { GhostFactory } from '../../components/Timeline/dnd/visuals/GhostFactory';
 ;
 ;

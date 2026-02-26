@@ -1,8 +1,8 @@
 
 import { LocalStorageService } from '../base/LocalStorageService';
 import { AppNotification, NotificationType } from './entities';
-import { generateUUID } from 'sdkwork-react-commons';
-import { ServiceResult, Result } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
+import { ServiceResult, Result } from '@sdkwork/react-commons';
 
 const NOTIFICATION_STORAGE_KEY = 'open_studio_notifications_v1';
 

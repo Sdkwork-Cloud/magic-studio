@@ -1,9 +1,9 @@
 
 ;
-import { storageConfig, APP_ROOT_DIR, DIR_NAMES } from 'sdkwork-react-fs';
-import { vfs } from 'sdkwork-react-fs';
-import { platform } from 'sdkwork-react-core';
-import { StudioWorkspace, StudioProject, ProjectType, pathUtils, generateUUID, ImageMediaResource, MediaResourceType, ServiceResult, Result, IBaseService, Page, PageRequest, logger } from 'sdkwork-react-commons';
+import { storageConfig, APP_ROOT_DIR, DIR_NAMES } from '@sdkwork/react-fs';
+import { vfs } from '@sdkwork/react-fs';
+import { platform } from '@sdkwork/react-core';
+import { StudioWorkspace, StudioProject, ProjectType, pathUtils, generateUUID, ImageMediaResource, MediaResourceType, ServiceResult, Result, IBaseService, Page, PageRequest, logger } from '@sdkwork/react-commons';
 
 /**
  * Workspace Service

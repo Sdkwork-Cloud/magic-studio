@@ -1,6 +1,6 @@
 
-import { GenerationType, ModelInfoResponse } from 'sdkwork-react-commons';
-import { ServiceResult, Result } from 'sdkwork-react-commons';
+import { GenerationType, ModelInfoResponse } from '@sdkwork/react-commons';
+import { ServiceResult, Result } from '@sdkwork/react-commons';
 
 class ModelInfoService {
     

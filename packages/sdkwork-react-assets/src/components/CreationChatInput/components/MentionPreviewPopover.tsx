@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Popover } from 'sdkwork-react-commons';
-import type { InputAttachment } from 'sdkwork-react-commons';
+import { Popover } from '@sdkwork/react-commons';
+import type { InputAttachment } from '@sdkwork/react-commons';
 import { Music, Video, Image as ImageIcon, FileText, Maximize2 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { getAssetLabel } from 'sdkwork-react-commons';
+import { getAssetLabel } from '@sdkwork/react-commons';
 
 interface MentionPreviewPopoverProps {
     anchorEl: HTMLElement | null;

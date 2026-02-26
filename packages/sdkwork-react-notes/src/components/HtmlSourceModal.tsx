@@ -1,11 +1,11 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Check, FileCode } from 'lucide-react';
 ;
-import { platform } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { platform } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface HtmlSourceModalProps {
     isOpen: boolean;

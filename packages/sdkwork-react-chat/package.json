@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-chat",
+  "name": "@sdkwork/react-chat",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,10 +25,11 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

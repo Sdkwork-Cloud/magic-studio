@@ -1,4 +1,4 @@
-import { FileEntry, FileStat, IFileSystemProvider } from 'sdkwork-react-types';
+import { FileEntry, FileStat, IFileSystemProvider } from '@sdkwork/react-types';
 import { LocalFileSystemProvider } from './providers/local';
 
 class FileSystemManager {

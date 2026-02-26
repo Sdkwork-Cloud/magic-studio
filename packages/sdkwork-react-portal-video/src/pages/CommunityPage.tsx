@@ -4,7 +4,7 @@ import {
     Award, Filter, Search, Plus, Image as ImageIcon,
     Video as VideoIcon, Music, Mic
 } from 'lucide-react';
-import { GalleryCard } from 'sdkwork-react-commons';
+import { GalleryCard } from '@sdkwork/react-commons';
 import { PortalHeader } from '../components/PortalHeader';
 
 // 模拟社区数据 - 使用简化的数据结构以适应 GalleryCard

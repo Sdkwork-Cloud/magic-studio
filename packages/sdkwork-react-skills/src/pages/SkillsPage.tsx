@@ -4,8 +4,8 @@ import {
     ArrowRight, Plus, Download, Award, CheckCircle, Heart,
     Github, Globe, Shield, Layers, Package, ExternalLink
 } from 'lucide-react';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
-import { PortalHeader, PortalSidebar } from 'sdkwork-react-portal-video';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { PortalHeader, PortalSidebar } from '@sdkwork/react-portal-video';
 import { SKILL_CATEGORIES } from '../constants';
 import { AGENT_SKILLS } from '../data/skills';
 
@@ -20,8 +20,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [bookmarkedSkills, setBookmarkedSkills] = useState<Set<string>>(new Set());
 
-    // 处理技能点击
-    const handleSkillClick = (skillId: string) => {
+    // 处理技能点�?    const handleSkillClick = (skillId: string) => {
         if (onSkillSelect) {
             onSkillSelect(skillId);
         } else {
@@ -29,12 +28,10 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
         }
     };
 
-    // 过滤技能
-    const filteredSkills = useMemo(() => {
+    // 过滤技�?    const filteredSkills = useMemo(() => {
         let skills = [...AGENT_SKILLS];
 
-        // 标签页过滤
-        if (activeTab === 'featured') {
+        // 标签页过�?        if (activeTab === 'featured') {
             skills = skills.filter(s => s.featured);
         } else if (activeTab === 'trending') {
             skills = skills.sort((a, b) => b.users - a.users);
@@ -45,7 +42,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
         } else if (activeTab === 'free') {
             skills = skills.filter(s => !s.premium);
         } else if (activeTab === 'opensource') {
-            // 开源技能 - 免费且作者认证的
+            // 开源技�?- 免费且作者认证的
             skills = skills.filter(s => !s.premium && s.author.verified);
         }
 
@@ -109,20 +106,19 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                             <span className="text-xs text-gray-300">Open Source Agent Skills Marketplace</span>
                         </div>
                         <h1 className="text-4xl font-bold text-white mb-3">
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">技能市场</span> - 发现开源 AI 技能
-                        </h1>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">技能市�?/span> - 发现开�?AI 技�?                        </h1>
                         <p className="text-gray-400 max-w-2xl mx-auto">
-                            探索 {AGENT_SKILLS.length}+ 个遵循开源标准的 Agent Skills，扩展你的 AI 助手能力边界
+                            探索 {AGENT_SKILLS.length}+ 个遵循开源标准的 Agent Skills，扩展你�?AI 助手能力边界
                         </p>
                     </div>
 
-                    {/* 搜索栏 */}
+                    {/* 搜索�?*/}
                     <div className="max-w-2xl mx-auto">
                         <div className="relative">
                             <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                             <input
                                 type="text"
-                                placeholder="搜索技能名称、功能、标签或作者..."
+                                placeholder="搜索技能名称、功能、标签或作�?.."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl pl-12 pr-6 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
@@ -132,18 +128,18 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                 </div>
             </div>
 
-            {/* 导航栏 */}
+            {/* 导航�?*/}
             <div className="sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex items-center justify-between py-4">
-                        {/* 主标签 - 技能市场分类 */}
+                        {/* 主标�?- 技能市场分�?*/}
                         <div className="flex items-center gap-1">
                             {[
-                                { id: 'featured', label: '精选推荐', icon: Award },
+                                { id: 'featured', label: '精选推�?, icon: Award },
                                 { id: 'trending', label: '热门流行', icon: TrendingUp },
-                                { id: 'opensource', label: '开源免费', icon: Github },
-                                { id: 'new', label: '最新上架', icon: Sparkles },
-                                { id: 'premium', label: '专业版', icon: Star },
+                                { id: 'opensource', label: '开源免�?, icon: Github },
+                                { id: 'new', label: '最新上�?, icon: Sparkles },
+                                { id: 'premium', label: '专业�?, icon: Star },
                             ].map((tab) => {
                                 const Icon = tab.icon;
                                 return (
@@ -205,7 +201,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                 <div className="text-2xl font-bold text-white">
                                     {AGENT_SKILLS.filter(s => !s.premium && s.author.verified).length}
                                 </div>
-                                <div className="text-xs text-gray-400">开源技能</div>
+                                <div className="text-xs text-gray-400">开源技�?/div>
                             </div>
                         </div>
                     </div>
@@ -218,7 +214,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                 <div className="text-2xl font-bold text-white">
                                     {(AGENT_SKILLS.reduce((sum, s) => sum + s.users, 0) / 1000).toFixed(0)}k
                                 </div>
-                                <div className="text-xs text-gray-400">总用户</div>
+                                <div className="text-xs text-gray-400">总用�?/div>
                             </div>
                         </div>
                     </div>
@@ -231,7 +227,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                 <div className="text-2xl font-bold text-white">
                                     {AGENT_SKILLS.filter(s => s.author.verified).length}
                                 </div>
-                                <div className="text-xs text-gray-400">认证作者</div>
+                                <div className="text-xs text-gray-400">认证作�?/div>
                             </div>
                         </div>
                     </div>
@@ -240,15 +236,14 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                 {/* 统计信息 */}
                 <div className="flex items-center justify-between mb-6">
                     <p className="text-sm text-gray-400">
-                        显示 <span className="text-white font-medium">{filteredSkills.length}</span> 个技能
-                    </p>
+                        显示 <span className="text-white font-medium">{filteredSkills.length}</span> 个技�?                    </p>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Shield size={12} />
-                        <span>所有技能均遵循开源 Agent Skills 标准</span>
+                        <span>所有技能均遵循开�?Agent Skills 标准</span>
                     </div>
                 </div>
 
-                {/* 技能网格 */}
+                {/* 技能网�?*/}
                 {filteredSkills.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {filteredSkills.map((skill) => {
@@ -262,23 +257,21 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                     onClick={() => handleSkillClick(skill.id)}
                                     className="group relative bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-xl overflow-hidden border border-white/5 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10"
                                 >
-                                    {/* 精选标识 */}
+                                    {/* 精选标�?*/}
                                     {skill.featured && (
                                         <div className="absolute top-3 left-3 z-10">
                                             <span className="px-2 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1">
                                                 <Award size={10} />
-                                                精选
-                                            </span>
+                                                精�?                                            </span>
                                         </div>
                                     )}
 
-                                    {/* 开源标识 */}
+                                    {/* 开源标�?*/}
                                     {!skill.premium && skill.author.verified && (
                                         <div className="absolute top-3 left-3 z-10">
                                             <span className="px-2 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1">
                                                 <Github size={10} />
-                                                开源
-                                            </span>
+                                                开�?                                            </span>
                                         </div>
                                     )}
 
@@ -296,7 +289,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
 
                                     {/* 内容 */}
                                     <div className="p-5">
-                                        {/* 图标和标题 */}
+                                        {/* 图标和标�?*/}
                                         <div className="flex items-start gap-3 mb-3">
                                             <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 group-hover:scale-105 transition-transform">
                                                 <Icon size={20} className="text-emerald-400" />
@@ -319,7 +312,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                             {skill.description}
                                         </p>
 
-                                        {/* 分类和能力标签 */}
+                                        {/* 分类和能力标�?*/}
                                         <div className="flex items-center gap-2 mb-3 flex-wrap">
                                             <span className="px-2 py-0.5 bg-white/5 text-gray-400 text-[10px] rounded flex items-center gap-1">
                                                 {categoryInfo && <categoryInfo.icon size={10} />}
@@ -370,35 +363,32 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
                             <Search size={32} className="text-gray-600" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">未找到匹配的技能</h3>
-                        <p className="text-gray-400 text-sm mb-6">尝试调整搜索条件或浏览其他分类</p>
+                        <h3 className="text-lg font-semibold text-white mb-2">未找到匹配的技�?/h3>
+                        <p className="text-gray-400 text-sm mb-6">尝试调整搜索条件或浏览其他分�?/p>
                         <button
                             onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
                             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
                         >
-                            清除筛选
-                        </button>
+                            清除筛�?                        </button>
                     </div>
                 )}
             </div>
 
-            {/* 页脚 CTA - 技能市场 */}
+            {/* 页脚 CTA - 技能市�?*/}
             <div className="border-t border-white/5 mt-16">
                 <div className="max-w-7xl mx-auto px-6 py-12">
                     <div className="bg-gradient-to-r from-emerald-900/30 via-teal-900/30 to-cyan-900/30 rounded-2xl p-8 border border-white/10">
                         <div className="text-center">
                             <div className="flex items-center justify-center gap-2 mb-4">
                                 <Layers size={24} className="text-emerald-400" />
-                                <h2 className="text-xl font-bold text-white">贡献你的开源技能</h2>
+                                <h2 className="text-xl font-bold text-white">贡献你的开源技�?/h2>
                             </div>
                             <p className="text-gray-400 text-sm mb-6 max-w-2xl mx-auto">
-                                遵循开源 Agent Skills 标准，将你的 AI 技能发布到市场，与全球开发者分享创新成果
-                            </p>
+                                遵循开�?Agent Skills 标准，将你的 AI 技能发布到市场，与全球开发者分享创新成�?                            </p>
                             <div className="flex items-center justify-center gap-4">
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors">
                                     <Plus size={16} />
-                                    创建技能
-                                </button>
+                                    创建技�?                                </button>
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors">
                                     <Github size={16} />
                                     查看标准
@@ -406,8 +396,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors">
                                     <Globe size={16} />
                                     <ExternalLink size={14} />
-                                    开源社区
-                                </button>
+                                    开源社�?                                </button>
                             </div>
                         </div>
                     </div>

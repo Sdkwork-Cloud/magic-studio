@@ -1,6 +1,6 @@
-import { VideoAsset, ImageAsset, AudioAsset, TextAsset, EffectAsset, TransitionAsset, DigitalHumanAsset, SfxAsset, MediaResourceType } from '../entities/enhancedAsset.entity';
-import { AudioFormat } from 'sdkwork-react-commons';
-import { generateUUID } from 'sdkwork-react-commons';
+import { VideoAsset, ImageAsset, AudioAsset, TextAsset, EffectAsset, TransitionAsset, DigitalHumanAsset, SfxAsset, MediaResourceType } from '../entities';
+import { AudioFormat } from '@sdkwork/react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 // --- Helper Generators ---
 const createPage = <T>(content: T[], page: number, size: number): any => {

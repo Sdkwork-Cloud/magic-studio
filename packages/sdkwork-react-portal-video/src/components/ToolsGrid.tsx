@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES, remixService } from 'sdkwork-react-core'
+import { useRouter, ROUTES, remixService } from '@sdkwork/react-core'
 import React from 'react';
 import { 
     Mic, Move, Image as ImageIcon, Type, Scissors, 

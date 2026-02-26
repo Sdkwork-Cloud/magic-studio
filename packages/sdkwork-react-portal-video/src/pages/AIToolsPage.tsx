@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import { PortalSidebar, PortalHeader } from '../index'
 import React, { useState } from 'react';
 import { 

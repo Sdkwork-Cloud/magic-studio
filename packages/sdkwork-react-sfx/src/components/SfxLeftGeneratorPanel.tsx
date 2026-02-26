@@ -1,5 +1,5 @@
 
-import { PromptTextInput } from 'sdkwork-react-assets'
+import { PromptTextInput } from '@sdkwork/react-assets'
 import React from 'react';
 import { useSfxStore } from '../store/sfxStore';
 import { SfxModelSelector } from './SfxModelSelector';

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Plus, Trash2, Layout } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const CanvasExplorer: React.FC = () => {
     const { boards, activeBoardId, selectBoard, createBoard, deleteBoard } = useCanvasStore();

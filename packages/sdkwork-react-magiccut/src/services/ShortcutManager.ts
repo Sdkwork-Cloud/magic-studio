@@ -151,10 +151,10 @@ class ShortcutManager {
                     case 'shift': return '?';
                     case 'meta': case 'cmd': return '?';
                     case 'space': return 'ç©ºæ ¼';
-                    case 'left': return 'â†';
-                    case 'right': return 'â†’';
-                    case 'up': return 'â†‘';
-                    case 'down': return 'â†“';
+                    case 'left': return 'â†?;
+                    case 'right': return 'â†?;
+                    case 'up': return 'â†?;
+                    case 'down': return 'â†?;
                     default: return part.toUpperCase();
                 }
             })

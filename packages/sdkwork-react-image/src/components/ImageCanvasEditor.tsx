@@ -5,7 +5,7 @@ import {
     Undo, Redo, Save, ZoomIn, ZoomOut, Move,
     Trash2
 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Button, useAssetUrl } from 'sdkwork-react-commons';
+import { Button, useAssetUrl } from '@sdkwork/react-commons';
 
 interface ImageCanvasEditorProps {
     imageUrl: string;

@@ -1,5 +1,5 @@
 
-import { VideoAspectRatio, VideoResolution } from 'sdkwork-react-commons'
+import { VideoAspectRatio, VideoResolution } from '@sdkwork/react-commons'
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Monitor, Smartphone, Square, X, Lock } from 'lucide-react';
 ;

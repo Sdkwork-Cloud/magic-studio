@@ -1,6 +1,6 @@
 import { IAssetService } from '../IAssetService';
-import { Page, DEFAULT_PAGE_SIZE } from 'sdkwork-react-commons';
-import { AnyAsset } from '../../entities/enhancedAsset.entity';
+import { Page, DEFAULT_PAGE_SIZE } from '@sdkwork/react-commons';
+import { AnyAsset } from '../../entities';
 import { MockDatabase } from '../MockAssetDatabase';
 
 export class AudioAssetService implements IAssetService {

@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-prompt",
+  "name": "@sdkwork/react-prompt",
   "version": "1.0.0",
   "description": "Prompt Optimization Module - AI prompt optimization for image and video generation",
   "type": "module",
@@ -30,12 +30,12 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-image": "workspace:*",
-    "sdkwork-react-video": "workspace:*",
-    "sdkwork-react-chat": "workspace:*"
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-video": "workspace:*",
+    "@sdkwork/react-chat": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

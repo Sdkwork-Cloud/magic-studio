@@ -25,24 +25,24 @@ export default defineConfig({
         'react', 
         'react-dom', 
         'react/jsx-runtime',
-        'sdkwork-react-commons',
-        'sdkwork-react-core',
-        'sdkwork-react-assets',
-        'sdkwork-react-settings',
-        'sdkwork-react-i18n',
-        'sdkwork-react-generation-history'
+        '@sdkwork/react-commons',
+        '@sdkwork/react-core',
+        '@sdkwork/react-assets',
+        '@sdkwork/react-settings',
+        '@sdkwork/react-i18n',
+        '@sdkwork/react-generation-history'
       ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-assets': 'SdkworkReactAssets',
-          'sdkwork-react-settings': 'SdkworkReactSettings',
-          'sdkwork-react-i18n': 'SdkworkReactI18n',
-          'sdkwork-react-generation-history': 'SdkworkReactGenerationHistory'
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-assets': 'SdkworkReactAssets',
+          '@sdkwork/react-settings': 'SdkworkReactSettings',
+          '@sdkwork/react-i18n': 'SdkworkReactI18n',
+          '@sdkwork/react-generation-history': 'SdkworkReactGenerationHistory'
         }
       }
     },

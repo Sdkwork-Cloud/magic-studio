@@ -3,7 +3,7 @@ import { driveService } from '../services/driveService'
 import React, { useState, useRef, useEffect } from 'react';
 import { HardDrive, Clock, Star, Trash2, Cloud, Plus, FolderPlus, FileUp } from 'lucide-react';
 import { useDriveStore } from '../store/driveStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const DriveSidebar: React.FC = () => {
     const { stats, createFolder, uploadFiles, navigateTo, currentPath } = useDriveStore();

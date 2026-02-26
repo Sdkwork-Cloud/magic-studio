@@ -1,6 +1,6 @@
 
-import { VoiceProfile, VoiceModelType } from './entities/voice.entity';
-import { ModelProvider } from 'sdkwork-react-commons';
+import { VoiceProfile, VoiceModelType } from './entities';
+import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Mic, Sparkles, Globe } from 'lucide-react';
 

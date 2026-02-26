@@ -1,11 +1,11 @@
 
-import { assetService } from 'sdkwork-react-assets'
+import { assetService } from '@sdkwork/react-assets'
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { produce, enableMapSet, enablePatches, applyPatches, Patch } from 'immer';
 import { useStore } from 'zustand';
 
 import { CutProject, CutTimeline, CutTrack, CutClip, CutLayer, CutTrackType, TemplateMetadata, CutClipTransform, CutProjectSettings } from '../entities/magicCut.entity';
-import { MediaResourceType, AnyMediaResource, generateUUID } from 'sdkwork-react-commons';
+import { MediaResourceType, AnyMediaResource, generateUUID } from '@sdkwork/react-commons';
 import { createTimelineStore, TimelineStore } from './transientStore';
 import { PlayerController } from '../controllers/PlayerController';
 import { NormalizedState, InteractionState, DragOperation } from './types';
@@ -17,7 +17,7 @@ import { templateService } from '../services/templateService';
 ;
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
-import { uploadHelper } from 'sdkwork-react-core';
+import { uploadHelper } from '@sdkwork/react-core';
 import { textRenderer, DEFAULT_TEXT_STYLE } from '../engine/text/TextRenderer';
 ;
 ;

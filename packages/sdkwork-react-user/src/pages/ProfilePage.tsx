@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuthStore } from 'sdkwork-react-auth';
+import { useAuthStore } from '@sdkwork/react-auth';
 import { User, Mail, Calendar, Crown } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {

@@ -40,6 +40,24 @@ export function formatDate(date: Date | string | number, locale = 'en-US'): stri
     }).format(d);
 }
 
+/**
+ * Format date as yyyy-MM-dd HH:mm:ss
+ * Used for BaseEntity timestamps (createdAt, updatedAt, deletedAt)
+ */
+export function formatDateTime(date: Date | string | number = new Date()): string {
+    const d = new Date(date);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/**
+ * Get current datetime in yyyy-MM-dd HH:mm:ss format
+ * Shortcut for formatDateTime()
+ */
+export function now(): string {
+    return formatDateTime();
+}
+
 export function debounce<T extends (...args: any[]) => any>(
     func: T,
     wait: number

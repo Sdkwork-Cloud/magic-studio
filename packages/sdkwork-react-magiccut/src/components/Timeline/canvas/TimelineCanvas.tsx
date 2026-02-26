@@ -1,7 +1,7 @@
 
 import React, { useRef, useCallback, useEffect, useMemo, memo } from 'react';
 ;
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
 import { useMagicCutBus } from '../../../providers/MagicCutEventProvider';

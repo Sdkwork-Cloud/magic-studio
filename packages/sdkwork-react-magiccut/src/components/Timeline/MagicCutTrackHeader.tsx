@@ -4,13 +4,13 @@ import { createPortal } from 'react-dom';
 import { Video, Mic, Layers, Lock, Unlock, Eye, EyeOff, Volume2, VolumeX, Type, Sparkles, Image as ImageIcon, Trash2, Upload, Loader2, X, GripVertical } from 'lucide-react';
 ;
 import { useMagicCutStore } from '../../store/magicCutStore';
-import { platform, uploadHelper } from 'sdkwork-react-core';
+import { platform, uploadHelper } from '@sdkwork/react-core';
 import { CutTrack } from '../../entities/magicCut.entity';
-import { thumbnailGenerator } from 'sdkwork-react-core';
-import { downloadService } from 'sdkwork-react-core';
-import { Confirm, useConfirm } from 'sdkwork-react-commons';
-import { MediaResourceType } from 'sdkwork-react-commons';
-import { assetService } from 'sdkwork-react-assets';
+import { thumbnailGenerator } from '@sdkwork/react-core';
+import { downloadService } from '@sdkwork/react-core';
+import { Confirm, useConfirm } from '@sdkwork/react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
+import { assetService } from '@sdkwork/react-assets';
 
 interface MagicCutTrackHeaderProps {
     track: CutTrack;

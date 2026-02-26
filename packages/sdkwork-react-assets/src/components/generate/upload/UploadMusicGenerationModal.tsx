@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Music, FileAudio, Layers, Type } from 'lucide-react';
-import { Button, AudioUpload, ImageUpload, generateUUID } from 'sdkwork-react-commons';
+import { Button, AudioUpload, ImageUpload, generateUUID } from '@sdkwork/react-commons';
 import { PromptTextInput } from '../PromptTextInput';
 import { ImportData } from './types';
-import { SettingInput, SettingToggle } from 'sdkwork-react-settings';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { SettingInput, SettingToggle } from '@sdkwork/react-settings';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
 
 interface UploadMusicGenerationModalProps {

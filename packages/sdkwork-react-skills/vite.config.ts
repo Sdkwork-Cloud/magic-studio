@@ -25,20 +25,20 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        'sdkwork-react-commons',
-        'sdkwork-react-core',
-        'sdkwork-react-i18n',
-        'sdkwork-react-portal-video'
+        '@sdkwork/react-commons',
+        '@sdkwork/react-core',
+        '@sdkwork/react-i18n',
+        '@sdkwork/react-portal-video'
       ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-i18n': 'SdkworkReactI18n',
-          'sdkwork-react-portal-video': 'SdkworkReactPortalVideo'
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-i18n': 'SdkworkReactI18n',
+          '@sdkwork/react-portal-video': 'SdkworkReactPortalVideo'
         }
       }
     },

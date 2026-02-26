@@ -1,7 +1,7 @@
 import { VideoConfig, GeneratedVideoResult } from '../entities/video.entity';
-import { genAIService } from 'sdkwork-react-core';
-import { assetService } from 'sdkwork-react-assets';
-import { vfs } from 'sdkwork-react-fs';
+import { genAIService } from '@sdkwork/react-core';
+import { assetService } from '@sdkwork/react-assets';
+import { vfs } from '@sdkwork/react-fs';
 
 // Mock video generation service for demonstration
 export const videoService = {

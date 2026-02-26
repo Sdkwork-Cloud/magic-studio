@@ -2,7 +2,7 @@ import React from 'react';
 import { Clock, CheckCircle, XCircle, AlertCircle, Package, CreditCard } from 'lucide-react';
 import type { Order, OrderStatus, OrderType } from '../../entities';
 import { OrderStatus as OrderStatusEnum, OrderType as OrderTypeEnum } from '../../entities';
-import { cn, formatDate } from 'sdkwork-react-commons';
+import { cn, formatDate } from '@sdkwork/react-commons';
 
 interface OrderCardProps {
   order: Order;
@@ -40,13 +40,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getStatusLabel = (status: OrderStatus) => {
     const labels: Record<OrderStatus, string> = {
-      [OrderStatusEnum.PENDING_PAYMENT]: '待支付',
-      [OrderStatusEnum.PAID]: '已支付',
-      [OrderStatusEnum.IN_PROGRESS]: '进行中',
-      [OrderStatusEnum.COMPLETED]: '已完成',
-      [OrderStatusEnum.CANCELLED]: '已取消',
-      [OrderStatusEnum.REFUNDED]: '已退款',
-      [OrderStatusEnum.DISPUTED]: '争议中',
+      [OrderStatusEnum.PENDING_PAYMENT]: '待支�?,
+      [OrderStatusEnum.PAID]: '已支�?,
+      [OrderStatusEnum.IN_PROGRESS]: '进行�?,
+      [OrderStatusEnum.COMPLETED]: '已完�?,
+      [OrderStatusEnum.CANCELLED]: '已取�?,
+      [OrderStatusEnum.REFUNDED]: '已退�?,
+      [OrderStatusEnum.DISPUTED]: '争议�?,
     };
     return labels[status];
   };
@@ -60,7 +60,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       [OrderTypeEnum.VIDEO_EDITING]: '视频编辑',
       [OrderTypeEnum.CUSTOM_SERVICE]: '定制服务',
       [OrderTypeEnum.SUBSCRIPTION]: '订阅',
-      [OrderTypeEnum.CREDIT_TOPUP]: '充值',
+      [OrderTypeEnum.CREDIT_TOPUP]: '充�?,
     };
     return labels[type];
   };

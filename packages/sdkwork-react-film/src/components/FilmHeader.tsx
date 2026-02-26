@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Film, Bell, Settings, User } from 'lucide-react';
+import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 
 export const FilmHeader: React.FC = () => {
     return (
@@ -11,6 +12,14 @@ export const FilmHeader: React.FC = () => {
                     <span className="text-sm font-bold text-white">Film Studio</span>
                 </div>
             </div>
+            
+            {/* Center: Workspace / Project Selector */}
+            <WorkspaceProjectSelector 
+                variant="portal"
+                showDelete={false}
+                defaultProjectType="VIDEO"
+                compact={true}
+            />
             
             <div className="flex items-center gap-2">
                 <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors">

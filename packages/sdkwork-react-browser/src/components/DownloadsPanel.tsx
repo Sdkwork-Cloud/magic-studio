@@ -5,8 +5,8 @@ import {
     Search, Image as ImageIcon, Video, Music, FileCode, Archive, Box
 } from 'lucide-react';
 import { useBrowserStore } from '../store/browserStore';
-import { platform } from 'sdkwork-react-core';
-import { pathUtils } from 'sdkwork-react-commons';
+import { platform } from '@sdkwork/react-core';
+import { pathUtils } from '@sdkwork/react-commons';
 
 const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 B';

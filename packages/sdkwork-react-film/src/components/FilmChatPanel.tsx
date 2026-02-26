@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmbeddedChatPane } from 'sdkwork-react-chat';
+import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useFilmStore } from '../store/filmStore';
 import { Bot, PenTool } from 'lucide-react';
 

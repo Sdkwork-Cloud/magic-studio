@@ -1,10 +1,10 @@
-import { useRouter, ROUTES } from 'sdkwork-react-core';
-import { Button } from 'sdkwork-react-commons';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { Button } from '@sdkwork/react-commons';
 import { authService } from '../services/authService';
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Smartphone, Key, User, QrCode, RefreshCw, Check } from 'lucide-react';
 import { AuthInput } from './AuthInput';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useAuthStore } from '../store/authStore';
 
 interface LoginFormProps {

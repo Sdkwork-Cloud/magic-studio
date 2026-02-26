@@ -1,6 +1,6 @@
 
 import { CutClip, CutLayer } from '../../entities/magicCut.entity';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { RenderContext } from '../types';
 import { ClipStrategyFactory } from './ClipRenderStrategies';
 import { RenderMatrices } from '../config/RenderConfig';

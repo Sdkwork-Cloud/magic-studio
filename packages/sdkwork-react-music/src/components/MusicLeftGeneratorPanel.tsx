@@ -1,11 +1,11 @@
 
-import { PromptTextInput } from 'sdkwork-react-assets'
+import { PromptTextInput } from '@sdkwork/react-assets'
 import React from 'react';
 import { useMusicStore } from '../store/musicStore';
 import { MusicModelSelector } from './MusicModelSelector';
 import { MUSIC_STYLES } from '../constants';
 import { Music, Loader2, Sparkles, Mic2, Guitar, ToggleLeft, ToggleRight, Type, ListMusic } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const MusicLeftGeneratorPanel: React.FC = () => {
     const { config, setConfig, generate, isGenerating } = useMusicStore();

@@ -1,8 +1,8 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React, { useState, useEffect } from 'react';
 import { Sparkles, X, Wand2, RefreshCw, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
-import { genAIService } from 'sdkwork-react-core';
+import { genAIService } from '@sdkwork/react-core';
 
 interface AIGenerateCoverModalProps {
     contextText: string;

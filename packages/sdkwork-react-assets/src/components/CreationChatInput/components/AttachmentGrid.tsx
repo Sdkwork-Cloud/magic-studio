@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { X, FileText, Image as ImageIcon, Video, Mic, Paperclip, FileCode } from 'lucide-react';
-import type { InputAttachment } from 'sdkwork-react-commons';
-import { getAssetLabel } from 'sdkwork-react-commons';
-import { useAssetUrl } from 'sdkwork-react-commons';
+import type { InputAttachment } from '@sdkwork/react-commons';
+import { getAssetLabel } from '@sdkwork/react-commons';
+import { useAssetUrl } from '@sdkwork/react-commons';
 
 interface AttachmentGridProps {
     attachments: InputAttachment[];

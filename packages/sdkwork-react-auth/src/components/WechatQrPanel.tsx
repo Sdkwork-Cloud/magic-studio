@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { RefreshCw, Smartphone, ShieldCheck } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const WechatQrPanel: React.FC = () => {
     const { t } = useTranslation();

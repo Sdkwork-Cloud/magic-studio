@@ -1,5 +1,5 @@
 
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import React from 'react';
 
 export interface GhostVisualConfig {

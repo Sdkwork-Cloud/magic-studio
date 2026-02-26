@@ -19,8 +19,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "sdkwork-react-core": ["../sdkwork-react-core/src"],
-      "sdkwork-react-commons": ["../sdkwork-react-commons/src"]
+      "@sdkwork/react-core": ["../sdkwork-react-core/src"],
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src"]
     }
   },
   "include": ["src"],

@@ -1,7 +1,7 @@
 
 import { IFileSaveStrategy } from '../types';
-import { platform } from 'sdkwork-react-core';
-import { pathUtils } from 'sdkwork-react-commons';
+import { platform } from '@sdkwork/react-core';
+import { pathUtils } from '@sdkwork/react-commons';
 
 export class DesktopExportStrategy implements IFileSaveStrategy {
     async save(blob: Blob, filename: string, destinationPath?: string): Promise<void> {

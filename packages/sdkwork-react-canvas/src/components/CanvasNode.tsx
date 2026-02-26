@@ -7,13 +7,13 @@ import {
     ChevronDown, ArrowRightLeft, Layers, ScanFace, Sparkles, Check
 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
-import { genAIService, uploadHelper } from 'sdkwork-react-core';
+import { genAIService, uploadHelper } from '@sdkwork/react-core';
 import { CanvasElement } from '../entities/canvas.entity';
-import { Popover, AspectRatioSelector } from 'sdkwork-react-commons';
-import { assetService, CreationChatInput, InputFooterButton, InputAttachment } from 'sdkwork-react-assets';
-import { ImageModelSelector } from 'sdkwork-react-image';
-import { VideoModelSelector } from 'sdkwork-react-video';
-import { textRenderer, TextStyle } from 'sdkwork-react-magiccut';
+import { Popover, AspectRatioSelector } from '@sdkwork/react-commons';
+import { assetService, CreationChatInput, InputFooterButton, InputAttachment } from '@sdkwork/react-assets';
+import { ImageModelSelector } from '@sdkwork/react-image';
+import { VideoModelSelector } from '@sdkwork/react-video';
+import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 import { VideoNode } from './nodes/VideoNode';
 
 export type LODLevel = 'detail' | 'simplified' | 'block';

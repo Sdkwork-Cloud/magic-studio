@@ -1,8 +1,8 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
 import { useCharacterStore } from '../store/characterStore';
-import { GenerationChatWindow } from 'sdkwork-react-assets';
+import { GenerationChatWindow } from '@sdkwork/react-assets';
 
 const CharacterChatPage: React.FC = () => {
     const {

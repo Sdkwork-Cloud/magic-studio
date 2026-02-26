@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ModelSelector } from 'sdkwork-react-commons';
+import { ModelSelector } from '@sdkwork/react-commons';
 import { SFX_PROVIDERS } from '../constants';
 
 interface SfxModelSelectorProps {

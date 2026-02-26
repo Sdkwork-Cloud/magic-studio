@@ -1,8 +1,8 @@
 
 import React, { useRef, useState } from 'react';
 import { ChevronDown, RotateCcw, AlertCircle, X, FolderOpen, Copy, Check, File, Eye, EyeOff } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { platform } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // --- Types ---
 interface BaseProps {

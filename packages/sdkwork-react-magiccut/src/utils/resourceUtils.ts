@@ -1,7 +1,7 @@
 
-import { AnyMediaResource } from 'sdkwork-react-commons';
-import { downloadService } from 'sdkwork-react-core';
-import { platform } from 'sdkwork-react-core';
+import { AnyMediaResource } from '@sdkwork/react-commons';
+import { downloadService } from '@sdkwork/react-core';
+import { platform } from '@sdkwork/react-core';
 ;
 
 /**

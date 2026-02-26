@@ -1,13 +1,11 @@
 
-import { Button, genAIService } from 'sdkwork-react-commons'
+import { Button, genAIService } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { 
     X, Image as ImageIcon, Video, Mic, Sparkles, 
     Loader2, RotateCcw 
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
-;
-;
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type MediaType = 'image' | 'video' | 'audio';
 

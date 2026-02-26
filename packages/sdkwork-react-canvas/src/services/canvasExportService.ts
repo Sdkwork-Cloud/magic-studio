@@ -1,15 +1,15 @@
 
 ;
 import { CanvasBoard, CanvasExportMode } from '../entities/canvas.entity';
-import { generateUUID, MediaResourceType, pathUtils } from 'sdkwork-react-commons';
-import { thumbnailGenerator } from 'sdkwork-react-core';
+import { generateUUID, MediaResourceType, pathUtils } from '@sdkwork/react-commons';
+import { thumbnailGenerator } from '@sdkwork/react-core';
 import { canvasService } from './canvasService';
 import { canvasToCutConverter } from './canvasToCutConverter';
-import { CutProject, NormalizedState } from 'sdkwork-react-magiccut';
-import { vfs } from 'sdkwork-react-fs';
-import { platform } from 'sdkwork-react-core';
-import { storageConfig } from 'sdkwork-react-fs';
-import { assetService } from 'sdkwork-react-assets';
+import { CutProject, NormalizedState } from '@sdkwork/react-magiccut';
+import { vfs } from '@sdkwork/react-fs';
+import { platform } from '@sdkwork/react-core';
+import { storageConfig } from '@sdkwork/react-fs';
+import { assetService } from '@sdkwork/react-assets';
 
 // Concurrency limit for video processing to prevent browser resource exhaustion
 const MAX_CONCURRENT_TASKS = 3;

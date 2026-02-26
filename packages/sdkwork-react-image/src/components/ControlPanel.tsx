@@ -1,5 +1,5 @@
-import { AspectRatio, Button } from 'sdkwork-react-commons'
-import { PromptTextInput } from 'sdkwork-react-assets'
+import { AspectRatio, Button } from '@sdkwork/react-commons'
+import { PromptTextInput } from '@sdkwork/react-assets'
 import React from 'react';
 import { useImageStore } from '../store/imageStore';
 import { IMAGE_STYLES } from '../constants';
@@ -8,7 +8,7 @@ import {
     Wand2, Ratio, Layers, Image as ImageIcon,
     Trash2, CheckCircle2, Loader2, Copy
 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { useTranslation } from 'sdkwork-react-i18n'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { useTranslation } from '@sdkwork/react-i18n'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export const ControlPanel: React.FC = () => {
     const { config, setConfig, generate, enhancePrompt, isGenerating, history, clearHistory } = useImageStore();

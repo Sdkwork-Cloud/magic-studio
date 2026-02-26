@@ -5,7 +5,7 @@ export { SfxModelSelector } from './components/SfxModelSelector';
 export { SfxGeneratorModal } from './components/SfxGeneratorModal';
 export { SfxStoreProvider, useSfxStore } from './store/sfxStore';
 export * from './store';
-export * from './entities/sfx.entity';
+export * from './entities';
 export * from './constants';
 export * from './services/sfxService';
 export * from './i18n';

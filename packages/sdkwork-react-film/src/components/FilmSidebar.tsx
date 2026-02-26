@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { ProjectList } from './ProjectList';
 
 export const FilmSidebar: React.FC = () => {

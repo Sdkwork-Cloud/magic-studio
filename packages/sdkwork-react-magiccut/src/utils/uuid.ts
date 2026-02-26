@@ -1,1 +1,1 @@
-export { generateUUID } from 'sdkwork-react-commons';
+export { generateUUID } from '@sdkwork/react-commons';

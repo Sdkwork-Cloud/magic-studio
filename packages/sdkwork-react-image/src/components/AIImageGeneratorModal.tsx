@@ -1,17 +1,17 @@
 
-import { Button } from 'sdkwork-react-commons'
-import { GenerateHistory, EditorComponents } from 'sdkwork-react-generation-history'
+import { Button } from '@sdkwork/react-commons'
+import { GenerateHistory, EditorComponents } from '@sdkwork/react-generation-history'
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageLeftGeneratorPanel } from './ImageLeftGeneratorPanel';
-import { genAIService } from 'sdkwork-react-core';
+import { genAIService } from '@sdkwork/react-core';
 import { Sparkles, X, Check } from 'lucide-react';
 import { ImageStoreProvider, useImageStore } from '../store/imageStore';
 import { GenerationConfig } from '../services/imageService';
 import { ImageGridEditorModal } from './ImageGridEditorModal';
 import { ImageCanvasEditorModal } from './ImageCanvasEditorModal';
-import { assetService } from 'sdkwork-react-assets';
-import { MediaType } from 'sdkwork-react-commons';
+import { assetService } from '@sdkwork/react-assets';
+import { MediaType } from '@sdkwork/react-commons';
 
 export interface AIImageGeneratorModalProps {
     contextText?: string;

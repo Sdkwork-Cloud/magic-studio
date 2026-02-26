@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
-import { Note, NoteSummary, NoteFolder, TreeItem, generateUUID } from 'sdkwork-react-commons';
+import { Note, NoteSummary, NoteFolder, TreeItem, generateUUID } from '@sdkwork/react-commons';
 import { noteService } from '../services/noteService';
 
 interface NoteStoreContextType {

@@ -20,12 +20,12 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "sdkwork-react-types": ["../sdkwork-react-types/src/index.ts"],
-      "sdkwork-react-commons": ["../sdkwork-react-commons/src/index.ts"],
-      "sdkwork-react-core": ["../sdkwork-react-core/src/index.ts"],
-      "sdkwork-react-fs": ["../sdkwork-react-fs/src/index.ts"],
-      "sdkwork-react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
-      "sdkwork-react-settings": ["../sdkwork-react-settings/src/index.ts"]
+      "@sdkwork/react-types": ["../sdkwork-react-types/src/index.ts"],
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
+      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
+      "@sdkwork/react-fs": ["../sdkwork-react-fs/src/index.ts"],
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/react-settings": ["../sdkwork-react-settings/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

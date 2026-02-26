@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useMemo, useLayoutEffect, forwardRef, useImperativeHandle, useContext, createContext, useEffect } from 'react';
 import { WebGLEngine, RenderOverrideClip, RenderData } from '../../engine/WebGLEngine';
-import { MediaResourceType, AnyMediaResource } from 'sdkwork-react-commons';
+import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { playerPreviewService } from '../../services';
 import { Monitor } from 'lucide-react';
 import { useMagicCutStore as TimelineStore } from '../../store/magicCutStore';

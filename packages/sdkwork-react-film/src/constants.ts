@@ -28,7 +28,7 @@ export const TIMELINE_CONSTANTS = {
     Z_SNAP_GUIDE: 40
 };
 
-import { StyleOption } from 'sdkwork-react-commons';
+import { StyleOption } from '@sdkwork/react-commons';
 
 export const FILM_STYLES: StyleOption[] = [
     { value: 'cinematic', label: 'Cinematic', icon: '🎬' },

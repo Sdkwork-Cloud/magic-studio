@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button } from 'sdkwork-react-commons';
+import { Card, Button } from '@sdkwork/react-commons';
 
 const PricingPage: React.FC = () => {
     return (

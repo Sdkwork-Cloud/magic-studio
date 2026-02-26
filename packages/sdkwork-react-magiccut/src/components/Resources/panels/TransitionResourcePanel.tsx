@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { AnyAsset, TransitionAsset } from 'sdkwork-react-assets';
+import { AnyAsset, TransitionAsset } from '@sdkwork/react-assets';
 import { ArrowRightLeft, MonitorPlay } from 'lucide-react';
-import { useAssetUrl } from 'sdkwork-react-assets';
+import { useAssetUrl } from '@sdkwork/react-assets';
 
 interface TransitionResourcePanelProps {
     assets: AnyAsset[];

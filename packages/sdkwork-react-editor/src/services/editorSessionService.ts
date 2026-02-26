@@ -1,6 +1,6 @@
 
-import { EditorSession, generateUUID } from 'sdkwork-react-commons';
-import { LocalStorageService } from 'sdkwork-react-core';
+import { EditorSession, generateUUID } from '@sdkwork/react-commons';
+import { LocalStorageService } from '@sdkwork/react-core';
 
 const SESSION_KEY = 'open_studio_editor_session_v1';
 const DEFAULT_SESSION_ID = 'current_workspace';

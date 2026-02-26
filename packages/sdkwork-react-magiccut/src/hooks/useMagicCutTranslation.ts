@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 type MagicCutTranslationKey = string;
 

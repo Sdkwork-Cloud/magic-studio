@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-editor",
+  "name": "@sdkwork/react-editor",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,10 +26,10 @@
   },
   "dependencies": {
     "@monaco-editor/react": "catalog:",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-fs": "workspace:*",
-    "sdkwork-react-settings": "workspace:*"
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-fs": "workspace:*",
+    "@sdkwork/react-settings": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -1,6 +1,6 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { GenerationChatWindow } from 'sdkwork-react-assets';
+import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { GenerationChatWindow } from '@sdkwork/react-assets';
 import React from 'react';
 import { AudioStoreProvider, useAudioStore } from '../store';
 

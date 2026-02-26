@@ -5,12 +5,12 @@ import {
     Loader2, Plus, Trash2, ChevronUp, User, 
     Check, Sparkles, ArrowUp, ArrowDown, ExternalLink
 } from 'lucide-react';
-import { MediaAccountConfig, useSettingsStore } from 'sdkwork-react-settings';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { useAuthStore } from 'sdkwork-react-auth';
+import { MediaAccountConfig, useSettingsStore } from '@sdkwork/react-settings';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { useAuthStore } from '@sdkwork/react-auth';
 import { UniversalNoteEditor } from './NoteEditor';
-import { ChooseAsset } from 'sdkwork-react-assets';
-import { Note, ArticlePayload, PublishTarget, Button, generateUUID } from 'sdkwork-react-commons';
+import { ChooseAsset } from '@sdkwork/react-assets';
+import { Note, ArticlePayload, PublishTarget, Button, generateUUID } from '@sdkwork/react-commons';
 import { publishingService } from '../services/publishingService';
 
 interface PublishModalProps {

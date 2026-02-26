@@ -1,5 +1,5 @@
 import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities/magicCut.entity';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { TextureLRUCache } from './TextureLRUCache';
 import { ShaderManager } from './gl/ShaderManager';
 import { RenderData, RenderOverrideClip, FBO, RenderContext } from './types';

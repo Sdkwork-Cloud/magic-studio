@@ -1,10 +1,10 @@
 
 import { StorageConfig, StorageProviderType } from '../entities/settings.entity'
-import { Button } from 'sdkwork-react-commons'
-import { storageManager, S3Provider, ServerProvider } from 'sdkwork-react-core'
+import { Button } from '@sdkwork/react-commons'
+import { storageManager, S3Provider, ServerProvider } from '@sdkwork/react-core'
 import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     HardDrive, Plus, Trash2, Edit2, AlertCircle, CheckCircle2, 
     Wifi, Check, Globe, FolderTree, Key, Server, Lock

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Mic, Bot, Workflow, ChevronDown, Check } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type ChatMode = 'AGENT' | 'PLAN';
 

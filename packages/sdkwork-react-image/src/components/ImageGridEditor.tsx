@@ -6,11 +6,11 @@ import {
     Columns, Rows, Loader2, Save, Trash2,
     Minus, Plus, ImagePlus, ArrowUpCircle
 } from 'lucide-react';
-import { platform, uploadHelper } from 'sdkwork-react-core';
+import { platform, uploadHelper } from '@sdkwork/react-core';
 ;
-import { SettingToggle } from 'sdkwork-react-settings';
-import { assetService } from 'sdkwork-react-assets';
-import { Button, useAssetUrl } from 'sdkwork-react-commons';
+import { SettingToggle } from '@sdkwork/react-settings';
+import { assetService } from '@sdkwork/react-assets';
+import { Button, useAssetUrl } from '@sdkwork/react-commons';
 
 // --- Canvas Processing Utility ---
 class GridProcessor {

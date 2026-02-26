@@ -2,7 +2,7 @@
 import { OpencodeConfig } from '../entities/settings.entity'
 import React from 'react';
 import { useSettingsStore } from '../store/settingsStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { Terminal } from 'lucide-react';
 import { SettingsSection, SettingInput, SettingSelect, SettingToggle, SettingTextArea, SettingSlider } from './SettingsWidgets';
 

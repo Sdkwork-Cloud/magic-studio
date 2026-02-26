@@ -2,7 +2,7 @@
 import React, { useRef, useCallback } from 'react';
 import { InteractionState } from '../../../../store/magicCutStore';
 ;
-import { AnyMediaResource, TrackIntervalIndex } from 'sdkwork-react-commons';
+import { AnyMediaResource, TrackIntervalIndex } from '@sdkwork/react-commons';
 import { CutTrack, CutClip, CutTrackType } from '../../../../entities/magicCut.entity';
 import { DragContext, DragInput, IPlacementStrategy } from '../../dnd/types';
 import { ClipMoveStrategy } from '../../dnd/strategies/ClipMoveStrategy';

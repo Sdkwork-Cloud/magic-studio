@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Open Studio",
+  "productName": "Magic Studio",
   "version": "0.1.0",
   "identifier": "com.openstudio.app",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Open Studio",
+        "title": "Magic Studio",
         "width": 1200,
         "height": 800,
         "decorations": false,

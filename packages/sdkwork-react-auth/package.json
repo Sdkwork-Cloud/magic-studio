@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-auth",
+  "name": "@sdkwork/react-auth",
   "version": "0.1.0",
   "description": "Authentication flows package for SDKWork React applications",
   "private": true,
@@ -28,10 +28,10 @@
   },
   "dependencies": {
     "@sdkwork/app-sdk": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*"
-},
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*"
+  },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

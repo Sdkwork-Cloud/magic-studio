@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { MediaResourceType } from 'sdkwork-react-commons';
-import { mediaService } from 'sdkwork-react-core';
+import { MediaResourceType } from '@sdkwork/react-commons';
+import { mediaService } from '@sdkwork/react-core';
 
 interface ClipFilmstripProps {
     resourceUrl: string;

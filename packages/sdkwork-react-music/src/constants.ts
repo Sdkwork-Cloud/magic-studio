@@ -1,5 +1,5 @@
-import { MusicStyle, MusicModelType } from './entities/music.entity';
-import { ModelProvider } from 'sdkwork-react-commons';
+import { MusicStyle, MusicModelType } from './entities';
+import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Music, Mic, Radio } from 'lucide-react';
 

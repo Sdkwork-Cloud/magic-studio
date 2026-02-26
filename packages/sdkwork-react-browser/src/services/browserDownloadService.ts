@@ -1,13 +1,13 @@
 
 import { DownloadItem } from '../entities/browser.entity';
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils, generateUUID } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { settingsService } from 'sdkwork-react-settings';
-import { assetService } from 'sdkwork-react-assets';
-import { AssetType } from 'sdkwork-react-commons';
-import { storageConfig } from 'sdkwork-react-fs';
-import { ASSET_CATEGORIES } from 'sdkwork-react-assets';
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils, generateUUID } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { settingsService } from '@sdkwork/react-settings';
+import { assetService } from '@sdkwork/react-assets';
+import { AssetType } from '@sdkwork/react-commons';
+import { storageConfig } from '@sdkwork/react-fs';
+import { ASSET_CATEGORIES } from '@sdkwork/react-assets';
 
 class BrowserDownloadService {
     private tasks = new Map<string, DownloadItem>();

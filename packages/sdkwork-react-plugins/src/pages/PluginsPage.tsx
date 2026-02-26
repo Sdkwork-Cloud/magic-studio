@@ -6,7 +6,7 @@ import {
     RefreshCw, Trash2, Settings
 } from 'lucide-react';
 import { PLUGIN_CATEGORIES, Plugin } from '../constants';
-import { PortalHeader } from 'sdkwork-react-portal-video';
+import { PortalHeader } from '@sdkwork/react-portal-video';
 
 // 模拟插件数据
 const DEFAULT_PLUGINS: Plugin[] = [
@@ -28,7 +28,7 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p2',
-        name: '高级滤镜包',
+        name: '高级滤镜�?,
         description: '50+ 专业级滤镜效果，让作品更具艺术感',
         icon: Palette,
         category: 'effects',
@@ -39,7 +39,7 @@ const DEFAULT_PLUGINS: Plugin[] = [
         verified: true,
         installed: false,
         price: '¥29',
-        badges: ['精选'],
+        badges: ['精�?],
         updateAvailable: false
     },
     {
@@ -76,8 +76,8 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p5',
-        name: '音效库扩展',
-        description: '1000+ 高品质音效素材',
+        name: '音效库扩�?,
+        description: '1000+ 高品质音效素�?,
         icon: Music,
         category: 'assets',
         version: '2.3.0',
@@ -92,8 +92,8 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p6',
-        name: '语音增强器',
-        description: 'AI 降噪，提升语音质量',
+        name: '语音增强�?,
+        description: 'AI 降噪，提升语音质�?,
         icon: Mic,
         category: 'ai',
         version: '1.2.5',
@@ -199,7 +199,7 @@ const PluginsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* 快捷筛选 */}
+                    {/* 快捷筛�?*/}
                     <div className="flex items-center gap-4 mt-4 text-xs">
                         <button
                             onClick={() => setShowInstalledOnly(!showInstalledOnly)}
@@ -210,17 +210,15 @@ const PluginsPage: React.FC = () => {
                             }`}
                         >
                             <Check size={12} />
-                            已安装 ({installedCount})
+                            已安�?({installedCount})
                         </button>
                         {updateCount > 0 && (
                             <span className="flex items-center gap-1 text-orange-400">
                                 <RefreshCw size={12} />
-                                {updateCount} 个更新可用
-                            </span>
+                                {updateCount} 个更新可�?                            </span>
                         )}
                         <span className="text-gray-500 ml-auto">
-                            共 {filteredPlugins.length} 个插件
-                        </span>
+                            �?{filteredPlugins.length} 个插�?                        </span>
                     </div>
                 </div>
             </div>
@@ -259,8 +257,7 @@ const PluginsPage: React.FC = () => {
                                                 {plugin.updateAvailable && (
                                                     <span className="text-orange-400 flex items-center gap-1">
                                                         <RefreshCw size={10} />
-                                                        可更新
-                                                    </span>
+                                                        可更�?                                                    </span>
                                                 )}
                                             </div>
                                         </div>
@@ -276,7 +273,7 @@ const PluginsPage: React.FC = () => {
                                                 key={idx} 
                                                 className={`px-2 py-0.5 text-[10px] font-medium rounded ${
                                                     badge === '热门' ? 'bg-red-500/20 text-red-400' :
-                                                    badge === '精选' ? 'bg-blue-500/20 text-blue-400' :
+                                                    badge === '精�? ? 'bg-blue-500/20 text-blue-400' :
                                                     badge === '官方' ? 'bg-green-500/20 text-green-400' :
                                                     badge === 'AI' ? 'bg-purple-500/20 text-purple-400' :
                                                     'bg-gray-500/20 text-gray-400'
@@ -314,8 +311,7 @@ const PluginsPage: React.FC = () => {
                                                     </button>
                                                 ) : (
                                                     <button className="flex-1 px-3 py-2 bg-[#2a2a2d] text-gray-400 rounded-lg text-xs font-medium cursor-default">
-                                                        已安装
-                                                    </button>
+                                                        已安�?                                                    </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleInstall(plugin.id)}
@@ -344,7 +340,7 @@ const PluginsPage: React.FC = () => {
                 ) : (
                     <div className="text-center py-20">
                         <Puzzle size={48} className="mx-auto text-gray-600 mb-4" />
-                        <p className="text-gray-400 text-sm">暂无符合条件的插件</p>
+                        <p className="text-gray-400 text-sm">暂无符合条件的插�?/p>
                     </div>
                 )}
             </div>

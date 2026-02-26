@@ -1,3 +1,3 @@
 
-export { useAssetUrl as useResourceUrl } from 'sdkwork-react-assets';
+export { useAssetUrl as useResourceUrl } from '@sdkwork/react-assets';
 

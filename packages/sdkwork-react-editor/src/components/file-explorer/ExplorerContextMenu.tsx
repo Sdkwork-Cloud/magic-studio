@@ -5,7 +5,7 @@ import {
     Copy, Scissors, ClipboardPaste, ExternalLink, Link2 
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface ContextMenuProps {
     x: number;

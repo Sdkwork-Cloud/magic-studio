@@ -3,7 +3,7 @@ import { AppSettings } from '../entities/settings.entity'
 import { settingsService } from '../services/settingsService'
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from '../constants';
-import { i18nService, Locale } from 'sdkwork-react-i18n';
+import { i18nService, Locale } from '@sdkwork/react-i18n';
 
 interface SettingsStoreContextType {
   settings: AppSettings;

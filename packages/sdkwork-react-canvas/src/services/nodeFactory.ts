@@ -1,8 +1,8 @@
 
 ;
 import { CanvasElement, CanvasElementType, CanvasNodeData } from '../entities/canvas.entity';
-import { generateUUID, MediaResourceType } from 'sdkwork-react-commons';
-import { textRenderer, TextStyle } from 'sdkwork-react-magiccut';
+import { generateUUID, MediaResourceType } from '@sdkwork/react-commons';
+import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 
 // --- 1. The Strategy Interface (The Contract) ---
 export interface INodeCreationStrategy {

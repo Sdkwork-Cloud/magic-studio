@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AnyAsset } from 'sdkwork-react-assets';
+import { AnyAsset } from '@sdkwork/react-assets';
 import { Play, Pause, Heart, MoreHorizontal } from 'lucide-react';
 
 interface AudioResourceListProps {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { MapPin, Plus, Edit2, Trash2, Image as ImageIcon, Video, Mic, User, Clock, Clapperboard } from 'lucide-react';
 
-import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp, MediaScene } from 'sdkwork-react-commons';
+import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp, MediaScene } from '@sdkwork/react-commons';
 import { ShotCard } from './ShotCard';
 
 export interface SceneGroupProps {

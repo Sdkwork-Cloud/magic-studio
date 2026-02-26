@@ -5,7 +5,7 @@ import { MapPin, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { LocationCard } from './LocationCard';
 
 import { useFilmStore } from '../../store/filmStore';
-import { FilmLocation, generateUUID } from 'sdkwork-react-commons';
+import { FilmLocation, generateUUID } from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
 
 interface LocationListPanelProps {

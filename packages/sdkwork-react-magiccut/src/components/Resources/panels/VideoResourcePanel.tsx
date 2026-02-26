@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AnyAsset } from 'sdkwork-react-assets';
+import { AnyAsset } from '@sdkwork/react-assets';
 import { SkimmableAssetCard } from '../SkimmableAssetCard';
 
 interface VideoResourcePanelProps {

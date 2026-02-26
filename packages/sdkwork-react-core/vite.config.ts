@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'sdkwork-react-core',
+      name: '@sdkwork/react-core',
       formats: ['es'],
       fileName: 'index'
     },
@@ -28,8 +28,8 @@ export default defineConfig({
         '@google/genai',
         '@tauri-apps/api',
         '@tauri-apps/plugin-*',
-        'sdkwork-react-commons',
-        'sdkwork-react-fs'
+        '@sdkwork/react-commons',
+        '@sdkwork/react-fs'
       ],
       output: {
         globals: {
@@ -39,8 +39,8 @@ export default defineConfig({
           zustand: 'zustand',
           '@google/genai': 'GoogleGenAI',
           '@tauri-apps/api': 'TauriApi',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-fs': 'SdkworkReactFs'
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-fs': 'SdkworkReactFs'
         }
       }
     },

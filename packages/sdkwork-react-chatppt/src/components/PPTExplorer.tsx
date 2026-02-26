@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Presentation, Search, Plus, Trash2 } from 'lucide-react';
 import { useChatPPTStore } from '../store/chatPPTStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const PPTExplorer: React.FC = () => {
     const { presentations, activePresentationId, selectPresentation, createPresentation, deletePresentation } = useChatPPTStore();

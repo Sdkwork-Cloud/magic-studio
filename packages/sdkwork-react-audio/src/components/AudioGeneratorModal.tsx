@@ -1,12 +1,12 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import { AudioTask } from '../entities/audio.entity'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AudioLeftGeneratorPanel } from './AudioLeftGeneratorPanel';
 import { AudioStoreProvider, useAudioStore } from '../store';
 import { X, Check } from 'lucide-react';
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets';
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
 
 interface AudioGeneratorModalProps {
     onClose: () => void;

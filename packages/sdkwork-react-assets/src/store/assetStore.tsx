@@ -2,9 +2,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 ;
 ;
-import { uploadHelper } from 'sdkwork-react-core';
+import { uploadHelper } from '@sdkwork/react-core';
 import { Asset, AssetType, AssetOrigin } from '../entities/asset.entity';
-import { Page } from 'sdkwork-react-commons';
+import { Page } from '@sdkwork/react-commons';
 import { assetService, ASSET_CATEGORIES } from '../services/assetService';
 
 interface AssetStoreContextType {

@@ -1,5 +1,5 @@
 
-import { DragContext, MediaResourceType } from 'sdkwork-react-commons';
+import { DragContext, MediaResourceType } from '@sdkwork/react-commons';
 ;
 
 export enum DropValidationStatus {

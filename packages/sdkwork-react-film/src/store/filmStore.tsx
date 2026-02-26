@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { FilmProject, FilmShot, FilmCharacter, FilmLocation, FilmProp, FilmScene, FilmViewMode, FilmSettings, MediaScene, MediaResourceType, AssetMediaResource, generateUUID } from 'sdkwork-react-commons';
+import { FilmProject, FilmShot, FilmCharacter, FilmLocation, FilmProp, FilmScene, FilmViewMode, FilmSettings, MediaScene, MediaResourceType, AssetMediaResource, generateUUID } from '@sdkwork/react-commons';
 import { filmService } from '../services/filmService';
 import { filmProjectService } from '../services/filmProjectService';
-import { genAIService } from 'sdkwork-react-core';
-import { assetService } from 'sdkwork-react-assets';
+import { genAIService } from '@sdkwork/react-core';
+import { assetService } from '@sdkwork/react-assets';
 
 interface FilmStoreContextType {
     project: FilmProject;

@@ -13,7 +13,7 @@ import { LayoutTemplate, Download } from 'lucide-react';
 import { MagicCutEvents, SeekPayload, ZoomPayload, TimelineAddClipPayload } from '../events';
 import { ExportModal } from './Export/ExportModal';
 import { SaveTemplateModal } from './SaveTemplateModal';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 import { MagicCutErrorBoundary } from './ErrorBoundary/MagicCutErrorBoundary';
 
 // Resizer Helper

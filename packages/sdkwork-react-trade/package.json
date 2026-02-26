@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-trade",
+  "name": "@sdkwork/react-trade",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -38,13 +38,13 @@
     "lucide-react": "catalog:",
     "classnames": "catalog:",
     "zustand": "catalog:",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-auth": "workspace:*",
-    "sdkwork-react-workspace": "workspace:*",
-    "sdkwork-react-notifications": "workspace:*",
-    "sdkwork-react-vip": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*"
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-auth": "workspace:*",
+    "@sdkwork/react-workspace": "workspace:*",
+    "@sdkwork/react-notifications": "workspace:*",
+    "@sdkwork/react-vip": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:",

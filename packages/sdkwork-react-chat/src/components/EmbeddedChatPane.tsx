@@ -4,7 +4,7 @@ import {
     Sparkles, X, MessageSquare, 
     Trash2, Plus, LayoutPanelLeft 
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useChatStore } from '../store/chatStore';
 import { MessageList } from './MessageList';
 import ChatInput from './ChatInput';

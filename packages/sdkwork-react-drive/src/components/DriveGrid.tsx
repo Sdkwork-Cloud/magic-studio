@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 ;
 import { Folder, MoreHorizontal, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDriveStore, SortOption } from '../store/driveStore';
-import { FileIcon } from 'sdkwork-react-editor'; 
-import { useTranslation } from 'sdkwork-react-i18n';
+import { FileIcon } from '@sdkwork/react-editor'; 
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface DriveGridProps {
     items: DriveItem[];

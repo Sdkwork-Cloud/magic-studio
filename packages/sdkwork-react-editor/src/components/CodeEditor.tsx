@@ -1,9 +1,9 @@
 
-import { Tabs, TabItem, useTheme } from 'sdkwork-react-commons'
+import { Tabs, TabItem, useTheme } from '@sdkwork/react-commons'
 import React, { useEffect, useState } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { useEditorStore } from '../store/editorStore';
-import { useSettingsStore } from 'sdkwork-react-settings';
+import { useSettingsStore } from '@sdkwork/react-settings';
 import { FileJson, Code, File, Image } from 'lucide-react';
 
 const CodeEditor: React.FC = () => {

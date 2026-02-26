@@ -1,5 +1,5 @@
 
-import { StyleOption } from 'sdkwork-react-commons'
+import { StyleOption } from '@sdkwork/react-commons'
 import { Clapperboard, Video, Image as ImageIcon, Type, ArrowRightLeft, Layers, Grid3x3, Bot, Music, Mic, Zap, ScanFace, Sparkles } from 'lucide-react';
 ;
 

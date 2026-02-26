@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import {
     Bot, Plus, Trash2, Edit2, AlertCircle, Wrench, Brain, Sparkles, Check
 } from 'lucide-react';
 import { SettingsSection, SettingInput, SettingSelect, SettingSlider } from './SettingsWidgets';
 
-import { genAIService } from 'sdkwork-react-core';
+import { genAIService } from '@sdkwork/react-core';
 import { AgentConfig, McpConfig } from '../entities/settings.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 // PromptTextInput will be implemented locally or moved to commons
 const PromptTextInput: React.FC<any> = (props) => <input {...props} />;

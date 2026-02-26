@@ -8,7 +8,7 @@ import type {
     ChatContext,
     ChatMessage
 } from '../types';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 import { 
     DEFAULT_IMAGE_PROMPT_TEMPLATES, 
     DEFAULT_VIDEO_PROMPT_TEMPLATES 

@@ -5,7 +5,7 @@ import { CreationChatInputProps, InputAttachment } from './types';
 import { AttachmentGrid } from './components/AttachmentGrid';
 import { MentionPreviewPopover } from './components/MentionPreviewPopover';
 import { getAssetLabel } from './utils';
-import { Popover } from 'sdkwork-react-commons';
+import { Popover } from '@sdkwork/react-commons';
 
 // TipTap Imports
 import { useEditor, EditorContent } from '@tiptap/react';

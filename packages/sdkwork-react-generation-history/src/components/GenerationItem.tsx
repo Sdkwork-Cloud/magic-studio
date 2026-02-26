@@ -3,8 +3,8 @@ import React, { useState, useRef } from 'react';
 import { 
     Trash2, Copy, Repeat2, Check, Maximize2, Play, Image as ImageIcon, Film, Mic, Music, Volume2, Box, Save
 } from 'lucide-react';
-import { ImageTask, GeneratedResult, MediaType, PromptText, useAssetUrl } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
+import { ImageTask, GeneratedResult, MediaType, PromptText, useAssetUrl } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
 
 interface GenerationItemProps {
     task: ImageTask;

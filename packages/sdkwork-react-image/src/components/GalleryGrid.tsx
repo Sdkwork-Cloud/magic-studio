@@ -1,10 +1,10 @@
 
-import { ImageTask } from 'sdkwork-react-commons'
+import { ImageTask } from '@sdkwork/react-commons'
 import React, { useState } from 'react';
 import { useImageStore } from '../store/imageStore';
 ;
 import { Download, Trash2, Eye, Copy, Maximize2, AlertCircle } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 export const GalleryGrid: React.FC = () => {
     const { history, deleteTask } = useImageStore();

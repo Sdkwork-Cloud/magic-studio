@@ -1,5 +1,5 @@
 
-import { FilmProp } from 'sdkwork-react-commons'
+import { FilmProp } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { Zap, Loader2, Plus } from 'lucide-react';

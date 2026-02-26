@@ -1,5 +1,5 @@
 
-import { BaseEntity } from 'sdkwork-react-types';
+import { BaseEntity } from '@sdkwork/react-types';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'system';
 

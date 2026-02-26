@@ -1,5 +1,5 @@
 
-import { CharacterArchetype, CharacterGender } from './entities/character.entity';
+import { CharacterArchetype, CharacterGender } from './entities';
 
 export const STORAGE_KEY_CHARACTER_HISTORY = 'open_studio_character_history_v1';
 

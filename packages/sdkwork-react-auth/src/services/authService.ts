@@ -1,5 +1,5 @@
-import { ServiceResult, Result } from 'sdkwork-react-commons';
-import { sdk, hasSdkworkClient } from 'sdkwork-react-core';
+import { ServiceResult, Result } from '@sdkwork/react-commons';
+import { sdk, hasSdkworkClient } from '@sdkwork/react-core';
 import type { LoginVO, UserInfo, LoginRequest, RegisterRequest } from '@sdkwork/app-sdk';
 import { User } from '../entities/user.entity';
 

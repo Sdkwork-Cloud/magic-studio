@@ -52,7 +52,7 @@ export const DEFAULT_PLUGINS: Plugin[] = [
   },
   {
     id: 'p2',
-    name: '高级滤镜包',
+    name: '高级滤镜�?,
     description: '50+ 专业级滤镜效果，让作品更具艺术感',
     icon: Palette,
     category: 'effects',
@@ -63,7 +63,7 @@ export const DEFAULT_PLUGINS: Plugin[] = [
     verified: true,
     installed: false,
     price: '¥29',
-    badges: ['精选'],
+    badges: ['精�?],
     updateAvailable: false
   },
   {

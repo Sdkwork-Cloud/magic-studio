@@ -3,7 +3,7 @@ import { LlmProviderConfig } from '../entities/settings.entity'
 import React, { useState, useMemo } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     Cpu, Plus, Trash2, Zap, Server, AlertCircle, CheckCircle2, 
     Link2, Key, List, Code2, Globe, Box, Terminal,

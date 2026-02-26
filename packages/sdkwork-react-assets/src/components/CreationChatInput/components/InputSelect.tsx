@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { InputFooterButton } from './InputFooterButton';
-import { Popover } from 'sdkwork-react-commons';
+import { Popover } from '@sdkwork/react-commons';
 
 export interface SelectOption {
     value: string;

@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Film, FileVideo } from 'lucide-react';
-import { Button, VideoUpload, ImageUpload, generateUUID } from 'sdkwork-react-commons';
+import { Button, VideoUpload, ImageUpload, generateUUID } from '@sdkwork/react-commons';
 import { PromptTextInput } from '../PromptTextInput';
 import { ImportData } from './types';
-import { SettingInput, SettingSelect } from 'sdkwork-react-settings';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { SettingInput, SettingSelect } from '@sdkwork/react-settings';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
 
 interface UploadVideoGenerationModalProps {

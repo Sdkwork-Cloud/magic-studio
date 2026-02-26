@@ -1,6 +1,6 @@
 
 import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities/magicCut.entity';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 ;
 
 export interface NormalizedState {

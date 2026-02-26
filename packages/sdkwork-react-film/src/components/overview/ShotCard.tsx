@@ -1,5 +1,5 @@
 
-import { FilmShot, useAssetUrl } from 'sdkwork-react-commons'
+import { FilmShot, useAssetUrl } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { Clapperboard, Video, Image as ImageIcon, Sparkles, Play, Mic, AlertCircle, Trash2 } from 'lucide-react';
 

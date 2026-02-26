@@ -2,7 +2,7 @@
 import React from 'react';
 import { User, Sparkles } from 'lucide-react';
 
-import { FilmCharacter, useAssetUrl, MediaScene } from 'sdkwork-react-commons';
+import { FilmCharacter, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
 
 export interface CharacterCardProps {
     character: FilmCharacter;

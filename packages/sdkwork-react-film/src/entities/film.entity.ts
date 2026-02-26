@@ -1,4 +1,4 @@
-import { BaseEntity, MediaResource, VideoMediaResource, ImageMediaResource, AssetMediaResource, MediaScene, GenerationProduct, GenerationPlatform, MediaResourceType } from 'sdkwork-react-commons';
+import { BaseEntity, MediaResource, VideoMediaResource, ImageMediaResource, AssetMediaResource, MediaScene, GenerationProduct, GenerationPlatform, MediaResourceType } from '@sdkwork/react-commons';
 
 export type FilmProjectStatus =
   | 'DRAFT'

@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState } from 'react';
 import { 
     Home, Compass, FolderOpen, Video, Image as ImageIcon, 
@@ -9,8 +9,8 @@ import {
     CreditCard, Zap, Smile, Wand2
 } from 'lucide-react';
 
-import { useTranslation } from 'sdkwork-react-i18n';
-import { PricingModal } from 'sdkwork-react-vip';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { PricingModal } from '@sdkwork/react-vip';
 
 export const PortalSidebar: React.FC = () => {
     const { navigate, currentPath } = useRouter();

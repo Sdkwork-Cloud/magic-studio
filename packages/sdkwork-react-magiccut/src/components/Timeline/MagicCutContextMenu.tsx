@@ -4,7 +4,7 @@ import {
     Scissors, Trash2, ArrowLeftToLine, ArrowRightToLine, 
     Copy, MapPin, Minimize2, ZoomIn, Clipboard
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface MagicCutContextMenuProps {
     x: number;

@@ -5,7 +5,7 @@ import {
     BookOpen, Palette, Edit2, Clapperboard, MapPin, Users, Box, BarChart3, TrendingUp
 } from 'lucide-react';
 
-import { FilmShot, FilmCharacter, FilmLocation, FilmProp, MediaScene } from 'sdkwork-react-commons';
+import { FilmShot, FilmCharacter, FilmLocation, FilmProp, MediaScene } from '@sdkwork/react-commons';
 
 // Modals
 import { ShotModal } from './ShotModal';

@@ -5,7 +5,7 @@ import {
     Volume2, Sparkles, Clock, Type as TypeIcon,
     Move, Ghost, Image as ImageIcon, Mic, Rewind, FastForward
 } from 'lucide-react';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip, CutClipTransform } from '../../entities/magicCut.entity';
 import { DEFAULT_TEXT_STYLE } from '../../engine/text/TextRenderer';
 import { VisualTransformPanel } from './panels/VisualTransformPanel';

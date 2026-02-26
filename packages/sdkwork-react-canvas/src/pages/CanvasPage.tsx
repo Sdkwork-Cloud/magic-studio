@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import { CanvasBoard } from '../components/CanvasBoard';
 import { CanvasToolbar } from '../components/CanvasToolbar';
 import React from 'react';

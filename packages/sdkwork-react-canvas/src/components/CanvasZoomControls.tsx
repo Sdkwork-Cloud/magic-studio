@@ -7,7 +7,7 @@ import {
     Loader2, FileUp 
 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore'; 
-import { useRouter, ROUTES, platform, uploadHelper } from 'sdkwork-react-core'; 
+import { useRouter, ROUTES, platform, uploadHelper } from '@sdkwork/react-core'; 
 import { CanvasExportModal } from './CanvasExportModal';
 
 export const CanvasZoomControls: React.FC = () => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { CreditCard, Smartphone, Wallet, Coins, Check, Loader2 } from 'lucide-react';
 import type { PaymentMethod } from '../../entities';
 import { PaymentMethod as PaymentMethodEnum } from '../../entities';
-import { cn } from 'sdkwork-react-commons';
+import { cn } from '@sdkwork/react-commons';
 
 interface PaymentMethodSelectorProps {
   value?: PaymentMethod;
@@ -28,7 +28,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   const methods: MethodOption[] = [
     {
       id: PaymentMethodEnum.ALIPAY,
-      name: '支付宝',
+      name: '支付�?,
       description: '快捷支付',
       icon: Smartphone,
       color: 'text-blue-500',
@@ -42,7 +42,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     },
     {
       id: PaymentMethodEnum.CREDIT_CARD,
-      name: '信用卡',
+      name: '信用�?,
       description: 'Visa/Master',
       icon: CreditCard,
       color: 'text-purple-500',
@@ -57,7 +57,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     {
       id: PaymentMethodEnum.POINTS,
       name: '积分',
-      description: '100 积分=1 元',
+      description: '100 积分=1 �?,
       icon: Coins,
       color: 'text-orange-500',
     },
@@ -109,11 +109,11 @@ export const PaymentStatusBadge: React.FC<PaymentStatusBadgeProps> = ({
   className = '',
 }) => {
   const config: Record<string, { label: string; color: string; icon?: React.ElementType }> = {
-    PENDING: { label: '待支付', color: 'bg-yellow-500/10 text-yellow-500', icon: Loader2 },
-    PROCESSING: { label: '支付中', color: 'bg-blue-500/10 text-blue-500', icon: Loader2 },
+    PENDING: { label: '待支�?, color: 'bg-yellow-500/10 text-yellow-500', icon: Loader2 },
+    PROCESSING: { label: '支付�?, color: 'bg-blue-500/10 text-blue-500', icon: Loader2 },
     SUCCESS: { label: '支付成功', color: 'bg-green-500/10 text-green-500' },
     FAILED: { label: '支付失败', color: 'bg-red-500/10 text-red-500' },
-    REFUNDED: { label: '已退款', color: 'bg-gray-500/10 text-gray-500' },
+    REFUNDED: { label: '已退�?, color: 'bg-gray-500/10 text-gray-500' },
     REFUNDING: { label: '退款中', color: 'bg-orange-500/10 text-orange-500', icon: Loader2 },
   };
 

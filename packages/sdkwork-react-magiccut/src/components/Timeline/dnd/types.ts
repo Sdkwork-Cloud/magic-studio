@@ -1,6 +1,6 @@
 
 ;
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip, CutTrackType } from '../../../entities/magicCut.entity';
 
 export interface DragContext {

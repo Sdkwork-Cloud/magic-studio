@@ -1,5 +1,5 @@
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { ImportData as _ImportData, GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { ImportData as _ImportData, GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
 import React, { useState } from 'react';
 import { useMusicStore } from '../store/musicStore';
 

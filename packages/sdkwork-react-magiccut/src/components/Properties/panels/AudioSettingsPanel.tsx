@@ -3,7 +3,7 @@ import React from 'react';
 import { Volume2, VolumeX, Activity, Mic2, BarChart2, Zap, SlidersHorizontal, Clock, FastForward, Rewind } from 'lucide-react';
 import { PropertySection, ScrubbableInput, ActionButton } from '../widgets/PropertyWidgets';
 ;
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
 

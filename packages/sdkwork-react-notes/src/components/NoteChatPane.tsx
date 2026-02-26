@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Editor } from '@tiptap/react';
-import { EmbeddedChatPane } from 'sdkwork-react-chat';
+import { EmbeddedChatPane } from '@sdkwork/react-chat';
 
 interface NoteChatPaneProps {
     editor: Editor;

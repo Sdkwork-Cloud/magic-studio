@@ -1,5 +1,5 @@
 
-import { useAssetUrl } from 'sdkwork-react-commons'
+import { useAssetUrl } from '@sdkwork/react-commons'
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Upload, Loader2, RefreshCw } from 'lucide-react';
 ;

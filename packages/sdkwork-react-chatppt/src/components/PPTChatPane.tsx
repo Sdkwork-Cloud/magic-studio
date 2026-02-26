@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmbeddedChatPane } from 'sdkwork-react-chat';
+import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useChatPPTStore } from '../store/chatPPTStore';
 
 export const PPTChatPane: React.FC = () => {

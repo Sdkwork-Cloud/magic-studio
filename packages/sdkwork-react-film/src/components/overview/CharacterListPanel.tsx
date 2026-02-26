@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Users, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { CharacterCard } from './CharacterCard';
 import { useFilmStore } from '../../store/filmStore';
-import { FilmCharacter, MediaScene, AssetMediaResource, generateUUID } from 'sdkwork-react-commons';
+import { FilmCharacter, MediaScene, AssetMediaResource, generateUUID } from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
 
 interface CharacterListPanelProps {

@@ -1,5 +1,5 @@
 
-import { ModelProvider, StyleOption, VIDEO_STYLES } from 'sdkwork-react-commons'
+import { ModelProvider, StyleOption, VIDEO_STYLES } from '@sdkwork/react-commons'
 import { VideoAspectRatio, VideoDuration, VideoResolution, VideoGenerationMode } from './entities/video.entity';
 import { Zap, Globe, Layers, Film, Box, Monitor, Sparkles, ArrowRightLeft, ScanFace, Grid3x3 } from 'lucide-react';
 import React from 'react';

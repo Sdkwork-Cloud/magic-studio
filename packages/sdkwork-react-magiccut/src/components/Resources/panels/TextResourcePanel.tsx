@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AnyAsset, TextAsset } from 'sdkwork-react-assets';
+import { AnyAsset, TextAsset } from '@sdkwork/react-assets';
 import { Type, Plus } from 'lucide-react';
 
 interface TextResourcePanelProps {

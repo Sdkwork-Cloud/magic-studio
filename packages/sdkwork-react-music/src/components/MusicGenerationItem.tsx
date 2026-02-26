@@ -1,5 +1,5 @@
 
-import { MusicTask, GeneratedMusicResult } from 'sdkwork-react-commons';
+import { MusicTask, GeneratedMusicResult } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import {
     Play, Pause, Download, Trash2, Heart, MoreHorizontal,

@@ -1,5 +1,5 @@
 
-import { ErrorBoundary, ErrorBoundaryProps, logger } from 'sdkwork-react-commons'
+import { ErrorBoundary, ErrorBoundaryProps, logger } from '@sdkwork/react-commons'
 import React, { ReactNode } from 'react';
 ;
 ;

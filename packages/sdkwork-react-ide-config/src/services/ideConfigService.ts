@@ -1,8 +1,8 @@
 import { IDE_AND_TOOLS_CONFIG } from '../constants';
 import { IDEDefinition, PlatformKey } from '../types';
-import { platform } from 'sdkwork-react-core';
-import { pathUtils } from 'sdkwork-react-commons';
-import { vfs } from 'sdkwork-react-fs';
+import { platform } from '@sdkwork/react-core';
+import { pathUtils } from '@sdkwork/react-commons';
+import { vfs } from '@sdkwork/react-fs';
 
 export const ideConfigService = {
     getToolDefinition: (toolId: string): IDEDefinition | undefined => {

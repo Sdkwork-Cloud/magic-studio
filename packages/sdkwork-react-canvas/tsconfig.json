@@ -17,8 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "sdkwork-react-commons": ["../sdkwork-react-commons/src/index.ts"],
-      "sdkwork-react-core": ["../sdkwork-react-core/src/index.ts"]
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
+      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

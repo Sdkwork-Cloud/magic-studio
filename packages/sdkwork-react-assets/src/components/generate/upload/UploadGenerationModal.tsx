@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { X, Upload, FileText, Box, Layers, Image as ImageIcon, Film } from 'lucide-react';
-import { Button } from 'sdkwork-react-commons';
-import { ImageUpload, VideoUpload } from 'sdkwork-react-commons';
+import { Button } from '@sdkwork/react-commons';
+import { ImageUpload, VideoUpload } from '@sdkwork/react-commons';
 import { PromptTextInput } from '../PromptTextInput';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { generateUUID } from 'sdkwork-react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { generateUUID } from '@sdkwork/react-commons';
 
 export interface ImportData {
     id: string;

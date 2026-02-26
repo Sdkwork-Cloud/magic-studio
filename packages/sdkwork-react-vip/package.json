@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-vip",
+  "name": "@sdkwork/react-vip",
   "version": "0.1.0",
   "description": "VIP/subscription features package for SDKWork React applications",
   "private": true,
@@ -27,8 +27,8 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*"
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-chatppt",
+  "name": "@sdkwork/react-chatppt",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,9 +25,10 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-chat": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*"
+    "@sdkwork/react-chat": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

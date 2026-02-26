@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, RotateCw, Star, Lock, Search, ExternalLink, CloudDownload } from 'lucide-react';
 import { useBrowserStore } from '../store/browserStore';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { platform } from 'sdkwork-react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { platform } from '@sdkwork/react-core';
 import { DownloadsPanel } from './DownloadsPanel';
 
 export const AddressBar: React.FC = () => {

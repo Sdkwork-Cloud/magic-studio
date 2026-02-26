@@ -1,5 +1,5 @@
-import { Page } from 'sdkwork-react-commons';
-import { AnyAsset } from '../entities/enhancedAsset.entity';
+import { Page } from '@sdkwork/react-commons';
+import { AnyAsset } from '../entities';
 
 export interface IAssetService {
     /**

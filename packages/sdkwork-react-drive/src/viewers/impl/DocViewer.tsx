@@ -1,5 +1,5 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React from 'react';
 import { FileViewerProps } from '../types';
 import { FileText, Download, ExternalLink, AlertTriangle } from 'lucide-react';

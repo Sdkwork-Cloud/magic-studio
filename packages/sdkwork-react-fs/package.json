@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-fs",
+  "name": "@sdkwork/react-fs",
   "version": "0.1.0",
   "description": "File system abstraction package for SDKWork React applications",
   "private": true,
@@ -29,8 +29,8 @@
     "@vitejs/plugin-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-types": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-types": "workspace:*",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:"

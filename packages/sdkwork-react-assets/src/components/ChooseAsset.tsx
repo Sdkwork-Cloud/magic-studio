@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ChooseAssetModal } from './ChooseAssetModal';
-import { uploadHelper } from 'sdkwork-react-core';
+import { uploadHelper } from '@sdkwork/react-core';
 import { 
     Plus, Image as ImageIcon, FileAudio, FileVideo, 
     File, RotateCcw, Trash2,
@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAssetUrl } from '../hooks/useAssetUrl';
 import { Asset, AssetType } from '../entities/asset.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 interface AIGeneratorProps {
     contextText?: string;

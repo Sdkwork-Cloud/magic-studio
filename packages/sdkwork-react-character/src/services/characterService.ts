@@ -1,5 +1,5 @@
 import { CharacterConfig, CharacterTask } from '../entities/character.entity';
-import { BaseEntity } from 'sdkwork-react-commons';
+import { BaseEntity } from '@sdkwork/react-commons';
 
 class CharacterService {
     async generate(config: CharacterConfig): Promise<CharacterTask> {

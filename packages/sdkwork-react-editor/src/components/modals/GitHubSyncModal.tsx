@@ -1,10 +1,10 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import { GitSyncOptions } from '../../types';
 import React, { useState } from 'react';
 import { X, Github, GitBranch, ArrowUpCircle, CheckCircle2, Loader2, GitCommit } from 'lucide-react';
 ;
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 ;
 
 interface GitHubSyncModalProps {

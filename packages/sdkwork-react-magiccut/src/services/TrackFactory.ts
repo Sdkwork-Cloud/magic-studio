@@ -1,5 +1,5 @@
 import { CutTrackType } from '../entities/magicCut.entity';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../constants';
 import { TrackRulesFactory } from '../domain/dnd/TrackRulesFactory';
 

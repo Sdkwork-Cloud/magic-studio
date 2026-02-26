@@ -1,5 +1,5 @@
 import React from 'react';
-import { ModelSelector } from 'sdkwork-react-commons';
+import { ModelSelector } from '@sdkwork/react-commons';
 import { VIDEO_PROVIDERS } from '../constants';
 
 interface VideoModelSelectorProps {

@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-core",
+  "name": "@sdkwork/react-core",
   "version": "0.1.0",
   "description": "Core functionality module package for SDKWork React applications - routing, state management, platform abstraction, event bus, and AI services",
   "type": "module",
@@ -94,9 +94,9 @@
   "dependencies": {
     "@google/genai": "catalog:",
     "@sdkwork/app-sdk": "workspace:*",
-    "sdkwork-react-types": "workspace:*",
-    "sdkwork-react-fs": "workspace:*",
-    "sdkwork-react-commons": "workspace:*"
+    "@sdkwork/react-types": "workspace:*",
+    "@sdkwork/react-fs": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*"
   },
   "devDependencies": {
     "@tauri-apps/api": "catalog:",

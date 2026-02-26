@@ -1,4 +1,4 @@
-import type { I18nNamespaceResource } from 'sdkwork-react-i18n';
+import type { I18nNamespaceResource } from '@sdkwork/react-i18n';
 
 export const assetsEnUS: I18nNamespaceResource = {
     common: {

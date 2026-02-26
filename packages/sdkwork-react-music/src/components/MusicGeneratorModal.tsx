@@ -1,11 +1,11 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MusicLeftGeneratorPanel } from './MusicLeftGeneratorPanel';
 import { MusicStoreProvider, useMusicStore, setAssetServiceAdapter, AssetServiceAdapter } from '../store/musicStore';
 import { X, Check } from 'lucide-react';
-import { GenerationHistoryListPane, GENERATION_TABS, assetService } from 'sdkwork-react-assets';
+import { GenerationHistoryListPane, GENERATION_TABS, assetService } from '@sdkwork/react-assets';
 
 const assetAdapter: AssetServiceAdapter = {
     saveGeneratedAsset: async (data, type, metadata, filename) => {

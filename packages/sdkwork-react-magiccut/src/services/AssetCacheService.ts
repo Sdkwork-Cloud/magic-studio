@@ -1,9 +1,9 @@
 
-import { assetService } from 'sdkwork-react-assets'
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { storageConfig } from 'sdkwork-react-fs';
+import { assetService } from '@sdkwork/react-assets'
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { storageConfig } from '@sdkwork/react-fs';
 ;
 
 /**

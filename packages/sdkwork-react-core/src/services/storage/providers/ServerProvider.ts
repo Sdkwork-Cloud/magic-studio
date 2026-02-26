@@ -1,4 +1,4 @@
-import { IStorageProvider, StorageObject, UploadResult } from 'sdkwork-react-commons';
+import { IStorageProvider, StorageObject, UploadResult } from '@sdkwork/react-commons';
 
 // Stub type for StorageConfig - to be replaced with actual settings entity
 interface ServerStorageConfig {

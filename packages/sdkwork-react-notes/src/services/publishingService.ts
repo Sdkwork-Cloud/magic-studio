@@ -1,9 +1,8 @@
 
-import { ArticlePayload, PublishResult } from 'sdkwork-react-commons'
+import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
 import { IPublishingProvider } from './providers/types';
 import { WeChatProvider } from './providers/wechatProvider';
 import { ToutiaoProvider } from './providers/toutiaoProvider';
-;
 import { MediaAccountConfig } from '../../settings/entities/settings.entity';
 
 class PublishingService {

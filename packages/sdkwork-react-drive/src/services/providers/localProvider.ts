@@ -1,9 +1,9 @@
 
 import { IDriveProvider } from './types';
 import { DriveItem, DriveStats } from '../../entities/drive.entity';
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils, logger } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils, logger } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
 
 export class LocalDriveProvider implements IDriveProvider {
   name = 'Local Drive';

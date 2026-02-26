@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Clapperboard, Video, Image as ImageIcon, Wand2, Clock, FileText, MessageSquare, Play, Layers, Grid3x3, ArrowRightLeft, FileImage, Type, Upload, Plus, Trash2, User, Music, Zap, Sparkles, Cpu, Cloud, Brain, Star, Activity, LayoutGrid, ChevronDown } from 'lucide-react';
-import { SettingInput, SettingSelect, SettingTextArea, SettingSlider } from 'sdkwork-react-settings';
-import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, InputAttachment, MediaScene, GenerationProduct, AssetMediaResource, MediaResourceType } from 'sdkwork-react-commons';
-import { PromptTextInput, ChooseAssetModal } from 'sdkwork-react-assets';
-import { AIImageGeneratorModal } from 'sdkwork-react-image';
-import { genAIService, uploadHelper } from 'sdkwork-react-core';
-import { generateUUID } from 'sdkwork-react-commons';
+import { SettingInput, SettingSelect, SettingTextArea, SettingSlider } from '@sdkwork/react-settings';
+import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, InputAttachment, MediaScene, GenerationProduct, AssetMediaResource, MediaResourceType } from '@sdkwork/react-commons';
+import { PromptTextInput, ChooseAssetModal } from '@sdkwork/react-assets';
+import { AIImageGeneratorModal } from '@sdkwork/react-image';
+import { genAIService, uploadHelper } from '@sdkwork/react-core';
+import { generateUUID } from '@sdkwork/react-commons';
 import { Asset, AssetType } from '../../assets/entities/asset.entity';
 
 interface ShotModalProps {

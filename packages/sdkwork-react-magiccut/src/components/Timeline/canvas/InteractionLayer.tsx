@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { InteractionState } from '../../../store/types';
 ;
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../../entities/magicCut.entity';
 import { DragInput, DragContext } from '../dnd/types';
 import { ClipTrimStrategy, TrimMode } from '../dnd/strategies/ClipTrimStrategy';

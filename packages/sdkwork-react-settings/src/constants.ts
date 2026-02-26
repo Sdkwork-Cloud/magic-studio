@@ -1,5 +1,5 @@
 
-import { AppSettings, ThemeMode, SidebarItemConfig, SidebarTemplate } from './entities/settings.entity';
+import { AppSettings, ThemeMode, SidebarItemConfig, SidebarTemplate } from './entities';
 
 export const SETTINGS_STORAGE_KEY = 'open_studio_settings_v1';
 
@@ -199,7 +199,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
         name: 'General Assistant',
         enabled: true,
         model: 'gpt-4o',
-        systemPrompt: 'You are a helpful AI assistant integrated into Open Studio.',
+        systemPrompt: 'You are a helpful AI assistant integrated into Magic Studio.',
         temperature: 0.7,
         tools: ['web-search']
      }

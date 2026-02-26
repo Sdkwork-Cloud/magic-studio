@@ -1,6 +1,6 @@
 import type {
   FilmProject,
-} from 'sdkwork-react-commons';
+} from '@sdkwork/react-commons';
 
 /**
  * Film Repository
@@ -8,7 +8,7 @@ import type {
  * No complex business logic allowed here.
  * All operations go through Platform API.
  */
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 const STORAGE_KEY = 'film_projects';
 const CURRENT_PROJECT_KEY = 'film_current_project';

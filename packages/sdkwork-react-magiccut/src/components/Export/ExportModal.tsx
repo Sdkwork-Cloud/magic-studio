@@ -1,7 +1,7 @@
 
 import { videoExportService } from '../../services/export/videoExportService';
 import { ExportConfig, ExportResolution, ExportFrameRate, ExportBitrate, ExportFormat, ExportOptions } from '../../services/export/types';
-import { Button, logger } from 'sdkwork-react-commons';
+import { Button, logger } from '@sdkwork/react-commons';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -12,7 +12,7 @@ import {
 import { useMagicCutStore } from '../../store/magicCutStore';
 ;
 ;
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 ;
 ;
 

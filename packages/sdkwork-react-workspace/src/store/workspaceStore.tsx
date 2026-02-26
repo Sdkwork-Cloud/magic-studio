@@ -1,4 +1,4 @@
-import { StudioWorkspace, StudioProject, ProjectType } from 'sdkwork-react-commons';
+import { StudioWorkspace, StudioProject, ProjectType } from '@sdkwork/react-commons';
 import { workspaceService } from '../services/workspaceService';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 

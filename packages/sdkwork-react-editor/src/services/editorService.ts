@@ -1,7 +1,7 @@
 // Editor Service Implementation
-import { ServiceResult, Result, pathUtils } from 'sdkwork-react-commons';
-import { FileEntry } from 'sdkwork-react-core';
-import { vfs } from 'sdkwork-react-fs';
+import { ServiceResult, Result, pathUtils } from '@sdkwork/react-commons';
+import { FileEntry } from '@sdkwork/react-core';
+import { vfs } from '@sdkwork/react-fs';
 
 class EditorServiceImpl {
     async loadProjectTree(rootPath: string): Promise<ServiceResult<FileEntry[]>> {

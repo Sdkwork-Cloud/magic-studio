@@ -4,7 +4,7 @@ import { BrowserMediaEncoder } from './encoders/BrowserMediaEncoder';
 import { WebCodecsEncoder } from './encoders/WebCodecsEncoder';
 import { BrowserExportStrategy } from './strategies/BrowserExportStrategy';
 import { DesktopExportStrategy } from './strategies/DesktopExportStrategy';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 // Factory types
 export type EncoderFactory = () => IMediaEncoder;

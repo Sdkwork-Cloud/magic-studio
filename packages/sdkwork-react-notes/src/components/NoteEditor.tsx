@@ -28,12 +28,12 @@ import {
     Send, FilePlus, FolderPlus, Keyboard, AppWindow, FileCode
 } from 'lucide-react';
 import { EditorContextMenu } from './EditorContextMenu';
-;
-import { useTranslation } from 'sdkwork-react-i18n';
-import { filePicker } from 'sdkwork-react-editor';
-;
-import { platform, genAIService } from 'sdkwork-react-core';
-import { NoteType, markdownUtils } from 'sdkwork-react-commons'; 
+
+import { useTranslation } from '@sdkwork/react-i18n';
+import { filePicker } from '@sdkwork/react-editor';
+
+import { platform, genAIService } from '@sdkwork/react-core';
+import { NoteType, markdownUtils } from '@sdkwork/react-commons'; 
 
 // Custom Menus & Modals
 import { TextBubbleMenu } from './menus/TextBubbleMenu';
@@ -49,12 +49,11 @@ import { HtmlSourceModal } from './HtmlSourceModal';
 import { NoteEditorEmpty } from './NoteEditorEmpty'; 
 
 // Specialized Generator Modals
-import { ImageGeneratorModal } from 'sdkwork-react-image';
-import { VideoGeneratorModal } from 'sdkwork-react-video';
-import { AudioGeneratorModal } from 'sdkwork-react-audio';
+import { ImageGeneratorModal } from '@sdkwork/react-image';
+import { VideoGeneratorModal } from '@sdkwork/react-video';
+import { AudioGeneratorModal } from '@sdkwork/react-audio';
 
-// Asset Service
-import { assetService } from 'sdkwork-react-assets';
+import { assetService } from '@sdkwork/react-assets';
 import { AssetType } from '../../assets/entities/asset.entity';
 
 // --- Helper: Advanced Word Count (CJK support) ---

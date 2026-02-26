@@ -1,8 +1,8 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
-import { LoginPage as AuthLoginPage } from 'sdkwork-react-auth';
-import { useAuthStore } from 'sdkwork-react-auth';
+import { LoginPage as AuthLoginPage } from '@sdkwork/react-auth';
+import { useAuthStore } from '@sdkwork/react-auth';
 ;
 ;
 

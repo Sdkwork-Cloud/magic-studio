@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmbeddedChatPane } from 'sdkwork-react-chat';
+import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useEditorStore } from '../store/editorStore';
 
 const AIChatPane: React.FC = () => {

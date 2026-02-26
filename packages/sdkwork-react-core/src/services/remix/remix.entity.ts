@@ -1,5 +1,5 @@
 
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 
 export type RemixTargetModule = 'video' | 'image' | 'audio' | 'music' | 'character';
 

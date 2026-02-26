@@ -1,5 +1,5 @@
 
-import { PromptTextInput } from 'sdkwork-react-assets'
+import { PromptTextInput } from '@sdkwork/react-assets'
 import React from 'react';
 import { useAudioStore } from '../store/audioStore';
 import { AudioModelSelector } from './AudioModelSelector';

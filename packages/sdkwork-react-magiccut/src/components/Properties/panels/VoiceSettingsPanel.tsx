@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, User, Settings2, Captions, Type } from 'lucide-react';
 import { PropertySection, ScrubbableInput, Dropdown, ActionButton } from '../widgets/PropertyWidgets';
 ;
-import { PRESET_VOICES } from 'sdkwork-react-voicespeaker';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { PRESET_VOICES } from '@sdkwork/react-voicespeaker';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
-import { PromptTextInput } from 'sdkwork-react-assets';
-import { genAIService } from 'sdkwork-react-core';
+import { PromptTextInput } from '@sdkwork/react-assets';
+import { genAIService } from '@sdkwork/react-core';
 
 interface VoiceSettingsPanelProps {
     clip: CutClip;

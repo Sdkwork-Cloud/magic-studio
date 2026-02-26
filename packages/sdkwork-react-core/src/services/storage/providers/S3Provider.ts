@@ -1,7 +1,7 @@
 
 import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { IStorageProvider, StorageObject, UploadResult } from 'sdkwork-react-commons';
+import { IStorageProvider, StorageObject, UploadResult } from '@sdkwork/react-commons';
 
 // Stub type for StorageConfig - to be replaced with actual settings entity
 interface S3StorageConfig {

@@ -1,5 +1,5 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React from 'react';
 import { 
     Home, Presentation, ChevronLeft, Layout 

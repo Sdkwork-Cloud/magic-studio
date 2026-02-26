@@ -1,9 +1,9 @@
 
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils } from 'sdkwork-react-commons';
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils } from '@sdkwork/react-commons';
 import { platform } from '../../platform';
-import { storageConfig } from 'sdkwork-react-fs';
-import { AnyMediaResource } from 'sdkwork-react-commons';
+import { storageConfig } from '@sdkwork/react-fs';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 ;
 
 export interface DownloadTask {

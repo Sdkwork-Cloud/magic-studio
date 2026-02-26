@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronRight, Home, Star, Clock, Trash2, HardDrive, Cloud } from 'lucide-react';
 import { useDriveStore } from '../store/driveStore';
 import { driveService } from '../services/driveService';
-import { pathUtils } from 'sdkwork-react-commons';
+import { pathUtils } from '@sdkwork/react-commons';
 
 export const DriveBreadcrumbs: React.FC = () => {
     const { currentPath, navigateTo } = useDriveStore();

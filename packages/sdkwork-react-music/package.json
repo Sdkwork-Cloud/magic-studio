@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-music",
+  "name": "@sdkwork/react-music",
   "version": "0.1.0",
   "description": "Music generation module for SDKWork React applications",
   "private": true,
@@ -35,10 +35,11 @@
     }
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

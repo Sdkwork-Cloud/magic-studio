@@ -3,11 +3,11 @@ export type {
     I18nNamespaceResource,
     I18nModuleResource,
     SupportedLocale 
-} from 'sdkwork-react-i18n';
+} from '@sdkwork/react-i18n';
 
 import { musicEnUS } from './locales/en-US';
 import { musicZhCN } from './locales/zh-CN';
-import type { PackageI18nConfig } from 'sdkwork-react-i18n';
+import type { PackageI18nConfig } from '@sdkwork/react-i18n';
 
 export const NAMESPACE = 'music';
 

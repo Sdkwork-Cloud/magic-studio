@@ -86,8 +86,11 @@ export const header = {
     select_workspace: "选择工作区",
     select_project: "选择项目",
     workspaces: "工作区",
+    projects: "项目",
     projects_in: "{workspace} 中的项目",
     no_projects: "未找到项目",
+    no_workspaces: "未找到工作区",
+    select_workspace_first: "请先选择工作区",
     pro_plans: "Pro 计划",
     breadcrumbs: {
         app: "应用",

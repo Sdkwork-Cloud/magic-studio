@@ -6,8 +6,8 @@ import {
     Eraser, List, CheckCircle2
 } from 'lucide-react';
 import { Editor } from '@tiptap/react';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { platform } from 'sdkwork-react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { platform } from '@sdkwork/react-core';
 
 interface EditorContextMenuProps {
     x: number;

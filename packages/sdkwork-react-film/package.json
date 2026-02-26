@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-film",
+  "name": "@sdkwork/react-film",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,15 +25,15 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-image": "workspace:*",
-    "sdkwork-react-video": "workspace:*",
-    "sdkwork-react-voicespeaker": "workspace:*",
-    "sdkwork-react-notes": "workspace:*",
-    "sdkwork-react-chat": "workspace:*",
-    "sdkwork-react-settings": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-video": "workspace:*",
+    "@sdkwork/react-voicespeaker": "workspace:*",
+    "@sdkwork/react-notes": "workspace:*",
+    "@sdkwork/react-chat": "workspace:*",
+    "@sdkwork/react-settings": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

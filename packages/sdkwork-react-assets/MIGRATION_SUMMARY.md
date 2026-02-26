@@ -51,7 +51,7 @@ Changed all asset-related imports from:
 import { AnyAsset } from '../../../services/assets/AssetTypes';
 
 // NEW  
-import { AnyAsset } from 'sdkwork-react-assets';
+import { AnyAsset } from '@sdkwork/react-assets';
 ```
 
 Updated files:

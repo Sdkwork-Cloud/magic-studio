@@ -1,5 +1,5 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle, FolderOpen } from 'lucide-react';

@@ -19,8 +19,10 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "sdkwork-react-commons": ["../sdkwork-react-commons/src/index.ts"],
-      "sdkwork-react-core": ["../sdkwork-react-core/src/index.ts"]
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src"],
+      "@sdkwork/react-core": ["../sdkwork-react-core/src"],
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src"],
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src"]
     }
   },
   "include": ["src/**/*"],

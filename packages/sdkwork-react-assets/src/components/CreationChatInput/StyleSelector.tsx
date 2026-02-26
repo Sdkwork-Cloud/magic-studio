@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { Palette, ChevronDown, Check, Sparkles, Image as ImageIcon, User, ScanFace, LayoutTemplate, Search, X, Copy } from 'lucide-react';
-import { Popover } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { Popover } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export interface StyleAsset {
     url: string;

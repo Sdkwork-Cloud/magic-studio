@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 ;
-import { useAssetUrl, MediaResourceType } from 'sdkwork-react-commons';
+import { useAssetUrl, MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip } from '../../entities/magicCut.entity';
 import { PlayerController } from '../../controllers/PlayerController';
 import { Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle, Lock } from 'lucide-react';

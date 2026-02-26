@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 
 import { MagicCutClip } from './MagicCutClip';
 import { WaveformOverlay } from './WaveformOverlay';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../entities/magicCut.entity';
 import { getRobustResourceUrl } from '../../utils/resourceUtils';
 import { Film } from 'lucide-react';

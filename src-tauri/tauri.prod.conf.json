@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Open Studio",
+  "productName": "Magic Studio",
   "identifier": "ai.OpenStudio.desktop",
   "app": {
     "windows": [
       {
         "label": "main",
         "create": false,
-        "title": "Open Studio",
+        "title": "Magic Studio",
         "url": "/",
         "decorations": true,
         "dragDropEnabled": false,

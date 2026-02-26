@@ -1,4 +1,4 @@
-import type { I18nNamespaceResource } from 'sdkwork-react-i18n';
+import type { I18nNamespaceResource } from '@sdkwork/react-i18n';
 
 export const voiceZhCN: I18nNamespaceResource = {
     common: {
@@ -25,7 +25,7 @@ export const voiceZhCN: I18nNamespaceResource = {
     },
     message: {
         noHistory: '暂无历史记录',
-        startCreating: '开始创作，您的作品将显示在这里。',
+        startCreating: '开始创作，您的作品将显示在这里',
         cloneVoice: '克隆声音',
         createVoice: '创建声音',
     },

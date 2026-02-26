@@ -1,8 +1,8 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
 import { MusicStoreProvider, useMusicStore } from '../index';
-import { GenerationChatWindow } from 'sdkwork-react-assets';
+import { GenerationChatWindow } from '@sdkwork/react-assets';
 
 const MusicChatContent: React.FC = () => {
     const { history, deleteTask, generate, isGenerating, config, setConfig } = useMusicStore();

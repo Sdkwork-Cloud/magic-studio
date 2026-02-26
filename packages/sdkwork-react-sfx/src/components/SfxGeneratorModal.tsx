@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SfxLeftGeneratorPanel } from './SfxLeftGeneratorPanel';
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets';
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
 import { useSfxStore, SfxStoreProvider } from '../store/sfxStore';
 import { X, Check } from 'lucide-react';
 import { SfxTask } from '../entities/sfx.entity';

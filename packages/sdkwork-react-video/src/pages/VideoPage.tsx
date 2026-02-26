@@ -1,8 +1,8 @@
-import { useRouter, ROUTES } from 'sdkwork-react-core'
-import { ImportData, GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { ImportData, GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets'
 import React, { useState } from 'react';
 import { useVideoStore } from '../store/videoStore';
-import { VideoTask, generateUUID } from 'sdkwork-react-commons';
+import { VideoTask, generateUUID } from '@sdkwork/react-commons';
 
 const VideoPage: React.FC = () => {
     const { history, deleteTask, setConfig, importTask } = useVideoStore();

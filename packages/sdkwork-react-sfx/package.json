@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-sfx",
+  "name": "@sdkwork/react-sfx",
   "version": "0.1.0",
   "description": "Sound effects generation package for SDKWork React applications",
   "private": true,
@@ -27,10 +27,11 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

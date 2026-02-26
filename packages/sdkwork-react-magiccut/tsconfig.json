@@ -18,17 +18,17 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "sdkwork-react-commons": ["../sdkwork-react-commons/src/index.ts"],
-      "sdkwork-react-core": ["../sdkwork-react-core/src/index.ts"],
-      "sdkwork-react-assets": ["../sdkwork-react-assets/src/index.ts"],
-      "sdkwork-react-image": ["../sdkwork-react-image/src/index.ts"],
-      "sdkwork-react-video": ["../sdkwork-react-video/src/index.ts"],
-      "sdkwork-react-audio": ["../sdkwork-react-audio/src/index.ts"],
-      "sdkwork-react-sfx": ["../sdkwork-react-sfx/src/index.ts"],
-      "sdkwork-react-music": ["../sdkwork-react-music/src/index.ts"],
-      "sdkwork-react-fs": ["../sdkwork-react-fs/src/index.ts"],
-      "sdkwork-react-voicespeaker": ["../sdkwork-react-voicespeaker/src/index.ts"],
-      "sdkwork-react-i18n": ["../sdkwork-react-i18n/src/index.ts"]
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
+      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
+      "@sdkwork/react-image": ["../sdkwork-react-image/src/index.ts"],
+      "@sdkwork/react-video": ["../sdkwork-react-video/src/index.ts"],
+      "@sdkwork/react-audio": ["../sdkwork-react-audio/src/index.ts"],
+      "@sdkwork/react-sfx": ["../sdkwork-react-sfx/src/index.ts"],
+      "@sdkwork/react-music": ["../sdkwork-react-music/src/index.ts"],
+      "@sdkwork/react-fs": ["../sdkwork-react-fs/src/index.ts"],
+      "@sdkwork/react-voicespeaker": ["../sdkwork-react-voicespeaker/src/index.ts"],
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"]
     }
   },
   "include": ["./src/**/*"],

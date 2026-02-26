@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
@@ -25,9 +25,9 @@ export default defineConfig({
         'react-dom', 
         'react/jsx-runtime',
         'lucide-react',
-        'sdkwork-react-core',
-        'sdkwork-react-i18n',
-        /^sdkwork-react-/
+        '@sdkwork/react-core',
+        '@sdkwork/react-i18n',
+        /^@sdkwork\/react-/
       ],
       output: {
         globals: {
@@ -35,8 +35,8 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
           'lucide-react': 'LucideReact',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-i18n': 'SdkworkReactI18n'
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-i18n': 'SdkworkReactI18n'
         }
       }
     },

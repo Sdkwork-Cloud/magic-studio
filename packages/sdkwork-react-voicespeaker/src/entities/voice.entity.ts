@@ -1,4 +1,4 @@
-import { BaseEntity } from 'sdkwork-react-commons';
+import { BaseEntity } from '@sdkwork/react-commons';
 
 // ============================================================================
 // Voice Speaker - 全局声音角色

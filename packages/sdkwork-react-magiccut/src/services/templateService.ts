@@ -1,12 +1,12 @@
 
 ;
 import { NormalizedState } from '../store/types';
-import { vfs } from 'sdkwork-react-fs';
+import { vfs } from '@sdkwork/react-fs';
 import { CutProject, CutTemplate, CutTimeline, CutTrack, CutClip, CutLayer, TemplateMetadata } from '../entities/magicCut.entity';
-import { pathUtils } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { storageConfig } from 'sdkwork-react-fs';
-import { generateUUID } from 'sdkwork-react-commons';
+import { pathUtils } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { storageConfig } from '@sdkwork/react-fs';
+import { generateUUID } from '@sdkwork/react-commons';
 
 class TemplateService {
     

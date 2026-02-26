@@ -1,5 +1,5 @@
 
-import { FilmProject } from 'sdkwork-react-commons'
+import { FilmProject } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { ChatMessage } from '../entities/chat.entity';
 import { Copy, ArrowLeftToLine, RefreshCw, ThumbsUp } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 interface ChatBubbleProps {
   message: ChatMessage;

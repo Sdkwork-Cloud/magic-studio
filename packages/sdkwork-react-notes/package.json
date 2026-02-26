@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-notes",
+  "name": "@sdkwork/react-notes",
   "version": "0.1.0",
   "description": "Notes module for SDKWork React applications",
   "type": "module",
@@ -26,16 +26,16 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-auth": "workspace:*",
-    "sdkwork-react-chat": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-editor": "workspace:*",
-    "sdkwork-react-fs": "workspace:*",
-    "sdkwork-react-image": "workspace:*",
-    "sdkwork-react-settings": "workspace:*",
-    "sdkwork-react-video": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-auth": "workspace:*",
+    "@sdkwork/react-chat": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-editor": "workspace:*",
+    "@sdkwork/react-fs": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-settings": "workspace:*",
+    "@sdkwork/react-video": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

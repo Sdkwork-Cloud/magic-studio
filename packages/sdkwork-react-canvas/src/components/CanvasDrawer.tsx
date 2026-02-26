@@ -2,10 +2,10 @@ import { CanvasElement } from '../entities/canvas.entity'
 import React, { useEffect, useRef } from 'react';
 import { X, Image, Film, FileText, Settings } from 'lucide-react';
 ;
-import { ImageLeftGeneratorPanel } from 'sdkwork-react-image';
-import { VideoLeftGeneratorPanel } from 'sdkwork-react-video';
-import { ImageStoreProvider } from 'sdkwork-react-image';
-import { VideoStoreProvider } from 'sdkwork-react-video';
+import { ImageLeftGeneratorPanel } from '@sdkwork/react-image';
+import { VideoLeftGeneratorPanel } from '@sdkwork/react-video';
+import { ImageStoreProvider } from '@sdkwork/react-image';
+import { VideoStoreProvider } from '@sdkwork/react-video';
 
 interface CanvasDrawerProps {
     element: CanvasElement | null;

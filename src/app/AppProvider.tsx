@@ -1,15 +1,15 @@
 
-import { RouterProvider } from 'sdkwork-react-core'
+import { RouterProvider } from '@sdkwork/react-core'
 import React, { ReactNode, useEffect, useState } from 'react';
-import { SettingsStoreProvider } from 'sdkwork-react-settings';
-import { AuthStoreProvider } from 'sdkwork-react-auth';
-import { VipStoreProvider } from 'sdkwork-react-vip';
-import { EditorStoreProvider } from 'sdkwork-react-editor';
-import { WorkspaceStoreProvider } from 'sdkwork-react-workspace';
-import { ChatStoreProvider } from 'sdkwork-react-chat';
+import { SettingsStoreProvider } from '@sdkwork/react-settings';
+import { AuthStoreProvider } from '@sdkwork/react-auth';
+import { VipStoreProvider } from '@sdkwork/react-vip';
+import { EditorStoreProvider } from '@sdkwork/react-editor';
+import { WorkspaceStoreProvider } from '@sdkwork/react-workspace';
+import { ChatStoreProvider } from '@sdkwork/react-chat';
 ;
 import { themeManager } from './theme/ThemeManager';
-import { NotificationStoreProvider } from 'sdkwork-react-notifications';
+import { NotificationStoreProvider } from '@sdkwork/react-notifications';
 
 interface AppProviderProps {
   children: ReactNode;

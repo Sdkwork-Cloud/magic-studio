@@ -13,7 +13,7 @@ pnpm add sdkwork-react-commons
 ## Usage
 
 ```typescript
-import { Button, Card, generateUUID, MediaResourceType } from 'sdkwork-react-commons';
+import { Button, Card, generateUUID, MediaResourceType } from '@sdkwork/react-commons';
 ```
 
 ## Exports

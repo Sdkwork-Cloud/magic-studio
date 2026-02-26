@@ -1,5 +1,5 @@
 import { PlatformAPI, SystemPath, BrowserInstance } from './types';
-import { pathUtils, logger } from 'sdkwork-react-commons';
+import { pathUtils, logger } from '@sdkwork/react-commons';
 
 let tauriModules: any = null;
 

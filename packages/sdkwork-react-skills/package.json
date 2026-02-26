@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-skills",
+  "name": "@sdkwork/react-skills",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,9 +25,9 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-portal-video": "workspace:*"
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-portal-video": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

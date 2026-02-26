@@ -2,7 +2,7 @@
 import React, { useRef, useMemo, useLayoutEffect } from 'react';
 import { Plus, Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle } from 'lucide-react';
 
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip, CutTrackType } from '../../../entities/magicCut.entity';
 import { getRobustResourceUrl } from '../../../utils/resourceUtils';
 import { formatTime } from '../../../utils/timeUtils';

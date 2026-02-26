@@ -1,5 +1,5 @@
 
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { ImageTask } from '../entities/image.entity';
 import { STORAGE_KEY_HISTORY } from '../constants';
 

@@ -4,7 +4,7 @@ import {
     Film, Image as ImageIcon, Music, Type, Sticker, Sparkles, LayoutTemplate, 
     Import, Settings
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface SidebarProps {
     onSelectTab: (tab: string) => void;

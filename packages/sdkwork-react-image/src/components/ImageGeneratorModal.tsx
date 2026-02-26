@@ -1,6 +1,6 @@
 
-import { Button } from 'sdkwork-react-commons'
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets'
+import { Button } from '@sdkwork/react-commons'
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageLeftGeneratorPanel } from './ImageLeftGeneratorPanel';

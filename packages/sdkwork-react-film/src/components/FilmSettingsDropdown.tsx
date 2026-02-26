@@ -5,7 +5,7 @@ import {
     Ratio, Activity, Smartphone, LayoutTemplate, Square, Check, Download
 } from 'lucide-react';
 
-import { FilmSettings } from 'sdkwork-react-commons';
+import { FilmSettings } from '@sdkwork/react-commons';
 import { useFilmStore } from '../store/filmStore';
 
 const ASPECT_RATIOS = [

@@ -1,6 +1,8 @@
 import { Locale, TranslationResource } from './types';
 import en from './resources/en';
 import zhCN from './resources/zh-CN';
+import { packageI18nRegistry } from './registryInstance';
+import { mapLocaleToSupported } from './packageTypes';
 
 class I18nService {
   private _locale: Locale = 'en';
@@ -35,11 +37,20 @@ class I18nService {
     this._listeners.forEach(fn => fn(this._locale));
   }
 
+  private _getMergedResources(): Record<string, any> {
+    const baseResources = this._resources[this._locale] || this._resources['en'];
+    const supportedLocale = mapLocaleToSupported(this._locale);
+    const packageResources = packageI18nRegistry.getMergedResources(supportedLocale);
+    
+    return {
+      ...baseResources,
+      ...packageResources,
+    };
+  }
+
   public t(key: string, params?: Record<string, string>): string {
     const keys = key.split('.');
-    let current: any = this._resources[this._locale];
-    
-    if (!current) current = this._resources['en'];
+    let current: any = this._getMergedResources();
 
     for (const k of keys) {
       if (current && typeof current === 'object') {
@@ -50,8 +61,24 @@ class I18nService {
       }
     }
 
-    if (current === undefined && this._locale !== 'en') {
+    // Fallback to base resources if not found
+    if (current === undefined) {
         let fallback: any = this._resources['en'];
+        for (const k of keys) {
+            if (fallback && typeof fallback === 'object') {
+                fallback = fallback[k];
+            } else {
+                fallback = undefined;
+                break;
+            }
+        }
+        current = fallback;
+    }
+
+    // Fallback to package resources in en-US
+    if (current === undefined) {
+        const packageResources = packageI18nRegistry.getMergedResources('en-US');
+        let fallback: any = packageResources;
         for (const k of keys) {
             if (fallback && typeof fallback === 'object') {
                 fallback = fallback[k];

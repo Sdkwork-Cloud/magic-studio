@@ -1,8 +1,8 @@
 
-import { GenerationHistoryListPane, GENERATION_TABS } from 'sdkwork-react-assets'
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets'
 import React, { useState } from 'react';
 import { useSfxStore } from '../store/sfxStore';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
 
 const SfxPage: React.FC = () => {
     const { history: storeHistory, deleteTask, setConfig, toggleFavorite } = useSfxStore();

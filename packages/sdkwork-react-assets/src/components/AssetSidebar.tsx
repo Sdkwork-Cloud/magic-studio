@@ -7,7 +7,7 @@ import {
     Image, Video, Music, Mic, LayoutGrid, FileAudio,
     Volume2, Smile, Upload, Sparkles, FolderOpen
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const AssetSidebar: React.FC = () => {
     const {

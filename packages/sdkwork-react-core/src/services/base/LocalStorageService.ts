@@ -1,5 +1,5 @@
 
-import { IBaseService, BaseEntity, ServiceResult, Page, PageRequest, Result } from 'sdkwork-react-commons';
+import { IBaseService, BaseEntity, ServiceResult, Page, PageRequest, Result } from '@sdkwork/react-commons';
 import { platform } from '../../platform';
 
 /**
@@ -89,7 +89,7 @@ export class LocalStorageService<T extends BaseEntity> implements IBaseService<T
             content = scored.map(s => s.item);
         } else {
             // Default Sort: UpdatedAt Descending
-            content.sort((a, b) => b.updatedAt - a.updatedAt);
+            content.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
         }
 
         // 2. Pagination

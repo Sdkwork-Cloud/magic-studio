@@ -1,7 +1,7 @@
 
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { Bookmark } from '../entities/browser.entity';
-import { BaseEntity, generateUUID } from 'sdkwork-react-commons';
+import { BaseEntity, generateUUID } from '@sdkwork/react-commons';
 
 interface BookmarkEntity extends Bookmark, BaseEntity {}
 

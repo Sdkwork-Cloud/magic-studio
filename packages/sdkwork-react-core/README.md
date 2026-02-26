@@ -13,7 +13,7 @@ pnpm add sdkwork-react-core
 ## Usage
 
 ```typescript
-import { useRouter, ROUTES, platform, EventBus } from 'sdkwork-react-core';
+import { useRouter, ROUTES, platform, EventBus } from '@sdkwork/react-core';
 ```
 
 ## Exports

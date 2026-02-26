@@ -1,5 +1,5 @@
 import { ITrackRules, DropValidationResult, DropValidationStatus } from './ITrackRules';
-import { DragContext, MediaResourceType } from 'sdkwork-react-commons';
+import { DragContext, MediaResourceType } from '@sdkwork/react-commons';
 import { CutTrackType } from '../../entities/magicCut.entity';
 
 /**

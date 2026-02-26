@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom';
 import { X, Save, LayoutTemplate } from 'lucide-react';
 ;
 ;
-import { Button, ImageUpload } from 'sdkwork-react-commons';
-import { logger } from 'sdkwork-react-commons';
+import { Button, ImageUpload } from '@sdkwork/react-commons';
+import { logger } from '@sdkwork/react-commons';
 import { TemplateMetadata } from '../entities/magicCut.entity';
 
 interface SaveTemplateModalProps {

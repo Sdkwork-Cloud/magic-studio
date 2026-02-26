@@ -5,7 +5,7 @@ import {
     Bold, Italic, Strikethrough, Code, Link2, 
     Highlighter, Sparkles, ChevronDown, Check, X, Baseline
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface TextBubbleMenuProps {
     editor: Editor;

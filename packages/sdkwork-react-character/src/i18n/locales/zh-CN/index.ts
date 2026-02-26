@@ -1,4 +1,4 @@
-import type { I18nNamespaceResource } from 'sdkwork-react-i18n';
+import type { I18nNamespaceResource } from '@sdkwork/react-i18n';
 
 export const characterZhCN: I18nNamespaceResource = {
     common: {
@@ -16,6 +16,6 @@ export const characterZhCN: I18nNamespaceResource = {
     },
     message: {
         noHistory: '暂无历史记录',
-        startCreating: '开始创作，您的角色将显示在这里。',
+        startCreating: '开始创作，您的角色将显示在这里',
     },
 };

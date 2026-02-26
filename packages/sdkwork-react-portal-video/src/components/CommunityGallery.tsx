@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Flame, Clock, Filter } from 'lucide-react';
-import { GalleryCard, GalleryItem } from 'sdkwork-react-commons';
+import { GalleryCard, GalleryItem } from '@sdkwork/react-commons';
 ;
-import { GenerationPreview } from 'sdkwork-react-image';
+import { GenerationPreview } from '@sdkwork/react-image';
 
 const MOCK_WORKS: GalleryItem[] = [
     { 

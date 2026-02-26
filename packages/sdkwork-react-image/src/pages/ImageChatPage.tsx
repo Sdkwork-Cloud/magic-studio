@@ -1,8 +1,8 @@
 // GenerationChatWindow has been moved to sdkwork-react-assets
-import { GenerationChatWindow } from 'sdkwork-react-assets';
+import { GenerationChatWindow } from '@sdkwork/react-assets';
 import React from 'react';
 import { ImageStoreProvider, useImageStore } from '../store/imageStore';
-import { useRouter, ROUTES, uploadHelper } from 'sdkwork-react-core';
+import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 
 const ImageChatContent: React.FC = () => {
     const {

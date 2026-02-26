@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 ;

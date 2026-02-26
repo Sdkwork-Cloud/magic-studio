@@ -1,4 +1,4 @@
-import { FileEntry, FileStat } from 'sdkwork-react-types';
+import { FileEntry, FileStat } from '@sdkwork/react-types';
 import { IFileSystemProvider } from '../types';
 
 // Platform API will be injected at runtime

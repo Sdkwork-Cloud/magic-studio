@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Wand2, Languages, FileText, Check, X, Loader2, PenTool } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AIPanelProps {
     onClose: () => void;

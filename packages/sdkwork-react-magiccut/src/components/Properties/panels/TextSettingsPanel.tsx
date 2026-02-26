@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { PropertySection, ScrubbableInput, ColorPicker, SegmentedControl } from '../widgets/PropertyWidgets';
 import { DEFAULT_TEXT_STYLE, TextStyle } from '../../../engine/text/TextRenderer';
-import { PromptTextInput } from 'sdkwork-react-assets';
-import { genAIService } from 'sdkwork-react-core';
+import { PromptTextInput } from '@sdkwork/react-assets';
+import { genAIService } from '@sdkwork/react-core';
 
 interface TextSettingsPanelProps {
     content: string;

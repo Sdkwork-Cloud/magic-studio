@@ -1,4 +1,4 @@
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { CanvasBoard } from '../entities/canvas.entity';
 
 ;

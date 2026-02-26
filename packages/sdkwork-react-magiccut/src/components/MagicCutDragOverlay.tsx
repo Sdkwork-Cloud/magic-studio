@@ -1,8 +1,8 @@
 
-import { assetService } from 'sdkwork-react-assets'
+import { assetService } from '@sdkwork/react-assets'
 import React, { useEffect, useRef, useState } from 'react';
 import { useMagicCutStore } from '../store/magicCutStore';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { Film, Image as ImageIcon, Music, Sparkles, AlertCircle, Type } from 'lucide-react';
 ;
 

@@ -2,9 +2,9 @@
 import { settingsRepository } from '../repository/settingsRepository';
 ;
 import { DEFAULT_SETTINGS } from '../constants';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 import { AppSettings } from '../entities/settings.entity';
-import { ServiceResult, Result } from 'sdkwork-react-commons';
+import { ServiceResult, Result } from '@sdkwork/react-commons';
 
 const getPlatformDefaultShell = async (): Promise<string> => {
   const os = await platform.getOsType();

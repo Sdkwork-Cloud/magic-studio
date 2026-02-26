@@ -62,7 +62,7 @@ type SfxAsset = AudioMediaResource & {
 The asset center uses a registry pattern to manage different asset services:
 
 ```typescript
-import { assetServiceRegistry, initializeAssetServices } from 'sdkwork-react-assets';
+import { assetServiceRegistry, initializeAssetServices } from '@sdkwork/react-assets';
 
 // Initialize all services (call once at app startup)
 initializeAssetServices();
@@ -95,7 +95,7 @@ if (assetServiceRegistry.has('sfx')) {
 ### 1. Basic Asset Operations
 
 ```typescript
-import { assetService, AssetType } from 'sdkwork-react-assets';
+import { assetService, AssetType } from '@sdkwork/react-assets';
 
 // Import an asset
 const imageData = await fetchImageData();
@@ -117,7 +117,7 @@ import {
     DigitalHumanAsset, 
     SfxAsset, 
     getAssetService 
-} from 'sdkwork-react-assets';
+} from '@sdkwork/react-assets';
 
 // Get digital human assets
 const dhService = getAssetService('digital-human');
@@ -140,7 +140,7 @@ soundEffects.content.forEach((asset: SfxAsset) => {
 ### 3. Asset URL Resolution
 
 ```typescript
-import { useAssetUrl } from 'sdkwork-react-assets';
+import { useAssetUrl } from '@sdkwork/react-assets';
 
 function AssetDisplay({ assetPath }: { assetPath: string }) {
     const { url, loading } = useAssetUrl(assetPath);
@@ -155,7 +155,7 @@ function AssetDisplay({ assetPath }: { assetPath: string }) {
 ### 4. Asset Selection Component
 
 ```typescript
-import { ChooseAsset, AssetType } from 'sdkwork-react-assets';
+import { ChooseAsset, AssetType } from '@sdkwork/react-assets';
 
 function AssetSelector() {
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -178,7 +178,7 @@ Always initialize asset services at application startup:
 
 ```typescript
 // In your app's entry point
-import { initializeAssetServices } from 'sdkwork-react-assets';
+import { initializeAssetServices } from '@sdkwork/react-assets';
 
 initializeAssetServices();
 ```

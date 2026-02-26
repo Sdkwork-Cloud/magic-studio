@@ -4,7 +4,7 @@ import {
     Sparkles, ArrowUp, StopCircle, Languages, AlignLeft, 
     FileCode, FileType, Check, ChevronDown, Command
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AIWriterFloatProps {
     visible: boolean;

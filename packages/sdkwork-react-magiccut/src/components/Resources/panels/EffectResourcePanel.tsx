@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { AnyAsset } from 'sdkwork-react-assets';
+import { AnyAsset } from '@sdkwork/react-assets';
 import { Sparkles, Eye } from 'lucide-react';
-import { useAssetUrl } from 'sdkwork-react-assets';
+import { useAssetUrl } from '@sdkwork/react-assets';
 
 interface EffectResourcePanelProps {
     assets: AnyAsset[];

@@ -1,15 +1,14 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useNoteStore } from '../store/noteStore';
-import { TreeItem, NoteType, logger } from 'sdkwork-react-commons';
+import { TreeItem, NoteType, logger } from '@sdkwork/react-commons';
 import { 
     Plus, Search, ChevronRight, Trash2, FileText, 
     Folder, FolderOpen, FilePlus, FolderPlus, Edit2, Star, Clock,
     BookOpen, Layout, Type, Code, MoreHorizontal, ChevronDown,
     File as GenericFile, X
 } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
-;
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // --- Icons Mapping ---
 const TYPE_ICONS: Record<NoteType, any> = {

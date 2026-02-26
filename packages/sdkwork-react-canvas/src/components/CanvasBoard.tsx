@@ -11,7 +11,7 @@ import { CanvasBackground } from './layers/CanvasBackground';
 import { CanvasConnections } from './layers/CanvasConnections';
 ;
 import { CanvasElement, CanvasElementType, ConnectionDraft, DropMenuState, MarqueeState, ContextMenuState } from '../entities/canvas.entity';
-import { QuadTree, Rect } from 'sdkwork-react-commons';
+import { QuadTree, Rect } from '@sdkwork/react-commons';
 import { getSmartPath } from '../utils/smartPath';
 import { calculateSnap } from '../utils/snapping';
 import { CanvasContextMenu } from './CanvasContextMenu';

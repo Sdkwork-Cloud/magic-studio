@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-canvas",
+  "name": "@sdkwork/react-canvas",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,8 +25,9 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*"
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

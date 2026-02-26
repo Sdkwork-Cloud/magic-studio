@@ -1,5 +1,5 @@
 
-import { useRouter } from 'sdkwork-react-core'
+import { useRouter } from '@sdkwork/react-core'
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
     ChevronLeft, ChevronDown, Check, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 ;
 import { ROUTES } from '../../router/routes';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface GenerationLayoutSidebarProps {
     className?: string;

@@ -1,10 +1,10 @@
 
 ;
 ;
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { Presentation, Slide } from '../entities/ppt.entity';
-import { generateUUID } from 'sdkwork-react-commons';
-import { ServiceResult, Result } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
+import { ServiceResult, Result } from '@sdkwork/react-commons';
 
 const STORAGE_KEY_PPT = 'open_studio_ppt_v1';
 

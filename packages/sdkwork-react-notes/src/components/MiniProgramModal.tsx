@@ -1,12 +1,12 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Image as ImageIcon, Type, LayoutTemplate, Link as LinkIcon, Check, Smartphone, AppWindow, Link2 } from 'lucide-react';
 ;
-import { ChooseAsset } from 'sdkwork-react-assets';
+import { ChooseAsset } from '@sdkwork/react-assets';
 import { Asset } from '../../assets/entities/asset.entity';
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 interface MiniProgramModalProps {
     onClose: () => void;

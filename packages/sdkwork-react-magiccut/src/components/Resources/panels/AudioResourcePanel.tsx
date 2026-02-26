@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { AnyAsset } from 'sdkwork-react-assets';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { AnyAsset } from '@sdkwork/react-assets';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { Pause, Heart, FileAudio, Mic2, Trash2 } from 'lucide-react';
 
 interface AudioResourcePanelProps {

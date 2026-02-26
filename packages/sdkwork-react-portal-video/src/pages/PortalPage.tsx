@@ -1,14 +1,14 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic, Layers, ArrowRightLeft, Grid3x3 } from 'lucide-react';
-import { useFilmStore, FilmStoreProvider } from 'sdkwork-react-film';
-import { useRouter, ROUTES, uploadHelper, modelInfoService } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useFilmStore, FilmStoreProvider } from '@sdkwork/react-film';
+import { useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { FILM_STYLES, GEN_MODES } from '../constants';
-import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector, ChooseAssetModal, assetService } from 'sdkwork-react-assets';
+import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector, ChooseAssetModal, assetService } from '@sdkwork/react-assets';
 import { PortalSidebar, PortalHeader, ToolsGrid, CommunityGallery, StickyHeroBar } from '../index';
-import { GalleryCard, GalleryItem, generateUUID, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent } from 'sdkwork-react-commons';
-import { GenerationPreview } from 'sdkwork-react-image';
+import { GalleryCard, GalleryItem, generateUUID, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent } from '@sdkwork/react-commons';
+import { GenerationPreview } from '@sdkwork/react-image';
 
 const MOCK_SHORTS: GalleryItem[] = [
     { 

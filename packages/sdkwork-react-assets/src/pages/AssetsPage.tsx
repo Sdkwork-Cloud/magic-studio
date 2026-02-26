@@ -4,8 +4,8 @@ import { AssetGrid } from '../components/AssetGrid'
 import React, { useState } from 'react';
 import { useAssetStore } from '../store/assetStore';
 import { Search, Upload } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { platform } from 'sdkwork-react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { platform } from '@sdkwork/react-core';
 
 // Stub FilePreviewModal - to be replaced with actual sdkwork-react-drive import
 const FilePreviewModal: React.FC<{ item: any; onClose: () => void }> = ({ item, onClose }) => {

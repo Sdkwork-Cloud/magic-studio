@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { AnyAsset } from 'sdkwork-react-assets';
+import { AnyAsset } from '@sdkwork/react-assets';
 import { Play, Heart, Music, Trash2 } from 'lucide-react';
-import { useAssetUrl } from 'sdkwork-react-assets';
+import { useAssetUrl } from '@sdkwork/react-assets';
 
 interface MusicResourcePanelProps {
     assets: AnyAsset[];

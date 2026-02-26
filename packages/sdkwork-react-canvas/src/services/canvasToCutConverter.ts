@@ -1,11 +1,11 @@
 
 ;
 import { CanvasBoard, CanvasElement, CanvasExportMode } from '../entities/canvas.entity';
-import { AnyMediaResource, MediaResourceType, generateUUID } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType, generateUUID } from '@sdkwork/react-commons';
 import { 
     CutProject, CutTimeline, CutTrack, CutClip, CutClipTransform, CutTrackType,
     TIMELINE_CONSTANTS
-} from 'sdkwork-react-magiccut';
+} from '@sdkwork/react-magiccut';
 
 // --- Constants ---
 const DEFAULT_DURATIONS: Record<string, number> = {

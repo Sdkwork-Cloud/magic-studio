@@ -6,7 +6,7 @@ import { ImportData as _ImportData } from './upload/types'; // eslint-disable-li
 import { UploadImageGenerationModal } from './upload/UploadImageGenerationModal';
 import { UploadVideoGenerationModal } from './upload/UploadVideoGenerationModal';
 import { UploadMusicGenerationModal } from './upload/UploadMusicGenerationModal';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export interface HistoryTab {
     id: string;

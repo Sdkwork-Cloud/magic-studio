@@ -1,10 +1,10 @@
 
 import { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from '../entities/asset.entity';
-import { vfs } from 'sdkwork-react-fs';
-import { pathUtils, generateUUID, IBaseService, ServiceResult, Result, Page, PageRequest, logger, MediaResource as _MediaResource, MediaResourceType, AnyMediaResource } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { storageConfig, LIBRARY_SUBDIRS } from 'sdkwork-react-fs';
-import { mediaAnalysisService } from 'sdkwork-react-core';
+import { vfs } from '@sdkwork/react-fs';
+import { pathUtils, generateUUID, IBaseService, ServiceResult, Result, Page, PageRequest, logger, MediaResource as _MediaResource, MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { storageConfig, LIBRARY_SUBDIRS } from '@sdkwork/react-fs';
+import { mediaAnalysisService } from '@sdkwork/react-core';
 
 export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'image', label: 'Images', accepts: ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.bmp', '.tiff'] },

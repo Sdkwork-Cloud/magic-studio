@@ -5,7 +5,7 @@ export { AudioModelSelector } from './components/AudioModelSelector';
 export { AudioRecorder } from './components/Audio/AudioRecorder';
 export { AudioGeneratorModal } from './components/AudioGeneratorModal';
 export { AudioStoreProvider, useAudioStore } from './store';
-export * from './entities/audio.entity';
+export * from './entities';
 export * from './services';
 export * from './constants';
 export * from './i18n';

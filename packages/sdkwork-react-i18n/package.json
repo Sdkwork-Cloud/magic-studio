@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-i18n",
+  "name": "@sdkwork/react-i18n",
   "version": "0.1.0",
   "description": "Internationalization package for SDKWork React applications",
   "private": true,

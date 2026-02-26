@@ -1,8 +1,8 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons';
 import React from 'react';
 import { useFilmStore } from '../store/filmStore';
-import { SettingsSection, SettingInput, SettingTextArea } from 'sdkwork-react-settings';
+import { SettingsSection, SettingInput, SettingTextArea } from '@sdkwork/react-settings';
 
 import { Image as ImageIcon, Video } from 'lucide-react';
 

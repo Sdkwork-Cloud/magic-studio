@@ -1,5 +1,5 @@
 
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../../../../constants';
 import React from 'react';
 import { Film, Image as ImageIcon, Music, Type, FileVideo, Sparkles } from 'lucide-react';

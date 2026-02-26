@@ -3,7 +3,7 @@ import { VoiceTask, VoiceConfig } from '../entities/voice.entity';
 import { voiceService } from '../services/voiceService';
 import { voiceHistoryService } from '../services/voiceHistoryService';
 import { VOICE_MODELS, PRESET_VOICES } from '../constants';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 interface VoiceStoreContextType {
     history: VoiceTask[];

@@ -3,7 +3,7 @@ import { SfxTask, SfxConfig } from '../entities/sfx.entity';
 import { sfxService } from '../services/sfxService';
 import { sfxHistoryService } from '../services/sfxHistoryService';
 import { SFX_MODELS } from '../constants';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 interface SfxStoreContextType {
     history: SfxTask[];

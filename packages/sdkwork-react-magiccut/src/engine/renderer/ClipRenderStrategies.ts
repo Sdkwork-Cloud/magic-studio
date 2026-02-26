@@ -1,5 +1,5 @@
 import { CutClip } from '../../entities/magicCut.entity';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { RenderContext } from '../types';
 import { textRenderer, TextStyle, DEFAULT_TEXT_STYLE } from '../text/TextRenderer';
 

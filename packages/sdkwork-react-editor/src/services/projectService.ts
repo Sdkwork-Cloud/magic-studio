@@ -1,5 +1,5 @@
 
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 import { GitSyncOptions, PublishOptions } from '../types';
 

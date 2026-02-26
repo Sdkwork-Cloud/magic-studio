@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmbeddedChatPane } from 'sdkwork-react-chat';
+import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useCanvasStore } from '../store/canvasStore';
 
 export const CanvasChatPane: React.FC = () => {

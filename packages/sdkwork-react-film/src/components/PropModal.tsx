@@ -2,12 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Box, Image as ImageIcon, Wand2, Upload, Trash2, Sparkles, Grid3X3, Layers, FolderOpen } from 'lucide-react';
-import { ChooseAssetModal, PromptTextInput } from 'sdkwork-react-assets';
-import { AIImageGeneratorModal } from 'sdkwork-react-image';
-import { Asset } from '../../assets/entities/asset.entity';
-import { genAIService } from 'sdkwork-react-core';
-import { FilmProp, ImageMediaResource } from 'sdkwork-react-commons';
-import { generateUUID } from 'sdkwork-react-commons';
+import { ChooseAssetModal, PromptTextInput,Asset } from '@sdkwork/react-assets';
+import { AIImageGeneratorModal } from '@sdkwork/react-image'; 
+import { genAIService } from '@sdkwork/react-core';
+import { FilmProp, ImageMediaResource } from '@sdkwork/react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 interface PropModalProps {
     isOpen: boolean;

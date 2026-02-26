@@ -1,8 +1,8 @@
 
-import { assetService as _assetService, GenerationChatWindow } from 'sdkwork-react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { assetService as _assetService, GenerationChatWindow } from '@sdkwork/react-assets' // eslint-disable-line @typescript-eslint/no-unused-vars
 import React from 'react';
 import { SfxStoreProvider, useSfxStore } from '../index';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
 
 const SfxChatContent: React.FC = () => {
     const { history, deleteTask, generate, isGenerating, config, setConfig } = useSfxStore();

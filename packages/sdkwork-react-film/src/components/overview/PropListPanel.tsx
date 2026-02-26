@@ -5,7 +5,7 @@ import { Box, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { PropCard } from './PropCard';
 
 import { useFilmStore } from '../../store/filmStore';
-import { FilmProp, MediaScene, AssetMediaResource, MediaResourceType, generateUUID } from 'sdkwork-react-commons';
+import { FilmProp, MediaScene, AssetMediaResource, MediaResourceType, generateUUID } from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
 
 interface PropListPanelProps {

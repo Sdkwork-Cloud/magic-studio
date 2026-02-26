@@ -2,7 +2,7 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface ChatSidebarProps {
   isOpen: boolean;

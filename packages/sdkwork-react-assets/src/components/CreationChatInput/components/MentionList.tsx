@@ -6,8 +6,8 @@ import React, {
   useState,
 } from 'react'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { FileText, Image as ImageIcon, Video, Mic } from 'lucide-react';
-import type { InputAttachment } from 'sdkwork-react-commons';
-import { getAssetLabel } from 'sdkwork-react-commons';
+import type { InputAttachment } from '@sdkwork/react-commons';
+import { getAssetLabel } from '@sdkwork/react-commons';
 
 export interface MentionListProps {
   items: InputAttachment[];

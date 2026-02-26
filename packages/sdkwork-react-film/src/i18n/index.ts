@@ -3,11 +3,11 @@ export type {
     I18nNamespaceResource,
     I18nModuleResource,
     SupportedLocale 
-} from 'sdkwork-react-i18n';
+} from '@sdkwork/react-i18n';
 
 import { filmEnUS } from './locales/en-US';
 import { filmZhCN } from './locales/zh-CN';
-import type { PackageI18nConfig } from 'sdkwork-react-i18n';
+import type { PackageI18nConfig } from '@sdkwork/react-i18n';
 
 export const NAMESPACE = 'film';
 

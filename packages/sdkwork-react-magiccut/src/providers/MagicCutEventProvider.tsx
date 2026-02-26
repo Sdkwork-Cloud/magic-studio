@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useMemo, useEffect } from 'react';
-import { EventBus } from 'sdkwork-react-core';
-import { useEventSubscription } from 'sdkwork-react-core';
+import { EventBus } from '@sdkwork/react-core';
+import { useEventSubscription } from '@sdkwork/react-core';
 
 export type MagicCutEventBus = EventBus;
 

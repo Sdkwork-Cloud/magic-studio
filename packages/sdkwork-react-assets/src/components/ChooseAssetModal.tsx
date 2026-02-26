@@ -1,12 +1,12 @@
 import { Asset, AssetType } from '../entities/asset.entity'
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import React, { useState, useEffect } from 'react';
 import { X, Search, UploadCloud, CheckCircle2, LayoutGrid, FileText, Image as ImageIcon } from 'lucide-react';
 import { AssetStoreProvider, useAssetStore } from '../store/assetStore';
 import { AssetSidebar } from './AssetSidebar';
 import { AssetGrid } from './AssetGrid';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { platform, uploadHelper as _uploadHelper } from 'sdkwork-react-core'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { useTranslation } from '@sdkwork/react-i18n';
+import { platform, uploadHelper as _uploadHelper } from '@sdkwork/react-core'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 interface ChooseAssetModalContentProps {
     onClose: () => void;

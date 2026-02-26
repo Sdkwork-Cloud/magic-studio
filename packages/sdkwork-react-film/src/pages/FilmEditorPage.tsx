@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FilmStoreProvider } from '../store/filmStore';
 import { FilmSidebar, FilmWorkspace, FilmChatPanel, FilmSettingsDropdown, FilmPreviewPanel } from '../index';

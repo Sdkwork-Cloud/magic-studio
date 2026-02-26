@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { FileText, Plus } from 'lucide-react';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useNoteStore } from '../store/noteStore';
 
 export const NoteEditorEmpty: React.FC = () => {

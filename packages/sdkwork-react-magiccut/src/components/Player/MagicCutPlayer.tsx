@@ -9,11 +9,11 @@ import { MagicCutEvents, SeekPayload } from '../../events';
 import { UniversalPlayer, UniversalPlayerHandle, RenderData } from './UniversalPlayer';
 import { PlayerControls } from './PlayerControls';
 import { CutClip, CutLayer } from '../../entities/magicCut.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 import { usePlayerPreviewSync } from '../../hooks/usePlayerPreviewSync';
 import { audioEngine } from '../../engine/AudioEngine';
 
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { MagicCutErrorBoundary } from '../ErrorBoundary/MagicCutErrorBoundary';
 
 const getResolutionFromRatio = (ratio: string): string => {

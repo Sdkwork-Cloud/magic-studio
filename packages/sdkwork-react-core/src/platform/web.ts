@@ -1,5 +1,5 @@
 import { PlatformAPI, FileEntry, FileStat, SystemPath, BrowserInstance } from './types';
-import { pathUtils } from 'sdkwork-react-commons';
+import { pathUtils } from '@sdkwork/react-commons';
 
 class WebFileSystem {
     private dbName = 'OpenStudio_VFS';

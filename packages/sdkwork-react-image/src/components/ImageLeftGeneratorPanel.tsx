@@ -1,5 +1,5 @@
 
-import { Button as _Button } from 'sdkwork-react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Button as _Button } from '@sdkwork/react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import React, { useState, useRef, useEffect } from 'react';
 import { useImageStore } from '../store/imageStore';
 import { IMAGE_STYLES } from '../constants';
@@ -7,12 +7,12 @@ import {
     Image as ImageIcon, ChevronDown, Check as _Check, Loader2, Sparkles as _Sparkles,
     Zap, Settings2, Copy, Layers, Upload as _Upload, Trash2 as _Trash2, Wand2
 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { ImageModelSelector } from './ImageModelSelector';
-import { PromptTextInput, ChooseAssetModal as _ChooseAssetModal, assetService as _assetService, StyleSelector } from 'sdkwork-react-assets'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Asset } from 'sdkwork-react-commons';
-import { genAIService } from 'sdkwork-react-core'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { ChooseAsset } from 'sdkwork-react-assets';
+import { PromptTextInput, ChooseAssetModal as _ChooseAssetModal, assetService as _assetService, StyleSelector } from '@sdkwork/react-assets'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Asset } from '@sdkwork/react-commons';
+import { genAIService } from '@sdkwork/react-core'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { ChooseAsset } from '@sdkwork/react-assets';
 
 // Helper for Aspect Ratios specific to Image
 const IMAGE_ASPECT_RATIOS = [

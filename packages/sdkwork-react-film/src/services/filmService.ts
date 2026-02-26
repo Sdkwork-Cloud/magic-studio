@@ -8,10 +8,10 @@ import type {
   FilmScene,
   FilmShot,
   FilmAnalysisResult
-} from 'sdkwork-react-commons';
-import { MediaResourceType, AssetMediaResource, MediaScene } from 'sdkwork-react-commons';
+} from '@sdkwork/react-commons';
+import { MediaResourceType, AssetMediaResource, MediaScene } from '@sdkwork/react-commons';
 import { filmProjectService } from './filmProjectService';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 const API_KEY = process.env.API_KEY || '';
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;

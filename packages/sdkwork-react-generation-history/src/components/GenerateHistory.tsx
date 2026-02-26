@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { History } from 'lucide-react';
-import { ImageTask, MediaType } from 'sdkwork-react-commons';
+import { ImageTask, MediaType } from '@sdkwork/react-commons';
 import { GenerationItem } from './GenerationItem';
 import { GenerationPreview, EditorComponents } from './GenerationPreview';
 

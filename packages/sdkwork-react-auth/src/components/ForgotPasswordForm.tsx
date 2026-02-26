@@ -1,10 +1,10 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import { authService } from '../services/authService'
 import React, { useState } from 'react';
 import { Mail, CheckCircle2, ArrowRight } from 'lucide-react';
 import { AuthInput } from './AuthInput';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface ForgotPasswordFormProps {
     onBack?: () => void;

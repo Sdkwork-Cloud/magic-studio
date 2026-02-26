@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-drive",
+  "name": "@sdkwork/react-drive",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,10 +27,10 @@
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-editor": "workspace:*",
-    "sdkwork-react-fs": "workspace:*"
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-editor": "workspace:*",
+    "@sdkwork/react-fs": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -1,11 +1,11 @@
 
 ;
-import { vfs } from 'sdkwork-react-fs';
-import { Note, NoteSummary, NoteFolder, pathUtils } from 'sdkwork-react-commons';
-import { platform } from 'sdkwork-react-core';
-import { IBaseService, ServiceResult, Result, Page, PageRequest } from 'sdkwork-react-commons';
-import { TextSearchEngine } from 'sdkwork-react-commons';
-import { logger } from 'sdkwork-react-commons';
+import { vfs } from '@sdkwork/react-fs';
+import { Note, NoteSummary, NoteFolder, pathUtils } from '@sdkwork/react-commons';
+import { platform } from '@sdkwork/react-core';
+import { IBaseService, ServiceResult, Result, Page, PageRequest } from '@sdkwork/react-commons';
+import { TextSearchEngine } from '@sdkwork/react-commons';
+import { logger } from '@sdkwork/react-commons';
 
 const NOTES_ROOT_DIR = 'OpenStudio/Notes';
 

@@ -8,9 +8,9 @@ import {
     Copy, Check, Play, LayoutTemplate, Brush,
     Move, Eraser, Mic, Repeat2, MessageSquare, UserPlus
 } from 'lucide-react';
-import { ImageTask, MediaResourceType, GalleryItem, PromptText, useAssetUrl } from 'sdkwork-react-commons';
-import { platform, useRouter, ROUTES, remixService } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { ImageTask, MediaResourceType, GalleryItem, PromptText, useAssetUrl } from '@sdkwork/react-commons';
+import { platform, useRouter, ROUTES, remixService } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type PreviewMode = 'creation' | 'view';
 

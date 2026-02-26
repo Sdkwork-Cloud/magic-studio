@@ -5,9 +5,9 @@ import { imageService } from '../services/imageService';
 import { imageHistoryService } from '../services/imageHistoryService';
 import { IMAGE_STYLES } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { platform as _platform } from 'sdkwork-react-core';
-import { generateUUID } from 'sdkwork-react-commons';
-import { assetService } from 'sdkwork-react-assets';
+import { platform as _platform } from '@sdkwork/react-core';
+import { generateUUID } from '@sdkwork/react-commons';
+import { assetService } from '@sdkwork/react-assets';
 
 interface ImageStoreContextType {
     history: ImageTask[];

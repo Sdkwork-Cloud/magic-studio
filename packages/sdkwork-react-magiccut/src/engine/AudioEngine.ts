@@ -1,7 +1,7 @@
 
-import { assetService } from 'sdkwork-react-assets'
-import { platform } from 'sdkwork-react-core';
-import { MediaResourceType, AnyMediaResource } from 'sdkwork-react-commons';
+import { assetService } from '@sdkwork/react-assets'
+import { platform } from '@sdkwork/react-core';
+import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip, CutTimeline, CutTrack } from '../entities/magicCut.entity';
 import { AudioEffectProcessor, createAudioEffectChain } from '../services/audio/AudioEffectProcessor';
 

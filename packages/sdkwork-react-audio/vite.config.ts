@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'sdkwork-react-audio',
+      name: '@sdkwork/react-audio',
       formats: ['es'],
       fileName: 'index'
     },
@@ -24,22 +24,22 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        'sdkwork-react-commons',
-        'sdkwork-react-core',
-        'sdkwork-react-assets',
-        'sdkwork-react-i18n',
-        'sdkwork-react-image'
+        '@sdkwork/react-commons',
+        '@sdkwork/react-core',
+        '@sdkwork/react-assets',
+        '@sdkwork/react-i18n',
+        '@sdkwork/react-image'
       ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-assets': 'SdkworkReactAssets',
-          'sdkwork-react-i18n': 'SdkworkReactI18n',
-          'sdkwork-react-image': 'SdkworkReactImage'
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-assets': 'SdkworkReactAssets',
+          '@sdkwork/react-i18n': 'SdkworkReactI18n',
+          '@sdkwork/react-image': 'SdkworkReactImage'
         }
       }
     },

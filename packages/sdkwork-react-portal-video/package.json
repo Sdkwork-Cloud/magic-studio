@@ -1,5 +1,5 @@
 {
-  "name": "sdkwork-react-portal-video",
+  "name": "@sdkwork/react-portal-video",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,18 +25,18 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "sdkwork-react-assets": "workspace:*",
-    "sdkwork-react-auth": "workspace:*",
-    "sdkwork-react-commons": "workspace:*",
-    "sdkwork-react-core": "workspace:*",
-    "sdkwork-react-film": "workspace:*",
-    "sdkwork-react-i18n": "workspace:*",
-    "sdkwork-react-image": "workspace:*",
-    "sdkwork-react-notifications": "workspace:*",
-    "sdkwork-react-plugins": "workspace:*",
-    "sdkwork-react-trade": "workspace:*",
-    "sdkwork-react-vip": "workspace:*",
-    "sdkwork-react-workspace": "workspace:*"
+    "@sdkwork/react-assets": "workspace:*",
+    "@sdkwork/react-auth": "workspace:*",
+    "@sdkwork/react-commons": "workspace:*",
+    "@sdkwork/react-core": "workspace:*",
+    "@sdkwork/react-film": "workspace:*",
+    "@sdkwork/react-i18n": "workspace:*",
+    "@sdkwork/react-image": "workspace:*",
+    "@sdkwork/react-notifications": "workspace:*",
+    "@sdkwork/react-plugins": "workspace:*",
+    "@sdkwork/react-trade": "workspace:*",
+    "@sdkwork/react-vip": "workspace:*",
+    "@sdkwork/react-workspace": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

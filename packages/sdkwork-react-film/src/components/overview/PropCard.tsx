@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box, Package } from 'lucide-react';
 
-import { FilmProp, useAssetUrl, MediaScene } from 'sdkwork-react-commons';
+import { FilmProp, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
 
 export interface PropCardProps {
     prop: FilmProp;

@@ -7,8 +7,8 @@ import {
     Award, AlertCircle, Bot, Brain, Puzzle,
     ImageIcon, Palette
 } from 'lucide-react';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
-import { PortalHeader, PortalSidebar } from 'sdkwork-react-portal-video';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { PortalHeader, PortalSidebar } from '@sdkwork/react-portal-video';
 import { AGENT_SKILLS } from '../data/skills';
 
 interface SkillDetailPageProps {
@@ -45,8 +45,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                 onClick={() => onBack ? onBack() : navigate(ROUTES.PORTAL_SKILLS)}
                                 className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
                             >
-                                返回技能市场
-                            </button>
+                                返回技能市�?                            </button>
                         </div>
                     </div>
                 </div>
@@ -73,7 +72,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
             });
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('链接已复制到剪贴板');
+            alert('链接已复制到剪贴�?);
         }
     };
 
@@ -83,13 +82,13 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
         if (capability.includes('语音') || capability.includes('配音')) return Mic;
         if (capability.includes('代码') || capability.includes('生成')) return Code;
         if (capability.includes('文档') || capability.includes('翻译')) return FileText;
-        if (capability.includes('自动化') || capability.includes('工作流')) return Terminal;
+        if (capability.includes('自动�?) || capability.includes('工作�?)) return Terminal;
         if (capability.includes('3D') || capability.includes('模型')) return Layers;
-        if (capability.includes('提示词') || capability.includes('对话')) return MessageSquare;
+        if (capability.includes('提示�?) || capability.includes('对话')) return MessageSquare;
         if (capability.includes('分析') || capability.includes('数据')) return TrendingUp;
         if (capability.includes('图片') || capability.includes('风格')) return ImageIcon;
         if (capability.includes('艺术') || capability.includes('转换')) return Palette;
-        if (capability.includes('机器人') || capability.includes('客服')) return Bot;
+        if (capability.includes('机器�?) || capability.includes('客服')) return Bot;
         if (capability.includes('思维') || capability.includes('笔记')) return Brain;
         if (capability.includes('拼图')) return Puzzle;
         return Zap;
@@ -160,8 +159,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                                 {skill.featured && (
                                                     <span className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold rounded-lg flex items-center gap-1">
                                                         <Award size={12} />
-                                                        精选
-                                                    </span>
+                                                        精�?                                                    </span>
                                                 )}
                                             </div>
 
@@ -202,15 +200,14 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                             {isInstalled ? (
                                                 <span className="flex items-center justify-center gap-2">
                                                     <CheckCircle size={16} />
-                                                    已安装
-                                                </span>
+                                                    已安�?                                                </span>
                                             ) : isInstalling ? (
                                                 <span className="flex items-center justify-center gap-2">
                                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    安装中...
+                                                    安装�?..
                                                 </span>
                                             ) : skill.premium ? (
-                                                '获取专业版'
+                                                '获取专业�?
                                             ) : (
                                                 '免费安装'
                                             )}
@@ -224,12 +221,12 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                 </div>
 
                                 <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-2xl p-6 border border-white/5">
-                                    <h2 className="text-lg font-semibold text-white mb-4">技能介绍</h2>
+                                    <h2 className="text-lg font-semibold text-white mb-4">技能介�?/h2>
                                     <p className="text-gray-400 leading-relaxed">{skill.description}</p>
                                 </div>
 
                                 <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-2xl p-6 border border-white/5">
-                                    <h2 className="text-lg font-semibold text-white mb-4">功能特性</h2>
+                                    <h2 className="text-lg font-semibold text-white mb-4">功能特�?/h2>
                                     <div className="grid grid-cols-2 gap-3">
                                         {skill.capabilities.map((capability: string, index: number) => {
                                             const CapIcon = getCapabilityIcon(capability);
@@ -278,7 +275,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
 
                             <div className="space-y-6">
                                 <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-2xl p-5 border border-white/5">
-                                    <h3 className="text-sm font-semibold text-white mb-4">技能信息</h3>
+                                    <h3 className="text-sm font-semibold text-white mb-4">技能信�?/h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-500 flex items-center gap-2">
@@ -306,7 +303,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                                 <Shield size={14} />
                                                 权限
                                             </span>
-                                            <span className="text-gray-300">{skill.permissions?.length || 0} 项</span>
+                                            <span className="text-gray-300">{skill.permissions?.length || 0} �?/span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-500 flex items-center gap-2">
@@ -347,7 +344,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                 </div>
 
                                 <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-2xl p-5 border border-white/5">
-                                    <h3 className="text-sm font-semibold text-white mb-3">开发者</h3>
+                                    <h3 className="text-sm font-semibold text-white mb-3">开发�?/h3>
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-semibold">
                                             {skill.author.name[0]}
@@ -359,7 +356,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                                                     <CheckCircle size={12} className="text-emerald-400" />
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-500">已发布多个优质技能</p>
+                                            <p className="text-xs text-gray-500">已发布多个优质技�?/p>
                                         </div>
                                     </div>
                                     <button className="w-full mt-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-medium rounded-lg transition-colors">

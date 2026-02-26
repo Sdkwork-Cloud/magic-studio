@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useMagicCutStore } from '../../../store/magicCutStore';
 import { MenuItemConfig, MenuContextType } from './types';
-import { MediaResourceType } from 'sdkwork-react-commons';
+import { MediaResourceType } from '@sdkwork/react-commons';
 
 export const useMenuLogic = (
     type: MenuContextType,
@@ -45,7 +45,7 @@ export const useMenuLogic = (
                 },
                 {
                     id: 'trim-start',
-                    label: 'Trim Start (Delete Left)', // ���ɾ��?                    icon: React.createElement(ArrowLeftToLine, { size: 14 }),
+                    label: 'Trim Start (Delete Left)', // ���ɾ��?                    icon: React.createElement(ArrowLeftToLine, { size: 14 }),
                     shortcut: 'Q',
                     action: () => trimStart(time) // Pass time
                 },

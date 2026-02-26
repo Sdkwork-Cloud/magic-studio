@@ -5,15 +5,15 @@ import { VIDEO_DURATIONS, VIDEO_ASPECT_RATIOS, VIDEO_GENERATION_MODES, VIDEO_STY
 import { 
     Film, ChevronDown, Check, Loader2, Sparkles, Zap, ArrowRight, Settings2, Palette
 } from 'lucide-react';
-import { VideoGenerationMode, InputAttachment, ImageUpload } from 'sdkwork-react-commons';
-import { StyleSelector } from 'sdkwork-react-assets';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { VideoGenerationMode, InputAttachment, ImageUpload } from '@sdkwork/react-commons';
+import { StyleSelector } from '@sdkwork/react-assets';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { VideoModelSelector } from './VideoModelSelector';
-import { PromptTextInput, ChooseAssetModal, assetService } from 'sdkwork-react-assets';
-import { AssetType, Asset } from 'sdkwork-react-commons';
-import { SettingSelect } from 'sdkwork-react-settings';
-import { ChooseAsset } from 'sdkwork-react-assets';
-import { genAIService } from 'sdkwork-react-core';
+import { PromptTextInput, ChooseAssetModal, assetService } from '@sdkwork/react-assets';
+import { AssetType, Asset } from '@sdkwork/react-commons';
+import { SettingSelect } from '@sdkwork/react-settings';
+import { ChooseAsset } from '@sdkwork/react-assets';
+import { genAIService } from '@sdkwork/react-core';
 
 export const VideoLeftGeneratorPanel: React.FC = () => {
     const { config, setConfig, setMode, generate, isGenerating } = useVideoStore();

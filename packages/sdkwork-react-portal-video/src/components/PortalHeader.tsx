@@ -1,16 +1,15 @@
 
-import { useRouter, ROUTES } from 'sdkwork-react-core'
+import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState, useRef, useEffect } from 'react';
 import {
     ChevronDown, Bell, User, LogOut, Plus, Check, Box,
     CreditCard, Settings, LayoutGrid, Home, Users, Tv, Wrench, Puzzle, Briefcase, ClipboardList
 } from 'lucide-react';
-import { useAuthStore } from 'sdkwork-react-auth';
-import { useWorkspaceStore } from 'sdkwork-react-workspace';
-import { useNotificationStore, NotificationCenter } from 'sdkwork-react-notifications';
-import { PricingModal } from 'sdkwork-react-vip';
+import { useAuthStore } from '@sdkwork/react-auth';
+import { useWorkspaceStore, WorkspaceProjectSelector } from '@sdkwork/react-workspace';
+import { useNotificationStore, NotificationCenter } from '@sdkwork/react-notifications';
+import { PricingModal } from '@sdkwork/react-vip';
 
-// 导航配置
 const NAV_ITEMS = [
     { id: 'home', label: '首页', icon: Home, route: ROUTES.PORTAL_VIDEO },
     { id: 'community', label: '社区', icon: Users, route: ROUTES.PORTAL_COMMUNITY },
@@ -25,14 +24,9 @@ export const PortalHeader: React.FC = () => {
     const { navigate, currentPath } = useRouter();
     const { unreadCount } = useNotificationStore();
 
-    // Debug: Log path changes
     React.useEffect(() => {
         console.log('[PortalHeader] currentPath changed:', currentPath);
     }, [currentPath]);
-
-    const { currentWorkspace, currentProject, setCurrentProject, addProject } = useWorkspaceStore();
-    const [showProjectMenu, setShowProjectMenu] = useState(false);
-    const projectMenuRef = useRef<HTMLDivElement>(null);
 
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -42,7 +36,6 @@ export const PortalHeader: React.FC = () => {
 
     const [showPricing, setShowPricing] = useState(false);
 
-    // 当前激活的导航项 - 从 currentPath 派生活跃状态
     const activeNav = React.useMemo(() => {
         const item = NAV_ITEMS.find(i => i.route === currentPath);
         return item ? item.id : 'home';
@@ -50,9 +43,6 @@ export const PortalHeader: React.FC = () => {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (projectMenuRef.current && !projectMenuRef.current.contains(event.target as Node)) {
-                setShowProjectMenu(false);
-            }
             if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
                 setShowUserMenu(false);
             }
@@ -64,14 +54,6 @@ export const PortalHeader: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleCreateProject = () => {
-        const name = prompt("Project Name:");
-        if (name) {
-            addProject(name, 'VIDEO', 'New video project');
-            setShowProjectMenu(false);
-        }
-    };
-
     const handleLogout = () => {
         logout();
         navigate(ROUTES.LOGIN);
@@ -81,8 +63,6 @@ export const PortalHeader: React.FC = () => {
         setShowUserMenu(false);
         setShowPricing(true);
     };
-
-    const projects = currentWorkspace?.projects || [];
 
     return (
         <div className="h-16 flex items-center justify-between px-8 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 transition-colors duration-300">
@@ -112,54 +92,13 @@ export const PortalHeader: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-5">
-                
-                <div className="relative" ref={projectMenuRef}>
-                    <button 
-                        onClick={() => setShowProjectMenu(!showProjectMenu)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-[#1a1a1c] border border-transparent hover:border-white/10 transition-all group"
-                    >
-                        <span className="text-xs font-semibold text-gray-300 group-hover:text-white tracking-wide">
-                            {currentProject ? currentProject.name : "Select Project"}
-                        </span>
-                        <ChevronDown size={12} className="text-gray-500 group-hover:text-white transition-colors" />
-                    </button>
-
-                    {showProjectMenu && (
-                        <div className="absolute top-full right-0 mt-2 w-64 bg-[#1e1e20] border border-white/10 rounded-xl shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/50">
-                            <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center border-b border-white/5 bg-[#222225]">
-                                <span>Active Workspace</span>
-                                <span className="bg-[#2a2a2d] px-1.5 rounded text-gray-400">{projects.length}</span>
-                            </div>
-                            
-                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-1 space-y-0.5">
-                                {projects.map(p => (
-                                    <button
-                                        key={p.uuid}
-                                        onClick={() => { setCurrentProject(p); setShowProjectMenu(false); }}
-                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-colors ${currentProject?.uuid === p.uuid ? 'bg-[#2a2a2d] text-white' : 'text-gray-400 hover:bg-[#252528] hover:text-gray-200'}`}
-                                    >
-                                        <div className="flex items-center gap-2.5">
-                                            <div className={`p-1 rounded ${currentProject?.uuid === p.uuid ? 'bg-blue-500/20 text-blue-400' : 'bg-[#333] text-gray-500'}`}>
-                                                <Box size={12} />
-                                            </div>
-                                            <span className="truncate max-w-[130px] font-medium">{p.name}</span>
-                                        </div>
-                                        {currentProject?.uuid === p.uuid && <Check size={12} className="text-blue-500" />}
-                                    </button>
-                                ))}
-                            </div>
-                            
-                            <div className="p-1 border-t border-white/5 mt-1">
-                                <button 
-                                    onClick={handleCreateProject}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors border border-dashed border-blue-500/30 hover:border-blue-500/50"
-                                >
-                                    <Plus size={12} /> Create New Project
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                {/* Workspace / Project Selector */}
+                <WorkspaceProjectSelector 
+                    variant="portal"
+                    showDelete={false}
+                    defaultProjectType="VIDEO"
+                    compact={true}
+                />
 
                 <div 
                     className="hidden md:flex items-center gap-2 bg-[#1a1a1c] px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-colors group cursor-pointer"

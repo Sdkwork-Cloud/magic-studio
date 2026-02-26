@@ -1,11 +1,11 @@
 
-import { GenerationChatWindow } from 'sdkwork-react-assets'
+import { GenerationChatWindow } from '@sdkwork/react-assets'
 import React from 'react';
 import { VideoStoreProvider, useVideoStore } from '../store/videoStore';
 ;
 ;
 ;
-import { useRouter, ROUTES, uploadHelper } from 'sdkwork-react-core';
+import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 
 const VideoChatContent: React.FC = () => {
     const { 

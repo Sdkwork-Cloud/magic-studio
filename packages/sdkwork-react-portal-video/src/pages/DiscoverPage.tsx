@@ -5,8 +5,8 @@ import { PortalHeader } from '../components/PortalHeader';
 import { 
     Flame, Clock, ChevronDown, Filter, LayoutGrid
 } from 'lucide-react';
-import { GalleryItem, GalleryCard } from 'sdkwork-react-commons';
-import { GenerationPreview } from 'sdkwork-react-image';
+import { GalleryItem, GalleryCard } from '@sdkwork/react-commons';
+import { GenerationPreview } from '@sdkwork/react-image';
 
 // --- Mock Data Mapped to GalleryItem ---
 const DISCOVER_ITEMS: GalleryItem[] = [

@@ -1,5 +1,5 @@
 
-import { VideoConfig, CreationChatInput } from 'sdkwork-react-commons'
+import { VideoConfig, CreationChatInput } from '@sdkwork/react-commons'
 import React from 'react';
 ;
 ;

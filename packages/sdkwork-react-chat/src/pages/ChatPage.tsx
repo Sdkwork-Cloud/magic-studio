@@ -6,7 +6,7 @@ import { ChatInput } from '../components/ChatInput';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatMode } from '../entities/chat.entity';
 import { PanelLeft, Sparkles, ArrowLeft } from 'lucide-react';
-import { useRouter } from 'sdkwork-react-core';
+import { useRouter } from '@sdkwork/react-core';
 
 const ChatPage: React.FC = () => {
     const { currentSession, isGenerating, sendMessage } = useChatStore();

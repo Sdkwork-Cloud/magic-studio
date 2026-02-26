@@ -310,20 +310,55 @@ my-package/
 
 以下是一个完整的 Monorepo 项目示例，展示多个包的组织方式：
 
-**包命名规范**：桌面端项目统一使用 `sdkwork-react-` 前缀
+#### 包命名规范
+
+所有包**必须**使用 `@sdkwork` 作用域，遵循以下命名规范：
+
+```
+@sdkwork/<package-name>
+```
+
+**命名规则**：
+
+1. **必须使用 `@sdkwork` 作用域** - 区分内部包和第三方包
+2. **使用 kebab-case**（小写+连字符）- 如 `@sdkwork/react-commons`
+3. **遵循技术前缀模式**：
+   - React 包：`@sdkwork/react-*`
+   - 核心包：`@sdkwork/core-*`
+   - 工具包：`@sdkwork/utils-*`
 
 | 层级 | 包名格式 | 示例 |
 |------|----------|------|
-| Layer 0 | `sdkwork-react-{name}` | `sdkwork-react-core` |
-| Layer 1 | `sdkwork-react-{name}` | `sdkwork-react-commons` |
-| Layer 2 | `sdkwork-react-{name}` | `sdkwork-react-auth` |
-| Layer 3 | `sdkwork-react-{name}` | `sdkwork-react-user` |
+| Layer 0 | `@sdkwork/react-{name}` | `@sdkwork/react-core` |
+| Layer 1 | `@sdkwork/react-{name}` | `@sdkwork/react-commons` |
+| Layer 2 | `@sdkwork/react-{name}` | `@sdkwork/react-auth` |
+| Layer 3 | `@sdkwork/react-{name}` | `@sdkwork/react-user` |
+
+**正确示例** ✅：
+- `@sdkwork/react-video`
+- `@sdkwork/react-audio`
+- `@sdkwork/react-editor`
+
+**错误示例** ❌：
+- `react-video`（缺少作用域）
+- `@sdkwork/reactVideo`（使用 camelCase）
+- `@sdkwork/VideoEditor`（使用 PascalCase）
+
+**导入规范**：
+```typescript
+// ✅ 正确 - 使用作用域包名
+import { Button } from '@sdkwork/react-commons';
+import { useAuthStore } from '@sdkwork/react-auth';
+
+// ❌ 错误 - 不要使用相对路径跨包导入
+import { Button } from '../../sdkwork-react-commons/src';
+```
 
 ```
 sdkwork-desktop-monorepo/
 ├── packages/                         # 所有包目录
 │   │
-│   ├── sdkwork-react-core/           # 核心包 (Layer 0)
+│   ├── @sdkwork/react-core/           # 核心包 (Layer 0)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── router/               # 路由核心
@@ -337,7 +372,7 @@ sdkwork-desktop-monorepo/
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   │
-│   ├── sdkwork-react-commons/        # 通用包 (Layer 1)
+│   ├── @sdkwork/react-commons/        # 通用包 (Layer 1)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── components/           # 通用组件
@@ -351,7 +386,7 @@ sdkwork-desktop-monorepo/
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   │
-│   ├── sdkwork-react-i18n/           # 国际化包 (Layer 0)
+│   ├── @sdkwork/react-i18n/           # 国际化包 (Layer 0)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── types.ts
@@ -361,7 +396,7 @@ sdkwork-desktop-monorepo/
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   │
-│   ├── sdkwork-react-auth/           # 认证包 (Layer 2)
+│   ├── @sdkwork/react-auth/           # 认证包 (Layer 2)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── components/
@@ -379,7 +414,7 @@ sdkwork-desktop-monorepo/
 │   │   ├── vite.config.ts
 │   │   └── vite.app.config.ts
 │   │
-│   ├── sdkwork-react-user/           # 用户包 (Layer 3)
+│   ├── @sdkwork/react-user/           # 用户包 (Layer 3)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── components/
@@ -418,7 +453,7 @@ sdkwork-desktop-monorepo/
 │   │   ├── vite.config.ts
 │   │   └── vite.app.config.ts
 │   │
-│   ├── sdkwork-react-image/          # 图片生成包 (Layer 3)
+│   ├── @sdkwork/react-image/          # 图片生成包 (Layer 3)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── components/
@@ -433,10 +468,10 @@ sdkwork-desktop-monorepo/
 │   │   ├── package.json
 │   │   └── ...
 │   │
-│   ├── sdkwork-react-video/          # 视频生成包 (Layer 3)
+│   ├── @sdkwork/react-video/          # 视频生成包 (Layer 3)
 │   │   └── ...
 │   │
-│   ├── sdkwork-react-audio/          # 音频生成包 (Layer 3)
+│   ├── @sdkwork/react-audio/          # 音频生成包 (Layer 3)
 │   │   └── ...
 │   │
 │   └── ...                           # 其他业务包
@@ -475,8 +510,8 @@ packages:
   "name": "sdkwork-desktop-monorepo",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter sdkwork-react-user dev",
-    "dev:tauri": "pnpm --filter sdkwork-react-user tauri:dev",
+    "dev": "pnpm --filter @sdkwork/react-user dev",
+    "dev:tauri": "pnpm --filter @sdkwork/react-user tauri:dev",
     "build": "pnpm -r build",
     "build:app": "pnpm -r build:app",
     "test": "pnpm -r test",
@@ -500,7 +535,7 @@ packages:
 
 ```json
 {
-  "name": "@scope/my-package",
+  "name": "@sdkwork/my-package",
   "version": "1.0.0",
   "description": "Package description",
   "type": "module",
@@ -544,7 +579,7 @@ packages:
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@scope/my-core": "workspace:*"
+    "@sdkwork/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -555,10 +590,10 @@ packages:
     "vite": "^7.0.0"
   },
   "publishConfig": {
-    "access": "public",
+    "access": "restricted",
     "registry": "https://registry.npmjs.org/"
   },
-  "keywords": ["react", "typescript", "vite"],
+  "keywords": ["react", "typescript", "vite", "sdkwork"],
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

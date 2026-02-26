@@ -13,7 +13,7 @@ pnpm add sdkwork-react-types
 ## Usage
 
 ```typescript
-import { Asset, User, MediaResourceType } from 'sdkwork-react-types';
+import { Asset, User, MediaResourceType } from '@sdkwork/react-types';
 ```
 
 ## Exports

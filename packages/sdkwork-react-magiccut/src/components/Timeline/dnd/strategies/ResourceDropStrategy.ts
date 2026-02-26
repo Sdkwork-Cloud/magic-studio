@@ -1,7 +1,7 @@
 
 import { IPlacementStrategy, DragInput, DragContext, PlacementResult } from '../types';
 import { TrackFactory } from '../../../../services/TrackFactory';
-import { AnyMediaResource, MediaResourceType } from 'sdkwork-react-commons';
+import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { ResourceTraitsFactory } from '../../../../domain/dnd/ResourceTraitsFactory';
 import { TrackRulesFactory } from '../../../../domain/dnd/TrackRulesFactory';
 import { DropValidationStatus } from '../../../../domain/dnd/ITrackRules';

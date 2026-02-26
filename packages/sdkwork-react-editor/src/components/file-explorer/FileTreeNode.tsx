@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, Folder, File, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
-import { FileEntry } from 'sdkwork-react-core';
+import { FileEntry } from '@sdkwork/react-core';
 import { useEditorStore } from '../../store/editorStore';
 import { FileIcon } from './FileIcon';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // --- Inline Input ---
 interface InlineInputProps {

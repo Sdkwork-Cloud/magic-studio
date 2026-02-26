@@ -6,3 +6,6 @@ export { generateUUID } from './uuid';
 export { audioUtils } from './audioUtils';
 export { getAssetLabel } from '../types';
 export { storageConfig, APP_ROOT_DIR, DIR_NAMES, PROJECT_SUBDIRS, CACHE_SUBDIRS, LIBRARY_SUBDIRS } from './storageConfig';
+
+// Re-export date utilities for BaseEntity timestamps
+export { formatDateTime, now } from './helpers';

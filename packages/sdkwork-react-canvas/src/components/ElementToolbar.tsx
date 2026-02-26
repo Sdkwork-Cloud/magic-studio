@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { 
     MoreHorizontal, Loader2
 } from 'lucide-react'; 
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { canvasActionService } from '../services/canvasActionService';
 
 interface ElementToolbarProps {

@@ -1,10 +1,10 @@
 
 import { ChatSession, ChatMessage, ChatTranscript } from '../entities/chat.entity';
-import { genAIService } from 'sdkwork-react-core';
-import { generateUUID, ServiceResult, Result, Page, PageRequest, pathUtils, TextSearchEngine } from 'sdkwork-react-commons';
-import { LocalStorageService } from 'sdkwork-react-core';
-import { vfs } from 'sdkwork-react-fs';
-import { platform } from 'sdkwork-react-core';
+import { genAIService } from '@sdkwork/react-core';
+import { generateUUID, ServiceResult, Result, Page, PageRequest, pathUtils, TextSearchEngine } from '@sdkwork/react-commons';
+import { LocalStorageService } from '@sdkwork/react-core';
+import { vfs } from '@sdkwork/react-fs';
+import { platform } from '@sdkwork/react-core';
 
 const STORAGE_KEY = 'open_studio_chat_sessions_v2';
 const CHATS_DIR = 'OpenStudio/Chats';

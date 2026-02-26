@@ -44,7 +44,7 @@ export {
     SfxAssetService
 } from './services/impl';
 
-export type { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from './entities/asset.entity';
+export type { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from './entities';
 
 // Enhanced asset types
 export type {
@@ -58,4 +58,4 @@ export type {
     TransitionAsset,
     AnyAsset,
     MediaResourceType
-} from './entities/enhancedAsset.entity';
+} from './entities';

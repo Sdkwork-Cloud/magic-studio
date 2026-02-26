@@ -4,13 +4,13 @@ import { FilmSidebar } from '../components/FilmSidebar';
 import { FilmHeader } from '../components/FilmHeader';
 import { Sparkles, Play, Heart, ChevronDown, Clock, Check, Type } from 'lucide-react';
 import { useFilmStore, FilmStoreProvider } from '../store/filmStore';
-import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector } from 'sdkwork-react-assets';
-import { generateUUID, ModelSelector, AspectRatioSelector, AspectRatio, GalleryCard, GalleryItem, StyleOption } from 'sdkwork-react-commons';
-import { GenerationPreview } from 'sdkwork-react-image';
-import { VIDEO_PROVIDERS } from 'sdkwork-react-video';
-import { IMAGE_PROVIDERS } from 'sdkwork-react-image';
+import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector } from '@sdkwork/react-assets';
+import { generateUUID, ModelSelector, AspectRatioSelector, AspectRatio, GalleryCard, GalleryItem, StyleOption } from '@sdkwork/react-commons';
+import { GenerationPreview } from '@sdkwork/react-image';
+import { VIDEO_PROVIDERS } from '@sdkwork/react-video';
+import { IMAGE_PROVIDERS } from '@sdkwork/react-image';
 import { FILM_STYLES } from '../constants';
-import { useRouter, ROUTES, uploadHelper } from 'sdkwork-react-core';
+import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 
 type Resolution = '2k' | '4k';
 

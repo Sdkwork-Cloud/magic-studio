@@ -6,12 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'sdkwork-react-types',
+      name: '@sdkwork/react-types',
       formats: ['es'],
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['sdkwork-react-commons'],
+      external: ['@sdkwork/react-commons'],
     },
     sourcemap: true,
   },

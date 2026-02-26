@@ -1,12 +1,12 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import { PublishOptions } from '../../types';
 import React, { useState } from 'react';
 import { X, Rocket, Globe, Package, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
 ;
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 ;
-import { platform } from 'sdkwork-react-core';
+import { platform } from '@sdkwork/react-core';
 
 interface PublishAppModalProps {
     onClose: () => void;

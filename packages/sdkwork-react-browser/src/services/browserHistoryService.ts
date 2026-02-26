@@ -1,6 +1,6 @@
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { HistoryItem } from '../entities/browser.entity';
-import { BaseEntity, generateUUID } from 'sdkwork-react-commons';
+import { BaseEntity, generateUUID } from '@sdkwork/react-commons';
 
 interface HistoryEntity extends HistoryItem, BaseEntity {}
 

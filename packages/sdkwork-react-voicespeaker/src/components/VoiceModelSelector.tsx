@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ModelSelector } from 'sdkwork-react-commons';
+import { ModelSelector } from '@sdkwork/react-commons';
 import { VOICE_PROVIDERS } from '../constants';
 
 interface VoiceModelSelectorProps {

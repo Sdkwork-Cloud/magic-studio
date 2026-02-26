@@ -6,7 +6,7 @@ import {
     Share, Github, Rocket, ChevronDown
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface ExplorerHeaderProps {
   hasRoot: boolean;

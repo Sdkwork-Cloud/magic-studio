@@ -1,7 +1,7 @@
 
-import { LocalStorageService } from 'sdkwork-react-core';
+import { LocalStorageService } from '@sdkwork/react-core';
 import { DriveMetadata } from '../entities/driveMetadata.entity';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from '@sdkwork/react-commons';
 
 const META_STORAGE_KEY = 'open_studio_drive_meta_v2';
 

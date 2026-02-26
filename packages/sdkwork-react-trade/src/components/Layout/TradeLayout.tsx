@@ -5,18 +5,18 @@ import {
     Sparkles, Crown, Compass, FolderOpen, Video, Image as ImageIcon, Bot, Music, 
     Clapperboard, Zap, BookOpen, Scissors, Volume2, Mic, Smile
 } from 'lucide-react';
-import { useRouter, ROUTES } from 'sdkwork-react-core';
-import { useAuthStore } from 'sdkwork-react-auth';
-import { useWorkspaceStore } from 'sdkwork-react-workspace';
-import { useNotificationStore, NotificationCenter } from 'sdkwork-react-notifications';
-import { PricingModal } from 'sdkwork-react-vip';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { useAuthStore } from '@sdkwork/react-auth';
+import { useWorkspaceStore } from '@sdkwork/react-workspace';
+import { useNotificationStore, NotificationCenter } from '@sdkwork/react-notifications';
+import { PricingModal } from '@sdkwork/react-vip';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 const HEADER_NAV_ITEMS = [
     { id: 'home', label: '首页', icon: Home, route: ROUTES.PORTAL_VIDEO },
     { id: 'community', label: '社区', icon: Users, route: ROUTES.PORTAL_COMMUNITY },
     { id: 'theater', label: '剧场', icon: Tv, route: ROUTES.PORTAL_THEATER },
-    { id: 'skills', label: '技能', icon: Wrench, route: ROUTES.PORTAL_SKILLS },
+    { id: 'skills', label: '技�?, icon: Wrench, route: ROUTES.PORTAL_SKILLS },
     { id: 'plugins', label: '插件', icon: Puzzle, route: ROUTES.PORTAL_PLUGINS },
     { id: 'task-market', label: '任务市场', icon: Briefcase, route: ROUTES.TASK_MARKET },
 ];
@@ -31,7 +31,7 @@ const SIDEBAR_NAV_GROUPS = [
         ]
     },
     {
-        title: '工作室',
+        title: '工作�?,
         items: [
             { id: 'quick-short', label: '快剪', icon: Zap, route: ROUTES.FILM, badge: 'Hot', accent: 'text-orange-400' },
             { id: 'magic-cut', label: '智能剪辑', icon: Scissors, route: ROUTES.MAGIC_CUT, badge: 'New', accent: 'text-red-400' },
@@ -40,11 +40,11 @@ const SIDEBAR_NAV_GROUPS = [
         ]
     },
     {
-        title: '生成器',
+        title: '生成�?,
         items: [
             { id: 'video', label: '视频', icon: Video, route: ROUTES.VIDEO },
             { id: 'image', label: '图片', icon: ImageIcon, route: ROUTES.IMAGE },
-            { id: 'human', label: '数字人', icon: Smile, route: ROUTES.CHARACTER },
+            { id: 'human', label: '数字�?, icon: Smile, route: ROUTES.CHARACTER },
         ]
     },
     {
@@ -361,8 +361,7 @@ const TradeSidebar: React.FC = () => {
                     <div className="relative z-10">
                         <div className="text-xs font-bold text-white mb-0.5">升级到专业版</div>
                         <div className="text-[10px] text-gray-500 leading-relaxed mb-3 line-clamp-2">
-                            解锁更多功能和额度
-                        </div>
+                            解锁更多功能和额�?                        </div>
                         
                         <button 
                             onClick={(e) => { e.stopPropagation(); setShowPricing(true); }}
@@ -385,8 +384,7 @@ const TradeSidebar: React.FC = () => {
                         onClick={() => navigate(ROUTES.LOGIN)}
                         className="flex items-center gap-1.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors p-1 rounded hover:bg-[#1a1a1c]"
                     >
-                        <LogOut size={12} /> 退出
-                    </button>
+                        <LogOut size={12} /> 退�?                    </button>
                 </div>
             </div>
 

@@ -1,5 +1,5 @@
 
-import { Button } from 'sdkwork-react-commons'
+import { Button } from '@sdkwork/react-commons'
 import { CanvasExportMode } from '../entities/canvas.entity'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';

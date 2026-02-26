@@ -2,10 +2,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { GenerationConfig } from '../entities/image.entity';
 export type { GenerationConfig };
-import { vfs } from 'sdkwork-react-fs';
-import { assetService } from 'sdkwork-react-assets';
+import { vfs } from '@sdkwork/react-fs';
+import { assetService } from '@sdkwork/react-assets';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { platform as _platform } from 'sdkwork-react-core';
+import { platform as _platform } from '@sdkwork/react-core';
 
 const API_KEY = process.env.API_KEY || '';
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;

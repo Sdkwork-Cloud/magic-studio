@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { useSettingsStore } from 'sdkwork-react-settings';
-import { PortalPage } from 'sdkwork-react-portal-video';
+import { useSettingsStore } from '@sdkwork/react-settings';
+import { PortalPage } from '@sdkwork/react-portal-video';
 
 const HomePage: React.FC = () => {
   const { isLoading } = useSettingsStore();
