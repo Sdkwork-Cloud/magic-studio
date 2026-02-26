@@ -69,6 +69,7 @@ export const sidebar = {
     settings: "设置",
     account: "账户",
     sign_in: "登录",
+    download: "下载客户端",
 
     video_workspace: "视频工作台",
     image_gen_workspace: "图像生成",

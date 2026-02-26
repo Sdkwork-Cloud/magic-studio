@@ -6,14 +6,17 @@ import {
     Bot, Music, Clapperboard, 
     Sparkles, Crown, Volume2, Mic, ChevronRight,
     Layout, BookOpen, Scissors, Settings, LogOut,
-    CreditCard, Zap, Smile, Wand2
+    CreditCard, Zap, Smile, Wand2, Download
 } from 'lucide-react';
 
 import { useTranslation } from '@sdkwork/react-i18n';
 import { PricingModal } from '@sdkwork/react-vip';
 
 export const PortalSidebar: React.FC = () => {
-    const { navigate, currentPath } = useRouter();
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
+    const currentPath = routerContext?.currentPath || '/';
     const { t } = useTranslation();
     const [showPricing, setShowPricing] = useState(false);
 
@@ -21,35 +24,35 @@ export const PortalSidebar: React.FC = () => {
         {
             title: null,
             items: [
-                { id: 'home', label: t('portal.sidebar.home'), icon: Home, route: ROUTES.PORTAL },
-                { id: 'discover', label: t('portal.sidebar.discover'), icon: Compass, route: ROUTES.PORTAL_DISCOVER },
-                { id: 'assets', label: t('portal.sidebar.assets'), icon: FolderOpen, route: ROUTES.ASSETS },
+                { id: 'home', label: t('sidebar.home'), icon: Home, route: ROUTES.PORTAL },
+                { id: 'discover', label: t('sidebar.discover'), icon: Compass, route: ROUTES.PORTAL_DISCOVER },
+                { id: 'assets', label: t('sidebar.assets'), icon: FolderOpen, route: ROUTES.ASSETS },
             ]
         },
         {
-            title: t('portal.sidebar.group_studio'),
+            title: t('sidebar.group_studio'),
             items: [
-                { id: 'quick-short', label: t('portal.sidebar.quick_short'), icon: Zap, route: ROUTES.FILM, badge: 'Hot', accent: 'text-orange-400' },
+                { id: 'quick-short', label: t('sidebar.quick_short'), icon: Zap, route: ROUTES.FILM, badge: 'Hot', accent: 'text-orange-400' },
                 { id: 'magic-cut', label: t('sidebar.magic_cut'), icon: Scissors, route: ROUTES.MAGIC_CUT, badge: 'New', accent: 'text-red-400' },
                 { id: 'canvas', label: t('canvas.title'), icon: Layout, route: ROUTES.CANVAS, badge: 'Beta', accent: 'text-blue-400' },
-                { id: 'notes', label: t('portal.sidebar.notes'), icon: BookOpen, route: ROUTES.NOTES },
-                { id: 'prompt', label: t('portal.sidebar.prompt_optimizer'), icon: Wand2, route: ROUTES.PROMPT, badge: 'New', accent: 'text-purple-400' },
+                { id: 'notes', label: t('sidebar.notes'), icon: BookOpen, route: ROUTES.NOTES },
+                { id: 'prompt', label: t('sidebar.prompt_optimizer'), icon: Wand2, route: ROUTES.PROMPT, badge: 'New', accent: 'text-purple-400' },
             ]
         },
         {
-            title: t('portal.sidebar.group_generators'),
+            title: t('sidebar.group_generators'),
             items: [
-                { id: 'video', label: t('portal.sidebar.video'), icon: Video, route: ROUTES.VIDEO },
-                { id: 'image', label: t('portal.sidebar.image'), icon: ImageIcon, route: ROUTES.IMAGE },
-                { id: 'human', label: t('portal.sidebar.human'), icon: Smile, route: ROUTES.CHARACTER },
+                { id: 'video', label: t('sidebar.video'), icon: Video, route: ROUTES.VIDEO },
+                { id: 'image', label: t('sidebar.image'), icon: ImageIcon, route: ROUTES.IMAGE },
+                { id: 'human', label: t('sidebar.human'), icon: Smile, route: ROUTES.CHARACTER },
             ]
         },
         {
-            title: t('portal.sidebar.group_audio'),
+            title: t('sidebar.group_audio'),
             items: [
-                { id: 'music', label: t('portal.sidebar.music'), icon: Music, route: ROUTES.MUSIC },
-                { id: 'speech', label: t('portal.sidebar.speech'), icon: Volume2, route: ROUTES.AUDIO },
-                { id: 'voice', label: t('portal.sidebar.voice'), icon: Mic, route: ROUTES.VOICE },
+                { id: 'music', label: t('sidebar.music'), icon: Music, route: ROUTES.MUSIC },
+                { id: 'speech', label: t('sidebar.speech'), icon: Volume2, route: ROUTES.AUDIO },
+                { id: 'voice', label: t('sidebar.voice'), icon: Mic, route: ROUTES.VOICE },
             ]
         }
     ];
@@ -125,6 +128,22 @@ export const PortalSidebar: React.FC = () => {
             </div>
 
             <div className="flex-none p-4 pt-0">
+                {/* Download App Button */}
+                <button
+                    onClick={() => navigate(ROUTES.DOWNLOAD)}
+                    className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 border border-blue-400/50 hover:border-blue-300 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all group relative overflow-hidden"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative z-10 w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                        <Download size={20} className="text-white group-hover:scale-110 transition-transform" />
+                    </div>
+                    <div className="relative z-10 flex-1 text-left">
+                        <div className="text-sm font-bold">{t('sidebar.download_app_title')}</div>
+                        <div className="text-[10px] text-blue-100/80">{t('sidebar.download_app_subtitle')}</div>
+                    </div>
+                    <ChevronRight size={16} className="relative z-10 opacity-70 group-hover:translate-x-1 transition-transform" />
+                </button>
+
                 <div 
                     className="relative overflow-hidden rounded-xl bg-gradient-to-b from-[#1a1a1c] to-[#111] border border-white/5 p-4 group cursor-pointer hover:border-white/10 transition-all duration-300 mb-4 shadow-lg"
                     onClick={() => setShowPricing(true)}
@@ -142,9 +161,9 @@ export const PortalSidebar: React.FC = () => {
                     </div>
                     
                     <div className="relative z-10">
-                        <div className="text-xs font-bold text-white mb-0.5">{t('portal.sidebar.upgrade_title')}</div>
+                        <div className="text-xs font-bold text-white mb-0.5">{t('sidebar.upgrade_title')}</div>
                         <div className="text-[10px] text-gray-500 leading-relaxed mb-3 line-clamp-2">
-                            {t('portal.sidebar.upgrade_desc')}
+                            {t('sidebar.upgrade_desc')}
                         </div>
                         
                         <button 
@@ -155,20 +174,20 @@ export const PortalSidebar: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between px-1">
                     <button 
                         onClick={() => navigate(ROUTES.SETTINGS)}
                         className="flex items-center gap-1.5 text-[10px] text-gray-600 hover:text-gray-300 transition-colors p-1 rounded hover:bg-[#1a1a1c]"
                     >
-                        <Settings size={12} /> {t('portal.sidebar.settings')}
+                        <Settings size={12} /> {t('sidebar.settings')}
                     </button>
                     <div className="w-px h-3 bg-[#1a1a1c]" />
                     <button 
                         onClick={() => navigate(ROUTES.LOGIN)}
                         className="flex items-center gap-1.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors p-1 rounded hover:bg-[#1a1a1c]"
                     >
-                        <LogOut size={12} /> {t('portal.sidebar.logout')}
+                        <LogOut size={12} /> {t('sidebar.sign_in')}
                     </button>
                 </div>
             </div>

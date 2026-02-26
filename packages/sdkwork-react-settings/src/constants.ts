@@ -22,6 +22,7 @@ const ROUTES = {
     VOICE: '/voice',
     AUDIO: '/audio',
     CHAT_PPT: '/chat-ppt',
+    DOWNLOAD: '/app/download',
 };
 
 const CORE_TOOLS: SidebarItemConfig[] = [
@@ -31,9 +32,11 @@ const CORE_TOOLS: SidebarItemConfig[] = [
     { id: 'drive', labelKey: 'sidebar.drive', route: ROUTES.DRIVE, icon: 'Cloud', visible: true },
     { id: 'assets', labelKey: 'sidebar.assets', route: ROUTES.ASSETS, icon: 'Library', visible: true },
     { id: 'portal', labelKey: 'sidebar.portal', route: ROUTES.PORTAL, icon: 'LayoutDashboard', visible: true },
-    { id: 'separator-1', labelKey: '', route: '', icon: '', visible: true, children: [] }, 
+    { id: 'separator-1', labelKey: '', route: '', icon: '', visible: true, children: [] },
     { id: 'chat', labelKey: 'sidebar.chat', route: ROUTES.CHAT, icon: 'MessageSquare', visible: true },
     { id: 'browser', labelKey: 'sidebar.browser', route: ROUTES.BROWSER, icon: 'Globe', visible: true },
+    { id: 'separator-2', labelKey: '', route: '', icon: '', visible: true, children: [] },
+    { id: 'download', labelKey: 'sidebar.download', route: ROUTES.DOWNLOAD, icon: 'Download', visible: true },
 ];
 
 const CREATIVE_TOOLS: SidebarItemConfig = {

@@ -1,17 +1,5 @@
 import type { BaseEntity as Base } from '@sdkwork/react-types';
-import type {
-  MediaResource,
-  FileMediaResource,
-  VideoMediaResource,
-  ImageMediaResource,
-  AudioMediaResource,
-  MusicMediaResource,
-  CharacterMediaResource,
-  AssetMediaResource,
-  AnyMediaResource,
-  GenerationProduct,
-  GenerationPlatform
-} from '@sdkwork/react-types';
+import type { ImageMediaResource } from '@sdkwork/react-types';
 
 // Re-export MediaResource types from sdkwork-react-types
 export type {
@@ -107,6 +95,8 @@ export interface BaseEntity extends Base {}
 // Gallery Types (Commons-specific extensions)
 // ============================================================================
 
+export type GalleryItemType = 'image' | 'video' | 'short' | 'music' | 'voice' | 'character';
+
 export interface GalleryAuthor {
   id: string;
   name: string;
@@ -119,7 +109,7 @@ export interface GalleryAuthor {
 
 export interface GalleryItem {
   id: string;
-  type: import('@sdkwork/react-types').GalleryItemType;
+  type: GalleryItemType;
   title: string;
   prompt: string;
   url: string;
@@ -141,6 +131,30 @@ export interface GalleryItem {
     color?: string;
     icon?: 'fire' | 'new' | 'trending' | 'official';
   }[];
+}
+
+// ============================================================================
+// Style Options
+// ============================================================================
+
+export interface StyleOption {
+  id: string;
+  label: string;
+  value?: string;
+  description?: string;
+  imageUrl?: string;
+  category?: string;
+  assets?: {
+    scene?: { url: string };
+    portrait?: { url: string };
+    sheet?: { url: string };
+    video?: { url: string };
+  };
+  usage?: string[];
+  prompt?: string;
+  prompt_zh?: string;
+  previewColor?: string;
+  isCustom?: boolean;
 }
 
 // ============================================================================

@@ -6,9 +6,11 @@ import { TaskCard } from '../components/Task/TaskCard';
 import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { TradeLayout } from '../components/Layout/TradeLayout';
 
+type TaskMarketTab = 'market' | 'orders' | 'published' | 'wallet';
+
 const TaskMarketPage: React.FC = () => {
   const { navigate } = useRouter();
-  const [activeTab, setActiveTab] = useState('market');
+  const [activeTab, setActiveTab] = useState<TaskMarketTab>('market');
   const [selectedTask, setSelectedTask] = useState<AvailableTask | null>(null);
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<AvailableTask[]>([]);
@@ -40,7 +42,7 @@ const TaskMarketPage: React.FC = () => {
   const handleAcceptTask = async (task: AvailableTask) => {
     try {
       await taskService.acceptTask({ taskUuid: task.uuid });
-      alert('接单成功�?);
+      alert('接单成功！');
       setSelectedTask(null);
       loadTasks();
     } catch (error) {
@@ -59,7 +61,7 @@ const TaskMarketPage: React.FC = () => {
   const formatBudget = (budget: number) => `¥${(budget / 100).toFixed(2)}`;
 
   const TABS = [
-    { id: 'market', label: '抢单大厅', icon: Zap },
+    { id: 'market', label: '订单大厅', icon: Zap },
     { id: 'orders', label: '我的订单', icon: FileText },
     { id: 'published', label: '我发布的', icon: Briefcase },
     { id: 'wallet', label: '钱包', icon: DollarSign },
@@ -77,13 +79,14 @@ const TaskMarketPage: React.FC = () => {
               <div className="text-center mb-10">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full border border-white/10 mb-6">
                   <Briefcase size={16} className="text-blue-400" />
-                  <span className="text-xs text-gray-300">AI 任务市场 - 用技能赚�?/span>
+                  <span className="text-xs text-gray-300">AI 任务市场 - 用技能赚钱</span>
                 </div>
                 <h1 className="text-4xl font-bold text-white mb-3">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400">任务市场</span> - 发现优质任务
                 </h1>
                 <p className="text-gray-400 max-w-2xl mx-auto">
-                  探索 {total}+ �?AI 任务，用你的技能赚取收�?                </p>
+                  探索 {total}+ 个AI任务，用你的技能赚取收入
+                </p>
               </div>
 
               <div className="max-w-2xl mx-auto">
@@ -91,7 +94,7 @@ const TaskMarketPage: React.FC = () => {
                   <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   <input
                     type="text"
-                    placeholder="搜索任务关键�?.."
+                    placeholder="搜索任务关键词..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
@@ -112,7 +115,7 @@ const TaskMarketPage: React.FC = () => {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => setActiveTab(tab.id as TaskMarketTab)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                           isActive
                             ? 'bg-white/10 text-white'
@@ -144,7 +147,7 @@ const TaskMarketPage: React.FC = () => {
                     className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
                   >
                     <option value="">全部难度</option>
-                    <option value="EASY">简�?/option>
+                    <option value="EASY">简单</option>
                     <option value="MEDIUM">中等</option>
                     <option value="HARD">困难</option>
                     <option value="EXPERT">专家</option>
@@ -154,15 +157,16 @@ const TaskMarketPage: React.FC = () => {
                     onChange={(e) => setSortBy(e.target.value as any)}
                     className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
                   >
-                    <option value="latest">最新发�?/option>
-                    <option value="budget">最高预�?/option>
-                    <option value="difficulty">最高难�?/option>
+                    <option value="latest">最新发布</option>
+                    <option value="budget">最高报酬</option>
+                    <option value="difficulty">最高难度</option>
                   </select>
                   <button
                     onClick={handleApplyFilters}
                     className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg"
                   >
-                    <Filter size={14} /> 筛�?                  </button>
+                    <Filter size={14} /> 筛选
+                  </button>
                 </div>
               </div>
             </div>
@@ -190,7 +194,7 @@ const TaskMarketPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-white">{formatBudget(stats.totalBudget)}</div>
-                        <div className="text-xs text-gray-400">总预算池</div>
+                        <div className="text-xs text-gray-400">总预算</div>
                       </div>
                     </div>
                   </div>
@@ -222,7 +226,7 @@ const TaskMarketPage: React.FC = () => {
                   <div className="flex items-center justify-center py-20">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                      <span className="text-sm text-gray-500">加载�?..</span>
+                      <span className="text-sm text-gray-500">加载中...</span>
                     </div>
                   </div>
                 ) : tasks.length === 0 ? (
@@ -232,7 +236,7 @@ const TaskMarketPage: React.FC = () => {
                         <Briefcase size={32} className="text-gray-600" />
                       </div>
                       <h3 className="text-base font-semibold text-white mb-2">暂无可接任务</h3>
-                      <p className="text-sm text-gray-500">请稍后再来查看新任务</p>
+                      <p className="text-sm text-gray-500">请稍后再来看看新任务</p>
                     </div>
                   </div>
                 ) : (
@@ -249,14 +253,16 @@ const TaskMarketPage: React.FC = () => {
                           disabled={page === 1}
                           className="px-4 py-2 bg-[#1e1e20] border border-white/10 rounded-lg text-sm text-gray-400 disabled:opacity-50"
                         >
-                          上一�?                        </button>
+                          上一页
+                        </button>
                         <span className="text-sm text-gray-500 px-4">{page} / {totalPages}</span>
                         <button
                           onClick={() => handlePageChange(page + 1)}
                           disabled={page === totalPages}
                           className="px-4 py-2 bg-[#1e1e20] border border-white/10 rounded-lg text-sm text-gray-400 disabled:opacity-50"
                         >
-                          下一�?                        </button>
+                          下一页
+                        </button>
                       </div>
                     )}
                   </>
@@ -269,7 +275,7 @@ const TaskMarketPage: React.FC = () => {
                 <div className="text-center">
                   <FileText size={48} className="mx-auto text-gray-600 mb-4" />
                   <h3 className="text-base font-semibold text-white mb-2">订单功能</h3>
-                  <p className="text-sm text-gray-500 mb-4">查看和管理你的订�?/p>
+                  <p className="text-sm text-gray-500 mb-4">查看和管理你的订单</p>
                   <button
                     onClick={() => navigate(ROUTES.MY_TASKS)}
                     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg"
@@ -285,17 +291,18 @@ const TaskMarketPage: React.FC = () => {
                 <div className="text-center">
                   <Briefcase size={48} className="mx-auto text-gray-600 mb-4" />
                   <h3 className="text-base font-semibold text-white mb-2">发布任务</h3>
-                  <p className="text-sm text-gray-500 mb-4">发布你的任务需�?/p>
+                  <p className="text-sm text-gray-500 mb-4">发布你的任务需求</p>
                   <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg">
-                    发布新任�?                  </button>
+                    发布新任务
+                  </button>
                 </div>
               </div>
             )}
 
             {activeTab === 'wallet' && (
-              <div className="max-w-2xl mx-auto py-8">
-                <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10 rounded-2xl p-8 mb-6">
-                  <div className="text-sm text-gray-400 mb-2">总余�?/div>
+              <div className="xl mx-auto py-8">
+                <div className="bg-gradient-tomax-w-2-br from-blue-600/20 to-purple-600/20 border border-white/10 rounded-2xl p-8 mb-6">
+                  <div className="text-sm text-gray-400 mb-2">总余额</div>
                   <div className="text-4xl font-bold text-white mb-4">¥1,000.00</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-[#1e1e20] rounded-xl p-4">
@@ -323,7 +330,8 @@ const TaskMarketPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1e1e20] hover:bg-white/10 border border-white/10 rounded-xl text-white text-sm font-medium">
-                    <DollarSign size={16} />充�?                  </button>
+                    <DollarSign size={16} />充值
+                  </button>
                   <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1e1e20] hover:bg-white/10 border border-white/10 rounded-xl text-white text-sm font-medium">
                     <FileText size={16} />交易记录
                   </button>
@@ -338,10 +346,11 @@ const TaskMarketPage: React.FC = () => {
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Award size={24} className="text-blue-400" />
-                    <h2 className="text-xl font-bold text-white">成为任务发布�?/h2>
+                    <h2 className="text-xl font-bold text-white">成为任务发布者</h2>
                   </div>
                   <p className="text-gray-400 text-sm mb-6 max-w-2xl mx-auto">
-                    发布你的 AI 任务需求，找到合适的创作者帮你完�?                  </p>
+                    发布你的 AI 任务需求，找到合适的创作者帮助你完成
+                  </p>
                   <div className="flex items-center justify-center gap-4">
                     <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors">
                       <Sparkles size={16} />

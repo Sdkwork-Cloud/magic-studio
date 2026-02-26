@@ -1,6 +1,7 @@
 
 import { useRouter, ROUTES } from '@sdkwork/react-core'
-import { PortalSidebar, PortalHeader } from '../index'
+import { PortalSidebar } from '../components/PortalSidebar'
+import { PortalHeader } from '../components/PortalHeader'
 import React, { useState } from 'react';
 import { 
     Wand2, Video, Image as ImageIcon, Mic, 
@@ -186,7 +187,9 @@ const AI_TOOLS: AITool[] = [
 const AIToolsPage: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const { navigate } = useRouter();
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
 
     const filteredTools = AI_TOOLS.filter(tool => {
         const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;

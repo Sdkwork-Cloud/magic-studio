@@ -66,7 +66,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
         const checkPayment = setInterval(() => {
             if (Math.random() < 0.01) {
-                setPaymentStatus({ status: 'success', message: '支付成功�? });
+                setPaymentStatus({ status: 'success', message: '支付成功！' });
             }
         }, 2000);
 
@@ -107,7 +107,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     const getMethodName = (method: PaymentMethod) => {
         if (method === 'wechat') return '微信';
-        return '支付�?;
+        return '支付宝';
     };
 
     if (!isOpen) return null;
@@ -122,7 +122,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[#222] bg-[#111]">
                     <div className="flex items-center gap-2">
                         <Shield className="w-5 h-5 text-green-500" />
-                        <span className="text-white font-medium">安全收银�?/span>
+                        <span className="text-white font-medium">安全收银台</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -143,7 +143,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 </div>
                                 <div>
                                     <h3 className="text-white font-semibold text-lg">{planName}</h3>
-                                    <p className="text-gray-400 text-sm">{billingCycle}付会�?/p>
+                                    <p className="text-gray-400 text-sm">{billingCycle}付会员</p>
                                 </div>
                             </div>
                             
@@ -165,7 +165,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-[#222]">
                                     <span className="text-gray-500 text-sm">计费周期</span>
-                                    <span className="text-gray-300 text-sm">{billingCycle}�?/span>
+                                    <span className="text-gray-300 text-sm">{billingCycle}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-[#222]">
                                     <span className="text-gray-500 text-sm">会员权益</span>
@@ -255,7 +255,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                         <>
                                             <img
                                                 src={qrCodeUrl}
-                                                alt="支付二维�?
+                                                alt="支付二维码"
                                                 className={`w-[200px] h-[200px] rounded-lg ${
                                                     paymentStatus.status === 'expired' ? 'opacity-30' : ''
                                                 }`}
@@ -272,7 +272,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                             className="flex items-center gap-2 px-5 py-2.5 bg-[#ff2449] text-white rounded-xl font-medium hover:bg-[#e02040] transition-all shadow-lg"
                                         >
                                             <RefreshCw size={16} />
-                                            刷新二维�?                                        </button>
+                                            刷新二维码
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -281,14 +282,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                             <div className="text-center mb-2">
                                 {paymentStatus.status === 'success' ? (
                                     <div className="space-y-2">
-                                        <p className="text-green-400 font-medium">感谢您的购买�?/p>
+                                        <p className="text-green-400 font-medium">感谢您的购买！</p>
                                         <p className="text-gray-500 text-sm">会员权益已生效，正在跳转...</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-center gap-2 text-gray-300">
                                             <QrCode size={16} className="text-gray-500" />
-                                            <span className="text-sm">请使用{getMethodName(selectedMethod)}扫一�?/span>
+                                            <span className="text-sm">请使用{getMethodName(selectedMethod)}扫一扫</span>
                                         </div>
                                         <div className="flex items-center justify-center gap-2">
                                             {paymentStatus.status === 'pending' && (
@@ -354,7 +355,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                             selectedMethod === 'alipay' ? 'text-[#1677ff]' : 'text-gray-400'
                                         }`}
                                     >
-                                        支付�?                                    </span>
+                                        支付宝
+                                    </span>
                                 </button>
                             </div>
                         </div>

@@ -24,7 +24,6 @@ export const RenderSortUtils = {
         // Sort descending: e.g. [Track 3, Track 2, Track 1, Track 0]
         // This ensures Track 0 is rendered last, appearing on top of other tracks.
         // This matches the UI representation where Track 0 is at the top and should appear visually on top.
-        return tracks.sort((a, b) => b.order - a.order);
+        return tracks.sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
     }
 };
-

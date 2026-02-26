@@ -33,7 +33,7 @@ export const useTimeline = (
         selectClip, isSkimmingEnabled,
         addClip, canSeek, totalDuration,
         validateTrackDrop, checkCollision,
-        playerController, setSkimmingResource, 
+        playerController, setSkimmingResource, setPreviewEffect,
         insertTrackAndAddClip, isSnappingEnabled,
         useTransientState, store, seek,
         getGlobalSnapPoints,
@@ -280,6 +280,9 @@ export const useTimeline = (
         const target = e.target as HTMLElement;
         if (target.closest('[data-interactive="true"]')) return;
         if (playerController.getIsPlaying()) playerController.pause();
+        setSkimmingResource(null);
+        setPreviewEffect(null);
+        playerController.skim(null);
         
         // Simple seek logic here, can be moved to controller later
         const container = tracksContainerRef.current;
@@ -298,4 +301,3 @@ export const useTimeline = (
         handleHeaderDragOver, handleHeaderDrop
     };
 };
-

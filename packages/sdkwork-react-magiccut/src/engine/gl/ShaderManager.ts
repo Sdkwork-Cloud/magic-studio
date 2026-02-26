@@ -84,7 +84,7 @@ export class ShaderManager {
             const info = this.gl.getActiveUniform(program, i);
             if (info) {
                 const loc = this.gl.getUniformLocation(program, info.name);
-                if (loc) uniforms[info.name] = loc;
+                if (loc !== null) uniforms[info.name] = loc;
             }
         }
 

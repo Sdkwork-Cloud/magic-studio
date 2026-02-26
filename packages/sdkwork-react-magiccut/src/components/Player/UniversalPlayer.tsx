@@ -327,19 +327,45 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
         screenToProject
     };
 
-    const lastCurrentTimeRef = useRef(-1);
+    const lastRenderStateRef = useRef<{ time: number; data: RenderData | null; previewKey: string; hiddenKey: string }>({
+        time: -1,
+        data: null,
+        previewKey: '',
+        hiddenKey: ''
+    });
+
+    const getPreviewKey = () => {
+        const res = previewResourceRef.current;
+        if (!res) return '';
+        const id = (res as any).id ?? (res as any).uuid ?? (res as any).name ?? 'resource';
+        return `${id}:${previewResourceTimeRef.current}`;
+    };
+
+    const getHiddenKey = () => {
+        const hidden = hiddenClipIdsRef.current;
+        if (!hidden || hidden.size === 0) return '';
+        return Array.from(hidden).sort().join('|');
+    };
+
     useLayoutEffect(() => {
         // Always update when currentTime changes, regardless of playback state
         // During playback, PlayerController will call renderNow directly
         // But we still need to update when seeking or when playback stops
-        if (currentTime === lastCurrentTimeRef.current) return;
-        lastCurrentTimeRef.current = currentTime;
+        const previewKey = getPreviewKey();
+        const hiddenKey = getHiddenKey();
+        const timeChanged = currentTime !== lastRenderStateRef.current.time;
+        const dataChanged = dataRef.current !== lastRenderStateRef.current.data;
+        const previewChanged = previewKey !== lastRenderStateRef.current.previewKey;
+        const hiddenChanged = hiddenKey !== lastRenderStateRef.current.hiddenKey;
+
+        if (!timeChanged && !dataChanged && !previewChanged && !hiddenChanged) return;
+        lastRenderStateRef.current = { time: currentTime, data: dataRef.current, previewKey, hiddenKey };
         
         if (currentTime >= 0) {
             renderVersionRef.current++;
             renderFrame(currentTime);
         }
-    }, [currentTime, isPlaying, hiddenClipIds]);
+    }, [currentTime, isPlaying, hiddenClipIds, previewResource, previewResourceTime, data]);
 
     return (
         <PlayerContext.Provider value={contextValue}>
@@ -392,4 +418,3 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
         </PlayerContext.Provider>
     );
 });
-

@@ -35,4 +35,5 @@ export interface Subscription {
   planId: PlanTier;
   status: 'active' | 'canceled' | 'expired';
   expiresAt: number;
+  billingCycle?: 'month' | 'year' | 'onetime';
 }

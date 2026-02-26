@@ -15,6 +15,8 @@ export type { RenderData, RenderOverrideClip };
 export class WebGLEngine {
     private canvas: HTMLCanvasElement | null = null;
     private gl: WebGL2RenderingContext | null = null;
+    private onContextLost?: (e: Event) => void;
+    private onContextRestored?: () => void;
 
     private resourceManager: ResourceManager;
     private textureCache: TextureLRUCache | null = null;
@@ -45,6 +47,9 @@ export class WebGLEngine {
     }
 
     public attach(canvas: HTMLCanvasElement) {
+        if (this.canvas && this.canvas !== canvas) {
+            this.cleanup();
+        }
         this.canvas = canvas;
         this.isDestroyed = false;
 
@@ -64,6 +69,7 @@ export class WebGLEngine {
 
         if (!gl) throw new Error("WebGL2 not supported");
         this.gl = gl;
+        this.bindContextEvents(canvas);
 
         // --- GLOBAL STATE ENFORCEMENT ---
         // We set this ONCE. No component should toggle these.
@@ -87,6 +93,27 @@ export class WebGLEngine {
 
         this.initBuffers();
         this.emptyTexture = this.createEmptyTexture(gl);
+    }
+
+    private bindContextEvents(canvas: HTMLCanvasElement) {
+        if (this.onContextLost || this.onContextRestored) return;
+
+        this.onContextLost = (e: Event) => {
+            e.preventDefault();
+            this.isDestroyed = true;
+            this.cachedContext = null;
+            this.fboMain = null;
+        };
+
+        this.onContextRestored = () => {
+            if (this.canvas) {
+                this.cleanup();
+                this.attach(this.canvas);
+            }
+        };
+
+        canvas.addEventListener('webglcontextlost', this.onContextLost as EventListener, { passive: false });
+        canvas.addEventListener('webglcontextrestored', this.onContextRestored as EventListener);
     }
 
     private createEmptyTexture(gl: WebGL2RenderingContext): WebGLTexture {
@@ -113,6 +140,7 @@ export class WebGLEngine {
             this.fboMain = null;
         }
         this.compositor?.cleanup();
+        this.cachedContext = null;
     }
 
     public destroy() {
@@ -121,6 +149,15 @@ export class WebGLEngine {
     }
 
     private cleanup() {
+        if (this.canvas && this.onContextLost) {
+            this.canvas.removeEventListener('webglcontextlost', this.onContextLost as EventListener);
+            this.onContextLost = undefined;
+        }
+        if (this.canvas && this.onContextRestored) {
+            this.canvas.removeEventListener('webglcontextrestored', this.onContextRestored as EventListener);
+            this.onContextRestored = undefined;
+        }
+
         if (this.gl) {
             if (this.vaoUnitQuad) {
                 this.gl.deleteVertexArray(this.vaoUnitQuad);
@@ -133,10 +170,16 @@ export class WebGLEngine {
             if (this.shaderManager) this.shaderManager.cleanup();
             if (this.textureCache) this.textureCache.clear();
             if (this.compositor) this.compositor.cleanup();
-            this.resourceManager.cleanup();
             this.gl = null;
-            this.canvas = null;
         }
+
+        this.resourceManager.cleanup();
+        this.textureCache = null;
+        this.shaderManager = null;
+        this.effectSystem = null;
+        this.compositor = null;
+        this.timelineRenderer = null;
+        this.canvas = null;
     }
 
     public setProjectResolution(w: number, h: number) {
@@ -199,7 +242,7 @@ export class WebGLEngine {
     ) {
         this.resourceManager.startFrame();
 
-        if (!this.gl || this.isDestroyed || !this.textureCache) return;
+        if (!this.gl || this.isDestroyed || !this.textureCache || this.gl.isContextLost()) return;
 
         const gl = this.gl;
 
@@ -305,7 +348,9 @@ export class WebGLEngine {
     }
 
     public renderSingleResource(resource: AnyMediaResource, time: number) {
-        if (!this.gl || this.isDestroyed || !this.textureCache) return;
+        this.resourceManager.startFrame();
+
+        if (!this.gl || this.isDestroyed || !this.textureCache || this.gl.isContextLost()) return;
         const gl = this.gl;
 
         if (!this.fboMain || this.fboMain.width !== this.projectW || this.fboMain.height !== this.projectH) {
@@ -462,6 +507,7 @@ export class WebGLEngine {
         clips: Record<string, CutClip>,
         layersMap: Record<string, CutLayer>
     ): Promise<void> {
+        if (!this.gl || this.isDestroyed || !this.textureCache || this.gl.isContextLost()) return;
         const videosToSeek: HTMLVideoElement[] = [];
         timeline.tracks.forEach(tr => {
             const track = tracks[tr.id];
@@ -512,4 +558,3 @@ export class WebGLEngine {
         this.render(time, timeline, resources, tracks, clips, false, null, layersMap);
     }
 }
-

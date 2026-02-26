@@ -99,12 +99,12 @@ export class Compositor {
             return;
         }
 
-        gl.disable(gl.BLEND);
+        if (opacity <= 0) return;
+
         this.applyBlendMode(gl, blendMode);
-        
-        if (opacity < 1.0 || blendMode !== 'normal') {
-            gl.enable(gl.BLEND);
-        }
+        // Always enable blending to preserve alpha in textures.
+        // Disabling blending causes transparent pixels to overwrite the target.
+        gl.enable(gl.BLEND);
 
         gl.useProgram(shader.program);
         gl.bindVertexArray(ctx.vaoQuad);
@@ -162,4 +162,3 @@ export class Compositor {
         }
     }
 }
-

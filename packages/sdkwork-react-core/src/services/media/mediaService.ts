@@ -116,33 +116,51 @@ class MediaService {
         
         const task = (async () => {
             try {
-                // 1. Resolve to a usable URL using AssetService (The Single Source of Truth)
-                // This handles hydration from VFS on Web automatically if needed via its internal logic (or we trigger hydration manually)
-                
-                // On Web, VFS files need hydration to Blob URLs for audio context
-                if (platform.getPlatform() === 'web' && resource.path?.startsWith('assets://')) {
-                     await downloadService.hydrateState(resource);
+                // 1. Resolve resource to a concrete, readable source (URL or VFS path)
+                const plat = platform.getPlatform();
+
+                // On Web, hydrate virtual assets (assets://) into VFS/blob URLs
+                if (plat === 'web' && resource.path?.startsWith('assets://')) {
+                    await downloadService.hydrateState(resource);
                 }
 
-                // Stub: Use path directly - to be implemented with actual assetService
-                const url = resource.path || resource.url;
-                
+                let url = resource.path || resource.url;
                 if (!url) {
-                    // console.warn(`[MediaService] Could not resolve audio URL for ${resource.name}`);
                     return null;
                 }
 
-                let arrayBuffer: ArrayBuffer;
-                
-                // Handle different URL types
-                if (url.startsWith('blob:') || url.startsWith('http') || url.startsWith('asset:') || url.startsWith('https://asset.localhost')) {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP Error ${response.status} for URL: ${url}`);
-                    arrayBuffer = await response.arrayBuffer();
+                let fetchUrl: string | null = null;
+                let vfsPath: string | null = null;
+
+                // Normalize virtual asset protocol
+                if (url.startsWith('assets://')) {
+                    url = url.replace('assets://', '');
+                }
+
+                if (url.startsWith('blob:') || url.startsWith('http') || url.startsWith('https://asset.localhost')) {
+                    fetchUrl = url;
+                } else if (url.startsWith('asset:')) {
+                    // Older asset protocol – strip prefix and treat as VFS path
+                    vfsPath = url.replace(/^asset:\/\//, '');
+                } else if (plat === 'desktop') {
+                    // Desktop: local filesystem path, convert to fetchable URL
+                    fetchUrl = platform.convertFileSrc(url);
                 } else {
-                    // Fallback: Assume it is a direct VFS path if not protocol based
-                    const data = await vfs.readFileBinary(url);
+                    // Web + plain path -> VFS
+                    vfsPath = url;
+                }
+
+                let arrayBuffer: ArrayBuffer;
+
+                if (fetchUrl) {
+                    const response = await fetch(fetchUrl);
+                    if (!response.ok) throw new Error(`HTTP Error ${response.status} for URL: ${fetchUrl}`);
+                    arrayBuffer = await response.arrayBuffer();
+                } else if (vfsPath) {
+                    const data = await vfs.readFileBinary(vfsPath);
                     arrayBuffer = new Uint8Array(data).buffer as ArrayBuffer;
+                } else {
+                    return null;
                 }
                 
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -197,12 +215,15 @@ class MediaService {
         this.waveformCache.clear();
     }
 
-    private hashString(str: string): string {
+    private hashString(str: string | null | undefined): string {
+        const s = String(str ?? '');
+        if (s.length === 0) return '0';
+
         let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
+        for (let i = 0; i < s.length; i++) {
+            const char = s.charCodeAt(i);
             hash = ((hash << 5) - hash) + char;
-            hash |= 0; 
+            hash |= 0;
         }
         return Math.abs(hash).toString(16);
     }

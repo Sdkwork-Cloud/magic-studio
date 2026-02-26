@@ -83,12 +83,12 @@ export const OrderList: React.FC<OrderListProps> = ({
   const totalPages = Math.ceil(total / pageSize);
 
   const statusOptions: { value: string; label: string }[] = [
-    { value: '', label: '全部状�? },
-    { value: 'PENDING_PAYMENT', label: '待支�? },
-    { value: 'PAID', label: '已支�? },
-    { value: 'IN_PROGRESS', label: '进行�? },
-    { value: 'COMPLETED', label: '已完�? },
-    { value: 'CANCELLED', label: '已取�? },
+    { value: '', label: '全部状态' },
+    { value: 'PENDING_PAYMENT', label: '待支付' },
+    { value: 'PAID', label: '已支付' },
+    { value: 'IN_PROGRESS', label: '进行中' },
+    { value: 'COMPLETED', label: '已完成' },
+    { value: 'CANCELLED', label: '已取消' },
   ];
 
   const typeOptions: { value: string; label: string }[] = [
@@ -100,7 +100,7 @@ export const OrderList: React.FC<OrderListProps> = ({
     { value: 'VIDEO_EDITING', label: '视频编辑' },
     { value: 'CUSTOM_SERVICE', label: '定制服务' },
     { value: 'SUBSCRIPTION', label: '订阅' },
-    { value: 'CREDIT_TOPUP', label: '充�? },
+    { value: 'CREDIT_TOPUP', label: '充值' },
   ];
 
   return (
@@ -111,7 +111,7 @@ export const OrderList: React.FC<OrderListProps> = ({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-gray-400" />
-              <span className="text-sm font-medium text-white">筛�?/span>
+              <span className="text-sm font-medium text-white">筛选</span>
             </div>
             <button
               onClick={() => setShowFilterPanel(!showFilterPanel)}
@@ -128,7 +128,7 @@ export const OrderList: React.FC<OrderListProps> = ({
           {showFilterPanel && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">订单状�?/label>
+                <label className="block text-xs text-gray-500 mb-1">订单状态</label>
                 <select
                   value={filters.status || ''}
                   onChange={(e) => handleStatusChange(e.target.value)}
@@ -190,7 +190,7 @@ export const OrderList: React.FC<OrderListProps> = ({
       {/* Order List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-sm text-gray-500">加载�?..</div>
+          <div className="text-sm text-gray-500">加载中...</div>
         </div>
       ) : orders.length === 0 ? (
         <div className="flex items-center justify-center py-12">
@@ -221,7 +221,8 @@ export const OrderList: React.FC<OrderListProps> = ({
             disabled={page === 1}
             className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
           >
-            上一�?          </button>
+            上一页
+          </button>
           <span className="text-xs text-gray-500">
             {page} / {totalPages}
           </span>
@@ -230,7 +231,8 @@ export const OrderList: React.FC<OrderListProps> = ({
             disabled={page === totalPages}
             className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
           >
-            下一�?          </button>
+            下一页
+          </button>
         </div>
       )}
     </div>

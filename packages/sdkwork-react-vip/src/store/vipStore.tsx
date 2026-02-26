@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface VipStoreContextType {
   currentSubscription: Subscription | null;
-  subscribe: (planId: PlanTier) => Promise<void>;
+  subscribe: (planId: PlanTier, billingCycle?: 'month' | 'year' | 'onetime') => Promise<void>;
   isProcessing: boolean;
 }
 
@@ -19,10 +19,10 @@ export const VipStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const subscribe = async (planId: PlanTier) => {
+  const subscribe = async (planId: PlanTier, billingCycle: 'month' | 'year' | 'onetime' = 'month') => {
     setIsProcessing(true);
     try {
-      const sub = await vipService.subscribe(planId);
+      const sub = await vipService.subscribe(planId, billingCycle);
       setCurrentSubscription(sub);
     } catch (e) {
       console.error('Subscription failed', e);

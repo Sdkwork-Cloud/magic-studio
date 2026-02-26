@@ -26,12 +26,34 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     init();
   }, []);
 
+  // Show a loading screen instead of null to maintain RouterProvider context
   if (!themeInitialized) {
-    return null; 
+    return (
+      <RouterProvider onRouteChange={() => {}}>
+        <NotificationStoreProvider>
+          <AuthStoreProvider>
+            <VipStoreProvider>
+              <SettingsStoreProvider>
+                <WorkspaceStoreProvider>
+                  <ChatStoreProvider>
+                    <EditorStoreProvider>
+                      <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
+                        <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+                        <span className="text-xs font-medium">Initializing...</span>
+                      </div>
+                    </EditorStoreProvider>
+                  </ChatStoreProvider>
+                </WorkspaceStoreProvider>
+              </SettingsStoreProvider>
+            </VipStoreProvider>
+          </AuthStoreProvider>
+        </NotificationStoreProvider>
+      </RouterProvider>
+    );
   }
 
   return (
-    <RouterProvider>
+    <RouterProvider onRouteChange={() => {}}>
       <NotificationStoreProvider>
         <AuthStoreProvider>
             <VipStoreProvider>

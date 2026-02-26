@@ -69,6 +69,7 @@ export const sidebar = {
     settings: "Settings",
     account: "Account",
     sign_in: "Sign In",
+    download: "Download App",
 
     video_workspace: "Video Workspace",
     image_gen_workspace: "Image Generation",

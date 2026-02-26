@@ -33,7 +33,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
   const paymentMethods: PaymentMethodOption[] = [
     {
       id: PaymentMethodEnum.ALIPAY,
-      name: '支付�?,
+      name: '支付宝',
       description: '推荐使用',
       icon: Smartphone,
       enabled: true,
@@ -47,7 +47,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
     },
     {
       id: PaymentMethodEnum.CREDIT_CARD,
-      name: '信用�?,
+      name: '信用卡',
       description: '支持 Visa/Master',
       icon: CreditCard,
       enabled: true,
@@ -62,7 +62,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
     {
       id: PaymentMethodEnum.POINTS,
       name: '积分支付',
-      description: '100 积分=1 �?,
+      description: '100 积分=1 元',
       icon: Coins,
       enabled: true,
     },
@@ -79,21 +79,22 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
         orderUuid: order.uuid,
         method: selectedMethod,
         useBalance: useBalance ? order.amount : undefined,
-        usePoints: usePoints ? 10000 : undefined, // 示例：使�?10000 积分
+        usePoints: usePoints ? 10000 : undefined, // 示例：使用 10000 积分
       });
 
       if (result.success) {
         if (result.redirectUrl) {
           // 第三方支付，跳转
           setRedirectUrl(result.redirectUrl);
-          // 模拟支付回调 (实际场景中应该等待回�?
+          // 模拟支付回调 (实际场景中应该等待回调)
           setTimeout(() => {
             paymentService.simulatePaymentCallback(result.payment!.uuid, true);
             onSuccess?.();
             onClose();
           }, 3000);
         } else {
-          // 余额/积分支付，直接成�?          onSuccess?.();
+          // 余额/积分支付，直接成功
+          onSuccess?.();
           onClose();
         }
       } else {
@@ -126,57 +127,47 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Order Summary */}
-          <div className="bg-[#2a2a2d] rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">订单金额</span>
-              <span className="text-xl font-bold text-white">{formatAmount(order.amount)}</span>
-            </div>
-            {order.description && (
-              <p className="text-xs text-gray-500">{order.description}</p>
-            )}
+          {/* Amount */}
+          <div className="text-center py-4">
+            <div className="text-sm text-gray-400 mb-1">支付金额</div>
+            <div className="text-3xl font-bold text-white">{formatAmount(order.amount)}</div>
           </div>
 
           {/* Payment Methods */}
           <div>
             <h3 className="text-sm font-semibold text-white mb-3">支付方式</h3>
-            <div className="space-y-2">
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  onClick={() => setSelectedMethod(method.id)}
-                  disabled={!method.enabled}
-                  className={cn(
-                    'w-full flex items-center gap-3 p-3 rounded-xl border transition-all',
-                    selectedMethod === method.id
-                      ? 'bg-blue-600/10 border-blue-500/50'
-                      : 'bg-[#2a2a2d] border-white/10 hover:border-white/20',
-                    !method.enabled && 'opacity-50 cursor-not-allowed'
-                  )}
-                >
-                  <method.icon
-                    size={20}
+            <div className="grid grid-cols-2 gap-3">
+              {paymentMethods.map((method) => {
+                const Icon = method.icon;
+                const isSelected = selectedMethod === method.id;
+
+                return (
+                  <button
+                    key={method.id}
+                    onClick={() => setSelectedMethod(method.id)}
+                    disabled={!method.enabled}
                     className={cn(
-                      selectedMethod === method.id ? 'text-blue-400' : 'text-gray-400'
+                      'relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all',
+                      isSelected
+                        ? 'bg-blue-600/10 border-blue-500/50'
+                        : 'bg-[#2a2a2d] border-white/10 hover:border-white/20',
+                      !method.enabled && 'opacity-50 cursor-not-allowed'
                     )}
-                  />
-                  <div className="flex-1 text-left">
-                    <div className="text-sm font-medium text-white">{method.name}</div>
-                    <div className="text-xs text-gray-500">{method.description}</div>
-                  </div>
-                  {selectedMethod === method.id && (
-                    <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                  >
+                    <Icon size={24} className={isSelected ? 'text-blue-500' : 'text-gray-400'} />
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-white">{method.name}</div>
+                      <div className="text-[10px] text-gray-500">{method.description}</div>
                     </div>
-                  )}
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Payment Options */}
-          <div className="bg-[#2a2a2d] rounded-xl p-4 space-y-3">
-            <label className="flex items-center justify-between cursor-pointer">
+          {/* Options */}
+          <div className="space-y-2">
+            <label className="flex items-center justify-between p-3 bg-[#2a2a2d] rounded-lg cursor-pointer">
               <div className="flex items-center gap-2">
                 <Wallet size={16} className="text-gray-400" />
                 <span className="text-sm text-gray-300">使用余额</span>
@@ -185,39 +176,33 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
                 type="checkbox"
                 checked={useBalance}
                 onChange={(e) => setUseBalance(e.target.checked)}
-                className="w-4 h-4 rounded bg-[#1e1e20] border-white/10 text-blue-600 focus:ring-blue-500/20"
+                className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
               />
             </label>
-            <label className="flex items-center justify-between cursor-pointer">
+            <label className="flex items-center justify-between p-3 bg-[#2a2a2d] rounded-lg cursor-pointer">
               <div className="flex items-center gap-2">
                 <Coins size={16} className="text-gray-400" />
-                <span className="text-sm text-gray-300">使用积分 (100 积分=1 �?</span>
+                <span className="text-sm text-gray-300">使用积分</span>
               </div>
               <input
                 type="checkbox"
                 checked={usePoints}
                 onChange={(e) => setUsePoints(e.target.checked)}
-                className="w-4 h-4 rounded bg-[#1e1e20] border-white/10 text-blue-600 focus:ring-blue-500/20"
+                className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
               />
             </label>
           </div>
 
-          {/* Redirect Info */}
           {redirectUrl && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-blue-400 text-sm mb-2">
-                <Loader2 size={16} className="animate-spin" />
-                正在跳转支付...
-              </div>
-              <p className="text-xs text-gray-500">
-                如果页面没有自动跳转，请点击下方按钮
-              </p>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
+              <div className="text-sm text-blue-400 mb-2">正在跳转支付...</div>
               <a
                 href={redirectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-2 text-xs text-blue-400 hover:text-blue-300 underline"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
               >
+                <CreditCard size={16} />
                 前往支付页面
               </a>
             </div>
@@ -225,19 +210,26 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/10">
+        <div className="flex items-center gap-3 p-6 border-t border-white/10">
+          <button
+            onClick={onClose}
+            disabled={processing}
+            className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+          >
+            取消
+          </button>
           <button
             onClick={handlePay}
-            disabled={processing}
+            disabled={processing || !!redirectUrl}
             className={cn(
-              'w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors',
-              processing && 'opacity-50 cursor-not-allowed'
+              'flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+              processing && 'bg-blue-500'
             )}
           >
             {processing ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                处理�?..
+                处理中...
               </>
             ) : (
               <>

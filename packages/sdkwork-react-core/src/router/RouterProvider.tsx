@@ -123,7 +123,20 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
 export const useRouter = (): RouterContextValue => {
     const context = useContext(RouterContext);
     if (!context) {
-        throw new Error('useRouter must be used within a RouterProvider');
+        // Return a default router context instead of throwing
+        // This prevents errors during SSR or when components render outside RouterProvider
+        console.warn('[useRouter] Router context not found, using default values. Make sure your component is wrapped with RouterProvider.');
+        return {
+            currentPath: '/' as RoutePath,
+            currentQuery: '',
+            navigate: () => {
+                console.warn('[useRouter] navigate called without RouterProvider');
+            },
+            goBack: () => {
+                console.warn('[useRouter] goBack called without RouterProvider');
+            },
+            getRouteParams: <T extends Record<string, string>>(): T => ({} as T)
+        };
     }
     console.log('[useRouter] returning context:', context.currentPath);
     return context;

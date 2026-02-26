@@ -7,6 +7,7 @@ import { MagicCutEvents, SkimPayload } from '../events';
 import { PlayerController } from '../controllers/PlayerController';
 import { useMagicCutStore } from '../store/magicCutStore';
 import { TimelineStore } from '../store/transientStore';
+import { useRafCallback } from './usePerformance';
 
 export const usePlayerPreviewSync = (
     playerRef: React.RefObject<UniversalPlayerHandle>,
@@ -18,7 +19,7 @@ export const usePlayerPreviewSync = (
     const dragOperation = useTransientState(s => s.dragOperation);
     const isPlaying = useTransientState(s => s.isPlaying);
 
-    const handleTimelineSkim = useCallback((payload: SkimPayload) => {
+    const rafRender = useRafCallback((time: number | null) => {
         const currentStoreState = store.getState();
         const isBusy = !!currentStoreState.skimmingResource || !!currentStoreState.dragOperation || !!dragOperation || isPlaying;
         
@@ -27,14 +28,18 @@ export const usePlayerPreviewSync = (
         if (playerRef.current) {
             playerRef.current.setPreviewResource(null);
             
-            if (payload.time !== null) {
-                playerRef.current.renderNow(payload.time, false);
+            if (time !== null) {
+                playerRef.current.renderNow(time, false);
             } else {
                 const currentTime = playerController.getCurrentTime();
                 playerRef.current.renderNow(currentTime, false);
             }
         }
-    }, [store, dragOperation, isPlaying, playerController, playerRef]);
+    });
+
+    const handleTimelineSkim = useCallback((payload: SkimPayload) => {
+        rafRender(payload.time);
+    }, [rafRender]);
 
     useEffect(() => {
         bus.on(MagicCutEvents.TIMELINE_SKIM, handleTimelineSkim);

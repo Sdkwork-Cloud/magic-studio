@@ -20,11 +20,12 @@ class NotificationService extends LocalStorageService<AppNotification> {
         type: NotificationType = 'info',
         options?: { actionUrl?: string; actionLabel?: string }
     ): Promise<ServiceResult<AppNotification>> {
+        const now = new Date().toISOString();
         const notification: AppNotification = {
             id: generateUUID(),
             uuid: generateUUID(),
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            createdAt: now,
+            updatedAt: now,
             title,
             message,
             type,
@@ -42,7 +43,7 @@ class NotificationService extends LocalStorageService<AppNotification> {
         await this.ensureInitialized();
         const item = this.cache?.find(n => n.id === id);
         if (item && !item.isRead) {
-            await this.save({ id, isRead: true });
+            await this.save({ id, isRead: true, updatedAt: new Date().toISOString() });
         }
         return Result.success(undefined);
     }
@@ -54,10 +55,11 @@ class NotificationService extends LocalStorageService<AppNotification> {
         await this.ensureInitialized();
         if (!this.cache) return Result.success(undefined);
 
+        const now = new Date().toISOString();
         const unread = this.cache.filter(n => !n.isRead);
         for (const n of unread) {
             n.isRead = true;
-            n.updatedAt = Date.now();
+            n.updatedAt = now;
         }
         await this.persist();
         return Result.success(undefined);
@@ -78,7 +80,7 @@ class NotificationService extends LocalStorageService<AppNotification> {
         await this.ensureInitialized();
         if (!this.cache || this.cache.length <= 50) return;
 
-        this.cache.sort((a, b) => b.createdAt - a.createdAt);
+        this.cache.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.cache = this.cache.slice(0, 50);
         await this.persist();
     }

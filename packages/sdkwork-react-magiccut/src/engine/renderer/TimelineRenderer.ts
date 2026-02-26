@@ -11,6 +11,8 @@ export class TimelineRenderer {
     private trackRenderer: TrackRenderer;
     private trackIndices = new Map<string, TrackIntervalIndex>();
     private lastTrackVersion = new Map<string, number>();
+    private lastEffectSize = new Map<string, { width: number; height: number }>();
+    private lastEffectSize = new Map<string, { width: number; height: number }>();
 
     private projectionMatrix = Matrix3Ops.create();
     private modelMatrix = Matrix3Ops.create();
@@ -93,10 +95,18 @@ export class TimelineRenderer {
                 if (hiddenClipIds && hiddenClipIds.has(clip.id)) continue;
 
                 const resource = resources[clip.resource.id];
-                const result = resource ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying) : null;
+                const clipTime = time - clip.start;
+                const tf = this.resolveTransform(clip, clipTime);
+                const filterCount = (clip.layers || [])
+                    .map(ref => layers[ref.id])
+                    .filter(l => l && l.enabled && l.type === 'filter').length;
+                const renderSize = this.getEffectRenderSize(ctx, tf, clip.id, filterCount);
+                const result = resource
+                    ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying, renderSize)
+                    : null;
 
                 if (result) {
-                    this.compositeClip(ctx, mainFBO, clip, time, result);
+                    this.compositeClip(ctx, mainFBO, clip, time, result, tf);
                 }
             }
         }
@@ -113,12 +123,15 @@ export class TimelineRenderer {
                 };
 
                 const resource = resources[overrideClip.resource.id];
-                const result = this.trackRenderer.prepareClipTexture(ctx, ghostClip, resource, {}, time, false);
+                const clipTime = time - ghostClip.start;
+                const tf = this.resolveTransform(ghostClip, clipTime);
+                const renderSize = this.getEffectRenderSize(ctx, tf, ghostClip.id, 0);
+                const result = this.trackRenderer.prepareClipTexture(ctx, ghostClip, resource, {}, time, false, renderSize);
 
                 if (result) {
                     const ghostTf = { ...(ghostClip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, opacity: 1 }) };
                     ghostTf.opacity = (ghostTf.opacity || 1) * 0.6;
-                    this.compositeClip(ctx, mainFBO, { ...ghostClip, transform: ghostTf }, time, result);
+                    this.compositeClip(ctx, mainFBO, { ...ghostClip, transform: ghostTf }, time, result, ghostTf);
                 }
             }
         }
@@ -132,11 +145,6 @@ export class TimelineRenderer {
         time: number,
         isPlaying: boolean
     ) {
-        const result = this.trackRenderer.prepareClipTexture(
-            ctx, clip, resource, {}, time, isPlaying
-        );
-        if (!result) return;
-
         const { gl } = ctx;
         gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO.fbo);
         gl.viewport(0, 0, targetFBO.width, targetFBO.height);
@@ -179,13 +187,21 @@ export class TimelineRenderer {
             transform: { x, y, width: finalW, height: finalH, rotation: 0, scale: 1, opacity: 1 }
         };
 
-        this.compositeClip(ctx, targetFBO, tempClip, time, result);
+        const clipTime = time - tempClip.start;
+        const tf = this.resolveTransform(tempClip, clipTime);
+        const renderSize = this.getEffectRenderSize(ctx, tf, tempClip.id, 0);
+        const result = this.trackRenderer.prepareClipTexture(
+            ctx, tempClip, resource, {}, time, isPlaying, renderSize
+        );
+        if (!result) return;
+
+        this.compositeClip(ctx, targetFBO, tempClip, time, result, tf);
     }
 
-    private compositeClip(ctx: RenderContext, targetFBO: FBO, clip: CutClip, time: number, result: TextureResult) {
+    private compositeClip(ctx: RenderContext, targetFBO: FBO, clip: CutClip, time: number, result: TextureResult, resolvedTransform?: CutClipTransform) {
         const { gl, compositor } = ctx;
         const clipTime = time - clip.start;
-        const tf = this.resolveTransform(clip, clipTime);
+        const tf = resolvedTransform || this.resolveTransform(clip, clipTime);
         const opacity = tf.opacity ?? 1.0;
 
         const w = tf.width;
@@ -213,6 +229,59 @@ export class TimelineRenderer {
         gl.viewport(0, 0, targetFBO.width, targetFBO.height);
 
         compositor.blit(ctx, result.texture, opacity, clip.blendMode || 'normal', this.modelMatrix, textureMatrix);
+
+        if (result.fbo && result.fbo !== targetFBO) {
+            compositor.releaseFBO(result.fbo);
+        }
+    }
+
+    private getEffectRenderSize(ctx: RenderContext, tf: CutClipTransform, clipId?: string, filterCount: number = 0): { width: number; height: number } {
+        const scale = Math.max(0.01, Math.abs(tf.scale ?? 1));
+        const rawW = Math.max(2, Math.round((tf.width || 1) * scale));
+        const rawH = Math.max(2, Math.round((tf.height || 1) * scale));
+
+        const area = rawW * rawH;
+        let downscale = 1;
+        if (area >= 3840 * 2160) {
+            downscale = Math.min(downscale, 0.66);
+        }
+        if (filterCount >= 1 && area >= 2560 * 1440) {
+            downscale = Math.min(downscale, 0.75);
+        }
+        if (filterCount >= 2 && area >= 1920 * 1080) {
+            downscale = Math.min(downscale, 0.66);
+        }
+        if (filterCount >= 3 && area >= 1920 * 1080) {
+            downscale = Math.min(downscale, 0.5);
+        }
+
+        const scaledW = Math.max(2, Math.round(rawW * downscale));
+        const scaledH = Math.max(2, Math.round(rawH * downscale));
+
+        const quant = 16;
+        const quantize = (v: number) => Math.max(2, Math.ceil(v / quant) * quant);
+
+        const maxW = Math.max(2, ctx.width);
+        const maxH = Math.max(2, ctx.height);
+
+        const nextSize = {
+            width: Math.min(quantize(scaledW), maxW),
+            height: Math.min(quantize(scaledH), maxH)
+        };
+
+        if (clipId) {
+            const last = this.lastEffectSize.get(clipId);
+            if (last) {
+                const dw = Math.abs(nextSize.width - last.width) / Math.max(1, last.width);
+                const dh = Math.abs(nextSize.height - last.height) / Math.max(1, last.height);
+                if (dw < 0.15 && dh < 0.15) {
+                    return last;
+                }
+            }
+            this.lastEffectSize.set(clipId, nextSize);
+        }
+
+        return nextSize;
     }
 
     private resolveTransform(clip: CutClip, clipTime: number): CutClipTransform {
@@ -261,4 +330,3 @@ export class TimelineRenderer {
         }
     }
 }
-

@@ -1,2 +1,2 @@
-export { PaymentDialog } from './PaymentDialog';
-export { PaymentMethodSelector, PaymentStatusBadge } from './PaymentMethod';
+export { PaymentDialog } from './PaymentDialog';
+export { PaymentMethodSelector, PaymentStatusBadge } from './PaymentMethod';

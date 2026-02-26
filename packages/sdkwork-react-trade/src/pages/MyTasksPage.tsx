@@ -3,19 +3,17 @@ import { ClipboardList, FileText, Briefcase, DollarSign, CheckCircle, Clock, Ale
 import { OrderList } from '../components/Order/OrderList';
 import { PaymentDialog } from '../components/Payment/PaymentDialog';
 import type { Order } from '../entities';
-import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { TradeLayout } from '../components/Layout/TradeLayout';
 
 type MyTasksTab = 'tasks' | 'orders' | 'published' | 'wallet';
 
 const MyTasksPage: React.FC = () => {
-  const { navigate } = useRouter();
   const [activeTab, setActiveTab] = useState<MyTasksTab>('tasks');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showPayment, setShowPayment] = useState(false);
 
   const handlePayOrder = (order: Order) => { setSelectedOrder(order); setShowPayment(true); };
-  const handleCancelOrder = async (order: Order) => { if (!confirm(`确定要取消订�?${order.orderNo} 吗？`)) return; alert('订单已取�?); };
+  const handleCancelOrder = async (order: Order) => { if (!confirm(`确定取消订单 ${order.orderNo} 吗?`)) return; alert('订单已取消'); };
 
   const TABS = [
     { id: 'tasks', label: '我的任务', icon: ClipboardList },
@@ -42,7 +40,7 @@ const MyTasksPage: React.FC = () => {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400">我的任务</span> - 管理你的工作
             </h1>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              查看和管理你的任务、订单和收益
+              查看和管理你的任务、订单和收入
             </p>
           </div>
         </div>
@@ -58,7 +56,7 @@ const MyTasksPage: React.FC = () => {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => setActiveTab(tab.id as MyTasksTab)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       isActive
                         ? 'bg-white/10 text-white'
@@ -73,7 +71,7 @@ const MyTasksPage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => navigate(ROUTES.TASK_MARKET)}
+              onClick={() => setActiveTab('orders')}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg"
             >
               <Briefcase size={14} />
@@ -94,7 +92,7 @@ const MyTasksPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-white">3</div>
-                    <div className="text-xs text-gray-400">进行�?/div>
+                    <div className="text-xs text-gray-400">进行中</div>
                   </div>
                 </div>
               </div>
@@ -105,7 +103,7 @@ const MyTasksPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-white">24</div>
-                    <div className="text-xs text-gray-400">已完�?/div>
+                    <div className="text-xs text-gray-400">已完成</div>
                   </div>
                 </div>
               </div>
@@ -116,7 +114,7 @@ const MyTasksPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-white">2</div>
-                    <div className="text-xs text-gray-400">待验�?/div>
+                    <div className="text-xs text-gray-400">待审核</div>
                   </div>
                 </div>
               </div>
@@ -127,7 +125,7 @@ const MyTasksPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-white">¥2,580</div>
-                    <div className="text-xs text-gray-400">累计收益</div>
+                    <div className="text-xs text-gray-400">累计收入</div>
                   </div>
                 </div>
               </div>
@@ -139,12 +137,12 @@ const MyTasksPage: React.FC = () => {
                   <ClipboardList size={32} className="text-gray-600" />
                 </div>
                 <h3 className="text-base font-semibold text-white mb-2">暂无进行中的任务</h3>
-                <p className="text-sm text-gray-500 mb-4">去任务市场抢单赚钱吧</p>
+                <p className="text-sm text-gray-500 mb-4">去任务市场抢单赚佣金吧</p>
                 <button
-                  onClick={() => navigate(ROUTES.TASK_MARKET)}
+                  onClick={() => setActiveTab('tasks')}
                   className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg"
                 >
-                  前往任务市场
+                  浏览任务
                 </button>
               </div>
             </div>
@@ -161,10 +159,11 @@ const MyTasksPage: React.FC = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                 <Briefcase size={32} className="text-gray-600" />
               </div>
-              <h3 className="text-base font-semibold text-white mb-2">暂无发布的任�?/h3>
-              <p className="text-sm text-gray-500 mb-4">发布你的任务需�?/p>
+              <h3 className="text-base font-semibold text-white mb-2">暂无发布的任务</h3>
+              <p className="text-sm text-gray-500 mb-4">发布你的任务需求</p>
               <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg">
-                发布新任�?              </button>
+                发布新任务
+              </button>
             </div>
           </div>
         )}
@@ -172,7 +171,7 @@ const MyTasksPage: React.FC = () => {
         {activeTab === 'wallet' && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-white/10 rounded-2xl p-8 mb-6">
-              <div className="text-sm text-gray-400 mb-2">总余�?/div>
+              <div className="text-sm text-gray-400 mb-2">总余额</div>
               <div className="text-4xl font-bold text-white mb-4">¥1,000.00</div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#1e1e20] rounded-xl p-4">
@@ -200,7 +199,8 @@ const MyTasksPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1e1e20] hover:bg-white/10 border border-white/10 rounded-xl text-white text-sm font-medium">
-                <DollarSign size={16} />充�?              </button>
+                <DollarSign size={16} />充值
+              </button>
               <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1e1e20] hover:bg-white/10 border border-white/10 rounded-xl text-white text-sm font-medium">
                 <FileText size={16} />交易记录
               </button>
@@ -215,15 +215,16 @@ const MyTasksPage: React.FC = () => {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Award size={24} className="text-purple-400" />
-                <h2 className="text-xl font-bold text-white">提升你的技能等�?/h2>
+                <h2 className="text-xl font-bold text-white">提升你的技能等级</h2>
               </div>
               <p className="text-gray-400 text-sm mb-6 max-w-2xl mx-auto">
-                完成更多任务，获得更高等级和更多收益
+                完成更多任务，获得更高等级和更多收入
               </p>
               <div className="flex items-center justify-center gap-4">
                 <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors">
                   <Sparkles size={16} />
-                  查看技能市�?                </button>
+                  查看技能市场
+                </button>
                 <button className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors">
                   了解等级系统
                 </button>

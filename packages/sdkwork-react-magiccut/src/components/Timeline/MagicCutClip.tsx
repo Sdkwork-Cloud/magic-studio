@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 ;
 import { useAssetUrl, MediaResourceType } from '@sdkwork/react-commons';
+import { assetService } from '@sdkwork/react-assets';
 import { CutClip } from '../../entities/magicCut.entity';
 import { PlayerController } from '../../controllers/PlayerController';
 import { Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle, Lock } from 'lucide-react';
@@ -99,9 +100,17 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
         return { bg, border, icon, headerBg, headerText };
     }, [resourceType]);
 
-    const filmstripSource = resourceType === MediaResourceType.VIDEO 
-        ? (resourceUrl || '') 
-        : (useAssetUrl(resourceUrl).url || '');
+    const { url: resolvedUrl } = useAssetUrl(resourceUrl || null, {
+        resolver: async (source) => {
+            if (!source) return '';
+            if (typeof source === 'string') {
+                return assetService.resolveAssetUrl({ path: source, url: source, id: source });
+            }
+            return assetService.resolveAssetUrl(source as any);
+        }
+    });
+
+    const filmstripSource = resolvedUrl || '';
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (isLocked || isGhost) return;

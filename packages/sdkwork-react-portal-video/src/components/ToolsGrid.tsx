@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 
 export const ToolsGrid: React.FC = () => {
-    const { navigate } = useRouter();
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
 
     const TOOLS = [
         { id: 'lipsync', label: '对口型', desc: '逼真唇形同步', icon: Mic, color: 'text-blue-400', bg: 'bg-[#1a1d26]', border: 'border-blue-500/20', route: ROUTES.VIDEO },

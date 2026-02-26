@@ -3,6 +3,7 @@ export { default as AIToolsPage } from './pages/AIToolsPage';
 export { default as DiscoverPage } from './pages/DiscoverPage';
 export { default as CommunityPage } from './pages/CommunityPage';
 export { default as TheaterPage } from './pages/TheaterPage';
+export { default as DownloadAppPage } from './pages/DownloadAppPage';
 export { PortalHeader } from './components/PortalHeader';
 export { PortalSidebar } from './components/PortalSidebar';
 export { ToolsGrid } from './components/ToolsGrid';

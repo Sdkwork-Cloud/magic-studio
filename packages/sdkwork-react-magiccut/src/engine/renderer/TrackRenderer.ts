@@ -1,13 +1,14 @@
 
 import { CutClip, CutLayer } from '../../entities/magicCut.entity';
 import { AnyMediaResource } from '@sdkwork/react-commons';
-import { RenderContext } from '../types';
+import { RenderContext, FBO } from '../types';
 import { ClipStrategyFactory } from './ClipRenderStrategies';
 import { RenderMatrices } from '../config/RenderConfig';
 
 export interface TextureResult {
     texture: WebGLTexture;
     isFBO: boolean;
+    fbo: FBO | null;
 }
 
 export class TrackRenderer {
@@ -27,7 +28,8 @@ export class TrackRenderer {
         resource: AnyMediaResource,
         layersMap: Record<string, CutLayer>,
         time: number,
-        isPlaying: boolean
+        isPlaying: boolean,
+        renderSize?: { width: number; height: number }
     ): TextureResult | null {
         const { gl, compositor, effectSystem, emptyTexture } = ctx;
 
@@ -51,13 +53,16 @@ export class TrackRenderer {
 
         // FAST PATH: No effects? Return raw texture directly.
         if (activeLayers.length === 0) {
-            return { texture: rawTexture, isFBO: false };
+            return { texture: rawTexture, isFBO: false, fbo: null };
         }
 
         // SLOW PATH: Apply Effects Chain via FBOs
 
-        const rawFBO = compositor.requestFBO(ctx.width, ctx.height);
-        const auxFBO = compositor.requestFBO(ctx.width, ctx.height);
+        const effectWidth = renderSize?.width ?? ctx.width;
+        const effectHeight = renderSize?.height ?? ctx.height;
+
+        const rawFBO = compositor.requestFBO(effectWidth, effectHeight);
+        const auxFBO = compositor.requestFBO(effectWidth, effectHeight);
 
         // Render raw texture into rawFBO first (Base Pass)
         gl.bindFramebuffer(gl.FRAMEBUFFER, rawFBO.fbo);
@@ -78,7 +83,7 @@ export class TrackRenderer {
         const res = effectSystem.applyFilters(
             gl, rawFBO.texture, activeLayers, auxFBO, rawFBO,
             { time, localTime: clipTime, progress: clipProgress },
-            { width: ctx.width, height: ctx.height },
+            { width: effectWidth, height: effectHeight },
             ctx.vaoQuad
         );
 
@@ -93,10 +98,9 @@ export class TrackRenderer {
             // No effect was actually applied (all defs missing), release both
             compositor.releaseFBO(rawFBO);
             compositor.releaseFBO(auxFBO);
-            return { texture: rawTexture, isFBO: false };
+            return { texture: rawTexture, isFBO: false, fbo: null };
         }
 
-        return { texture: finalTexture, isFBO: true };
+        return { texture: finalTexture, isFBO: true, fbo: res.fbo ?? null };
     }
 }
-

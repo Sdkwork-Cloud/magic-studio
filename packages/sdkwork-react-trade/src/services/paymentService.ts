@@ -19,7 +19,7 @@ export interface InitiatePaymentParams {
   orderUuid: string;
   /** 支付方式 */
   method: PaymentMethod;
-  /** 使用余额 (�? */
+  /** 使用余额 (分) */
   useBalance?: number;
   /** 使用积分 */
   usePoints?: number;
@@ -35,27 +35,29 @@ export interface PaymentResult {
   payment?: Payment;
   /** 错误信息 */
   errorMessage?: string;
-  /** 第三方支付跳�?URL */
+  /** 第三方支付跳转 URL */
   redirectUrl?: string;
-  /** 支付流水�?*/
+  /** 支付流水号 */
   transactionId?: string;
 }
 
 /**
- * 退款参�? */
+ * 退款参数
+ */
 export interface RefundParams {
   /** 支付 UUID */
   paymentUuid: string;
-  /** 退款金�?(�? */
+  /** 退款金额 (分) */
   amount?: number;
-  /** 退款原�?*/
+  /** 退款原因 */
   reason: string;
 }
 
 /**
- * 充值参�? */
+ * 充值参数
+ */
 export interface RechargeParams {
-  /** 充值金�?(�? */
+  /** 充值金额 (分) */
   amount: number;
   /** 支付方式 */
   method: PaymentMethod;
@@ -73,7 +75,8 @@ export interface IPaymentService {
   initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult>;
 
   /**
-   * 查询支付状�?   */
+   * 查询支付状态
+   */
   queryPaymentStatus(paymentUuid: string): Promise<PaymentStatus>;
 
   /**
@@ -92,11 +95,13 @@ export interface IPaymentService {
   getMyPaymentList(params: TradePageRequest): Promise<TradePageResponse<Payment>>;
 
   /**
-   * 申请退�?   */
+   * 申请退款
+   */
   requestRefund(params: RefundParams): Promise<Payment>;
 
   /**
-   * 发起充�?   */
+   * 发起充值
+   */
   initiateRecharge(params: RechargeParams): Promise<PaymentResult>;
 
   /**
@@ -149,7 +154,8 @@ export class PaymentService implements IPaymentService {
     if (data) {
       return JSON.parse(data);
     }
-    // 初始化默认钱�?    const defaultWallet: Wallet = {
+    // 初始化默认钱包
+    const defaultWallet: Wallet = {
       uuid: generateUUID(),
       userUuid: 'current-user',
       balance: 100000, // 默认 1000 元体验金
@@ -220,7 +226,7 @@ export class PaymentService implements IPaymentService {
       if (!order) {
         return {
           success: false,
-          errorMessage: '订单不存�?,
+          errorMessage: '订单不存在',
         };
       }
 
@@ -240,7 +246,7 @@ export class PaymentService implements IPaymentService {
       let useBalance = params.useBalance || 0;
       let usePoints = params.usePoints || 0;
 
-      // 积分抵扣 (假设 100 积分 = 1 �?
+      // 积分抵扣 (假设 100 积分 = 1 元)
       if (usePoints > 0) {
         const pointsValue = Math.floor(usePoints / 100);
         remainingAmount -= pointsValue;
@@ -274,7 +280,8 @@ export class PaymentService implements IPaymentService {
       payments.push(payment);
       await this.savePayments(payments);
 
-      // 如果是余�?积分支付，直接完�?      if (params.method === PaymentMethodEnum.BALANCE || params.method === PaymentMethodEnum.POINTS) {
+      // 如果是余额/积分支付，直接完成
+      if (params.method === PaymentMethodEnum.BALANCE || params.method === PaymentMethodEnum.POINTS) {
         return await this.completePayment(payment.uuid, useBalance, usePoints);
       }
 
@@ -295,7 +302,7 @@ export class PaymentService implements IPaymentService {
   }
 
   private getThirdPartyRedirectUrl(method: PaymentMethod, paymentNo: string): string {
-    // 模拟第三方支付跳�?URL
+    // 模拟第三方支付跳转 URL
     const baseUrl = 'https://payment.example.com/pay';
     return `${baseUrl}?no=${paymentNo}&method=${method}`;
   }
@@ -311,7 +318,7 @@ export class PaymentService implements IPaymentService {
     if (paymentIndex === -1) {
       return {
         success: false,
-        errorMessage: '支付记录不存�?,
+        errorMessage: '支付记录不存在',
       };
     }
 
@@ -322,7 +329,7 @@ export class PaymentService implements IPaymentService {
     if (!order) {
       return {
         success: false,
-        errorMessage: '订单不存�?,
+        errorMessage: '订单不存在',
       };
     }
 
@@ -340,7 +347,8 @@ export class PaymentService implements IPaymentService {
     wallet.totalSpent += payment.amount;
     wallet.updatedAt = now;
 
-    // 更新订单状�?    await orderService.updateOrderStatus(order.uuid, OrderStatusEnum.PAID);
+    // 更新订单状态
+    await orderService.updateOrderStatus(order.uuid, OrderStatusEnum.PAID);
 
     // 创建交易记录
     await this.createTransaction(
@@ -427,12 +435,12 @@ export class PaymentService implements IPaymentService {
     const index = payments.findIndex((p) => p.uuid === params.paymentUuid);
 
     if (index === -1) {
-      throw new Error('支付记录不存�?);
+      throw new Error('支付记录不存在');
     }
 
     const payment = payments[index];
     if (payment.status !== PaymentStatusEnum.SUCCESS) {
-      throw new Error('只有成功的支付才能退�?);
+      throw new Error('只有成功的支付才能退款');
     }
 
     const now = new Date().toISOString();
@@ -444,7 +452,7 @@ export class PaymentService implements IPaymentService {
     payments[index] = payment;
     await this.savePayments(payments);
 
-    // TODO: 实际场景中需要调用支付平台退款接�?
+    // TODO: 实际场景中需要调用支付平台退款接口
     return payment;
   }
 
@@ -472,7 +480,8 @@ export class PaymentService implements IPaymentService {
     payments.push(payment);
     await this.savePayments(payments);
 
-    // 模拟第三方支�?    const redirectUrl = this.getThirdPartyRedirectUrl(params.method, payment.paymentNo);
+    // 模拟第三方支付
+    const redirectUrl = this.getThirdPartyRedirectUrl(params.method, payment.paymentNo);
 
     return {
       success: true,
@@ -524,7 +533,7 @@ export class PaymentService implements IPaymentService {
     const index = payments.findIndex((p) => p.uuid === paymentUuid);
 
     if (index === -1) {
-      throw new Error('支付记录不存�?);
+      throw new Error('支付记录不存在');
     }
 
     const payment = payments[index];
@@ -535,7 +544,8 @@ export class PaymentService implements IPaymentService {
       payment.paidAt = now;
       payment.transactionId = `TXN${Date.now()}`;
 
-      // 更新订单状�?      const order = await orderService.getOrderById(payment.orderUuid);
+      // 更新订单状态
+      const order = await orderService.getOrderById(payment.orderUuid);
       if (order) {
         await orderService.updateOrderStatus(order.uuid, OrderStatusEnum.PAID);
       }

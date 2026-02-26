@@ -78,13 +78,13 @@ export const TaskList: React.FC<TaskListProps> = ({
     { value: 'VIDEO_EXTEND', label: '视频扩展' },
     { value: 'VIDEO_RESTORE', label: '视频修复' },
     { value: 'VIDEO_SUPER_RESOLUTION', label: '视频超分' },
-    { value: 'AVATAR_VIDEO', label: '数字人视�? },
-    { value: 'LIP_SYNC', label: '口型同步' },
+    { value: 'AVATAR_VIDEO', label: '数字人视频' },
+    { value: 'LIP_SYNC', label: '唇型同步' },
   ];
 
   const difficultyOptions: { value: string; label: string }[] = [
     { value: '', label: '全部难度' },
-    { value: 'EASY', label: '简�? },
+    { value: 'EASY', label: '简单' },
     { value: 'MEDIUM', label: '中等' },
     { value: 'HARD', label: '困难' },
     { value: 'EXPERT', label: '专家' },
@@ -143,9 +143,9 @@ export const TaskList: React.FC<TaskListProps> = ({
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="bg-[#2a2a2d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
           >
-            <option value="latest">最新发�?/option>
-            <option value="budget">最高预�?/option>
-            <option value="difficulty">最高难�?/option>
+            <option value="latest">最新发布</option>
+            <option value="budget">最高报酬</option>
+            <option value="difficulty">最高难度</option>
           </select>
 
           {/* Apply Button */}
@@ -154,7 +154,8 @@ export const TaskList: React.FC<TaskListProps> = ({
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Filter size={14} />
-            筛�?          </button>
+            筛选
+          </button>
         </div>
       </div>
 
@@ -169,7 +170,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         />
         <StatCard
           icon={DollarSign}
-          label="总预算池"
+          label="总预算"
           value="¥12,580"
           color="text-green-400"
           bgColor="bg-green-500/10"
@@ -183,7 +184,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         />
         <StatCard
           icon={Clock}
-          label="进行�?
+          label="进行中"
           value="3"
           color="text-yellow-400"
           bgColor="bg-yellow-500/10"
@@ -193,13 +194,13 @@ export const TaskList: React.FC<TaskListProps> = ({
       {/* Task List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-sm text-gray-500">加载�?..</div>
+          <div className="text-sm text-gray-500">加载中...</div>
         </div>
       ) : tasks.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="text-sm text-gray-500 mb-2">暂无可接任务</div>
-            <div className="text-xs text-gray-600">请稍后再来查看新任务</div>
+            <div className="text-xs text-gray-600">请稍后再来看看新任务</div>
           </div>
         </div>
       ) : (
@@ -223,7 +224,8 @@ export const TaskList: React.FC<TaskListProps> = ({
             disabled={page === 1}
             className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
           >
-            上一�?          </button>
+            上一页
+          </button>
           <span className="text-xs text-gray-500">
             {page} / {totalPages}
           </span>
@@ -232,7 +234,8 @@ export const TaskList: React.FC<TaskListProps> = ({
             disabled={page === totalPages}
             className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
           >
-            下一�?          </button>
+            下一页
+          </button>
         </div>
       )}
     </div>

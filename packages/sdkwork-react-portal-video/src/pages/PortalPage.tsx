@@ -1,14 +1,18 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic, Layers, ArrowRightLeft, Grid3x3 } from 'lucide-react';
-import { useFilmStore, FilmStoreProvider } from '@sdkwork/react-film';
+import { useFilmStore, FilmStoreProvider } from 'sdkwork-react-film';
 import { useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useTranslation } from 'sdkwork-react-i18n';
 import { FILM_STYLES, GEN_MODES } from '../constants';
-import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector, ChooseAssetModal, assetService } from '@sdkwork/react-assets';
-import { PortalSidebar, PortalHeader, ToolsGrid, CommunityGallery, StickyHeroBar } from '../index';
-import { GalleryCard, GalleryItem, generateUUID, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent } from '@sdkwork/react-commons';
-import { GenerationPreview } from '@sdkwork/react-image';
+import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector, ChooseAssetModal, assetService } from 'sdkwork-react-assets';
+import { PortalSidebar } from '../components/PortalSidebar';
+import { PortalHeader } from '../components/PortalHeader';
+import { ToolsGrid } from '../components/ToolsGrid';
+import { CommunityGallery } from '../components/CommunityGallery';
+import { StickyHeroBar } from '../components/StickyHeroBar';
+import { GalleryCard, GalleryItem, generateUUID, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent } from 'sdkwork-react-commons';
+import { GenerationPreview } from 'sdkwork-react-image';
 
 const MOCK_SHORTS: GalleryItem[] = [
     { 
@@ -36,8 +40,252 @@ const ACTIVE_USERS = [
     { name: '小猫游九寨沟', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jiu' },
 ];
 
-const PortalContent: React.FC = () => {
-    const { navigate } = useRouter();
+// 创建独立的 Footer Controls 组件，避免状态共享问题
+interface FooterControlsProps {
+    activeTab: PortalTab;
+    activeModel: string;
+    setActiveModel: (model: string) => void;
+    activeStyle: string;
+    setActiveStyle: (style: string) => void;
+    genMode: string;
+    setGenMode: (mode: string) => void;
+    aspectRatio: any;
+    setAspectRatio: (ratio: any) => void;
+    resolution: any;
+    setResolution: (res: any) => void;
+    duration: string;
+    setDuration: (duration: string) => void;
+    currentProviders: ModelProvider[];
+    onInsertQuote: () => void;
+    // 独立的状态命名空间
+    menuPrefix: string;
+}
+
+const FooterControls: React.FC<FooterControlsProps> = ({
+    activeTab,
+    activeModel,
+    setActiveModel,
+    activeStyle,
+    setActiveStyle,
+    genMode,
+    setGenMode,
+    aspectRatio,
+    setAspectRatio,
+    resolution,
+    setResolution,
+    duration,
+    setDuration,
+    currentProviders,
+    onInsertQuote,
+    menuPrefix,
+}) => {
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
+    
+    const modeButtonRef = useRef<HTMLButtonElement>(null);
+    const durationButtonRef = useRef<HTMLButtonElement>(null);
+    const genModeButtonRef = useRef<HTMLButtonElement>(null);
+
+    const toggleMenu = (menu: string) => {
+        setActiveMenu(prev => prev === menu ? null : menu);
+    };
+
+    const tabs = [
+        { id: 'short_drama', label: 'AI 短剧', icon: Clapperboard, color: 'text-orange-500' },
+        { id: 'video', label: 'AI 视频', icon: Video, color: 'text-pink-400' },
+        { id: 'image', label: 'AI 图片', icon: ImageIcon, color: 'text-blue-400' },
+        { id: 'human', label: '角色', icon: Smile, color: 'text-green-400' },
+        { id: 'music', label: 'AI 音乐', icon: Music, color: 'text-indigo-400' },
+        { id: 'speech', label: 'AI 配音', icon: Mic, color: 'text-teal-400' },
+    ];
+
+    const currentMode = tabs.find(t => t.id === activeTab) || tabs[0];
+    const currentGenMode = GEN_MODES.find(m => m.id === genMode) || GEN_MODES[0];
+    const GenModeIcon = currentGenMode.icon;
+
+    const availableGenModes = useMemo(() => {
+        return GEN_MODES.filter(m => m.validTabs.includes(activeTab));
+    }, [activeTab]);
+
+    return (
+        <div className="flex items-center gap-2 whitespace-nowrap">
+            <div className="relative shrink-0">
+                <InputFooterButton 
+                    ref={modeButtonRef}
+                    icon={<currentMode.icon size={16} className={currentMode.color} />}
+                    label={currentMode.label}
+                    onClick={() => toggleMenu(`${menuPrefix}-mode`)}
+                    active={activeMenu === `${menuPrefix}-mode`}
+                    suffix={<ChevronDown size={10} className="opacity-50" />}
+                    className="h-9 px-3"
+                />
+                <Popover
+                    isOpen={activeMenu === `${menuPrefix}-mode`}
+                    onClose={() => setActiveMenu(null)}
+                    triggerRef={modeButtonRef}
+                    width={160}
+                    className="p-1"
+                >
+                     {tabs.map(tab => (
+                         <button 
+                             key={tab.id} 
+                             onClick={() => { 
+                                 // 使用全局事件来切换 tab，避免 prop drilling
+                                 window.dispatchEvent(new CustomEvent('portal-tab-change', { detail: tab.id }));
+                                 setActiveMenu(null); 
+                             }}
+                             className={`flex items-center gap-2 w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-[#27272a] transition-colors ${activeTab === tab.id ? 'bg-[#27272a] text-white' : 'text-gray-400'}`}
+                         >
+                             <tab.icon size={14} className={tab.color} />
+                             <span>{tab.label}</span>
+                             {activeTab === tab.id && <Check size={12} className="ml-auto text-blue-500" />}
+                         </button>
+                     ))}
+                </Popover>
+            </div>
+
+            <div className="w-px h-5 bg-[#27272a] mx-1 shrink-0" />
+
+            <div className="relative shrink-0">
+                 <div className="hidden">
+                     <ModelSelector 
+                         value={activeModel}
+                         onChange={setActiveModel}
+                         providers={currentProviders}
+                         className="opacity-0 w-0 h-0 overflow-hidden" 
+                     />
+                 </div>
+                 <InputFooterButton 
+                    icon={<Sparkles size={16} />} 
+                    label={activeModel ? activeModel.split('-').slice(0, 2).join(' ') : 'Model'}
+                    onClick={() => toggleMenu(`${menuPrefix}-model`)}
+                    suffix={<ChevronDown size={10} className="opacity-50" />}
+                    active={activeMenu === `${menuPrefix}-model`}
+                    className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
+                 />
+                 <div className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none">
+                     <ModelSelector 
+                         value={activeModel}
+                         onChange={setActiveModel}
+                         providers={currentProviders}
+                         className="w-full h-full cursor-pointer"
+                         isOpen={activeMenu === `${menuPrefix}-model`}
+                         onToggle={(open) => toggleMenu(open ? `${menuPrefix}-model` : '')}
+                     />
+                 </div>
+            </div>
+
+            {availableGenModes.length > 1 && (
+                <div className="relative shrink-0">
+                    <InputFooterButton
+                        ref={genModeButtonRef}
+                        icon={<GenModeIcon size={16} className={genMode === 'text' ? 'text-blue-400' : 'text-pink-400'} />}
+                        label={currentGenMode.label}
+                        onClick={() => toggleMenu(`${menuPrefix}-genMode`)}
+                        active={activeMenu === `${menuPrefix}-genMode`}
+                        suffix={<ChevronDown size={10} className="opacity-50" />}
+                        className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
+                    />
+                    <Popover
+                        isOpen={activeMenu === `${menuPrefix}-genMode`}
+                        onClose={() => setActiveMenu(null)}
+                        triggerRef={genModeButtonRef}
+                        width={220}
+                        className="p-1"
+                    >
+                        {availableGenModes.map(m => (
+                            <button
+                                key={m.id}
+                                onClick={() => { setGenMode(m.id); setActiveMenu(null); }}
+                                className={`
+                                    flex flex-col gap-0.5 w-full text-left px-3 py-2 rounded-lg transition-colors group
+                                    ${genMode === m.id ? 'bg-[#27272a]' : 'hover:bg-[#202022]'}
+                                `}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <m.icon size={14} className={genMode === m.id ? (m.id === 'text' ? 'text-blue-400' : 'text-pink-400') : 'text-gray-500 group-hover:text-gray-400'} />
+                                    <span className={`text-xs font-bold ${genMode === m.id ? 'text-white' : 'text-gray-300'}`}>{m.label}</span>
+                                    {genMode === m.id && <Check size={12} className="ml-auto text-green-500" />}
+                                </div>
+                                <span className="text-[10px] text-gray-500 pl-6 leading-tight opacity-80">{m.desc}</span>
+                            </button>
+                        ))}
+                    </Popover>
+                </div>
+            )}
+
+            {activeTab === 'short_drama' && (
+                <StyleSelector 
+                    value={activeStyle}
+                    onChange={setActiveStyle}
+                    options={FILM_STYLES}
+                    className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
+                    label="风格"
+                    disabled={false}
+                    isOpen={activeMenu === `${menuPrefix}-style`}
+                    onToggle={(open) => toggleMenu(open ? `${menuPrefix}-style` : '')}
+                />
+            )}
+
+            {(activeTab === 'video' || activeTab === 'image' || activeTab === 'short_drama') && (
+                <AspectRatioSelector 
+                    value={aspectRatio}
+                    onChange={setAspectRatio}
+                    resolution={resolution}
+                    onResolutionChange={setResolution}
+                    className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
+                    isOpen={activeMenu === `${menuPrefix}-ratio`}
+                    onToggle={(open) => toggleMenu(open ? `${menuPrefix}-ratio` : '')}
+                />
+            )}
+
+            {(activeTab === 'video' || activeTab === 'short_drama') && (
+                <div className="relative shrink-0">
+                    <InputFooterButton 
+                        ref={durationButtonRef}
+                        icon={<Clock size={16} />}
+                        label={duration}
+                        onClick={() => toggleMenu(`${menuPrefix}-duration`)}
+                        active={activeMenu === `${menuPrefix}-duration`}
+                        suffix={<ChevronDown size={10} className="opacity-50" />}
+                        className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
+                    />
+                     <Popover
+                        isOpen={activeMenu === `${menuPrefix}-duration`}
+                        onClose={() => setActiveMenu(null)}
+                        triggerRef={durationButtonRef}
+                        width={128}
+                        className="p-1"
+                    >
+                        {['5s', '10s', '15s', '60s'].map(d => (
+                            <button 
+                                key={d} 
+                                onClick={() => { setDuration(d); setActiveMenu(null); }}
+                                className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d ? 'text-blue-400' : 'text-gray-400'}`}
+                            >
+                                {d}
+                            </button>
+                        ))}
+                    </Popover>
+                </div>
+            )}
+            
+             <button 
+                onClick={onInsertQuote}
+                className="p-2 text-gray-500 hover:text-white hover:bg-[#ffffff08] rounded-full transition-colors ml-auto shrink-0"
+                title="Insert Quote"
+             >
+                 <Quote size={18} />
+             </button>
+        </div>
+    );
+};
+
+// Inner component that uses FilmStore and receives navigate from parent
+interface PortalContentInnerProps {
+    navigate: (path: string) => void;
+}
+
+const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => {
     const { createProject, createProjectFromInput } = useFilmStore();
     const { t } = useTranslation();
     
@@ -54,16 +302,12 @@ const PortalContent: React.FC = () => {
     
     const [attachments, setAttachments] = useState<InputAttachment[]>([]);
     
-    const [activeMenu, setActiveMenu] = useState<string | null>(null);
-    
     const [showAssetModal, setShowAssetModal] = useState(false);
     
     const [currentProviders, setCurrentProviders] = useState<ModelProvider[]>([]);
 
-    const modeButtonRef = useRef<HTMLButtonElement>(null);
-    const durationButtonRef = useRef<HTMLButtonElement>(null);
-    const genModeButtonRef = useRef<HTMLButtonElement>(null);
     const editorRef = useRef<any>(null); 
+    const expandedEditorRef = useRef<any>(null); 
     
     const [isHeroVisible, setIsHeroVisible] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -71,9 +315,14 @@ const PortalContent: React.FC = () => {
     
     const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
-    const availableGenModes = useMemo(() => {
-        return GEN_MODES.filter(m => m.validTabs.includes(activeTab));
-    }, [activeTab]);
+    // 监听 tab 切换事件
+    useEffect(() => {
+        const handleTabChange = (e: CustomEvent) => {
+            setActiveTab(e.detail as PortalTab);
+        };
+        window.addEventListener('portal-tab-change', handleTabChange as EventListener);
+        return () => window.removeEventListener('portal-tab-change', handleTabChange as EventListener);
+    }, []);
 
     const getGenerationType = (tab: PortalTab): GenerationType => {
         switch (tab) {
@@ -140,10 +389,6 @@ const PortalContent: React.FC = () => {
         const valid = GEN_MODES.find(m => m.id === genMode && m.validTabs.includes(activeTab));
         if (!valid) setGenMode('text');
     }, [activeTab]);
-
-    const toggleMenu = (menu: string) => {
-        setActiveMenu(prev => prev === menu ? null : menu);
-    };
 
     const handleGenerate = async () => {
         if (!prompt.trim() && attachments.length === 0) return;
@@ -261,8 +506,8 @@ const PortalContent: React.FC = () => {
         setIsExpanded(true);
     };
     
-    const handleInsertQuote = () => {
-        const editor = editorRef.current;
+    const handleInsertQuote = (isExpandedEditor: boolean) => () => {
+        const editor = isExpandedEditor ? expandedEditorRef.current : editorRef.current;
         if (!editor) return;
 
         const { state } = editor;
@@ -306,192 +551,6 @@ const PortalContent: React.FC = () => {
         }
     };
 
-    const tabs = [
-        { id: 'short_drama', label: 'AI 短剧', icon: Clapperboard, color: 'text-orange-500' },
-        { id: 'video', label: 'AI 视频', icon: Video, color: 'text-pink-400' },
-        { id: 'image', label: 'AI 图片', icon: ImageIcon, color: 'text-blue-400' },
-        { id: 'human', label: '角色', icon: Smile, color: 'text-green-400' },
-        { id: 'music', label: 'AI 音乐', icon: Music, color: 'text-indigo-400' },
-        { id: 'speech', label: 'AI 配音', icon: Mic, color: 'text-teal-400' },
-    ];
-
-    const currentMode = tabs.find(t => t.id === activeTab) || tabs[0];
-    const currentGenMode = GEN_MODES.find(m => m.id === genMode) || GEN_MODES[0];
-
-    const renderFooterControls = () => {
-        const GenModeIcon = currentGenMode.icon;
-
-        return (
-            <div className="flex items-center gap-2 whitespace-nowrap">
-                
-                <div className="relative shrink-0">
-                    <InputFooterButton 
-                        ref={modeButtonRef}
-                        icon={<currentMode.icon size={16} className={currentMode.color} />}
-                        label={currentMode.label}
-                        onClick={() => toggleMenu('mode')}
-                        active={activeMenu === 'mode'}
-                        suffix={<ChevronDown size={10} className="opacity-50" />}
-                        className="h-9 px-3"
-                    />
-                    <Popover
-                        isOpen={activeMenu === 'mode'}
-                        onClose={() => setActiveMenu(null)}
-                        triggerRef={modeButtonRef}
-                        width={160}
-                        className="p-1"
-                    >
-                         {tabs.map(tab => (
-                             <button 
-                                 key={tab.id} 
-                                 onClick={() => { setActiveTab(tab.id as PortalTab); setActiveMenu(null); }}
-                                 className={`flex items-center gap-2 w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-[#27272a] transition-colors ${activeTab === tab.id ? 'bg-[#27272a] text-white' : 'text-gray-400'}`}
-                             >
-                                 <tab.icon size={14} className={tab.color} />
-                                 <span>{tab.label}</span>
-                                 {activeTab === tab.id && <Check size={12} className="ml-auto text-blue-500" />}
-                             </button>
-                         ))}
-                    </Popover>
-                </div>
-
-                <div className="w-px h-5 bg-[#27272a] mx-1 shrink-0" />
-
-                <div className="relative shrink-0">
-                     <div className="hidden">
-                         <ModelSelector 
-                             value={activeModel}
-                             onChange={setActiveModel}
-                             providers={currentProviders}
-                             className="opacity-0 w-0 h-0 overflow-hidden" 
-                         />
-                     </div>
-                     <InputFooterButton 
-                        icon={<Sparkles size={16} />} 
-                        label={activeModel ? activeModel.split('-').slice(0, 2).join(' ') : 'Model'}
-                        onClick={() => toggleMenu('model')}
-                        suffix={<ChevronDown size={10} className="opacity-50" />}
-                        active={activeMenu === 'model'}
-                        className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
-                     />
-                     <div className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none">
-                         <ModelSelector 
-                             value={activeModel}
-                             onChange={setActiveModel}
-                             providers={currentProviders}
-                             className="w-full h-full cursor-pointer"
-                             isOpen={activeMenu === 'model'}
-                             onToggle={(open) => toggleMenu(open ? 'model' : '')}
-                         />
-                     </div>
-                </div>
-
-                {availableGenModes.length > 1 && (
-                    <div className="relative shrink-0">
-                        <InputFooterButton
-                            ref={genModeButtonRef}
-                            icon={<GenModeIcon size={16} className={genMode === 'text' ? 'text-blue-400' : 'text-pink-400'} />}
-                            label={currentGenMode.label}
-                            onClick={() => toggleMenu('genMode')}
-                            active={activeMenu === 'genMode'}
-                            suffix={<ChevronDown size={10} className="opacity-50" />}
-                            className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
-                        />
-                        <Popover
-                            isOpen={activeMenu === 'genMode'}
-                            onClose={() => setActiveMenu(null)}
-                            triggerRef={genModeButtonRef}
-                            width={220}
-                            className="p-1"
-                        >
-                            {availableGenModes.map(m => (
-                                <button
-                                    key={m.id}
-                                    onClick={() => { setGenMode(m.id); setActiveMenu(null); }}
-                                    className={`
-                                        flex flex-col gap-0.5 w-full text-left px-3 py-2 rounded-lg transition-colors group
-                                        ${genMode === m.id ? 'bg-[#27272a]' : 'hover:bg-[#202022]'}
-                                    `}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <m.icon size={14} className={genMode === m.id ? (m.id === 'text' ? 'text-blue-400' : 'text-pink-400') : 'text-gray-500 group-hover:text-gray-400'} />
-                                        <span className={`text-xs font-bold ${genMode === m.id ? 'text-white' : 'text-gray-300'}`}>{m.label}</span>
-                                        {genMode === m.id && <Check size={12} className="ml-auto text-green-500" />}
-                                    </div>
-                                    <span className="text-[10px] text-gray-500 pl-6 leading-tight opacity-80">{m.desc}</span>
-                                </button>
-                            ))}
-                        </Popover>
-                    </div>
-                )}
-
-                {activeTab === 'short_drama' && (
-                    <StyleSelector 
-                        value={activeStyle}
-                        onChange={setActiveStyle}
-                        options={FILM_STYLES}
-                        className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
-                        label="风格"
-                        disabled={false}
-                        isOpen={activeMenu === 'style'}
-                        onToggle={(open) => toggleMenu(open ? 'style' : '')}
-                    />
-                )}
-
-                {(activeTab === 'video' || activeTab === 'image' || activeTab === 'short_drama') && (
-                    <AspectRatioSelector 
-                        value={aspectRatio}
-                        onChange={setAspectRatio}
-                        resolution={resolution}
-                        onResolutionChange={setResolution}
-                        className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
-                        isOpen={activeMenu === 'ratio'}
-                        onToggle={(open) => toggleMenu(open ? 'ratio' : '')}
-                    />
-                )}
-
-                {(activeTab === 'video' || activeTab === 'short_drama') && (
-                    <div className="relative shrink-0">
-                        <InputFooterButton 
-                            ref={durationButtonRef}
-                            icon={<Clock size={16} />}
-                            label={duration}
-                            onClick={() => toggleMenu('duration')}
-                            active={activeMenu === 'duration'}
-                            suffix={<ChevronDown size={10} className="opacity-50" />}
-                            className="bg-transparent border-transparent hover:bg-[#ffffff08] h-9"
-                        />
-                         <Popover
-                            isOpen={activeMenu === 'duration'}
-                            onClose={() => setActiveMenu(null)}
-                            triggerRef={durationButtonRef}
-                            width={128}
-                            className="p-1"
-                        >
-                            {['5s', '10s', '15s', '60s'].map(d => (
-                                <button 
-                                    key={d} 
-                                    onClick={() => { setDuration(d); setActiveMenu(null); }}
-                                    className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d ? 'text-blue-400' : 'text-gray-400'}`}
-                                >
-                                    {d}
-                                </button>
-                            ))}
-                        </Popover>
-                    </div>
-                )}
-                
-                 <button 
-                    onClick={handleInsertQuote}
-                    className="p-2 text-gray-500 hover:text-white hover:bg-[#ffffff08] rounded-full transition-colors ml-auto shrink-0"
-                    title="Insert Quote"
-                 >
-                     <Quote size={18} />
-                 </button>
-            </div>
-        );
-    };
-    
     const getPlaceholder = () => {
         if (activeTab === 'short_drama') return "输入故事梗概，或上传剧本文件 (TXT/PDF)...";
         if (activeTab === 'video') {
@@ -504,18 +563,60 @@ const PortalContent: React.FC = () => {
         return "输入提示词...";
     };
 
+    // 关键修复：当全屏编辑器展开时，StickyHeroBar 应该隐藏
+    const shouldShowStickyBar = !isHeroVisible && !isExpanded;
+
+    // Hero 区域的 Footer Controls
+    const heroFooterControls = (
+        <FooterControls
+            activeTab={activeTab}
+            activeModel={activeModel}
+            setActiveModel={setActiveModel}
+            activeStyle={activeStyle}
+            setActiveStyle={setActiveStyle}
+            genMode={genMode}
+            setGenMode={setGenMode}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            resolution={resolution}
+            setResolution={setResolution}
+            duration={duration}
+            setDuration={setDuration}
+            currentProviders={currentProviders}
+            onInsertQuote={handleInsertQuote(false)}
+            menuPrefix="hero"
+        />
+    );
+
+    // 全屏编辑器的 Footer Controls
+    const expandedFooterControls = (
+        <FooterControls
+            activeTab={activeTab}
+            activeModel={activeModel}
+            setActiveModel={setActiveModel}
+            activeStyle={activeStyle}
+            setActiveStyle={setActiveStyle}
+            genMode={genMode}
+            setGenMode={setGenMode}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            resolution={resolution}
+            setResolution={setResolution}
+            duration={duration}
+            setDuration={setDuration}
+            currentProviders={currentProviders}
+            onInsertQuote={handleInsertQuote(true)}
+            menuPrefix="expanded"
+        />
+    );
+
     return (
-        <div className="flex w-full h-full bg-[#050505] text-gray-200 font-sans overflow-hidden">
-            <PortalSidebar />
+        <>
+            <div className="absolute inset-0 pointer-events-none z-0">
+                 <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#1a1033]/30 via-[#0a0a0a]/80 to-[#050505]" />
+            </div>
 
-            <div className="flex-1 flex flex-col min-w-0 relative h-full">
-                <PortalHeader />
-                
-                <div className="absolute inset-0 pointer-events-none z-0">
-                     <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#1a1033]/30 via-[#0a0a0a]/80 to-[#050505]" />
-                </div>
-
-                <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 p-8">
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 p-8">
                     <div className="max-w-[1600px] mx-auto flex flex-col items-center">
                         
                         <div className="w-full mt-20 mb-8 text-center space-y-8">
@@ -533,7 +634,7 @@ const PortalContent: React.FC = () => {
                                     className="shadow-2xl shadow-black/50"
                                     glowClassName={getGradient(activeTab)}
                                     autoFocus={true}
-                                    footerControls={renderFooterControls()}
+                                    footerControls={heroFooterControls}
                                     onUpload={handleUpload}
                                     attachments={attachments}
                                     onRemoveAttachment={handleRemoveAttachment}
@@ -574,79 +675,89 @@ const PortalContent: React.FC = () => {
                         </div>
 
                     </div>
-                </div>
-                
-                 <StickyHeroBar 
-                    isVisible={!isHeroVisible && !isExpanded}
-                    prompt={prompt}
-                    setPrompt={setPrompt}
-                    activeTab={activeTab}
-                    isGenerating={isGenerating}
-                    onGenerate={() => handleGenerate()}
-                    onExpand={handleExpandSticky}
-                />
 
-                {isExpanded && (
-                    <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none">
-                        <div className="absolute inset-0 pointer-events-auto bg-black/40 backdrop-blur-sm transition-opacity duration-300" onClick={() => setIsExpanded(false)} />
-                        
-                        <div className="w-full max-w-[1200px] mx-auto px-4 pb-12 relative z-10 pointer-events-auto animate-in slide-in-from-bottom-10 fade-in duration-300">
-                            <button 
-                                onClick={() => setIsExpanded(false)}
-                                className="absolute -top-12 right-6 p-2 bg-[#18181b]/80 backdrop-blur-md hover:bg-[#333] rounded-full text-gray-400 hover:text-white transition-colors border border-white/10 shadow-lg"
-                                title="Collapse"
-                            >
-                                <Minimize2 size={18} />
-                            </button>
-                            
-                            <CreationChatInput 
-                                value={prompt}
-                                onChange={setPrompt}
-                                onGenerate={handleGenerate}
-                                isGenerating={isGenerating}
-                                className="mb-0 shadow-2xl"
-                                glowClassName={getGradient(activeTab)}
-                                footerControls={renderFooterControls()}
-                                onUpload={handleUpload}
-                                attachments={attachments}
-                                onRemoveAttachment={handleRemoveAttachment}
-                                autoFocus={true}
-                                placeholder={getPlaceholder()}
-                                cost={activeTab === 'image' ? 4 : 20}
-                                minHeight={88}
-                                editorInstanceRef={editorRef}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {selectedItem && (
-                    <GenerationPreview 
-                        mode="view"
-                        galleryItem={selectedItem}
-                        relatedItems={MOCK_SHORTS}
-                        onClose={() => setSelectedItem(null)} 
+                    <StickyHeroBar
+                        isVisible={shouldShowStickyBar}
+                        prompt={prompt}
+                        setPrompt={setPrompt}
+                        activeTab={activeTab}
+                        isGenerating={isGenerating}
+                        onGenerate={() => handleGenerate()}
+                        onExpand={handleExpandSticky}
                     />
-                )}
-            
-                <ChooseAssetModal 
-                    isOpen={showAssetModal}
-                    onClose={() => setShowAssetModal(false)}
-                    onConfirm={handleAssetsSelected}
-                    accepts={activeTab === 'image' ? ['image'] : activeTab === 'video' ? ['video', 'image'] : undefined}
-                    title="Select Asset"
-                    multiple
-                />
-            </div>
-        </div>
+
+                    {isExpanded && (
+                        <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none">
+                            <div className="absolute inset-0 pointer-events-auto bg-black/40 backdrop-blur-sm transition-opacity duration-300" onClick={() => setIsExpanded(false)} />
+
+                            <div className="w-full max-w-[1200px] mx-auto px-4 pb-12 relative z-10 pointer-events-auto animate-in slide-in-from-bottom-10 fade-in duration-300">
+                                <button
+                                    onClick={() => setIsExpanded(false)}
+                                    className="absolute -top-12 right-6 p-2 bg-[#18181b]/80 backdrop-blur-md hover:bg-[#333] rounded-full text-gray-400 hover:text-white transition-colors border border-white/10 shadow-lg"
+                                    title="Collapse"
+                                >
+                                    <Minimize2 size={18} />
+                                </button>
+
+                                <CreationChatInput
+                                    value={prompt}
+                                    onChange={setPrompt}
+                                    onGenerate={handleGenerate}
+                                    isGenerating={isGenerating}
+                                    className="mb-0 shadow-2xl"
+                                    glowClassName={getGradient(activeTab)}
+                                    footerControls={expandedFooterControls}
+                                    onUpload={handleUpload}
+                                    attachments={attachments}
+                                    onRemoveAttachment={handleRemoveAttachment}
+                                    autoFocus={true}
+                                    placeholder={getPlaceholder()}
+                                    cost={activeTab === 'image' ? 4 : 20}
+                                    minHeight={88}
+                                    editorInstanceRef={expandedEditorRef}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedItem && (
+                        <GenerationPreview
+                            mode="view"
+                            galleryItem={selectedItem}
+                            relatedItems={MOCK_SHORTS}
+                            onClose={() => setSelectedItem(null)}
+                        />
+                    )}
+
+                    <ChooseAssetModal
+                        isOpen={showAssetModal}
+                        onClose={() => setShowAssetModal(false)}
+                        onConfirm={handleAssetsSelected}
+                        accepts={activeTab === 'image' ? ['image'] : activeTab === 'video' ? ['video', 'image'] : undefined}
+                        title="Select Asset"
+                        multiple
+                    />
+                </div>
+            </>
     );
 };
 
+// Main component that combines everything
 const PortalPage: React.FC = () => {
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
+
     return (
-        <FilmStoreProvider>
-            <PortalContent />
-        </FilmStoreProvider>
+        <div className="flex w-full h-full bg-[#050505] text-gray-200 font-sans overflow-hidden">
+            <PortalSidebar />
+            <div className="flex-1 flex flex-col min-w-0 relative h-full">
+                <PortalHeader />
+                <FilmStoreProvider>
+                    <PortalContentInner navigate={navigate} />
+                </FilmStoreProvider>
+            </div>
+        </div>
     );
 };
 

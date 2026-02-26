@@ -33,7 +33,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   const getDifficultyLabel = (difficulty: string) => {
     const labels: Record<string, string> = {
-      EASY: '简�?,
+      EASY: '简单',
       MEDIUM: '中等',
       HARD: '困难',
       EXPERT: '专家',
@@ -49,9 +49,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       [TaskTypeEnum.VIDEO_RESTORE]: '视频修复',
       [TaskTypeEnum.VIDEO_SUPER_RESOLUTION]: '视频超分',
       [TaskTypeEnum.VIDEO_FRAME_INTERPOLATION]: '视频补帧',
-      [TaskTypeEnum.VIDEO_COLORIZATION]: '视频着�?,
+      [TaskTypeEnum.VIDEO_COLORIZATION]: '视频着色',
       [TaskTypeEnum.VIDEO_STYLE_TRANSFER]: '风格转换',
-      [TaskTypeEnum.AVATAR_VIDEO]: '数字人视�?,
+      [TaskTypeEnum.AVATAR_VIDEO]: '数字人视频',
       [TaskTypeEnum.LIP_SYNC]: '口型同步',
     };
     return labels[type] || type;
@@ -63,14 +63,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     const diff = deadlineDate.getTime() - now.getTime();
 
     if (diff <= 0) {
-      return '已过�?;
+      return '已过期';
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
     if (days > 0) {
-      return `剩余 ${days}�?{hours}小时`;
+      return `剩余 ${days}天${hours}小时`;
     }
     if (hours > 0) {
       return `剩余 ${hours}小时`;
@@ -104,9 +104,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </span>
         </div>
         {isExpired ? (
-          <span className="text-[10px] text-red-400">已过�?/span>
+          <span className="text-[10px] text-red-400">已过期</span>
         ) : isAccepted ? (
-          <span className="text-[10px] text-blue-400">已接�?/span>
+          <span className="text-[10px] text-blue-400">已接单</span>
         ) : null}
       </div>
 
@@ -124,7 +124,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       {/* Requirements */}
       {task.requirements && task.requirements.length > 0 && (
         <div className="mb-3">
-          <div className="text-[10px] text-gray-500 mb-1">要求�?/div>
+          <div className="text-[10px] text-gray-500 mb-1">要求：</div>
           <div className="flex flex-wrap gap-1">
             {task.requirements.slice(0, 3).map((req, index) => (
               <span

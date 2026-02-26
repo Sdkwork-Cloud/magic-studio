@@ -50,6 +50,8 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
         updateClipTransform, updateClip, beginTransaction, commitTransaction,
         useSkimmingResource,
         usePreviewEffect,
+        setSkimmingResource,
+        setPreviewEffect,
         getClipResource,
         playerController,
         useTransientState,
@@ -163,7 +165,19 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
     }, [activeTimeline, state, isDraggingResource, previewEffect]);
 
     const handleStageClick = (e: React.MouseEvent, point: { x: number, y: number, time: number }) => {
-        if (e.button !== 0 || e.defaultPrevented || skimmingResource) return;
+        if (e.button !== 0 || e.defaultPrevented) return;
+
+        if (skimmingResource) {
+            setSkimmingResource(null);
+            if (playerRef.current) {
+                playerRef.current.setPreviewResource(null);
+                playerRef.current.renderNow(playerController.getCurrentTime(), false);
+            }
+        }
+
+        if (previewEffect) {
+            setPreviewEffect(null);
+        }
 
         if (isEditingText) {
             setIsEditingText(false);
@@ -273,7 +287,18 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
             <MagicCutErrorBoundary componentName="MagicCut Player">
                 <div
                     className="flex-1 relative overflow-hidden bg-[#121214] flex flex-col"
-                    onMouseDown={() => { selectClip(null); setIsEditingText(false); }}
+                    onMouseDown={() => {
+                        if (skimmingResource) {
+                            setSkimmingResource(null);
+                            if (playerRef.current) {
+                                playerRef.current.setPreviewResource(null);
+                                playerRef.current.renderNow(playerController.getCurrentTime(), false);
+                            }
+                        }
+                        if (previewEffect) setPreviewEffect(null);
+                        selectClip(null);
+                        setIsEditingText(false);
+                    }}
                     onDoubleClick={handleStageDoubleClick}
                 >
                     <UniversalPlayer
@@ -356,4 +381,3 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
         </div>
     );
 });
-

@@ -6,7 +6,9 @@ import { ArrowRight } from 'lucide-react';
 ;
 
 export const FeaturedBanner: React.FC = () => {
-    const { navigate } = useRouter();
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">

@@ -48,13 +48,13 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
 
   const getStatusLabel = (status: OrderStatus) => {
     const labels: Record<OrderStatus, string> = {
-      [OrderStatusEnum.PENDING_PAYMENT]: '待支�?,
-      [OrderStatusEnum.PAID]: '已支�?,
-      [OrderStatusEnum.IN_PROGRESS]: '进行�?,
-      [OrderStatusEnum.COMPLETED]: '已完�?,
-      [OrderStatusEnum.CANCELLED]: '已取�?,
-      [OrderStatusEnum.REFUNDED]: '已退�?,
-      [OrderStatusEnum.DISPUTED]: '争议�?,
+      [OrderStatusEnum.PENDING_PAYMENT]: '待支付',
+      [OrderStatusEnum.PAID]: '已支付',
+      [OrderStatusEnum.IN_PROGRESS]: '进行中',
+      [OrderStatusEnum.COMPLETED]: '已完成',
+      [OrderStatusEnum.CANCELLED]: '已取消',
+      [OrderStatusEnum.REFUNDED]: '已退款',
+      [OrderStatusEnum.DISPUTED]: '争议中',
     };
     return labels[status];
   };
@@ -68,7 +68,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
       [OrderTypeEnum.VIDEO_EDITING]: '视频编辑',
       [OrderTypeEnum.CUSTOM_SERVICE]: '定制服务',
       [OrderTypeEnum.SUBSCRIPTION]: '订阅',
-      [OrderTypeEnum.CREDIT_TOPUP]: '充�?,
+      [OrderTypeEnum.CREDIT_TOPUP]: '充值',
     };
     return labels[type];
   };
@@ -177,7 +177,8 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">参数配置</span>
                       <span className="text-gray-400 text-xs">
-                        {Object.keys(order.taskParams).length} 项配�?                      </span>
+                        {Object.keys(order.taskParams).length} 项配置
+                      </span>
                     </div>
                   )}
                 </div>
@@ -235,7 +236,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
           {order.status !== OrderStatusEnum.PENDING_PAYMENT && (
             <div className="flex-1 text-center text-sm text-gray-500">
               {order.status === OrderStatusEnum.COMPLETED
-                ? '交易已完�?
+                ? '交易已完成'
                 : `当前状态：${getStatusLabel(order.status)}`}
             </div>
           )}

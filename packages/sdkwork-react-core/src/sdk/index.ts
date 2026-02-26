@@ -1,6 +1,6 @@
 export * from './hooks';
 
-import { 
+import {
     SdkworkClient,
     createClient,
     type SdkworkConfig,
@@ -8,7 +8,7 @@ import {
     type GenerationModule,
     type AuthModule,
     type UserModule,
-    type AssetModule,
+    type AssetsModule,
     type ChatModule,
     type ProjectModule,
     type HistoryModule,
@@ -47,7 +47,7 @@ export type {
     GenerationModule,
     AuthModule,
     UserModule,
-    AssetModule,
+    AssetsModule,
     ChatModule,
     ProjectModule,
     HistoryModule,

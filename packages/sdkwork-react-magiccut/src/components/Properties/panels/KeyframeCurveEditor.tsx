@@ -46,7 +46,7 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const [showEasingMenu, setShowEasingMenu] = useState(false);
     
-    const { state, updateClip } = useMagicCutStore();
+    const { state, updateClip, playerController } = useMagicCutStore();
     const clip = state.clips[clipId];
     const keyframes = clip?.keyframes?.[propertyName] || [];
     
@@ -287,6 +287,12 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
                 [propertyName]: newKeyframes
             }
         });
+
+        // Live preview at the keyframe's absolute timeline time without changing play state
+        if (clip && playerController) {
+            const absoluteTime = clip.start + time;
+            playerController.previewFrame(absoluteTime);
+        }
     };
     
     const updateEasing = (easing: EasingType) => {

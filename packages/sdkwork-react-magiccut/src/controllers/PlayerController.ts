@@ -349,7 +349,8 @@ export class PlayerController {
             this.currentState.resources,
             this.currentState.tracks,
             this.currentState.clips,
-            this.clock.isActive
+            this.clock.isActive,
+            this.clock.getPlaybackDirection()
         );
     }
 

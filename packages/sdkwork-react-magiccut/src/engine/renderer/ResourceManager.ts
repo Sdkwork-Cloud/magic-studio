@@ -1,6 +1,7 @@
 
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { downloadService } from '@sdkwork/react-core';
+import { assetService } from '@sdkwork/react-assets';
 import { getRobustResourceUrl, isVfsPath } from '../../utils/resourceUtils';
 
 
@@ -24,6 +25,8 @@ export class ResourceManager {
     
     // Logic State
     private pendingHydrations = new Set<string>();
+    private pendingAssetResolves = new Map<string, Promise<void>>();
+    private resolvedAssetUrls = new Map<string, string>();
     private hiddenContainer: HTMLDivElement;
 
     // Callbacks
@@ -57,6 +60,8 @@ export class ResourceManager {
         this.videoCacheAccessOrder = [];
         this.imageCache.clear();
         this.pendingHydrations.clear();
+        this.pendingAssetResolves.clear();
+        this.resolvedAssetUrls.clear();
         
         if (this.hiddenContainer && this.hiddenContainer.parentNode) {
             this.hiddenContainer.parentNode.removeChild(this.hiddenContainer);
@@ -138,6 +143,27 @@ export class ResourceManager {
 
     public resolveResourceUrl(resource: AnyMediaResource): string | null {
         let url = getRobustResourceUrl(resource);
+        if (!url) return null;
+
+        if (url.startsWith('assets://')) {
+            const cached = this.resolvedAssetUrls.get(resource.id);
+            if (cached) return cached;
+
+            if (!this.pendingAssetResolves.has(resource.id)) {
+                const task = assetService.resolveAssetUrl(resource).then(resolved => {
+                    if (resolved) {
+                        this.resolvedAssetUrls.set(resource.id, resolved);
+                        if (this.onFrameReady) this.onFrameReady();
+                    }
+                }).catch((e) => {
+                    logger.warn('[ResourceManager] asset resolve failed', e);
+                }).finally(() => {
+                    this.pendingAssetResolves.delete(resource.id);
+                });
+                this.pendingAssetResolves.set(resource.id, task.then(() => {}));
+            }
+            return null;
+        }
 
         if (isVfsPath(url) && !this.pendingHydrations.has(resource.id)) {
             const localUrl = downloadService.getLocalUrl(resource.id);
@@ -264,4 +290,3 @@ export class ResourceManager {
         }
     }
 }
-

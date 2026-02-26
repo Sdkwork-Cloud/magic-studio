@@ -255,12 +255,12 @@ export const APP_ROUTES: RouteDefinition[] = [
     },
     {
         path: ROUTES.PORTAL,
-        component: PortalPage,
+        component: LazyPageWrapper(PortalPage),
         layout: 'none'
     },
     {
         path: ROUTES.PORTAL_VIDEO,
-        component: PortalPage,
+        component: LazyPageWrapper(PortalPage),
         layout: 'none'
     },
     {

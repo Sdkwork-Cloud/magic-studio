@@ -1,1 +1,1 @@
-export * from './TradeLayout';
+export * from './TradeLayout';

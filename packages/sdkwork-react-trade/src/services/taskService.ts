@@ -78,7 +78,8 @@ export interface ITaskService {
   getPublishedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>>;
 
   /**
-   * 获取我接的任�?   */
+   * 获取我接的任务
+   */
   getAcceptedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>>;
 }
 
@@ -113,12 +114,12 @@ export class TaskService implements ITaskService {
     const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存�?);
+      throw new Error('任务不存在');
     }
 
     const task = tasks[index];
     if (task.status !== 'AVAILABLE') {
-      throw new Error('任务当前不可�?);
+      throw new Error('任务当前不可接');
     }
 
     const now = new Date().toISOString();
@@ -138,12 +139,12 @@ export class TaskService implements ITaskService {
     const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存�?);
+      throw new Error('任务不存在');
     }
 
     const task = tasks[index];
     if (task.status !== 'IN_PROGRESS') {
-      throw new Error('任务不在进行中状�?);
+      throw new Error('任务不在进行中状态');
     }
 
     const now = new Date().toISOString();
@@ -162,7 +163,7 @@ export class TaskService implements ITaskService {
     const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存�?);
+      throw new Error('任务不存在');
     }
 
     const task = tasks[index];
@@ -191,7 +192,7 @@ export class TaskService implements ITaskService {
     const index = tasks.findIndex((t) => t.uuid === taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存�?);
+      throw new Error('任务不存在');
     }
 
     const task = tasks[index];
@@ -254,7 +255,8 @@ export class TaskService implements ITaskService {
         const diffB = difficultyOrder[b.difficulty];
         return params.sortOrder === 'desc' ? diffB - diffA : diffA - diffB;
       }
-      // 默认按创建时间降�?      return a.createdAt < b.createdAt ? 1 : -1;
+      // 默认按创建时间降序
+      return a.createdAt < b.createdAt ? 1 : -1;
     });
 
     const page = params.page || 1;

@@ -22,7 +22,6 @@ export class VideoClipStrategy implements IClipRenderStrategy {
     getTexture(ctx: RenderContext, clip: CutClip, resource: AnyMediaResource, _time: number, _isPlaying: boolean): WebGLTexture | null {
         const { gl, resourceManager, textureCache, emptyTexture } = ctx;
         const url = resourceManager.resolveResourceUrl(resource);
-        
         if (!url) {
             return emptyTexture;
         }
@@ -36,7 +35,8 @@ export class VideoClipStrategy implements IClipRenderStrategy {
             return emptyTexture;
         }
 
-        let tex = textureCache.get(clip.id);
+        const cachedInfo = textureCache.getInfo(clip.id);
+        let tex = cachedInfo?.texture;
         const currentVideoTime = video.currentTime;
         const lastTime = this.lastUploadTime.get(clip.id);
         const timeDiff = lastTime !== undefined ? Math.abs(currentVideoTime - lastTime) : Infinity;
@@ -56,8 +56,15 @@ export class VideoClipStrategy implements IClipRenderStrategy {
             }
 
             try {
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-                textureCache.set(clip.id, tex!, video.videoWidth, video.videoHeight);
+                const videoW = video.videoWidth;
+                const videoH = video.videoHeight;
+                const needsRealloc = !cachedInfo || cachedInfo.width !== videoW || cachedInfo.height !== videoH;
+                if (needsRealloc) {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+                } else {
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, video);
+                }
+                textureCache.set(clip.id, tex!, videoW, videoH);
                 this.lastUploadTime.set(clip.id, currentVideoTime);
             } catch (e) {
                 return emptyTexture;
@@ -168,4 +175,3 @@ export class ClipStrategyFactory {
         return this.strategies.find(s => s.supports(type));
     }
 }
-

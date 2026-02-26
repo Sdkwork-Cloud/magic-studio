@@ -40,13 +40,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const getStatusLabel = (status: OrderStatus) => {
     const labels: Record<OrderStatus, string> = {
-      [OrderStatusEnum.PENDING_PAYMENT]: '待支�?,
-      [OrderStatusEnum.PAID]: '已支�?,
-      [OrderStatusEnum.IN_PROGRESS]: '进行�?,
-      [OrderStatusEnum.COMPLETED]: '已完�?,
-      [OrderStatusEnum.CANCELLED]: '已取�?,
-      [OrderStatusEnum.REFUNDED]: '已退�?,
-      [OrderStatusEnum.DISPUTED]: '争议�?,
+      [OrderStatusEnum.PENDING_PAYMENT]: '待支付',
+      [OrderStatusEnum.PAID]: '已支付',
+      [OrderStatusEnum.IN_PROGRESS]: '进行中',
+      [OrderStatusEnum.COMPLETED]: '已完成',
+      [OrderStatusEnum.CANCELLED]: '已取消',
+      [OrderStatusEnum.REFUNDED]: '已退款',
+      [OrderStatusEnum.DISPUTED]: '争议中',
     };
     return labels[status];
   };
@@ -60,7 +60,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       [OrderTypeEnum.VIDEO_EDITING]: '视频编辑',
       [OrderTypeEnum.CUSTOM_SERVICE]: '定制服务',
       [OrderTypeEnum.SUBSCRIPTION]: '订阅',
-      [OrderTypeEnum.CREDIT_TOPUP]: '充�?,
+      [OrderTypeEnum.CREDIT_TOPUP]: '充值',
     };
     return labels[type];
   };
@@ -81,61 +81,63 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           {getStatusIcon(order.status)}
-          <span className="text-xs font-medium text-gray-300">{getStatusLabel(order.status)}</span>
+          <span className="text-xs font-medium text-gray-400">{getStatusLabel(order.status)}</span>
         </div>
-        <span className="text-[10px] text-gray-500">{order.orderNo}</span>
+        <span className="text-[10px] text-gray-500">{formatDate(order.createdAt)}</span>
       </div>
 
-      {/* Title & Type */}
-      <div className="mb-3">
+      {/* Title */}
+      <div className="mb-2">
         <h3 className="text-sm font-semibold text-white mb-1">{order.title}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] px-2 py-0.5 bg-white/5 rounded-full text-gray-400">
-            {getTypeLabel(order.type)}
-          </span>
-          {order.taskType && (
-            <span className="text-[10px] text-gray-500">{order.taskType}</span>
-          )}
-        </div>
+        <p className="text-xs text-gray-500 line-clamp-2">{order.description}</p>
       </div>
 
-      {/* Info */}
+      {/* Type and Amount */}
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs text-gray-500">
-          创建时间：{formatDate(order.createdAt)}
-        </div>
-        <div className="text-lg font-bold text-white">{formatAmount(order.paidAmount || order.amount)}</div>
+        <span className="text-[10px] text-gray-500 bg-[#2a2a2d] px-2 py-1 rounded">
+          {getTypeLabel(order.type)}
+        </span>
+        <span className="text-sm font-bold text-white">{formatAmount(order.amount)}</span>
+      </div>
+
+      {/* Order Info */}
+      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+        <span>订单号：{order.orderNo}</span>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-3 border-t border-white/5">
-        {order.status === OrderStatusEnum.PENDING_PAYMENT && onPay && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPay(order);
-            }}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            <CreditCard size={12} />
-            立即支付
-          </button>
+      <div className="flex items-center gap-2">
+        {order.status === OrderStatusEnum.PENDING_PAYMENT && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPay?.(order);
+              }}
+              className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
+            >
+              <CreditCard size={12} />
+              立即支付
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel?.(order);
+              }}
+              className="px-3 py-1.5 bg-[#2a2a2d] hover:bg-[#333] text-gray-400 text-xs font-medium rounded-lg transition-colors"
+            >
+              取消订单
+            </button>
+          </>
         )}
-        {order.status === OrderStatusEnum.PENDING_PAYMENT && onCancel && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCancel(order);
-            }}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            取消
-          </button>
+        {order.status === OrderStatusEnum.PAID && (
+          <div className="text-xs text-gray-400">等待服务完成</div>
         )}
-        {order.status !== OrderStatusEnum.PENDING_PAYMENT && (
-          <div className="flex-1 text-center text-xs text-gray-500">
-            {order.status === OrderStatusEnum.COMPLETED ? '交易完成' : getStatusLabel(order.status)}
-          </div>
+        {order.status === OrderStatusEnum.COMPLETED && (
+          <div className="text-xs text-green-500">已完成</div>
+        )}
+        {order.status === OrderStatusEnum.CANCELLED && (
+          <div className="text-xs text-red-400">已取消</div>
         )}
       </div>
     </div>

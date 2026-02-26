@@ -1,5 +1,4 @@
-
-/**
+ï»¿/**
  * LRU Cache for WebGL Textures.
  * 
  * Uses JavaScript Map's insertion-order guarantee for O(1) LRU eviction.
@@ -9,7 +8,7 @@
 export class TextureLRUCache {
     private gl: WebGL2RenderingContext;
     // Single Map: insertion order = usage order (oldest first)
-    private entries = new Map<string, { texture: WebGLTexture; size: number }>();
+    private entries = new Map<string, { texture: WebGLTexture; size: number; width: number; height: number }>();
 
     // Approximate memory tracking (in bytes)
     private totalSize = 0;
@@ -24,10 +23,19 @@ export class TextureLRUCache {
     public get(key: string): WebGLTexture | undefined {
         const entry = this.entries.get(key);
         if (!entry) return undefined;
-        // Move to end (most recently used) by delete + re-insert ï¿?O(1)
+        // Move to end (most recently used) by delete + re-insert (O(1))
         this.entries.delete(key);
         this.entries.set(key, entry);
         return entry.texture;
+    }
+
+    public getInfo(key: string): { texture: WebGLTexture; width: number; height: number } | undefined {
+        const entry = this.entries.get(key);
+        if (!entry) return undefined;
+        // Move to end (most recently used) by delete + re-insert
+        this.entries.delete(key);
+        this.entries.set(key, entry);
+        return { texture: entry.texture, width: entry.width, height: entry.height };
     }
 
     public set(key: string, texture: WebGLTexture, width: number, height: number) {
@@ -43,14 +51,7 @@ export class TextureLRUCache {
         // Evict if needed
         this.ensureCapacity(size);
 
-        if (existing) {
-            // If key exists but size changed, update total size correctly
-            // already handled by delete(key) above which reduced totalSize
-        } else {
-            // Verify we are not adding duplicates without eviction logic (handled by delete if existing)
-        }
-
-        this.entries.set(key, { texture, size });
+        this.entries.set(key, { texture, size, width, height });
         this.totalSize += size;
     }
 
@@ -61,7 +62,7 @@ export class TextureLRUCache {
     }
 
     private evictLRU() {
-        // Map.keys().next() returns the oldest (first-inserted) entry ï¿?O(1)
+        // Map.keys().next() returns the oldest (first-inserted) entry in O(1)
         const oldestKey = this.entries.keys().next().value;
         if (oldestKey !== undefined) {
             this.delete(oldestKey);
@@ -86,4 +87,3 @@ export class TextureLRUCache {
     public get count(): number { return this.entries.size; }
     public get memoryUsed(): number { return this.totalSize; }
 }
-

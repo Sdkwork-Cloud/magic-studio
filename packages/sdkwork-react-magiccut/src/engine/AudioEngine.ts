@@ -60,6 +60,8 @@ interface ScheduledSource {
     pan?: StereoPannerNode;
 }
 
+export type ReversePlaybackMode = 'mute' | 'lowfi' | 'highfi';
+
 export class AudioEngine {
     private ctx: AudioContext | null = null;
     private masterGain: GainNode | null = null;
@@ -70,6 +72,8 @@ export class AudioEngine {
 
     private bufferCache = new Map<string, AudioBuffer>();
     private pendingLoads = new Map<string, Promise<AudioBuffer | null>>();
+    private reversedBufferCache = new Map<string, { buffer: AudioBuffer; length: number; sampleRate: number }>();
+    private reversePlaybackMode: ReversePlaybackMode = 'lowfi';
 
     // Track active sources by Clip ID
     private scheduledSources = new Map<string, ScheduledSource>();
@@ -173,6 +177,14 @@ export class AudioEngine {
         }
     }
 
+    public setReversePlaybackMode(mode: ReversePlaybackMode): void {
+        this.reversePlaybackMode = mode;
+    }
+
+    public getReversePlaybackMode(): ReversePlaybackMode {
+        return this.reversePlaybackMode;
+    }
+
     public async loadResource(resource: AnyMediaResource): Promise<AudioBuffer | null> {
         if (!this.ctx) await this.initContext();
         if (!this.ctx) return null;
@@ -210,6 +222,27 @@ export class AudioEngine {
         return task.finally(() => this.pendingLoads.delete(resource.id));
     }
 
+    private getReversedBuffer(resourceId: string, buffer: AudioBuffer): AudioBuffer {
+        const existing = this.reversedBufferCache.get(resourceId);
+        if (existing && existing.length === buffer.length && existing.sampleRate === buffer.sampleRate) {
+            return existing.buffer;
+        }
+
+        const ctx = this.ctx!;
+        const reversed = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+            const src = buffer.getChannelData(ch);
+            const dst = reversed.getChannelData(ch);
+            for (let i = 0, j = src.length - 1; i < src.length; i++, j--) {
+                dst[i] = src[j];
+            }
+        }
+
+        this.reversedBufferCache.set(resourceId, { buffer: reversed, length: buffer.length, sampleRate: buffer.sampleRate });
+        return reversed;
+    }
+
     /**
      * Precision Scheduling using "Lookahead" strategy.
      * Manages mixing of concurrent audio streams from multiple tracks.
@@ -220,12 +253,25 @@ export class AudioEngine {
         resources: Record<string, AnyMediaResource>,
         tracks: Record<string, CutTrack>,
         clips: Record<string, CutClip>,
-        isPlaying: boolean
-    ) {
+        isPlaying: boolean,
+        playbackDirection: 1 | -1 = 1
+    ): void {
         if (!this.ctx || !this.masterGain) return;
 
         if (!isPlaying) {
             this.stopAll();
+            return;
+        }
+
+        if (playbackDirection === -1) {
+            if (this.reversePlaybackMode === 'mute') {
+                this.stopAll();
+                return;
+            }
+
+            const lookahead = this.reversePlaybackMode === 'highfi' ? 0.35 : 0.5;
+            const microFade = this.reversePlaybackMode === 'highfi' ? 0.01 : 0;
+            this.scheduleReverse(currentTime, timeline, resources, tracks, clips, lookahead, microFade);
             return;
         }
 
@@ -267,8 +313,9 @@ export class AudioEngine {
             } else {
                 // Update volume/speed for existing sources (real-time mixing)
                 const clip = clips[id];
+                if (!clip) continue;
                 const track = tracks[clip.track.id];
-                if (clip && track) {
+                if (track) {
                     const vol = (track.volume ?? 1.0) * (clip.volume ?? 1.0);
                     // Smooth volume transition
                     scheduled.gain.gain.setTargetAtTime(vol, contextTime, 0.05);
@@ -280,6 +327,203 @@ export class AudioEngine {
                     }
                 }
             }
+        }
+    }
+
+    private scheduleReverse(
+        currentTime: number,
+        timeline: CutTimeline,
+        resources: Record<string, AnyMediaResource>,
+        tracks: Record<string, CutTrack>,
+        clips: Record<string, CutClip>,
+        lookahead: number,
+        microFade: number
+    ): void {
+        if (!this.ctx || !this.masterGain) return;
+
+        const contextTime = this.ctx.currentTime;
+        const windowStart = currentTime - lookahead;
+        const windowEnd = currentTime;
+
+        const activeClipIds = new Set<string>();
+
+        timeline.tracks.forEach(trackRef => {
+            const track = tracks[trackRef.id];
+            if (!track || track.muted) return;
+
+            track.clips.forEach(clipRef => {
+                const clip = clips[clipRef.id];
+                if (!clip) return;
+
+                const clipEnd = clip.start + clip.duration;
+                const intersects = clipEnd > windowStart && clip.start < windowEnd;
+                if (!intersects) return;
+
+                activeClipIds.add(clip.id);
+                this.scheduleClipReverse(clip, track, resources, contextTime, windowStart, windowEnd, microFade);
+            });
+        });
+
+        for (const [id, scheduled] of this.scheduledSources) {
+            if (!activeClipIds.has(id)) {
+                this.stopSource(scheduled);
+                this.scheduledSources.delete(id);
+            } else {
+                const clip = clips[id];
+                if (!clip) continue;
+                const track = tracks[clip.track.id];
+                if (track) {
+                    const vol = (track.volume ?? 1.0) * (clip.volume ?? 1.0);
+                    scheduled.gain.gain.setTargetAtTime(vol, contextTime, 0.05);
+                    const speed = Math.max(0.01, clip.speed || 1.0);
+                    if (Math.abs(scheduled.source.playbackRate.value - speed) > 0.01) {
+                        scheduled.source.playbackRate.setValueAtTime(speed, contextTime);
+                    }
+                }
+            }
+        }
+    }
+
+    private scheduleClipReverse(
+        clip: CutClip,
+        track: CutTrack,
+        resources: Record<string, AnyMediaResource>,
+        contextTime: number,
+        windowStart: number,
+        windowEnd: number,
+        microFade: number
+    ): void {
+        if (this.scheduledSources.has(clip.id)) return;
+
+        const resource = resources[clip.resource.id];
+        if (!resource) return;
+
+        const buffer = this.bufferCache.get(resource.id);
+        if (!buffer) return;
+
+        const speed = Math.max(0.01, clip.speed || 1.0);
+
+        const clipStart = clip.start;
+        const clipEnd = clip.start + clip.duration;
+        const segStart = Math.max(windowStart, clipStart);
+        const segEnd = Math.min(windowEnd, clipEnd);
+        if (segEnd <= segStart) return;
+
+        const offset = clip.offset || 0;
+        const rStart = offset + (segStart - clipStart) * speed;
+        const rEnd = offset + (segEnd - clipStart) * speed;
+
+        const bufferDuration = buffer.duration;
+        const clampedREnd = Math.min(Math.max(0, rEnd), bufferDuration);
+        const clampedRStart = Math.min(Math.max(0, rStart), bufferDuration);
+        const segmentBufferDuration = Math.max(0, clampedREnd - clampedRStart);
+        if (segmentBufferDuration <= 0) return;
+
+        const startOffset = Math.max(0, bufferDuration - clampedREnd);
+        const maxAvailable = Math.max(0, bufferDuration - startOffset);
+        const playBufferDuration = Math.min(segmentBufferDuration, maxAvailable);
+        if (playBufferDuration <= 0) return;
+
+        const reversed = this.getReversedBuffer(resource.id, buffer);
+
+        const source = this.ctx!.createBufferSource();
+        source.buffer = reversed;
+        source.playbackRate.value = speed;
+
+        const gain = this.ctx!.createGain();
+        const volume = (track.volume ?? 1.0) * (clip.volume ?? 1.0);
+        gain.gain.value = volume;
+
+        let effectChain: ScheduledSource['effectChain'] = undefined;
+        let pan: StereoPannerNode | undefined = undefined;
+
+        const clipEffects = clip.audioEffects || [];
+        const trackEffects = track.audioEffects || [];
+        const allEffects = [...trackEffects, ...clipEffects];
+
+        if (allEffects.length > 0) {
+            const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass);
+            if (enabledEffects.length > 0) {
+                effectChain = createAudioEffectChain(this.ctx!, enabledEffects);
+            }
+        }
+
+        if (track.pan !== undefined && track.pan !== 0) {
+            pan = this.ctx!.createStereoPanner();
+            pan.pan.value = track.pan;
+        }
+
+        let lastNode: AudioNode = gain;
+
+        if (effectChain) {
+            lastNode.connect(effectChain.input);
+            lastNode = effectChain.output;
+        }
+
+        if (pan) {
+            lastNode.connect(pan);
+            lastNode = pan;
+        }
+
+        lastNode.connect(this.masterGain!);
+        source.connect(gain);
+
+        const delay = Math.max(0, windowEnd - segEnd);
+        const absStartTime = contextTime + delay;
+        const wallClockDuration = playBufferDuration / speed;
+
+        // Reverse playback: swap fade-in/out to match timeline direction.
+        const clipFadeIn = (clip as any).fadeIn || 0;
+        const clipFadeOut = (clip as any).fadeOut || 0;
+        const fadeIn = Math.max(clipFadeOut, microFade);
+        const fadeOut = Math.max(clipFadeIn, microFade);
+
+        if (fadeIn > 0) {
+            gain.gain.setValueAtTime(0, absStartTime);
+            gain.gain.linearRampToValueAtTime(volume, absStartTime + fadeIn);
+        }
+
+        if (fadeOut > 0 && wallClockDuration > fadeOut) {
+            const fadeOutStart = absStartTime + wallClockDuration - fadeOut;
+            gain.gain.setValueAtTime(volume, Math.max(absStartTime + fadeIn, fadeOutStart));
+            gain.gain.linearRampToValueAtTime(0, absStartTime + wallClockDuration);
+        }
+
+        try {
+            source.start(absStartTime, startOffset, playBufferDuration);
+
+            const scheduled: ScheduledSource = {
+                source,
+                gain,
+                clipId: clip.id,
+                effectChain,
+                pan
+            };
+
+            this.scheduledSources.set(clip.id, scheduled);
+
+            source.onended = () => {
+                try {
+                    if (this.scheduledSources.has(clip.id)) {
+                        const current = this.scheduledSources.get(clip.id);
+                        if (current && current.source === source) {
+                            this.scheduledSources.delete(clip.id);
+                            source.disconnect();
+                            gain.disconnect();
+                            if (effectChain) {
+                                effectChain.processor.dispose();
+                            }
+                            if (pan) {
+                                pan.disconnect();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[AudioEngine] Error in onended cleanup:', e);
+                }
+            };
+        } catch (e) {
+            console.error("Audio Reverse Schedule Error", e);
         }
     }
 
@@ -298,7 +542,7 @@ export class AudioEngine {
         const buffer = this.bufferCache.get(resource.id);
         if (!buffer) return;
 
-        const speed = clip.speed || 1.0;
+        const speed = Math.max(0.01, clip.speed || 1.0);
 
         const timeUntilStart = clip.start - timelineTime;
 
@@ -361,8 +605,14 @@ export class AudioEngine {
 
         source.connect(gain);
 
-        const absStartTime = contextTime + (delay / 1.0);
-        const wallClockDuration = duration;
+        const absStartTime = contextTime + delay;
+        const bufferDuration = Math.max(0, duration * speed);
+        const maxBufferDuration = Math.max(0, buffer.duration - startOffset);
+        const playBufferDuration = Math.min(bufferDuration, maxBufferDuration);
+
+        if (playBufferDuration <= 0) return;
+
+        const wallClockDuration = playBufferDuration / speed;
 
         // Apply fadeIn / fadeOut envelope on the gain node
         const fadeIn = (clip as any).fadeIn || 0;
@@ -380,7 +630,7 @@ export class AudioEngine {
         }
 
         try {
-            source.start(absStartTime, startOffset, wallClockDuration);
+            source.start(absStartTime, startOffset, playBufferDuration);
 
             const scheduled: ScheduledSource = {
                 source,
@@ -464,13 +714,26 @@ export class AudioEngine {
 
             track.clips.forEach(clipRef => {
                 const clip = clips[clipRef.id];
+                if (!clip) return;
                 const res = resources[clip.resource.id];
+                if (!res) return;
                 const buffer = this.bufferCache.get(res.id);
 
                 if (buffer) {
+                    const speed = Math.max(0.01, clip.speed || 1.0);
+                    const startOffset = clip.offset || 0;
+                    if (startOffset >= buffer.duration) return;
+
+                    const bufferDuration = Math.max(0, clip.duration * speed);
+                    const maxBufferDuration = Math.max(0, buffer.duration - startOffset);
+                    const playBufferDuration = Math.min(bufferDuration, maxBufferDuration);
+                    if (playBufferDuration <= 0) return;
+
+                    const wallClockDuration = playBufferDuration / speed;
+
                     const src = offlineCtx.createBufferSource();
                     src.buffer = buffer;
-                    src.playbackRate.value = clip.speed || 1.0;
+                    src.playbackRate.value = speed;
 
                     const gain = offlineCtx.createGain();
                     gain.gain.value = (track.volume ?? 1) * (clip.volume ?? 1);
@@ -500,7 +763,22 @@ export class AudioEngine {
                     lastNode.connect(compressor);
                     src.connect(gain);
 
-                    src.start(clip.start, clip.offset || 0, clip.duration);
+                    // Apply fadeIn / fadeOut envelope on the gain node (timeline time)
+                    const fadeIn = (clip as any).fadeIn || 0;
+                    const fadeOut = (clip as any).fadeOut || 0;
+
+                    if (fadeIn > 0) {
+                        gain.gain.setValueAtTime(0, clip.start);
+                        gain.gain.linearRampToValueAtTime(gain.gain.value, clip.start + fadeIn);
+                    }
+
+                    if (fadeOut > 0 && wallClockDuration > fadeOut) {
+                        const fadeOutStart = clip.start + wallClockDuration - fadeOut;
+                        gain.gain.setValueAtTime(gain.gain.value, Math.max(clip.start + fadeIn, fadeOutStart));
+                        gain.gain.linearRampToValueAtTime(0, clip.start + wallClockDuration);
+                    }
+
+                    src.start(clip.start, startOffset, playBufferDuration);
                 }
             });
         });
@@ -510,4 +788,3 @@ export class AudioEngine {
 }
 
 export const audioEngine = new AudioEngine();
-

@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
-import { CutClip, CutTrackType } from '../../entities/magicCut.entity';
+import { CutClip, CutTrackType } from '@sdkwork/react-types';
 import { mediaService } from '@sdkwork/react-core';
 import { TIMELINE_CONSTANTS } from '../../constants';
 ;
@@ -28,6 +28,7 @@ export const WaveformOverlay: React.FC<WaveformOverlayProps> = React.memo(({
     draggedClipId
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const requestedIdsRef = useRef<Set<string>>(new Set());
     
     // Cache for local component rendering state (peaks data is cached in service)
     const [peaksMap, setPeaksMap] = useState<Map<string, Float32Array>>(new Map());
@@ -52,8 +53,9 @@ export const WaveformOverlay: React.FC<WaveformOverlayProps> = React.memo(({
 
                 if (!hasAudio) continue;
                 
-                // Check if we already have peaks locally to avoid re-fetching service promise
-                if (peaksMap.has(resource.id)) continue;
+                // Avoid duplicate requests on re-renders
+                if (requestedIdsRef.current.has(resource.id)) continue;
+                requestedIdsRef.current.add(resource.id);
 
                 try {
                     // Pass the whole resource object to the unified service
@@ -71,7 +73,7 @@ export const WaveformOverlay: React.FC<WaveformOverlayProps> = React.memo(({
         loadWaveforms();
         
         return () => { isMounted = false; };
-    }, [clips, getResource, peaksMap]);
+    }, [clips, getResource]);
 
     // 2. Optimized Drawing Logic
     useEffect(() => {
@@ -223,10 +225,7 @@ export const WaveformOverlay: React.FC<WaveformOverlayProps> = React.memo(({
                 ref={canvasRef}
                 style={{ 
                     width: `${width}px`, 
-                    height: `${height}px`,
-                    // Move the canvas to follow the scroll window, so the internal
-                    // (clipX - scrollLeft) calculation renders in the visible frame
-                    transform: `translate3d(${scrollLeft}px, 0, 0)` 
+                    height: `${height}px`
                 }}
             />
         </div>

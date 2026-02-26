@@ -5,25 +5,6 @@ export * from './algorithms';
 // Export commons-specific types (MediaResource, FileSystem, etc.)
 export * from './types';
 
-// Re-export MediaResource types from sdkwork-react-types
-export type {
-  MediaResource,
-  FileMediaResource,
-  VideoMediaResource,
-  ImageMediaResource,
-  AudioMediaResource,
-  MusicMediaResource,
-  CharacterMediaResource,
-  AssetMediaResource,
-  AnyMediaResource,
-  GenerationProduct,
-  GenerationPlatform,
-  MediaResourceOrigin,
-  MediaResourceStatus,
-  MediaResourceFilter,
-  MediaResourceSearchResult,
-} from '@sdkwork/react-types';
-
 // Re-export common/base types from sdkwork-react-types for convenience
 export {
   // Service Result
@@ -89,14 +70,11 @@ export {
   type ChannelInfo,
   type ModelInfoResponse,
 
-  // Gallery
-  type GalleryItemType,
+  // Gallery (from local types, not @sdkwork/react-types)
   type GalleryAuthor,
-  type GalleryItem,
 
   // Input & Style
   type InputAttachmentData,
-  type StyleOption,
 
   // Generation
   type GenerationMode,
@@ -175,7 +153,6 @@ export type {
   ImageMediaResource,
   AudioMediaResource,
   AnyMediaResource,
-  VideoAsset,
   ImageAsset,
   AudioAsset,
   DigitalHumanAsset,

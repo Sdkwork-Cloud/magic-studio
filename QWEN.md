@@ -213,7 +213,7 @@ src-tauri/
 ## Package Dependencies
 
 ### Core Packages (No Internal Dependencies)
-- `sdkwork-react-commons` - Shared types, utilities, components
+- `sdkwork-react-commons` - Shared types, components
 - `sdkwork-react-types` - Type definitions
 
 ### Infrastructure Packages (Depend on Core Only)

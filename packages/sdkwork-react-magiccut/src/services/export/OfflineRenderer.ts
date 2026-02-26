@@ -127,9 +127,8 @@ export class OfflineRenderer {
     }
 
     private cleanup() {
-        this.engine.detach();
+        this.engine.destroy();
         this.canvas.width = 1;
         this.canvas.height = 1;
     }
 }
-

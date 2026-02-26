@@ -21,7 +21,10 @@ const NAV_ITEMS = [
 
 export const PortalHeader: React.FC = () => {
     const { user, logout } = useAuthStore();
-    const { navigate, currentPath } = useRouter();
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
+    const currentPath = routerContext?.currentPath || '/';
     const { unreadCount } = useNotificationStore();
 
     React.useEffect(() => {

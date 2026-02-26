@@ -4,6 +4,7 @@ import { MediaResourceType } from '@sdkwork/react-commons';
 import { mediaService } from '@sdkwork/react-core';
 
 interface ClipFilmstripProps {
+    resourceId: string;
     resourceUrl: string;
     resourceType: MediaResourceType;
     height: number;
@@ -21,6 +22,7 @@ interface ClipFilmstripProps {
  * Renders a true filmstrip sequence for Video, or a repeating pattern for Images.
  */
 export const ClipFilmstrip: React.FC<ClipFilmstripProps> = React.memo(({
+    resourceId,
     resourceUrl,
     resourceType,
     height,
@@ -33,6 +35,7 @@ export const ClipFilmstrip: React.FC<ClipFilmstripProps> = React.memo(({
     if (resourceType === MediaResourceType.IMAGE) {
         return <ImageFilmstrip 
             resourceUrl={resourceUrl} 
+            resourceId={resourceId}
             resourceType={resourceType}
             height={height} 
             offset={offset} 
@@ -46,6 +49,7 @@ export const ClipFilmstrip: React.FC<ClipFilmstripProps> = React.memo(({
     if (resourceType === MediaResourceType.VIDEO) {
         return <VideoFilmstrip 
             resourceUrl={resourceUrl} 
+            resourceId={resourceId}
             resourceType={resourceType}
             height={height} 
             offset={offset} 
@@ -87,7 +91,7 @@ const ImageFilmstrip: React.FC<ClipFilmstripProps> = ({ resourceUrl, height, off
     );
 };
 
-const VideoFilmstrip: React.FC<ClipFilmstripProps> = ({ resourceUrl, height, offset, pixelsPerSecond, metadata, className }) => {
+const VideoFilmstrip: React.FC<ClipFilmstripProps> = ({ resourceUrl, resourceId, height, offset, pixelsPerSecond, metadata, className }) => {
     // 1. Calculate Tile Dimensions
     const validHeight = Math.max(1, height);
     let tileWidth = validHeight * (16/9);
@@ -154,6 +158,7 @@ const VideoFilmstrip: React.FC<ClipFilmstripProps> = ({ resourceUrl, height, off
                 <FilmstripFrame 
                     key={tile.id}
                     resourceUrl={resourceUrl}
+                    resourceId={resourceId}
                     time={tile.time}
                     width={tileWidth}
                     height={validHeight}
@@ -164,11 +169,12 @@ const VideoFilmstrip: React.FC<ClipFilmstripProps> = ({ resourceUrl, height, off
 };
 
 const FilmstripFrame: React.FC<{
+    resourceId: string;
     resourceUrl: string;
     time: number;
     width: number;
     height: number;
-}> = React.memo(({ resourceUrl, time, width, height }) => {
+}> = React.memo(({ resourceId, resourceUrl, time, width, height }) => {
     const [src, setSrc] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(false);
     
@@ -180,7 +186,7 @@ const FilmstripFrame: React.FC<{
         
         const load = async () => {
             // Use MediaService with caching
-            const thumb = await mediaService.getVideoThumbnail(resourceUrl, resourceUrl, time);
+            const thumb = await mediaService.getVideoThumbnail(resourceId, resourceUrl, time);
             if (active && thumb) {
                 setSrc(thumb);
                 setIsVisible(true);

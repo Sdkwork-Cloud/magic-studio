@@ -163,7 +163,7 @@ export class LocalStorageService<T extends BaseEntity> implements IBaseService<T
                 ...this.cache![existingIndex],
                 ...entity,
                 updatedAt: now
-            };
+            } as unknown as T;
             this.cache![existingIndex] = savedEntity;
         } else {
             // Create
@@ -171,7 +171,7 @@ export class LocalStorageService<T extends BaseEntity> implements IBaseService<T
                 ...entity,
                 createdAt: entity.createdAt || now,
                 updatedAt: now
-            } as T;
+            } as unknown as T;
             this.cache!.unshift(savedEntity); // Add to top
         }
 
