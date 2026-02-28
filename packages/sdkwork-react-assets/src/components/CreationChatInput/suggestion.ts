@@ -4,11 +4,6 @@ import tippy from 'tippy.js';
 import { MentionList, MentionListRef } from './components/MentionList';
 import { InputAttachment } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface SuggestionProps {
-    items: InputAttachment[];
-}
-
 export const getSuggestionConfig = (getAttachments: () => InputAttachment[]) => ({
   items: ({ query }: { query: string }) => {
     const attachments = getAttachments();

@@ -1,20 +1,20 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ImageTask, GenerationConfig, GeneratedResult } from '../entities/image.entity';
+import { ImageTask, ImageGenerationConfig, GeneratedImageResult } from '../entities';
 import { imageService } from '../services/imageService';
 import { imageHistoryService } from '../services/imageHistoryService';
 import { IMAGE_STYLES } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { platform as _platform } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
-import { assetService } from '@sdkwork/react-assets';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 
 interface ImageStoreContextType {
     history: ImageTask[];
     isGenerating: boolean;
-    config: GenerationConfig;
+    config: ImageGenerationConfig;
     
-    setConfig: (config: Partial<GenerationConfig>) => void;
+    setConfig: (config: Partial<ImageGenerationConfig>) => void;
     generate: () => Promise<void>;
     enhancePrompt: (currentText?: string) => Promise<string>;
     deleteTask: (id: string) => Promise<void>;
@@ -28,14 +28,70 @@ const ImageStoreContext = createContext<ImageStoreContextType | undefined>(undef
 
 interface ImageStoreProviderProps {
     children: ReactNode;
-    initialConfig?: Partial<GenerationConfig>;
+    initialConfig?: Partial<ImageGenerationConfig>;
 }
+
+type StoreGeneratedResult = GeneratedImageResult & { modelId?: string };
+
+const resolveImageScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        const buffer = await response.arrayBuffer();
+        return new Uint8Array(buffer);
+    }
+    return undefined;
+};
+
+const persistGeneratedImage = async (
+    source: string,
+    name: string,
+    metadata: Record<string, unknown>
+): Promise<string> => {
+    const inlineData = await tryExtractInlineData(source);
+    const result = await assetBusinessFacade.importImageStudioAsset({
+        scope: resolveImageScope(),
+        type: 'image',
+        name,
+        data: inlineData,
+        remoteUrl: inlineData ? undefined : source,
+        metadata: {
+            ...metadata,
+            origin: 'ai',
+            source: 'image-studio-gen'
+        }
+    });
+    return result.primaryLocator.uri;
+};
 
 export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children, initialConfig }) => {
     const [history, setHistory] = useState<ImageTask[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
     
-    const [config, setConfigState] = useState<GenerationConfig>({
+    const [config, setConfigState] = useState<ImageGenerationConfig>({
         prompt: '',
         aspectRatio: '1:1',
         styleId: 'none',
@@ -55,7 +111,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         load();
     }, []);
 
-    const setConfig = (updates: Partial<GenerationConfig>) => {
+    const setConfig = (updates: Partial<ImageGenerationConfig>) => {
         setConfigState(prev => ({ ...prev, ...updates }));
     };
 
@@ -106,7 +162,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
                 targetModels = config.models;
             }
 
-            const allPromises: Promise<GeneratedResult>[] = [];
+            const allPromises: Promise<StoreGeneratedResult>[] = [];
 
             targetModels.forEach(modelId => {
                 const count = config.batchSize || 1;
@@ -116,14 +172,14 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
                         prompt: fullPrompt,
                         model: modelId
                     }).then(async (url) => {
-                        const asset = await assetService.saveGeneratedAsset(url, 'image', {
+                        const storedUrl = await persistGeneratedImage(url, `gen_image_${taskId}_${i}.png`, {
                             prompt: fullPrompt,
                             model: modelId
-                        }, `gen_image_${taskId}_${i}.png`);
+                        });
 
                         return {
                             id: generateUUID(),
-                            url: asset.path,
+                            url: storedUrl,
                             modelId: modelId
                         };
                     });
@@ -136,7 +192,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
             const completedTask: ImageTask = { 
                 ...newTask, 
                 status: 'completed', 
-                results,
+                results: results as GeneratedImageResult[],
                 updatedAt: Date.now()
             };
             
@@ -180,21 +236,33 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         await imageHistoryService.save(newTask);
 
         setTimeout(async () => {
-            const asset = await assetService.saveGeneratedAsset(url, 'image', {}, `upscaled_${taskId}.png`);
+            try {
+                const storedUrl = await persistGeneratedImage(url, `upscaled_${taskId}.png`, {
+                    upscaledFrom: url
+                });
 
-            const completedTask: ImageTask = {
-                ...newTask,
-                status: 'completed',
-                updatedAt: Date.now(),
-                results: [{ 
-                    id: generateUUID(), 
-                    url: asset.path, 
-                    modelId: 'upscaler-pro' 
-                }]
-            };
-            
-            setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await imageHistoryService.save(completedTask);
+                const completedTask: ImageTask = {
+                    ...newTask,
+                    status: 'completed',
+                    updatedAt: Date.now(),
+                    results: [{
+                        id: generateUUID(),
+                        url: storedUrl
+                    }] as GeneratedImageResult[]
+                };
+
+                setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
+                await imageHistoryService.save(completedTask);
+            } catch (e: any) {
+                const failedTask: ImageTask = {
+                    ...newTask,
+                    status: 'failed',
+                    error: e?.message || 'Upscale save failed',
+                    updatedAt: Date.now()
+                };
+                setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
+                await imageHistoryService.save(failedTask);
+            }
         }, 2000);
     };
 

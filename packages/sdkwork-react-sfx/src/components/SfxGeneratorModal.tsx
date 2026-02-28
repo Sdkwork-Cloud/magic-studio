@@ -4,7 +4,7 @@ import { SfxLeftGeneratorPanel } from './SfxLeftGeneratorPanel';
 import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
 import { useSfxStore, SfxStoreProvider } from '../store/sfxStore';
 import { X, Check } from 'lucide-react';
-import { SfxTask } from '../entities/sfx.entity';
+import { SfxTask } from '../entities';
 
 interface SfxGeneratorModalProps {
     onClose: () => void;
@@ -21,7 +21,7 @@ const SfxGeneratorContent: React.FC<SfxGeneratorModalProps> = ({ onClose, onSucc
         
         // Attempt to find duration from the task results
         if (task && task.results) {
-            const result = task.results.find(r => r.url === url);
+            const result = task.results.find((r: any) => r.url === url);
             if (result) {
                 setSelectedDuration(result.duration);
             }

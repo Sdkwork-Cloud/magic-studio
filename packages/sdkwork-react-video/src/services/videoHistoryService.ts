@@ -1,4 +1,5 @@
-import { VideoTask } from '../entities/video.entity';
+import { VideoTask } from '../entities';
+import { generateUUID } from '@sdkwork/react-commons';
 
 // Mock history service for video tasks
 export class VideoHistoryService {
@@ -47,6 +48,7 @@ export class VideoHistoryService {
             // Add new
             const newTask: VideoTask = {
                 id: task.id,
+                uuid: task.uuid || generateUUID(),
                 config: task.config!,
                 status: task.status || 'pending',
                 results: task.results,

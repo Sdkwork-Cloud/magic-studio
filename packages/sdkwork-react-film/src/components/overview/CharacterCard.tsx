@@ -3,6 +3,7 @@ import React from 'react';
 import { User, Sparkles } from 'lucide-react';
 
 import { FilmCharacter, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
+import { resolveFilmAssetUrlByAssetIdFirst, toFilmUseAssetSource } from '../../utils/filmAssetUrlResolver';
 
 export interface CharacterCardProps {
     character: FilmCharacter;
@@ -11,10 +12,11 @@ export interface CharacterCardProps {
 }
 
 export const CharacterCard: React.FC<CharacterCardProps> = ({ character, onClick, isSelected }) => {
-    const faceImageUrl = character.faceImage?.url;
     const avatarAsset = character.refAssets?.find(a => a.scene === MediaScene.AVATAR);
-    const avatarUrl = faceImageUrl || avatarAsset?.url || avatarAsset?.image?.url;
-    const { url: displayUrl } = useAssetUrl(avatarUrl || null);
+    const avatarSource = avatarAsset || character.faceImage || null;
+    const { url: displayUrl } = useAssetUrl(toFilmUseAssetSource(avatarSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     return (
         <div 

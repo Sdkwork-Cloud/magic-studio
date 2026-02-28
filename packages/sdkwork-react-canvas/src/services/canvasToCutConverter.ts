@@ -1,6 +1,4 @@
-
-;
-import { CanvasBoard, CanvasElement, CanvasExportMode } from '../entities/canvas.entity';
+import { CanvasBoard, CanvasElement, CanvasExportMode } from '../entities';
 import { AnyMediaResource, MediaResourceType, generateUUID } from '@sdkwork/react-commons';
 import { 
     CutProject, CutTimeline, CutTrack, CutClip, CutClipTransform, CutTrackType,
@@ -60,7 +58,12 @@ export class CanvasToCutConverter {
             if (el.resource) {
                 // Ensure resource is indexed in the global map
                 // Critical: We must preserve the path if it exists (assets://) for the player to resolve it
-                resources[el.resource.id] = { ...el.resource };
+                const now = Date.now();
+                resources[el.resource.id] = { 
+                    ...el.resource, 
+                    createdAt: now,
+                    updatedAt: now
+                } as any;
             }
         });
 
@@ -110,7 +113,7 @@ export class CanvasToCutConverter {
             // Fixup clips with track ID
             const clipsWithTrack = bucketClips.map(c => ({
                 ...c,
-                track: { id: trackId, uuid: '', type: 'CutTrack' }
+                track: { id: trackId, uuid: '', type: 'CutTrack' as const }
             }));
             
             allClips.push(...clipsWithTrack);
@@ -118,7 +121,8 @@ export class CanvasToCutConverter {
             tracks.push({
                 id: trackId,
                 uuid: generateUUID(),
-                type,
+                type: 'CutTrack',
+                trackType: type,
                 name: trackIdx === 0 ? 'Main Track' : `Track ${trackIdx + 1}`,
                 order: trackIdx,
                 isMain: trackIdx === 0,
@@ -137,7 +141,7 @@ export class CanvasToCutConverter {
         if (tracks.length === 0) {
             const tid = generateUUID();
             tracks.push({
-                id: tid, uuid: generateUUID(), type: 'video', name: 'Main Track', order: 0, isMain: true, clips: [],
+                id: tid, uuid: generateUUID(), type: 'CutTrack', trackType: 'video', name: 'Main Track', order: 0, isMain: true, clips: [],
                 height: TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO, visible: true, locked: false, muted: false, volume: 1.0, createdAt: now, updatedAt: now
             });
         }
@@ -148,6 +152,7 @@ export class CanvasToCutConverter {
         const timeline: CutTimeline = {
             id: timelineId,
             uuid: timelineId,
+            type: 'CutTimeline',
             name: 'Generated Sequence',
             fps: 30,
             duration: Math.max(60, globalTimeOffset),
@@ -165,6 +170,7 @@ export class CanvasToCutConverter {
         return {
             id: projectId,
             uuid: projectId,
+            type: 'CUT_PROJECT',
             name: board.title || 'Canvas Export',
             version: 1,
             description: `Auto-generated from Canvas. ${allClips.length} clips created.`,
@@ -195,7 +201,8 @@ export class CanvasToCutConverter {
         for (const clip of clips) {
             const res = resources[clip.resource.id];
             if (res) {
-                if (res.type === MediaResourceType.VIDEO || res.type === MediaResourceType.IMAGE || res.type === MediaResourceType.TEXT) {
+                const resType = (res as any).type;
+                if (resType === 'video' || resType === 'image' || resType === MediaResourceType.VIDEO || resType === MediaResourceType.IMAGE || resType === MediaResourceType.TEXT) {
                     hasVisual = true;
                     break;
                 }
@@ -226,11 +233,9 @@ export class CanvasToCutConverter {
 
             const rType = res.type;
             
-            // Handle export modes
             if (mode === 'image_only') {
-                return rType === MediaResourceType.IMAGE;
+                return rType === 'image';
             }
-            // For video_only or mixed, we accept most visual types
             return true; 
         });
     }
@@ -521,7 +526,8 @@ export class CanvasToCutConverter {
         return {
             id: generateUUID(),
             uuid: generateUUID(),
-            track: { id: '', uuid: '', type: 'CutTrack' }, // Populated later by track builder
+            type: 'CutClip',
+            track: { id: '', uuid: '', type: 'CutTrack' },
             resource: { id: res.id, uuid: res.uuid, type: 'MediaResource' },
             start: absStart,
             duration: node.duration,

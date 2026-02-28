@@ -3,7 +3,6 @@ import { Button } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, FileText } from 'lucide-react';
-import { NoteEditor } from '@sdkwork/react-notes';
 
 interface NoteEditorModalProps {
     isOpen: boolean;
@@ -18,7 +17,6 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
 }) => {
     const [content, setContent] = useState(initialContent);
 
-    // Reset content when opening with new data
     React.useEffect(() => {
         if (isOpen) setContent(initialContent);
     }, [isOpen, initialContent]);
@@ -39,7 +37,6 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                 className="w-full max-w-4xl h-[85vh] bg-[#1e1e1e] border border-[#333] rounded-xl shadow-2xl overflow-hidden flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex-none px-6 py-4 border-b border-[#333] bg-[#252526] flex justify-between items-center">
                     <h3 className="text-white font-bold flex items-center gap-2 text-lg">
                         <FileText size={20} className="text-blue-500" />
@@ -53,28 +50,15 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                     </button>
                 </div>
 
-                {/* Editor Area */}
-                <div className="flex-1 overflow-hidden relative bg-[#111]">
-                    <div className="absolute inset-0">
-                        <UniversalNoteEditor
-                            key={isOpen ? 'open' : 'closed'} // Force re-mount on open to ensure clean state
-                            initialContent={content}
-                            onChange={(html) => setContent(html)}
-                            noteType="article"
-                            config={{
-                                mode: 'embed',
-                                showToolbar: true,
-                                showMetadata: false,
-                                showPublishButton: false,
-                                showChatToggle: false,
-                                placeholder: "Enter story summary...",
-                            }}
-                            className="h-full bg-[#111]"
-                        />
-                    </div>
+                <div className="flex-1 overflow-hidden relative bg-[#111] p-4">
+                    <textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="w-full h-full bg-transparent text-gray-200 resize-none outline-none font-mono text-sm leading-relaxed"
+                        placeholder="Enter story summary..."
+                    />
                 </div>
 
-                {/* Footer */}
                 <div className="flex-none px-6 py-4 border-t border-[#333] bg-[#252526] flex justify-end gap-3">
                     <Button variant="secondary" onClick={onClose}>Cancel</Button>
                     <Button 

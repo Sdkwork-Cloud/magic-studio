@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Clock, CheckCircle2, Loader2, Shield, Zap, RefreshCw, Crown, Sparkles, Smartphone, QrCode } from 'lucide-react';
+import { X, Clock, CheckCircle2, Loader2, Shield, Zap, RefreshCw, Crown, Sparkles, QrCode } from 'lucide-react';
 
 type PaymentMethod = 'wechat' | 'alipay';
 

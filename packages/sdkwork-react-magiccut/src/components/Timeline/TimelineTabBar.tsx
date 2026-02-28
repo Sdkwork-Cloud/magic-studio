@@ -21,7 +21,11 @@ export const TimelineTabBar: React.FC = React.memo(() => {
     const [editValue, setEditValue] = useState('');
 
     const timelines = useMemo(() => {
-        return (Object.values(state.timelines) as CutTimeline[]).sort((a, b) => a.createdAt - b.createdAt);
+        return (Object.values(state.timelines) as CutTimeline[]).sort((a, b) => {
+            const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+            const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+            return aTime - bTime;
+        });
     }, [state.timelines]);
 
     const handleSelect = (id: string) => {

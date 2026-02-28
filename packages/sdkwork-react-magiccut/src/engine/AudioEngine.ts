@@ -1,9 +1,9 @@
 
-import { assetService } from '@sdkwork/react-assets'
-import { platform } from '@sdkwork/react-core';
 import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
-import { CutClip, CutTimeline, CutTrack } from '../entities/magicCut.entity';
+import { CutClip, CutTimeline, CutTrack } from '../entities';
 import { AudioEffectProcessor, createAudioEffectChain } from '../services/audio/AudioEffectProcessor';
+import type { AudioEffectConfig as LocalAudioEffectConfig } from '../services/audio/AudioEffectTypes';
+import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
 
 declare global {
     interface Window {
@@ -202,8 +202,7 @@ export class AudioEngine {
 
         const task = (async () => {
             try {
-                // If it's a VFS path on Web, hydration handled by assetService
-                const url = await assetService.resolveAssetUrl(resource);
+                const url = await resolveAssetUrlByAssetIdFirst(resource);
                 if (!url) return null;
 
                 const res = await fetch(url);
@@ -442,7 +441,7 @@ export class AudioEngine {
         const allEffects = [...trackEffects, ...clipEffects];
 
         if (allEffects.length > 0) {
-            const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass);
+            const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass) as unknown as LocalAudioEffectConfig[];
             if (enabledEffects.length > 0) {
                 effectChain = createAudioEffectChain(this.ctx!, enabledEffects);
             }
@@ -578,7 +577,7 @@ export class AudioEngine {
         const allEffects = [...trackEffects, ...clipEffects];
 
         if (allEffects.length > 0) {
-            const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass);
+            const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass) as unknown as LocalAudioEffectConfig[];
             if (enabledEffects.length > 0) {
                 effectChain = createAudioEffectChain(this.ctx!, enabledEffects);
             }
@@ -745,7 +744,7 @@ export class AudioEngine {
                     let lastNode: AudioNode = gain;
 
                     if (allEffects.length > 0) {
-                        const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass);
+                        const enabledEffects = allEffects.filter(e => e.params.enabled && !e.params.bypass) as unknown as LocalAudioEffectConfig[];
                         if (enabledEffects.length > 0) {
                             const effectChain = createAudioEffectChain(offlineCtx as unknown as AudioContext, enabledEffects);
                             lastNode.connect(effectChain.input);

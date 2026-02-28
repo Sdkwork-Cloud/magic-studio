@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { IVoice } from './types';
-import { Play, Pause, Check, User, Globe, Mic2, Loader2 } from 'lucide-react';
+import { Play, Pause, Check, User, Mic2 } from 'lucide-react';
 
 interface VoiceCardProps {
   voice: IVoice;

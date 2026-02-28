@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { VideoTask, VideoConfig, GeneratedVideoResult, VideoGenerationMode } from '../entities/video.entity';
+import { VideoTask, VideoConfig, VideoGenerationMode } from '../entities';
 import { videoService } from '../services/videoService';
 import { videoHistoryService } from '../services/videoHistoryService';
 import { VIDEO_MODELS, VIDEO_STYLES } from '../constants';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 
 interface VideoStoreContextType {
     history: VideoTask[];
@@ -20,6 +21,38 @@ interface VideoStoreContextType {
 }
 
 const VideoStoreContext = createContext<VideoStoreContextType | undefined>(undefined);
+
+const resolveVideoScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+    return undefined;
+};
 
 export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<VideoTask[]>([]);
@@ -90,11 +123,31 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
             };
 
             const result = await videoService.generateVideo(finalConfig);
+            const videoInlineData = await tryExtractInlineData(result.url);
+            const persistedVideo = await assetBusinessFacade.importVideoStudioAsset({
+                scope: resolveVideoScope(),
+                type: 'video',
+                name: `video_gen_${taskId}.mp4`,
+                data: videoInlineData,
+                remoteUrl: videoInlineData ? undefined : result.url,
+                metadata: {
+                    origin: 'ai',
+                    source: 'video-studio-generate',
+                    model: finalConfig.model,
+                    prompt: finalConfig.prompt
+                }
+            });
+
+            const persistedResult = {
+                ...result,
+                url: persistedVideo.primaryLocator.uri,
+                mp4Url: persistedVideo.primaryLocator.uri
+            };
             
             const completedTask: VideoTask = { 
                 ...newTask, 
                 status: 'completed', 
-                results: [result],
+                results: [persistedResult],
                 updatedAt: Date.now()
             };
 

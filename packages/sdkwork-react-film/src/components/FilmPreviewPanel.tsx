@@ -1,5 +1,5 @@
 
-import { FilmShot } from '@sdkwork/react-commons';
+import { FilmShot, useAssetUrl } from '@sdkwork/react-commons';
 import React, { useRef, useEffect, useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { 
@@ -8,6 +8,11 @@ import {
     Captions, Edit2, Trash2 
 } from 'lucide-react';
 import { ShotModal } from './ShotModal';
+import {
+    hasFilmAssetReference,
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../utils/filmAssetUrlResolver';
 
 // --- Sub-Component: Stage (Player) ---
 const PreviewStage: React.FC = () => {
@@ -15,8 +20,11 @@ const PreviewStage: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
+        const hasVideo = hasFilmAssetReference(
+            currentPreviewItem?.shot.generation?.video || null
+        );
         if (videoRef.current) {
-            if (isPreviewPlaying && currentPreviewItem?.shot.generation?.video?.url) {
+            if (isPreviewPlaying && hasVideo) {
                 videoRef.current.play().catch(() => {});
             } else {
                 videoRef.current.pause();
@@ -34,10 +42,16 @@ const PreviewStage: React.FC = () => {
     }
 
     const { shot } = currentPreviewItem;
-    const videoUrl = shot.generation?.video?.url;
-    const imageUrl = shot.assets?.[0]?.url;
+    const primaryImageAsset =
+        shot.assets?.find((asset: unknown) => hasFilmAssetReference(asset)) ?? null;
+    const { url: videoUrl } = useAssetUrl(toFilmUseAssetSource(shot.generation?.video || null), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+    const { url: imageUrl } = useAssetUrl(toFilmUseAssetSource(primaryImageAsset || null), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
     
-    const subtitleText = shot.dialogue?.items?.map(d => d.text).join(' ') || '';
+    const subtitleText = shot.dialogue?.items?.map((d: { text: string }) => d.text).join(' ') || '';
 
     return (
         <div className="flex-1 bg-black flex items-center justify-center relative overflow-hidden">
@@ -251,71 +265,101 @@ const PreviewTimeline: React.FC = () => {
             >
                 {previewItems.map((item) => {
                     const isActive = previewTime >= item.startTime && previewTime < item.endTime;
-                    const hasVideo = !!item.shot.generation?.video?.url;
-                    const hasImage = !!item.shot.assets?.[0]?.url;
-                    const thumbUrl = hasImage ? item.shot.assets![0].url : null;
-                    
                     return (
-                        <div 
+                        <TimelineShotCard
                             key={item.shot.uuid}
-                            ref={isActive ? activeCardRef : null}
-                            onClick={() => seekPreview(item.startTime)}
-                            className={`
-                                relative flex-shrink-0 aspect-video h-28 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group
-                                ${isActive 
-                                    ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg scale-105 z-10' 
-                                    : 'border-[#27272a] hover:border-gray-500 hover:shadow-md'
-                                }
-                                bg-[#141414]
-                            `}
-                        >
-                            {/* Thumbnail Content */}
-                            {(hasVideo || hasImage) ? (
-                                <div className="w-full h-full flex items-center justify-center bg-black relative">
-                                    {/* Main Image - Contain Mode */}
-                                    <img 
-                                        src={thumbUrl || ''} 
-                                        className="w-full h-full object-contain z-10" 
-                                        draggable={false} 
-                                        alt={`Shot ${item.shot.index}`}
-                                    />
-                                    {/* Background Fill - Blur */}
-                                    <div className="absolute inset-0 overflow-hidden">
-                                        <img 
-                                            src={thumbUrl || ''} 
-                                            className="w-full h-full object-cover opacity-30 blur-md scale-110" 
-                                            draggable={false} 
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-700">
-                                    <Clapperboard size={24} className="opacity-20 mb-1" />
-                                    <span className="text-[10px] font-mono opacity-50">SHOT {item.shot.index}</span>
-                                </div>
-                            )}
-
-                            {/* Info Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 z-20">
-                                <div className="flex justify-between items-end">
-                                     <span className="text-[10px] font-bold text-white truncate max-w-[80%]">
-                                         S{item.scene.index}-{item.shot.index}
-                                     </span>
-                                     <div className="flex gap-1">
-                                         {hasVideo && <Video size={10} className="text-green-400" />}
-                                     </div>
-                                </div>
-                                <p className="text-[9px] text-gray-400 line-clamp-1">{item.shot.description}</p>
-                            </div>
-                            
-                            {/* Active Indicator Dot */}
-                            {isActive && (
-                                <div className="absolute top-1.5 left-1.5 w-2 h-2 bg-blue-500 rounded-full shadow-sm animate-pulse z-30" />
-                            )}
-                        </div>
+                            item={item}
+                            isActive={isActive}
+                            onSeek={() => seekPreview(item.startTime)}
+                            cardRef={isActive ? activeCardRef : null}
+                        />
                     );
                 })}
             </div>
+        </div>
+    );
+};
+
+interface TimelineShotCardProps {
+    item: {
+        shot: FilmShot;
+        scene: {
+            index?: number;
+        };
+        startTime: number;
+        endTime: number;
+        duration: number;
+    };
+    isActive: boolean;
+    onSeek: () => void;
+    cardRef?: React.Ref<HTMLDivElement> | null;
+}
+
+const TimelineShotCard: React.FC<TimelineShotCardProps> = ({
+    item,
+    isActive,
+    onSeek,
+    cardRef
+}) => {
+    const hasVideo = hasFilmAssetReference(item.shot.generation?.video || null);
+    const primaryImageAsset =
+        item.shot.assets?.find((asset: unknown) => hasFilmAssetReference(asset)) ?? null;
+    const hasImage = !!primaryImageAsset;
+    const { url: thumbUrl } = useAssetUrl(toFilmUseAssetSource(primaryImageAsset), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+
+    return (
+        <div
+            ref={cardRef || null}
+            onClick={onSeek}
+            className={`
+                relative flex-shrink-0 aspect-video h-28 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group
+                ${isActive
+                    ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg scale-105 z-10'
+                    : 'border-[#27272a] hover:border-gray-500 hover:shadow-md'
+                }
+                bg-[#141414]
+            `}
+        >
+            {(hasVideo || hasImage) && thumbUrl ? (
+                <div className="w-full h-full flex items-center justify-center bg-black relative">
+                    <img
+                        src={thumbUrl}
+                        className="w-full h-full object-contain z-10"
+                        draggable={false}
+                        alt={`Shot ${item.shot.index}`}
+                    />
+                    <div className="absolute inset-0 overflow-hidden">
+                        <img
+                            src={thumbUrl}
+                            className="w-full h-full object-cover opacity-30 blur-md scale-110"
+                            draggable={false}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-gray-700">
+                    <Clapperboard size={24} className="opacity-20 mb-1" />
+                    <span className="text-[10px] font-mono opacity-50">SHOT {item.shot.index}</span>
+                </div>
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 z-20">
+                <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-bold text-white truncate max-w-[80%]">
+                        S{item.scene.index}-{item.shot.index}
+                    </span>
+                    <div className="flex gap-1">
+                        {hasVideo && <Video size={10} className="text-green-400" />}
+                    </div>
+                </div>
+                <p className="text-[9px] text-gray-400 line-clamp-1">{item.shot.description}</p>
+            </div>
+
+            {isActive && (
+                <div className="absolute top-1.5 left-1.5 w-2 h-2 bg-blue-500 rounded-full shadow-sm animate-pulse z-30" />
+            )}
         </div>
     );
 };

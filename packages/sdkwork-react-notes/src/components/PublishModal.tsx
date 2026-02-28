@@ -24,9 +24,26 @@ interface ArticleDraft extends ArticlePayload {
 }
 
 export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => {
-    const { t } = useTranslation();
+    const { t: _t } = useTranslation();
     const { settings } = useSettingsStore();
     const { user } = useAuthStore();
+    const defaultAuthor = (() => {
+        if (!user) {
+            return 'Open Studio';
+        }
+
+        const usernameCandidate = 'username' in user ? user.username : undefined;
+        if (typeof usernameCandidate === 'string' && usernameCandidate.trim()) {
+            return usernameCandidate;
+        }
+
+        const nameCandidate = 'name' in user ? user.name : undefined;
+        if (typeof nameCandidate === 'string' && nameCandidate.trim()) {
+            return nameCandidate;
+        }
+
+        return 'Open Studio';
+    })();
     
     // --- State: Articles ---
     const [articles, setArticles] = useState<ArticleDraft[]>([]);
@@ -73,7 +90,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
             content: note.content || '', // Handle potentially empty content if somehow passed summary
             digest: note.metadata?.readingTime ? `${note.metadata.readingTime} min read` : '',
             coverImage: defaultCover,
-            author: user?.username || 'Open Studio',
+            author: defaultAuthor,
             tags: note.tags,
             originalUrl: ''
         }]);
@@ -108,7 +125,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
             uiId: generateUUID(),
             title: 'New Article',
             content: '<p>Start writing...</p>',
-            author: user?.username || 'Open Studio',
+            author: defaultAuthor,
             digest: '',
             coverImage: '',
             originalUrl: ''
@@ -283,6 +300,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
                                     value={activeArticle.coverImage || null}
                                     onChange={(asset) => updateActiveArticle({ coverImage: asset ? (asset.path || asset.id) : undefined })}
                                     accepts={['image']}
+                                    domain="notes"
                                     label="Select Cover"
                                     aspectRatio="aspect-[16/9]"
                                     extractedImages={contentImages}

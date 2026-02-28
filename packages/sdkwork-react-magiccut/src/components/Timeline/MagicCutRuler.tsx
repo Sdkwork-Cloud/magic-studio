@@ -15,7 +15,7 @@ interface MagicCutRulerProps {
     height?: number;
     markers?: TimelineMarker[];
     previewRange?: { start: number; end: number } | null;
-    scrollContainerRef: React.RefObject<HTMLElement>;
+    scrollContainerRef: React.RefObject<HTMLElement | null>;
 }
 
 export const MagicCutRuler: React.FC<MagicCutRulerProps> = ({

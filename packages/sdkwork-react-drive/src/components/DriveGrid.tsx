@@ -1,5 +1,5 @@
 
-import { DriveItem } from '../entities/drive.entity'
+import { DriveItem } from '../entities'
 import React, { useState, useRef, useEffect } from 'react';
 ;
 import { Folder, MoreHorizontal, Star, ArrowUp, ArrowDown } from 'lucide-react';

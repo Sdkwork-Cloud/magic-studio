@@ -4,10 +4,10 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { Film, Image as ImageIcon, Music, Heart, Sparkles, LayoutTemplate, MoreHorizontal, AlertCircle, Loader2, Upload, Type, Trash2 } from 'lucide-react';
-import { assetService } from '@sdkwork/react-assets';
 import { useResourceSkimming } from '../../hooks/useResourceSkimming';
 import { playerPreviewService } from '../../services';
 import { formatTime } from '../../utils/timeUtils';
+import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
 
 // Static empty image for drag ghost removal (performance optimized)
 const EMPTY_DRAG_IMAGE = new Image();
@@ -18,13 +18,13 @@ interface SkimmableAssetCardProps {
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onDragEnd: () => void;
     onDoubleClick?: (item: AnyAsset) => void;
-    onToggleFavorite: (id: string, isFavorite: boolean) => void;
+    onToggleFavorite?: (id: string, isFavorite: boolean) => void;
     onHover?: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
 }
 
 export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(({ 
-    item, onDragStart, onDragEnd, onDoubleClick, onToggleFavorite, onHover, onDelete
+    item, onDragStart, onDragEnd, onDoubleClick, onHover, onDelete
 }) => {
     const isVideo = item.type === MediaResourceType.VIDEO;
     const isEffect = item.type === MediaResourceType.EFFECT || item.type === MediaResourceType.TRANSITION;
@@ -35,12 +35,12 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
     const isUpload = item.origin === 'upload';
     
     // Duration fallback logic: metadata.duration -> top level duration -> default
-    const effectiveDuration = item.metadata?.duration || (item as any).duration || 0;
+    const effectiveDuration = (item.metadata as any)?.duration || (item as any).duration || 0;
 
     // --- Unified URL State ---
     const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [_isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(false);
 
     // Interaction State
@@ -52,7 +52,6 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
     const videoRef = useRef<HTMLVideoElement>(null);
     const scrubberLineRef = useRef<HTMLDivElement>(null);
     const scrubberTimeRef = useRef<HTMLDivElement>(null);
-    const progressBarRef = useRef<HTMLDivElement>(null);
 
     // --- 1. Resolution Effect (The Single Source of Truth) ---
     useEffect(() => {
@@ -66,11 +65,12 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
             try {
                 // A. Resolve Main Media URL (Video/Image)
                 // This handles assets://, file://, http://, and hydration of VFS
-                const src = await assetService.resolveAssetUrl(item);
+                const src = await resolveAssetUrlByAssetIdFirst(item as any);
                 
                 // B. Resolve Thumbnail
                 // Robustness: Check both legacy `thumbnailUrl` and new VFS `thumbnailPath`
-                const thumbPath = item.metadata?.thumbnailPath || item.metadata?.thumbnailUrl;
+                const meta = item.metadata as any;
+                const thumbPath = meta?.thumbnailPath || meta?.thumbnailUrl;
                 let thumb = null;
 
                 if (thumbPath) {
@@ -78,7 +78,7 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
                      if (thumbPath.startsWith('text-preview:')) {
                          thumb = null; // Handled by text rendering
                      } else {
-                         thumb = await assetService.resolveAssetUrl({ path: thumbPath });
+                         thumb = await resolveAssetUrlByAssetIdFirst(thumbPath);
                      }
                 } else if (!isVideo) {
                      // Use main src as thumb for images if no explicit thumb exists
@@ -99,7 +99,7 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
 
         resolve();
         return () => { isMounted = false; };
-    }, [item.id, item.path, item.url, isEffect, isVideo, isText, item.metadata?.thumbnailPath, item.metadata?.thumbnailUrl]);
+    }, [item.id, item.path, item.url, isEffect, isVideo, isText, (item.metadata as any)?.thumbnailPath, (item.metadata as any)?.thumbnailUrl]);
 
     // --- Skimming Hook ---
     const { handleMouseMove: performSkim, handleMouseLeave: stopSkim } = useResourceSkimming({
@@ -147,10 +147,11 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
     const typeConfig = getTypeConfig(item.type);
 
     // Text Content
-    const textContent = isText ? (item.metadata?.text || item.name) : '';
+    const meta = item.metadata as any;
+    const textContent = isText ? (meta?.text || item.name) : '';
     const textStyle = isText ? {
-        fontFamily: item.metadata?.fontFamily || 'sans-serif',
-        color: item.metadata?.color || '#ffffff',
+        fontFamily: meta?.fontFamily || 'sans-serif',
+        color: meta?.color || '#ffffff',
         fontSize: '14px',
         lineHeight: 1.2
     } : {};
@@ -260,7 +261,7 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
             {/* Favorite Button */}
             <div className={`absolute top-1 right-1 z-30 transition-opacity duration-200 ${isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 <button 
-                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, !isFavorite); }}
+                    onClick={(e) => { e.stopPropagation(); }}
                     className="p-1 text-white/80 hover:text-red-500 hover:scale-110 transition-all"
                 >
                     <Heart size={12} fill={isFavorite ? "#ef4444" : "none"} className={isFavorite ? "text-red-500" : "text-white drop-shadow-md"} />
@@ -329,4 +330,3 @@ const getTypeConfig = (type: MediaResourceType) => {
         default: return { largeIcon: <AlertCircle size={16} className="opacity-20" />, label: 'File' };
     }
 };
-

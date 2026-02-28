@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { 
     Scissors, Trash2, Copy, Clipboard, 
     ArrowLeftToLine, ArrowRightToLine, MapPin, 
-    Minimize2, ZoomIn, Eye, EyeOff, Lock, Unlock,
+    Minimize2, Eye, EyeOff, Lock, Unlock,
     Unlink
 } from 'lucide-react';
 import { useMagicCutStore } from '../../../store/magicCutStore';
@@ -20,8 +20,8 @@ export const useMenuLogic = (
         splitClip, deleteSelected, copyClip, pasteClip,
         trimStart, trimEnd, addMarker,
         updateTrack, removeTrack, state, clipboard,
-        selectClip,
         detachAudio,
+        selectClip,
         getResource,
         getClip
     } = useMagicCutStore();
@@ -41,20 +41,30 @@ export const useMenuLogic = (
                     label: 'Split', // �ָ�
                     icon: React.createElement(Scissors, { size: 14 }),
                     shortcut: 'Ctrl+B',
-                    action: () => splitClip(time) // Pass time
+                    action: () => {
+                        selectClip(targetId);
+                        splitClip(time);
+                    }
                 },
                 {
                     id: 'trim-start',
-                    label: 'Trim Start (Delete Left)', // ���ɾ��?                    icon: React.createElement(ArrowLeftToLine, { size: 14 }),
+                    label: 'Trim Start (Delete Left)',
+                    icon: React.createElement(ArrowLeftToLine, { size: 14 }),
                     shortcut: 'Q',
-                    action: () => trimStart(time) // Pass time
+                    action: () => {
+                        selectClip(targetId);
+                        trimStart(time);
+                    }
                 },
                 {
                     id: 'trim-end',
                     label: 'Trim End (Delete Right)', // �Ҳ�ɾ��
                     icon: React.createElement(ArrowRightToLine, { size: 14 }),
                     shortcut: 'W',
-                    action: () => trimEnd(time) // Pass time
+                    action: () => {
+                        selectClip(targetId);
+                        trimEnd(time);
+                    }
                 }
             );
 
@@ -79,11 +89,25 @@ export const useMenuLogic = (
                 { id: 'sep2', label: '', icon: null, separator: true, action: () => {} },
                 {
                     id: 'delete',
-                    label: 'Delete',
+                    label: 'Delete (Lift)',
                     icon: React.createElement(Trash2, { size: 14 }),
                     shortcut: 'Del',
                     danger: true,
-                    action: () => deleteSelected()
+                    action: () => {
+                        selectClip(targetId);
+                        deleteSelected();
+                    }
+                },
+                {
+                    id: 'ripple-delete',
+                    label: 'Ripple Delete',
+                    icon: React.createElement(Trash2, { size: 14 }),
+                    shortcut: 'Shift+Del',
+                    danger: true,
+                    action: () => {
+                        selectClip(targetId);
+                        deleteSelected('ripple');
+                    }
                 }
             );
         }
@@ -102,6 +126,21 @@ export const useMenuLogic = (
                     shortcut: 'Ctrl+V',
                     disabled: !clipboard,
                     action: () => pasteClip(targetId, time)
+                },
+                {
+                    id: 'paste-insert',
+                    label: 'Paste Insert Here',
+                    icon: React.createElement(Clipboard, { size: 14 }),
+                    shortcut: 'Ctrl+Shift+V',
+                    disabled: !clipboard,
+                    action: () => pasteClip(targetId, time, 'insert')
+                },
+                {
+                    id: 'paste-overwrite',
+                    label: 'Paste Overwrite Here',
+                    icon: React.createElement(Clipboard, { size: 14 }),
+                    disabled: !clipboard,
+                    action: () => pasteClip(targetId, time, 'overwrite')
                 },
                 { id: 'sep1', label: '', icon: null, separator: true, action: () => {} },
                 {
@@ -138,6 +177,21 @@ export const useMenuLogic = (
                     disabled: !clipboard,
                     action: () => pasteClip(null, time)
                 },
+                {
+                    id: 'paste-insert-new',
+                    label: 'Paste Insert to New Track',
+                    icon: React.createElement(Clipboard, { size: 14 }),
+                    shortcut: 'Ctrl+Shift+V',
+                    disabled: !clipboard,
+                    action: () => pasteClip(null, time, 'insert')
+                },
+                {
+                    id: 'paste-overwrite-new',
+                    label: 'Paste Overwrite to New Track',
+                    icon: React.createElement(Clipboard, { size: 14 }),
+                    disabled: !clipboard,
+                    action: () => pasteClip(null, time, 'overwrite')
+                },
                 { id: 'sep1', label: '', icon: null, separator: true, action: () => {} },
                 {
                     id: 'add-marker',
@@ -158,7 +212,7 @@ export const useMenuLogic = (
         }
 
         return items;
-    }, [type, targetId, time, clipboard, state.tracks, splitClip, trimStart, trimEnd, copyClip, deleteSelected, pasteClip, updateTrack, removeTrack, addMarker, detachAudio, getClip, getResource]);
+    }, [type, targetId, time, clipboard, state.tracks, splitClip, trimStart, trimEnd, copyClip, deleteSelected, pasteClip, updateTrack, removeTrack, addMarker, detachAudio, selectClip, getClip, getResource]);
 
     const handleAction = (item: MenuItemConfig) => {
         if (item.disabled) return;
@@ -171,4 +225,3 @@ export const useMenuLogic = (
         handleAction
     };
 };
-

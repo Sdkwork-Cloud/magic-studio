@@ -1,6 +1,6 @@
 
 ;
-import { CanvasElement, CanvasElementType, CanvasNodeData } from '../entities/canvas.entity';
+import { CanvasElement, CanvasElementType, CanvasNodeData } from '../entities';
 import { generateUUID, MediaResourceType } from '@sdkwork/react-commons';
 import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 

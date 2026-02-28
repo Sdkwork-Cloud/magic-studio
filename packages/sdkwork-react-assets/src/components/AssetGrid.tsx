@@ -1,19 +1,73 @@
 
 import type { Asset } from '../entities/asset.entity'
-import { assetService } from '../services/assetService'
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useAssetStore } from '../store/assetStore';
-import { FileImage, Film, Music, Volume2, Smile, Sparkles, Upload, Trash2 } from 'lucide-react';
+import { resolveAssetUrlByAssetIdFirst } from '../asset-center';
+import { useAssetUrl } from '../hooks/useAssetUrl';
+import { FileImage, Film, Music, Volume2, Smile, Sparkles, Upload, Trash2, Database, Shield } from 'lucide-react';
 
 interface AssetGridProps {
     onPreview: (asset: Asset) => void;
     onDelete: (asset: Asset) => void;
+    selectedAssetIds?: string[];
 }
 
-export const AssetGrid: React.FC<AssetGridProps> = ({ onPreview, onDelete }) => {
-    const { assets, isLoading } = useAssetStore();
+export const AssetGrid: React.FC<AssetGridProps> = ({
+    onPreview,
+    onDelete,
+    selectedAssetIds = []
+}) => {
+    const { assets, isLoading, pageData, loadPage } = useAssetStore();
+    const hasNextPage = !!pageData && !pageData.last;
+    const isInitialLoading = isLoading && assets.length === 0;
+    const autoLoadAnchorRef = useRef<HTMLDivElement | null>(null);
+    const lastAutoRequestedPageRef = useRef<number | null>(null);
+    const currentPage = pageData?.number || 0;
 
-    if (isLoading) {
+    const requestNextPage = useCallback(() => {
+        if (!hasNextPage || isLoading) {
+            return;
+        }
+        const targetPage = currentPage + 1;
+        if (lastAutoRequestedPageRef.current === targetPage) {
+            return;
+        }
+        lastAutoRequestedPageRef.current = targetPage;
+        void loadPage(targetPage);
+    }, [currentPage, hasNextPage, isLoading, loadPage]);
+
+    useEffect(() => {
+        if (!hasNextPage) {
+            lastAutoRequestedPageRef.current = null;
+            return;
+        }
+        const node = autoLoadAnchorRef.current;
+        if (!node || typeof IntersectionObserver === 'undefined') {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) {
+                    requestNextPage();
+                }
+            },
+            {
+                rootMargin: '320px 0px',
+                threshold: 0
+            }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [hasNextPage, requestNextPage]);
+
+    useEffect(() => {
+        if (!isLoading && lastAutoRequestedPageRef.current !== null && currentPage >= lastAutoRequestedPageRef.current) {
+            lastAutoRequestedPageRef.current = null;
+        }
+    }, [currentPage, isLoading]);
+
+    if (isInitialLoading) {
         return (
             <div className="flex items-center justify-center h-full text-gray-500 gap-3">
                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -37,24 +91,45 @@ export const AssetGrid: React.FC<AssetGridProps> = ({ onPreview, onDelete }) => 
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 p-6 content-start pb-20">
             {assets.map(asset => (
-                <AssetCard key={asset.id} asset={asset} onClick={() => onPreview(asset)} onDelete={() => onDelete(asset)} />
+                <AssetCard
+                    key={asset.id}
+                    asset={asset}
+                    selected={selectedAssetIds.includes(asset.id)}
+                    onClick={() => onPreview(asset)}
+                    onDelete={() => onDelete(asset)}
+                />
             ))}
+            <div ref={autoLoadAnchorRef} className="col-span-full h-1" />
+            {hasNextPage && (
+                <div className="col-span-full pt-2 flex justify-center">
+                    <button
+                        onClick={requestNextPage}
+                        disabled={isLoading}
+                        className={`
+                            min-w-[180px] rounded-lg px-4 py-2.5 text-sm font-medium border transition-all
+                            ${isLoading
+                                ? 'cursor-not-allowed border-[#333] bg-[#1a1a1a] text-gray-500'
+                                : 'border-[#333] bg-[#1f1f21] text-gray-300 hover:border-[#444] hover:text-white hover:bg-[#262629]'
+                            }
+                        `}
+                    >
+                        {isLoading ? 'Loading...' : 'Load More'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
 
-const AssetCard: React.FC<{ asset: Asset; onClick: () => void; onDelete: () => void }> = ({ asset, onClick, onDelete }) => {
-    const [displayUrl, setDisplayUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        let isMounted = true;
-        const resolve = async () => {
-            const url = await assetService.resolveAssetUrl(asset);
-            if (isMounted) setDisplayUrl(url);
-        };
-        resolve();
-        return () => { isMounted = false; };
-    }, [asset]);
+const AssetCard: React.FC<{
+    asset: Asset;
+    selected?: boolean;
+    onClick: () => void;
+    onDelete: () => void;
+}> = ({ asset, selected = false, onClick, onDelete }) => {
+    const { url: displayUrl } = useAssetUrl(asset, {
+        resolver: resolveAssetUrlByAssetIdFirst
+    });
 
     const formatSize = (bytes: number) => {
         if (bytes === 0) return '';
@@ -105,16 +180,46 @@ const AssetCard: React.FC<{ asset: Asset; onClick: () => void; onDelete: () => v
         return <div className="w-full h-full bg-[#111]" />;
     };
     
-    // Origin Icon
-    const OriginIcon = asset.origin === 'ai' ? Sparkles : Upload;
-    const originColor = asset.origin === 'ai' ? 'text-purple-400 bg-purple-500/10 border-purple-500/20' : 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+    const originBadge = (() => {
+        switch (asset.origin) {
+            case 'ai':
+                return {
+                    Icon: Sparkles,
+                    label: 'AI',
+                    className: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+                };
+            case 'stock':
+                return {
+                    Icon: Database,
+                    label: 'Stock',
+                    className: 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                };
+            case 'system':
+                return {
+                    Icon: Shield,
+                    label: 'System',
+                    className: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+                };
+            case 'upload':
+            default:
+                return {
+                    Icon: Upload,
+                    label: 'Upload',
+                    className: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+                };
+        }
+    })();
+    const OriginIcon = originBadge.Icon;
 
     const canDelete = asset.origin !== 'stock' && asset.origin !== 'system';
 
     return (
         <div 
             onClick={onClick}
-            className="group relative bg-[#18181b] border border-[#27272a] hover:border-blue-500/40 rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 aspect-[1/1.1] flex flex-col"
+            className={`
+                group relative bg-[#18181b] border rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 aspect-[1/1.1] flex flex-col
+                ${selected ? 'border-blue-500 ring-1 ring-blue-500/40' : 'border-[#27272a] hover:border-blue-500/40'}
+            `}
         >
             <div className="flex-1 relative overflow-hidden bg-[#111]">
                 {renderThumbnail()}
@@ -127,9 +232,9 @@ const AssetCard: React.FC<{ asset: Asset; onClick: () => void; onDelete: () => v
                 )}
                 
                 {/* Origin Badge */}
-                <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase flex items-center gap-1 border backdrop-blur-md shadow-sm ${originColor}`}>
+                <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase flex items-center gap-1 border backdrop-blur-md shadow-sm ${originBadge.className}`}>
                     <OriginIcon size={10} />
-                    {asset.origin === 'ai' ? 'AI' : 'Upload'}
+                    {originBadge.label}
                 </div>
 
                 {/* Delete Button (Hover) */}

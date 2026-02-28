@@ -4,14 +4,14 @@ import {
     ChevronLeft, Scissors, Share2, Save, ChevronDown, FileJson
 } from 'lucide-react';
 import { ROUTES } from '../../router/routes';
-import { useWorkspaceStore, WorkspaceProjectSelector } from '@sdkwork/react-workspace';
+import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { useMagicCutStore } from '@sdkwork/react-magiccut';
 import { useRouter, platform } from '@sdkwork/react-core';
 
 export const MagicCutLayoutHeader: React.FC = () => {
     const { navigate, currentQuery } = useRouter();
-    const { t } = useTranslation();
+    const { t: _t } = useTranslation();
     
     const { project } = useMagicCutStore();
 

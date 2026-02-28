@@ -1,2 +1,2 @@
-export { MusicStoreProvider, useMusicStore, setAssetServiceAdapter } from './musicStore';
-export type { AssetServiceAdapter, AssetSaveResult } from './musicStore';
+export { MusicStoreProvider, useMusicStore } from './musicStore';
+export type { MusicTask, MusicConfig, AssetServiceAdapter } from './musicStore';

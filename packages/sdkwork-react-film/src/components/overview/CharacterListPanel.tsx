@@ -3,8 +3,14 @@ import React, { useState } from 'react';
 import { Users, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { CharacterCard } from './CharacterCard';
 import { useFilmStore } from '../../store/filmStore';
-import { FilmCharacter, MediaScene, AssetMediaResource, generateUUID } from '@sdkwork/react-commons';
+import { FilmCharacter, MediaScene } from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
+import { hasFilmAssetReference } from '../../utils/filmAssetUrlResolver';
+import { importFilmAssetFromUrl } from '../../utils/filmModalAssetImport';
+import {
+    createFilmAssetMediaResource,
+    upsertFilmRefAssetByScene
+} from '../../utils/filmAssetFactories';
 
 interface CharacterListPanelProps {
     characters: FilmCharacter[];
@@ -26,25 +32,30 @@ export const CharacterListPanel: React.FC<CharacterListPanelProps> = ({
         
         for (const char of characters) {
             const avatarAsset = char.refAssets?.find(a => a.scene === MediaScene.AVATAR);
-            if (avatarAsset?.url || avatarAsset?.image?.url) continue;
+            if (hasFilmAssetReference(avatarAsset || char.faceImage || null)) continue;
             
             const prompt = `Character design, ${char.name}, ${char.appearance?.gender || ''}, ${char.appearance?.ageGroup || ''}, ${char.description || ''}, detailed, 8k`;
             try {
                 const url = await filmService.generateImage(prompt, '3:4');
-                const now = Date.now();
-                const newAsset: AssetMediaResource = {
-                    id: generateUUID(),
-                    uuid: generateUUID(),
-                    type: 'IMAGE',
-                    name: `${char.name}_avatar`,
-                    scene: MediaScene.AVATAR,
+                const imported = await importFilmAssetFromUrl(
                     url,
-                    createdAt: now,
-                    updatedAt: now
-                } as AssetMediaResource;
+                    `${char.name}_avatar`,
+                    'image',
+                    {
+                        origin: 'film-character-auto-gen',
+                        characterUuid: char.uuid
+                    }
+                );
+                const newAsset = createFilmAssetMediaResource({
+                    assetId: imported.assetId,
+                    type: 'image',
+                    scene: MediaScene.AVATAR,
+                    url: imported.url,
+                    fileName: `${char.name}_avatar`
+                });
                 
                 updateCharacter(char.uuid, { 
-                    refAssets: [...(char.refAssets || []), newAsset]
+                    refAssets: upsertFilmRefAssetByScene(char.refAssets, newAsset)
                 });
             } catch (e) {
                 console.error(`Failed to generate for ${char.name}`, e);

@@ -2,7 +2,7 @@
 import { Mark, mergeAttributes } from '@tiptap/core';
 
 export interface TextColorOptions {
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
 }
 
 export const TextColorExtension = Mark.create<TextColorOptions>({
@@ -45,16 +45,5 @@ export const TextColorExtension = Mark.create<TextColorOptions>({
         },
       },
     };
-  },
-
-  addCommands() {
-    return {
-      setColor: (color) => ({ commands }) => {
-        return commands.setMark(this.name, { color });
-      },
-      unsetColor: () => ({ commands }) => {
-        return commands.unsetMark(this.name);
-      },
-    } as any;
   },
 });

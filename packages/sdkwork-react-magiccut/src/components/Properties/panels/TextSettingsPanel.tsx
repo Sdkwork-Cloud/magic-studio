@@ -29,9 +29,9 @@ export const TextSettingsPanel: React.FC<TextSettingsPanelProps> = ({
     const strokeWidth = getStyle('strokeWidth') || 0;
     const hasStroke = strokeWidth > 0;
     const bgColor = getStyle('backgroundColor');
-    const hasBg = bgColor && bgColor !== 'transparent';
+    const hasBg = !!(bgColor && bgColor !== 'transparent');
     const shadowColor = getStyle('shadowColor');
-    const hasShadow = shadowColor && shadowColor !== 'transparent' && shadowColor !== 'rgba(0,0,0,0)' && (getStyle('shadowBlur') > 0 || getStyle('shadowOffsetX') !== 0);
+    const hasShadow = !!(shadowColor && shadowColor !== 'transparent' && shadowColor !== 'rgba(0,0,0,0)' && ((getStyle('shadowBlur') || 0) > 0 || getStyle('shadowOffsetX') !== 0));
 
     // Color helpers
     const handleColorChange = (key: string, newVal: string) => {
@@ -127,7 +127,7 @@ export const TextSettingsPanel: React.FC<TextSettingsPanelProps> = ({
                     <div className="grid grid-cols-2 gap-2">
                         <ScrubbableInput 
                             label={<MoveVertical size={12} />}
-                            value={getStyle('lineHeight')} 
+                            value={getStyle('lineHeight') || 1} 
                             onChange={(v: number) => onStyleChange('lineHeight', v)} 
                             step={0.1} min={0.5} max={3} 
                             suffix="em"
@@ -148,7 +148,7 @@ export const TextSettingsPanel: React.FC<TextSettingsPanelProps> = ({
             {/* 3. Paragraph (Alignment) */}
             <PropertySection title="Paragraph">
                 <SegmentedControl 
-                    value={getStyle('textAlign')}
+                    value={getStyle('textAlign') || 'left'}
                     onChange={(v) => onStyleChange('textAlign', v)}
                     options={[
                         { value: 'left', icon: <AlignLeft size={14} /> },

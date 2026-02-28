@@ -1,135 +1,135 @@
 {
-  "name": "@sdkwork/react-core",
-  "version": "0.1.0",
-  "description": "Core functionality module package for SDKWork React applications - routing, state management, platform abstraction, event bus, and AI services",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./router": {
-      "import": "./dist/router/index.js",
-      "types": "./dist/router/index.d.ts"
-    },
-    "./store": {
-      "import": "./dist/store/index.js",
-      "types": "./dist/store/index.d.ts"
-    },
-    "./eventBus": {
-      "import": "./dist/eventBus/index.js",
-      "types": "./dist/eventBus/index.d.ts"
-    },
-    "./platform": {
-      "import": "./dist/platform/index.js",
-      "types": "./dist/platform/index.d.ts"
-    },
-    "./ai": {
-      "import": "./dist/ai/index.js",
-      "types": "./dist/ai/index.d.ts"
-    },
-    "./utils": {
-      "import": "./dist/utils/index.js",
-      "types": "./dist/utils/index.d.ts"
-    },
-    "./sdk": {
-      "import": "./dist/sdk/index.js",
-      "types": "./dist/sdk/index.d.ts"
-    }
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build && tsc --emitDeclarationOnly",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "zustand": {
-      "optional": true
-    },
-    "@tauri-apps/api": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-clipboard-manager": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-dialog": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-fs": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-http": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-notification": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-os": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-process": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-shell": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-store": {
-      "optional": true
-    },
-    "@tauri-apps/plugin-updater": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@google/genai": "catalog:",
-    "@sdkwork/app-sdk": "workspace:*",
-    "@sdkwork/react-types": "workspace:*",
-    "@sdkwork/react-fs": "workspace:*",
-    "@sdkwork/react-commons": "workspace:*"
-  },
-  "devDependencies": {
-    "@tauri-apps/api": "catalog:",
-    "@tauri-apps/plugin-clipboard-manager": "catalog:",
-    "@tauri-apps/plugin-dialog": "catalog:",
-    "@tauri-apps/plugin-fs": "catalog:",
-    "@tauri-apps/plugin-http": "catalog:",
-    "@tauri-apps/plugin-notification": "catalog:",
-    "@tauri-apps/plugin-os": "catalog:",
-    "@tauri-apps/plugin-process": "catalog:",
-    "@tauri-apps/plugin-shell": "catalog:",
-    "@tauri-apps/plugin-store": "catalog:",
-    "@tauri-apps/plugin-updater": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-dts": "catalog:",
-    "zustand": "catalog:"
-  },
-  "keywords": [
-    "react",
-    "core",
-    "router",
-    "state",
-    "platform",
-    "ai",
-    "sdkwork"
-  ],
-  "author": "SDKWork",
-  "license": "MIT",
-  "private": true
+    "name":  "@sdkwork/react-core",
+    "version":  "0.1.0",
+    "description":  "Core functionality module package for SDKWork React applications - routing, state management, platform abstraction, event bus, and AI services",
+    "type":  "module",
+    "main":  "./src/index.ts",
+    "module":  "./src/index.ts",
+    "types":  "./src/index.ts",
+    "exports":  {
+                    ".":  {
+                              "import":  "./src/index.ts",
+                              "types":  "./src/index.ts"
+                          },
+                    "./router":  {
+                                     "import":  "./dist/router/index.js",
+                                     "types":  "./dist/router/index.d.ts"
+                                 },
+                    "./store":  {
+                                    "import":  "./dist/store/index.js",
+                                    "types":  "./dist/store/index.d.ts"
+                                },
+                    "./eventBus":  {
+                                       "import":  "./dist/eventBus/index.js",
+                                       "types":  "./dist/eventBus/index.d.ts"
+                                   },
+                    "./platform":  {
+                                       "import":  "./dist/platform/index.js",
+                                       "types":  "./dist/platform/index.d.ts"
+                                   },
+                    "./ai":  {
+                                 "import":  "./dist/ai/index.js",
+                                 "types":  "./dist/ai/index.d.ts"
+                             },
+                    "./utils":  {
+                                    "import":  "./dist/utils/index.js",
+                                    "types":  "./dist/utils/index.d.ts"
+                                },
+                    "./sdk":  {
+                                  "import":  "./dist/sdk/index.js",
+                                  "types":  "./dist/sdk/index.d.ts"
+                              }
+                },
+    "files":  [
+                  "dist",
+                  "README.md"
+              ],
+    "scripts":  {
+                    "dev":  "vite build --watch",
+                    "build":  "vite build",
+                    "typecheck":  "tsc --noEmit"
+                },
+    "peerDependencies":  {
+                             "react":  "\u003e=18.0.0",
+                             "react-dom":  "\u003e=18.0.0"
+                         },
+    "peerDependenciesMeta":  {
+                                 "zustand":  {
+                                                 "optional":  true
+                                             },
+                                 "@tauri-apps/api":  {
+                                                         "optional":  true
+                                                     },
+                                 "@tauri-apps/plugin-clipboard-manager":  {
+                                                                              "optional":  true
+                                                                          },
+                                 "@tauri-apps/plugin-dialog":  {
+                                                                   "optional":  true
+                                                               },
+                                 "@tauri-apps/plugin-fs":  {
+                                                               "optional":  true
+                                                           },
+                                 "@tauri-apps/plugin-http":  {
+                                                                 "optional":  true
+                                                             },
+                                 "@tauri-apps/plugin-notification":  {
+                                                                         "optional":  true
+                                                                     },
+                                 "@tauri-apps/plugin-os":  {
+                                                               "optional":  true
+                                                           },
+                                 "@tauri-apps/plugin-process":  {
+                                                                    "optional":  true
+                                                                },
+                                 "@tauri-apps/plugin-shell":  {
+                                                                  "optional":  true
+                                                              },
+                                 "@tauri-apps/plugin-store":  {
+                                                                  "optional":  true
+                                                              },
+                                 "@tauri-apps/plugin-updater":  {
+                                                                    "optional":  true
+                                                                }
+                             },
+    "dependencies":  {
+                         "@google/genai":  "catalog:",
+                         "@sdkwork/app-sdk":  "workspace:*",
+                         "@sdkwork/react-types":  "workspace:*",
+                         "@sdkwork/react-fs":  "workspace:*",
+                         "@sdkwork/react-commons":  "workspace:*"
+                     },
+    "devDependencies":  {
+                            "@tauri-apps/api":  "catalog:",
+                            "@tauri-apps/plugin-clipboard-manager":  "catalog:",
+                            "@tauri-apps/plugin-dialog":  "catalog:",
+                            "@tauri-apps/plugin-fs":  "catalog:",
+                            "@tauri-apps/plugin-http":  "catalog:",
+                            "@tauri-apps/plugin-notification":  "catalog:",
+                            "@tauri-apps/plugin-os":  "catalog:",
+                            "@tauri-apps/plugin-process":  "catalog:",
+                            "@tauri-apps/plugin-shell":  "catalog:",
+                            "@tauri-apps/plugin-store":  "catalog:",
+                            "@tauri-apps/plugin-updater":  "catalog:",
+                            "@types/react":  "catalog:",
+                            "@types/react-dom":  "catalog:",
+                            "@vitejs/plugin-react":  "catalog:",
+                            "react":  "catalog:",
+                            "react-dom":  "catalog:",
+                            "typescript":  "catalog:",
+                            "vite":  "catalog:",
+                            "vite-plugin-dts":  "catalog:",
+                            "zustand":  "catalog:"
+                        },
+    "keywords":  [
+                     "react",
+                     "core",
+                     "router",
+                     "state",
+                     "platform",
+                     "ai",
+                     "sdkwork"
+                 ],
+    "author":  "SDKWork",
+    "license":  "MIT",
+    "private":  true
 }

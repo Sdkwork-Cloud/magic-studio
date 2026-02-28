@@ -1,13 +1,13 @@
 
 import React, { useMemo } from 'react';
 ;
-import { useAssetUrl, MediaResourceType } from '@sdkwork/react-commons';
-import { assetService } from '@sdkwork/react-assets';
+import { useAssetUrl, MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../entities/magicCut.entity';
 import { PlayerController } from '../../controllers/PlayerController';
 import { Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle, Lock } from 'lucide-react';
 import { InteractionState } from '../../store/types';
 import { ClipFilmstrip } from './visuals/ClipFilmstrip';
+import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
 ;
 
 interface MagicCutClipProps {
@@ -15,6 +15,7 @@ interface MagicCutClipProps {
     resourceName?: string;
     resourceType?: MediaResourceType;
     resourceUrl?: string;
+    resourceSource?: string | AnyMediaResource;
     resourceMetadata?: any; 
     pixelsPerSecond: number;
     isSelected: boolean;
@@ -24,7 +25,8 @@ interface MagicCutClipProps {
     setInteraction: (interaction: InteractionState | ((prev: InteractionState) => InteractionState)) => void;
     playerController: PlayerController;
     isGhost?: boolean;
-    onDragStart?: (e: React.MouseEvent) => void; 
+    onDragStart?: (e: React.MouseEvent) => void;
+    onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 const HEADER_HEIGHT = 20;
@@ -34,6 +36,7 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
     resourceName,
     resourceType,
     resourceUrl,
+    resourceSource,
     resourceMetadata,
     pixelsPerSecond,
     isSelected,
@@ -42,7 +45,8 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
     isLocked,
     setInteraction,
     isGhost,
-    onDragStart
+    onDragStart,
+    onContextMenu
 }) => {
     const left = clip.start * pixelsPerSecond;
     const width = clip.duration * pixelsPerSecond;
@@ -100,14 +104,8 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
         return { bg, border, icon, headerBg, headerText };
     }, [resourceType]);
 
-    const { url: resolvedUrl } = useAssetUrl(resourceUrl || null, {
-        resolver: async (source) => {
-            if (!source) return '';
-            if (typeof source === 'string') {
-                return assetService.resolveAssetUrl({ path: source, url: source, id: source });
-            }
-            return assetService.resolveAssetUrl(source as any);
-        }
+    const { url: resolvedUrl } = useAssetUrl(resourceSource || resourceUrl || null, {
+        resolver: resolveAssetUrlByAssetIdFirst
     });
 
     const filmstripSource = resolvedUrl || '';
@@ -175,6 +173,7 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
                 top: '1px'
             }}
             onMouseDown={handleMouseDown}
+            onContextMenu={onContextMenu}
         >
             {showHeader && (
                 <div 
@@ -199,6 +198,7 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
 
                 {hasVisuals && !isTiny && contentHeight > 8 && (
                     <ClipFilmstrip 
+                        resourceId={clip.resource.id}
                         resourceUrl={filmstripSource}
                         resourceType={resourceType}
                         height={contentHeight}
@@ -247,4 +247,3 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
         </div>
     );
 });
-

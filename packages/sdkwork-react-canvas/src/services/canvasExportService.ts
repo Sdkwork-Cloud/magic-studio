@@ -1,6 +1,6 @@
 
 ;
-import { CanvasBoard, CanvasExportMode } from '../entities/canvas.entity';
+import { CanvasBoard, CanvasExportMode } from '../entities';
 import { generateUUID, MediaResourceType, pathUtils } from '@sdkwork/react-commons';
 import { thumbnailGenerator } from '@sdkwork/react-core';
 import { canvasService } from './canvasService';

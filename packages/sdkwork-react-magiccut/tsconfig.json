@@ -10,8 +10,8 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "declaration": true,
     "declarationMap": true,
@@ -28,7 +28,8 @@
       "@sdkwork/react-music": ["../sdkwork-react-music/src/index.ts"],
       "@sdkwork/react-fs": ["../sdkwork-react-fs/src/index.ts"],
       "@sdkwork/react-voicespeaker": ["../sdkwork-react-voicespeaker/src/index.ts"],
-      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"]
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/react-settings": ["../sdkwork-react-settings/src/index.ts"]
     }
   },
   "include": ["./src/**/*"],

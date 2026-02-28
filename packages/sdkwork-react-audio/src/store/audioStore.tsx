@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { AudioTask, AudioGenerationParams } from '../entities/audio.entity';
+import { AudioTask, AudioGenerationParams } from '../entities';
 import { audioHistoryService } from '../services/audioHistoryService';
+import { audioService } from '../services/audioService';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 
 interface AudioStoreContextType {
     history: AudioTask[];
@@ -21,6 +23,38 @@ const DEFAULT_CONFIG: AudioGenerationParams = {
     model: 'gemini-2.5-flash-tts',
     voice: 'Kore',
     duration: 10,
+};
+
+const resolveAudioScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+    return undefined;
 };
 
 export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -48,15 +82,36 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         
         setIsGenerating(true);
         try {
+            const generated = await audioService.generateAudio(config);
+            const candidateUrl =
+                generated.results?.[0]?.url ||
+                generated.url ||
+                'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+            const inlineData = await tryExtractInlineData(candidateUrl);
+            const persisted = await assetBusinessFacade.importAudioStudioAsset({
+                scope: resolveAudioScope(),
+                type: 'audio',
+                name: `audio_gen_${Date.now()}.wav`,
+                data: inlineData,
+                remoteUrl: inlineData ? undefined : candidateUrl,
+                metadata: {
+                    origin: 'ai',
+                    source: 'audio-studio-generate',
+                    prompt: config.prompt,
+                    duration: config.duration
+                }
+            });
+
             const newTask: AudioTask = {
                 id: crypto.randomUUID(),
+                uuid: crypto.randomUUID(),
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
                 status: 'completed',
                 prompt: config.prompt,
                 config: config,
                 results: [{
-                    url: 'mock-audio.wav',
+                    url: persisted.primaryLocator.uri,
                     duration: config.duration || 10
                 }]
             };

@@ -1,6 +1,6 @@
 import { LocalStorageService } from '@sdkwork/react-core';
-import { VoiceTask } from '../entities/voice.entity';
-import { generateUUID } from '@sdkwork/react-commons';
+import { VoiceTask } from '../entities';
+import { ServiceResult } from '@sdkwork/react-commons';
 
 class VoiceHistoryService extends LocalStorageService<VoiceTask> {
     constructor() {
@@ -17,7 +17,7 @@ class VoiceHistoryService extends LocalStorageService<VoiceTask> {
         }
     }
 
-    async clear(): Promise<void> {
+    async clear(): Promise<ServiceResult<void>> {
         // Clear all voice history
         const all = await this.findAll({ page: 0, size: 1000 });
         if (all.success && all.data) {
@@ -25,6 +25,7 @@ class VoiceHistoryService extends LocalStorageService<VoiceTask> {
                 await this.deleteById(task.id);
             }
         }
+        return { success: true, data: undefined, timestamp: new Date().toISOString() };
     }
 }
 

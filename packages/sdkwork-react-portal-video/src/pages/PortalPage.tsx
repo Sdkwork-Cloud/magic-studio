@@ -1,46 +1,93 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic, Layers, ArrowRightLeft, Grid3x3 } from 'lucide-react';
+import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic } from 'lucide-react';
 import { useFilmStore, FilmStoreProvider } from 'sdkwork-react-film';
 import { useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
 import { FILM_STYLES, GEN_MODES } from '../constants';
-import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector, ChooseAssetModal, assetService } from 'sdkwork-react-assets';
+import {
+    CreationChatInput,
+    InputFooterButton,
+    StyleSelector,
+    ChooseAssetModal,
+    clearPortalLaunchSession,
+    savePortalLaunchSession
+} from 'sdkwork-react-assets';
+import type { PortalTab } from 'sdkwork-react-assets';
 import { PortalSidebar } from '../components/PortalSidebar';
 import { PortalHeader } from '../components/PortalHeader';
 import { ToolsGrid } from '../components/ToolsGrid';
 import { CommunityGallery } from '../components/CommunityGallery';
 import { StickyHeroBar } from '../components/StickyHeroBar';
-import { GalleryCard, GalleryItem, generateUUID, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent } from 'sdkwork-react-commons';
+import { GalleryCard, GalleryItem, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from 'sdkwork-react-commons';
 import { GenerationPreview } from 'sdkwork-react-image';
+import {
+    importPortalAttachmentFromLocalFile,
+    resolvePortalAttachmentFromAsset,
+    type PortalAttachment
+} from '../utils/portalAttachmentImport';
 
 const MOCK_SHORTS: GalleryItem[] = [
-    { 
-        id: '1', title: '全民AI春晚', type: 'short', url: 'https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u1', name: 'CCTV_AI', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cctv' }, 
-        stats: { likes: 1200, views: '10k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
-        badges: [{ text: '马年焕新', color: 'bg-red-600' }]
+    {
+        id: '1',
+        title: 'AI Spring Gala Highlights',
+        type: 'short',
+        url: 'https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=800&auto=format&fit=crop',
+        aspectRatio: '16:10',
+        author: { id: 'u1', name: 'CCTV_AI', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cctv' },
+        stats: { likes: 1200, views: 10000 },
+        prompt: '',
+        model: '',
+        createdAt: Date.now().toString(),
+        badges: [{ text: 'Lunar New Year', color: 'bg-red-600' }]
     },
-    { 
-        id: '2', title: '《今年在家待几天》', type: 'short', url: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u2', name: 'Director_Li', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li' }, 
-        stats: { likes: 856, views: '5k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
-        badges: [{ text: '春节温情', color: 'bg-orange-500' }]
-    },
+    {
+        id: '2',
+        title: 'Staying Home This Winter',
+        type: 'short',
+        url: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop',
+        aspectRatio: '16:10',
+        author: { id: 'u2', name: 'Director_Li', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li' },
+        stats: { likes: 856, views: 5000 },
+        prompt: '',
+        model: '',
+        createdAt: Date.now().toString(),
+        badges: [{ text: 'Warm Holiday Story', color: 'bg-orange-500' }]
+    }
 ];
 
 const ACTIVE_USERS = [
-    { name: '风魔手', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=feng' },
-    { name: '小猫教英语', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cat_eng' },
-    { name: '三生三世的羁绊', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=san' },
-    { name: '小猫游九寨沟', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jiu' },
+    { name: 'StoryCrafter', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=feng' },
+    { name: 'CatTeacher', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cat_eng' },
+    { name: 'MythPainter', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=san' },
+    { name: 'TravelClipper', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jiu' }
 ];
 
-// 创建独立的 Footer Controls 组件，避免状态共享问题
+type PortalAspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
+type PortalResolution = '2k' | '4k';
+
+interface EditorLike {
+    state: {
+        selection: {
+            from: number;
+            to: number;
+            empty: boolean;
+        };
+        doc: {
+            textBetween: (from: number, to: number) => string;
+        };
+    };
+    chain: () => {
+        focus: () => {
+            insertContent: (content: string) => {
+                setTextSelection: (position: number) => {
+                    run: () => void;
+                };
+                run: () => void;
+            };
+        };
+    };
+}
+
 interface FooterControlsProps {
     activeTab: PortalTab;
     activeModel: string;
@@ -49,18 +96,16 @@ interface FooterControlsProps {
     setActiveStyle: (style: string) => void;
     genMode: string;
     setGenMode: (mode: string) => void;
-    aspectRatio: any;
-    setAspectRatio: (ratio: any) => void;
-    resolution: any;
-    setResolution: (res: any) => void;
+    aspectRatio: PortalAspectRatio;
+    setAspectRatio: (ratio: PortalAspectRatio) => void;
+    resolution: PortalResolution;
+    setResolution: (res: PortalResolution) => void;
     duration: string;
     setDuration: (duration: string) => void;
     currentProviders: ModelProvider[];
     onInsertQuote: () => void;
-    // 独立的状态命名空间
     menuPrefix: string;
 }
-
 const FooterControls: React.FC<FooterControlsProps> = ({
     activeTab,
     activeModel,
@@ -89,13 +134,13 @@ const FooterControls: React.FC<FooterControlsProps> = ({
         setActiveMenu(prev => prev === menu ? null : menu);
     };
 
-    const tabs = [
-        { id: 'short_drama', label: 'AI 短剧', icon: Clapperboard, color: 'text-orange-500' },
-        { id: 'video', label: 'AI 视频', icon: Video, color: 'text-pink-400' },
-        { id: 'image', label: 'AI 图片', icon: ImageIcon, color: 'text-blue-400' },
-        { id: 'human', label: '角色', icon: Smile, color: 'text-green-400' },
-        { id: 'music', label: 'AI 音乐', icon: Music, color: 'text-indigo-400' },
-        { id: 'speech', label: 'AI 配音', icon: Mic, color: 'text-teal-400' },
+        const tabs = [
+        { id: 'short_drama', label: 'AI Drama', icon: Clapperboard, color: 'text-orange-500' },
+        { id: 'video', label: 'AI Video', icon: Video, color: 'text-pink-400' },
+        { id: 'image', label: 'AI Image', icon: ImageIcon, color: 'text-blue-400' },
+        { id: 'human', label: 'Character', icon: Smile, color: 'text-green-400' },
+        { id: 'music', label: 'AI Music', icon: Music, color: 'text-indigo-400' },
+        { id: 'speech', label: 'AI Voice', icon: Mic, color: 'text-teal-400' }
     ];
 
     const currentMode = tabs.find(t => t.id === activeTab) || tabs[0];
@@ -129,7 +174,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                          <button 
                              key={tab.id} 
                              onClick={() => { 
-                                 // 使用全局事件来切换 tab，避免 prop drilling
+                                 // Use a window event to avoid prop drilling for tab switch.
                                  window.dispatchEvent(new CustomEvent('portal-tab-change', { detail: tab.id }));
                                  setActiveMenu(null); 
                              }}
@@ -219,7 +264,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                     onChange={setActiveStyle}
                     options={FILM_STYLES}
                     className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
-                    label="风格"
+                    label="Style"
                     disabled={false}
                     isOpen={activeMenu === `${menuPrefix}-style`}
                     onToggle={(open) => toggleMenu(open ? `${menuPrefix}-style` : '')}
@@ -287,27 +332,26 @@ interface PortalContentInnerProps {
 
 const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => {
     const { createProject, createProjectFromInput } = useFilmStore();
-    const { t } = useTranslation();
-    
+        
     const [activeTab, setActiveTab] = useState<PortalTab>('short_drama');
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     
-    const [aspectRatio, setAspectRatio] = useState<any>('16:9');
-    const [resolution, setResolution] = useState<any>('2k');
+    const [aspectRatio, setAspectRatio] = useState<PortalAspectRatio>('16:9');
+    const [resolution, setResolution] = useState<PortalResolution>('2k');
     const [duration, setDuration] = useState('5s');
     const [activeStyle, setActiveStyle] = useState('realistic');
     const [activeModel, setActiveModel] = useState<string>('');
     const [genMode, setGenMode] = useState<string>('text'); 
     
-    const [attachments, setAttachments] = useState<InputAttachment[]>([]);
+    const [attachments, setAttachments] = useState<PortalAttachment[]>([]);
     
     const [showAssetModal, setShowAssetModal] = useState(false);
     
     const [currentProviders, setCurrentProviders] = useState<ModelProvider[]>([]);
 
-    const editorRef = useRef<any>(null); 
-    const expandedEditorRef = useRef<any>(null); 
+    const editorRef = useRef<EditorLike | null>(null); 
+    const expandedEditorRef = useRef<EditorLike | null>(null); 
     
     const [isHeroVisible, setIsHeroVisible] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -315,13 +359,16 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     
     const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
-    // 监听 tab 切换事件
+    // Listen for tab switch events from footer controls.
     useEffect(() => {
-        const handleTabChange = (e: CustomEvent) => {
-            setActiveTab(e.detail as PortalTab);
+        const handleTabChange = (event: Event) => {
+            const detail = (event as CustomEvent<PortalTab>).detail;
+            if (detail) {
+                setActiveTab(detail);
+            }
         };
-        window.addEventListener('portal-tab-change', handleTabChange as EventListener);
-        return () => window.removeEventListener('portal-tab-change', handleTabChange as EventListener);
+        window.addEventListener('portal-tab-change', handleTabChange);
+        return () => window.removeEventListener('portal-tab-change', handleTabChange);
     }, []);
 
     const getGenerationType = (tab: PortalTab): GenerationType => {
@@ -343,12 +390,12 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
             const result = await modelInfoService.getModelsByType(type);
             
             if (result.success && result.data) {
-                const mappedProviders: ModelProvider[] = result.data.channels.map((ch, idx) => {
+                const mappedProviders: ModelProvider[] = result.data.channels.map((ch) => {
                     const IconComp = getIconComponent(ch.icon || 'Box');
                     return {
                         id: ch.name.toLowerCase().replace(/\s+/g, '-'),
                         name: ch.name,
-                        icon: <IconComp size={14} />,
+                        icon: IconComp ? <IconComp size={14} /> : null,
                         color: ch.color,
                         models: ch.models.map(m => ({
                             id: m.model,
@@ -395,14 +442,46 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
         
         setIsGenerating(true);
         setIsExpanded(false);
+
+        const toOptionalString = (value: unknown): string | undefined => {
+            if (typeof value === 'string' && value.trim().length > 0) {
+                return value;
+            }
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                return String(value);
+            }
+            return undefined;
+        };
+
+        const persistPortalLaunchContext = (target: PortalTab) => {
+            savePortalLaunchSession({
+                target,
+                prompt,
+                genMode,
+                model: activeModel,
+                styleId: activeStyle,
+                aspectRatio: toOptionalString(aspectRatio),
+                resolution: toOptionalString(resolution),
+                duration: toOptionalString(duration),
+                attachments: attachments.map((attachment) => ({
+                    id: attachment.id,
+                    name: attachment.name,
+                    type: attachment.type,
+                    assetId: attachment.assetId,
+                    locator: attachment.url,
+                    content: attachment.type === 'script' ? attachment.content : undefined
+                }))
+            });
+        };
         
         try {
             if (activeTab === 'short_drama') {
+                 clearPortalLaunchSession();
                  const scriptAttachment = attachments.find(a => a.type === 'script');
                  
-                 if (scriptAttachment && scriptAttachment.url) {
-                      const res = await fetch(scriptAttachment.url);
-                      const text = await res.text();
+                 if (scriptAttachment && (scriptAttachment.content || scriptAttachment.url)) {
+                      const text = scriptAttachment.content
+                          || (scriptAttachment.url ? await (await fetch(scriptAttachment.url)).text() : '');
                       const name = prompt.slice(0, 30) || scriptAttachment.name.replace(/\.[^/.]+$/, "") || "New Short Drama";
                       await createProjectFromInput(name, text);
                  } else {
@@ -411,14 +490,19 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                  }
                  navigate(ROUTES.FILM_EDITOR);
             } else if (activeTab === 'video') {
+                 persistPortalLaunchContext('video');
                  navigate(ROUTES.VIDEO); 
             } else if (activeTab === 'image') {
+                 persistPortalLaunchContext('image');
                  navigate(ROUTES.IMAGE);
             } else if (activeTab === 'speech') {
+                 persistPortalLaunchContext('speech');
                  navigate(ROUTES.AUDIO);
             } else if (activeTab === 'human') {
+                 persistPortalLaunchContext('human');
                  navigate(ROUTES.CHARACTER);
             } else if (activeTab === 'music') {
+                 persistPortalLaunchContext('music');
                  navigate(ROUTES.MUSIC);
             } else {
                  setTimeout(() => setIsGenerating(false), 2000);
@@ -441,32 +525,16 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                 const files = await uploadHelper.pickFiles(false, accept);
                 if (files.length > 0) {
                     const file = files[0];
-                    let type: InputAttachment['type'] = 'file';
-                    
-                    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+                    const importedAttachment = await importPortalAttachmentFromLocalFile({
+                        name: file.name,
+                        data: new Uint8Array(file.data)
+                    }, activeTab);
 
-                    if (['jpg', 'png', 'jpeg', 'webp', 'svg', 'bmp'].includes(ext)) {
-                        type = 'image';
-                    } else if (['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v'].includes(ext)) {
-                        type = 'video';
-                    } else if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'].includes(ext)) {
-                        type = 'audio';
-                    } else if (['txt', 'md', 'doc', 'docx', 'pdf', 'rtf', 'fountain'].includes(ext)) {
-                        type = 'script';
-                    }
-                    
-                    let url = URL.createObjectURL(new Blob([new Uint8Array(file.data)]));
-                    
-                    if (type === 'script' && activeTab === 'short_drama') {
+                    if (importedAttachment.type === 'script' && activeTab === 'short_drama') {
                         if (!prompt) setPrompt(`Based on script: ${file.name}...`);
                     }
 
-                    setAttachments([...attachments, {
-                        id: generateUUID(),
-                        name: file.name,
-                        type,
-                        url
-                    }]);
+                    setAttachments((prev) => [...prev, importedAttachment]);
                 }
             } catch (e) { console.error(e); }
         } else {
@@ -475,23 +543,13 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     };
 
     const handleAssetsSelected = async (assets: Asset[]) => {
-        const newAttachments: InputAttachment[] = [];
+        const newAttachments: PortalAttachment[] = [];
         
         for (const a of assets) {
-            let type: InputAttachment['type'] = 'file';
-            if (a.type === 'image') type = 'image';
-            if (a.type === 'video') type = 'video';
-            if (a.type === 'audio') type = 'audio';
-            if (a.type === 'text') type = 'script';
-            
-            const url = await assetService.resolveAssetUrl(a);
-            
-            newAttachments.push({
-                id: a.id,
-                name: a.name,
-                type,
-                url
-            });
+            const attachment = await resolvePortalAttachmentFromAsset(a);
+            if (attachment) {
+                newAttachments.push(attachment);
+            }
         }
         
         setAttachments(prev => [...prev, ...newAttachments]);
@@ -552,21 +610,21 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     };
 
     const getPlaceholder = () => {
-        if (activeTab === 'short_drama') return "输入故事梗概，或上传剧本文件 (TXT/PDF)...";
+        if (activeTab === 'short_drama') return 'Describe your story idea, or upload a script (TXT/PDF)...';
         if (activeTab === 'video') {
-            if (genMode === 'image_start_end') return "上传图片作为起始帧，描述运动...";
-            return "描述画面内容、运动方向...";
+            if (genMode === 'image_start_end') return 'Upload frames and describe camera movement...';
+            return 'Describe scene composition, movement, and pacing...';
         }
-        if (activeTab === 'image') return "描述画面细节、风格、构图...";
-        if (activeTab === 'music') return "描述音乐风格、情绪...";
-        if (activeTab === 'speech') return "输入要转换的文本...";
-        return "输入提示词...";
+        if (activeTab === 'image') return 'Describe details, style, lighting, and composition...';
+        if (activeTab === 'music') return 'Describe music style, mood, and instruments...';
+        if (activeTab === 'speech') return 'Enter the text you want to convert to speech...';
+        return 'Enter your prompt...';
     };
 
-    // 关键修复：当全屏编辑器展开时，StickyHeroBar 应该隐藏
+    // Keep sticky bar hidden while the expanded editor is open.
     const shouldShowStickyBar = !isHeroVisible && !isExpanded;
 
-    // Hero 区域的 Footer Controls
+    // Footer controls for hero input.
     const heroFooterControls = (
         <FooterControls
             activeTab={activeTab}
@@ -588,7 +646,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
         />
     );
 
-    // 全屏编辑器的 Footer Controls
+    // Footer controls for expanded editor.
     const expandedFooterControls = (
         <FooterControls
             activeTab={activeTab}
@@ -621,7 +679,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                         
                         <div className="w-full mt-20 mb-8 text-center space-y-8">
                             <h1 className="text-5xl font-bold text-white tracking-tight drop-shadow-xl opacity-90 flex items-center justify-center gap-3">
-                                有什么新的故事灵感？ 
+                                What story do you want to create today?
                                 <Sparkles size={36} className="text-yellow-400 fill-yellow-400/20 animate-pulse" />
                             </h1>
                             
@@ -734,6 +792,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                         onClose={() => setShowAssetModal(false)}
                         onConfirm={handleAssetsSelected}
                         accepts={activeTab === 'image' ? ['image'] : activeTab === 'video' ? ['video', 'image'] : undefined}
+                        domain="portal-video"
                         title="Select Asset"
                         multiple
                     />

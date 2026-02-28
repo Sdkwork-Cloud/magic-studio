@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
     Heart, MessageCircle, Share2, Eye, TrendingUp, Clock,
     Award, Filter, Search, Plus, Image as ImageIcon,
     Video as VideoIcon, Music, Mic
 } from 'lucide-react';
-import { GalleryCard } from '@sdkwork/react-commons';
 import { PortalHeader } from '../components/PortalHeader';
 
+interface CommunityGalleryItem {
+    id: string;
+    title: string;
+    type: 'image' | 'video' | 'music' | 'speech';
+    url: string;
+    aspectRatio: '16:9' | '1:1';
+    author: { id: string; name: string; avatar: string };
+    stats: { likes: number; views: string; comments: number };
+    prompt: string;
+    model: string;
+    createdAt: number;
+    badges: Array<{ text: string; color: string }>;
+}
+
+interface CategoryTab {
+    id: 'all' | 'trending' | 'latest' | 'image' | 'video' | 'music' | 'speech';
+    label: string;
+    icon: LucideIcon;
+}
+
 // 模拟社区数据 - 使用简化的数据结构以适应 GalleryCard
-const COMMUNITY_GALLERY: any[] = [
+const COMMUNITY_GALLERY: CommunityGalleryItem[] = [
     {
         id: 'c1',
         title: 'AI 生成的未来城市',
@@ -63,7 +83,7 @@ const COMMUNITY_GALLERY: any[] = [
     },
 ];
 
-const CATEGORY_TABS = [
+const CATEGORY_TABS: CategoryTab[] = [
     { id: 'all', label: '全部', icon: Filter },
     { id: 'trending', label: '热门', icon: TrendingUp },
     { id: 'latest', label: '最新', icon: Clock },
@@ -76,19 +96,6 @@ const CATEGORY_TABS = [
 const CommunityPage: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-
-    const handleLike = (itemId: string) => {
-        setLikedItems(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(itemId)) {
-                newSet.delete(itemId);
-            } else {
-                newSet.add(itemId);
-            }
-            return newSet;
-        });
-    };
 
     const filteredGallery = COMMUNITY_GALLERY.filter(item => {
         const matchesCategory = activeCategory === 'all' || 

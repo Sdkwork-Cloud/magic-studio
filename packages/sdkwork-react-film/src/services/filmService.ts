@@ -3,15 +3,100 @@ import { GoogleGenAI } from "@google/genai";
 import type {
   FilmProject,
   FilmCharacter,
+  FilmCharacterType,
   FilmProp,
   FilmLocation,
   FilmScene,
   FilmShot,
-  FilmAnalysisResult
+  FilmAssetMediaResource
 } from '@sdkwork/react-commons';
-import { MediaResourceType, AssetMediaResource, MediaScene } from '@sdkwork/react-commons';
+import { MediaScene } from '@sdkwork/react-commons';
 import { filmProjectService } from './filmProjectService';
 import { generateUUID } from '@sdkwork/react-commons';
+
+export interface FilmAnalysisResult {
+  characters: Partial<FilmCharacter>[];
+  locations: Partial<FilmLocation>[];
+  props: Partial<FilmProp>[];
+  scenes: Partial<FilmScene>[];
+  shots: Partial<FilmShot>[];
+}
+
+interface AnalyzeScriptCharacter {
+  name?: string;
+  characterType?: string;
+  description?: string;
+  age?: string;
+  gender?: string;
+}
+
+interface AnalyzeScriptLocation {
+  name?: string;
+  indoor?: boolean;
+  timeOfDay?: string;
+  visualDescription?: string;
+}
+
+interface AnalyzeScriptProp {
+  name?: string;
+  description?: string;
+}
+
+interface AnalyzeScriptScene {
+  index?: number;
+  locationName?: string;
+  summary?: string;
+  moodTags?: string[];
+  characterNames?: string[];
+  visualPrompt?: string;
+}
+
+interface AnalyzeScriptResponse {
+  characters?: AnalyzeScriptCharacter[];
+  locations?: AnalyzeScriptLocation[];
+  props?: AnalyzeScriptProp[];
+  scenes?: AnalyzeScriptScene[];
+}
+
+interface ExtractCharactersResponse {
+  characters?: Array<{
+    name?: string;
+    role?: string;
+    gender?: string;
+    age?: string;
+    description?: string;
+    traits?: string[];
+  }>;
+}
+
+interface ExtractPropsResponse {
+  props?: Array<{
+    name?: string;
+    role?: string;
+    description?: string;
+  }>;
+}
+
+const FILM_CHARACTER_TYPES: readonly FilmCharacterType[] = [
+  'HUMAN',
+  'PET',
+  'ANIMAL',
+  'ROBOT',
+  'OTHER'
+];
+
+const normalizeFilmCharacterType = (value: string | undefined): FilmCharacterType => {
+  const normalized = typeof value === 'string' ? value.toUpperCase() : '';
+  return FILM_CHARACTER_TYPES.find((item) => item === normalized) || 'HUMAN';
+};
+
+const SUPPORTED_IMAGE_ASPECT_RATIOS = ['1:1', '3:4', '4:3', '9:16', '16:9'] as const;
+type SupportedImageAspectRatio = (typeof SUPPORTED_IMAGE_ASPECT_RATIOS)[number];
+
+const normalizeImageAspectRatio = (aspectRatio: string): SupportedImageAspectRatio => {
+  const normalized = SUPPORTED_IMAGE_ASPECT_RATIOS.find((item) => item === aspectRatio);
+  return normalized || '16:9';
+};
 
 const API_KEY = process.env.API_KEY || '';
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
@@ -68,20 +153,16 @@ export const filmService = {
       shots: [],
       media: [],
       settings: {
-        language: 'zh-CN',
-        defaultLanguage: 'zh-CN',
-        imageModel: 'default',
-        videoModel: 'default',
+        id: generateUUID(),
+        uuid: generateUUID(),
+        theme: 'default',
+        style: 'cinematic',
         aspect: '16:9',
         resolution: '1080P',
         fps: 24,
         quality: 'standard',
-        generation: {
-          autoImage: false,
-          autoVideo: false,
-          parallel: true,
-          maxConcurrent: 3,
-        },
+        createdAt: now,
+        updatedAt: now
       },
       createdAt: now,
       updatedAt: now,
@@ -106,11 +187,11 @@ export const filmService = {
       };
   },
 
-  getCharacterAssetByScene: (character: FilmCharacter, scene: MediaScene): AssetMediaResource | undefined => {
+  getCharacterAssetByScene: (character: FilmCharacter, scene: MediaScene): FilmAssetMediaResource | undefined => {
       return character.refAssets?.find(a => a.scene === scene);
   },
 
-  getCharacterAvatar: (character: FilmCharacter): AssetMediaResource | undefined => {
+  getCharacterAvatar: (character: FilmCharacter): FilmAssetMediaResource | undefined => {
       return filmService.getCharacterAssetByScene(character, MediaScene.AVATAR);
   },
 
@@ -123,7 +204,6 @@ export const filmService = {
           name: 'New Prop',
           description: '',
           tags: [],
-          characterUuids: [],
           refAssets: [],
           createdAt: now,
           updatedAt: now
@@ -153,20 +233,19 @@ export const filmService = {
           id: generateUUID(),
           uuid: generateUUID(),
           type: 'FILM_SHOT',
+          shotNumber: index + 1,
+          index,
           sceneUuid,
           locationUuid,
-          index,
           duration: 3,
           description: '',
           dialogue: { items: [] },
-          characterUuids: [],
-          propUuids: [],
+          characterIds: [],
           generation: {
-              product: 'TEXT_TO_VIDEO',
-              modelId: 'default',
-              prompt: { base: '' },
-              assets: [],
-              status: 'PENDING'
+              status: 'PENDING',
+              prompt: '',
+              base: '',
+              assets: []
           },
           assets: [],
           createdAt: now,
@@ -231,62 +310,69 @@ export const filmService = {
         config: { responseMimeType: "application/json" }
     });
 
-    const data = parseAIResponse<any>(response.text || '{}');
+    const data = parseAIResponse<AnalyzeScriptResponse>(response.text || '{}');
     if (!data) throw new Error("Failed to parse AI response");
 
     const now = Date.now();
 
-    const characters: Partial<FilmCharacter>[] = (data.characters || []).map((c: any) => ({
+    const characters: Partial<FilmCharacter>[] = (data.characters || []).map((c) => ({
         id: generateUUID(),
         uuid: generateUUID(),
         type: 'FILM_CHARACTER',
-        name: c.name,
-        characterType: c.characterType || 'HUMAN',
+        name: c.name || 'Unknown Character',
+        characterType: normalizeFilmCharacterType(c.characterType),
         status: 'ACTIVE',
-        description: c.description,
+        description: c.description || '',
         appearance: {
             ageGroup: c.age,
             gender: c.gender
         },
         personality: { traits: [] },
+        refAssets: [],
         createdAt: now, updatedAt: now
     }));
 
-    const locations: Partial<FilmLocation>[] = (data.locations || []).map((l: any) => ({
+    const locations: Partial<FilmLocation>[] = (data.locations || []).map((l) => ({
         id: generateUUID(),
         uuid: generateUUID(),
         type: 'FILM_LOCATION',
-        name: l.name,
-        indoor: l.indoor,
+        name: l.name || 'Unknown Location',
+        indoor: l.indoor ?? true,
         timeOfDay: l.timeOfDay || 'DAY',
         visualDescription: l.visualDescription,
         atmosphereTags: [],
         createdAt: now, updatedAt: now
     }));
 
-    const props: Partial<FilmProp>[] = (data.props || []).map((p: any) => ({
+    const props: Partial<FilmProp>[] = (data.props || []).map((p) => ({
         id: generateUUID(),
         uuid: generateUUID(),
         type: 'FILM_PROP',
-        name: p.name,
-        description: p.description,
+        name: p.name || 'Unknown Prop',
+        description: p.description || '',
         tags: [],
-        characterUuids: [],
-        assets: [],
         createdAt: now, updatedAt: now
     }));
 
-    const scenes: Partial<FilmScene>[] = (data.scenes || []).map((s: any) => {
+    const scenes: Partial<FilmScene>[] = (data.scenes || []).map((s) => {
         const loc = locations.find(l => l.name === s.locationName) || locations[0];
-        const chars = characters.filter(c => s.characterNames?.includes(c.name)).map(c => c.uuid!);
+        const chars = characters
+            .filter((c) => {
+                if (!c.name || !s.characterNames) {
+                    return false;
+                }
+                return s.characterNames.includes(c.name);
+            })
+            .map((c) => c.uuid)
+            .filter((uuid): uuid is string => typeof uuid === 'string');
 
         return {
             id: generateUUID(),
             uuid: generateUUID(),
             type: 'FILM_SCENE',
-            index: s.index,
+            index: s.index || 1,
             locationUuid: loc?.uuid,
-            summary: s.summary,
+            summary: s.summary || '',
             moodTags: s.moodTags || [],
             characterUuids: chars,
             propUuids: [],
@@ -332,17 +418,17 @@ export const filmService = {
           config: { responseMimeType: "application/json" }
       });
 
-      const data = parseAIResponse<any>(response.text || '{}');
+      const data = parseAIResponse<ExtractCharactersResponse>(response.text || '{}');
       const now = Date.now();
       
-      return (data.characters || []).map((c: any) => ({
+      return (data?.characters || []).map((c) => ({
           id: generateUUID(),
           uuid: generateUUID(),
           type: 'FILM_CHARACTER',
-          name: c.name,
+          name: c.name || 'Unknown Character',
           characterType: 'HUMAN',
           status: 'ACTIVE',
-          description: c.description,
+          description: c.description || '',
           appearance: {
               gender: c.gender,
               ageGroup: c.age
@@ -350,6 +436,7 @@ export const filmService = {
           personality: {
               traits: c.traits || []
           },
+          refAssets: [],
           createdAt: now, 
           updatedAt: now
       }));
@@ -370,18 +457,16 @@ export const filmService = {
           config: { responseMimeType: "application/json" }
       });
 
-      const data = parseAIResponse<any>(response.text || '{}');
+      const data = parseAIResponse<ExtractPropsResponse>(response.text || '{}');
       const now = Date.now();
       
-      return (data.props || []).map((p: any) => ({
+      return (data?.props || []).map((p) => ({
           id: generateUUID(),
           uuid: generateUUID(),
-          type: 'FILM_STORY_PROP',
-          name: p.name,
-          description: p.description,
+          type: 'FILM_PROP',
+          name: p.name || 'Unknown Prop',
+          description: p.description || '',
           tags: [],
-          characterUuids: [],
-          assets: [],
           createdAt: now, 
           updatedAt: now
       }));
@@ -394,7 +479,7 @@ export const filmService = {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: prompt }] },
-            config: { imageConfig: { aspectRatio: aspectRatio as any } }
+            config: { imageConfig: { aspectRatio: normalizeImageAspectRatio(aspectRatio) } }
         });
         
         for (const part of response.candidates?.[0]?.content?.parts || []) {

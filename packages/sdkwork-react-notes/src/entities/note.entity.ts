@@ -36,9 +36,11 @@ export interface Note extends NoteSummary {
 
 export interface NoteFolder {
   id: string;
+  uuid: string;
   name: string;
   parentId: string | null;
   createdAt: number;
+  updatedAt: number;
 }
 
 // Unified Tree Item for UI Rendering

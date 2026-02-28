@@ -1,10 +1,98 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { FilmProject, FilmShot, FilmCharacter, FilmLocation, FilmProp, FilmScene, FilmViewMode, FilmSettings, MediaScene, MediaResourceType, AssetMediaResource, generateUUID } from '@sdkwork/react-commons';
+import {
+    FilmProject,
+    FilmShot,
+    FilmCharacter,
+    FilmLocation,
+    FilmProp,
+    FilmScene,
+    FilmViewMode,
+    FilmSettings,
+    MediaScene,
+    FilmAssetMediaResource,
+    generateUUID
+} from '@sdkwork/react-commons';
 import { filmService } from '../services/filmService';
 import { filmProjectService } from '../services/filmProjectService';
 import { genAIService } from '@sdkwork/react-core';
-import { assetService } from '@sdkwork/react-assets';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { createFilmAssetMediaResource } from '../utils/filmAssetFactories';
+
+type FilmImportType = 'image' | 'video' | 'audio';
+
+interface FilmPreviewItem {
+    shot: FilmShot;
+    scene: FilmScene;
+    startTime: number;
+    endTime: number;
+    duration: number;
+}
+
+const resolveGenerationPrompt = (
+    shot: FilmShot,
+    fallback: string = 'Cinematic shot'
+): string => {
+    const promptValue = shot.generation?.prompt;
+    if (typeof promptValue === 'string' && promptValue.trim().length > 0) {
+        return promptValue;
+    }
+
+    const generationRecord = shot.generation as Record<string, unknown> | undefined;
+    const nestedPrompt = generationRecord?.prompt;
+    if (nestedPrompt && typeof nestedPrompt === 'object') {
+        const promptBase = (nestedPrompt as Record<string, unknown>).base;
+        if (typeof promptBase === 'string' && promptBase.trim().length > 0) {
+            return promptBase;
+        }
+    }
+
+    const baseValue = generationRecord?.base;
+    if (typeof baseValue === 'string' && baseValue.trim().length > 0) {
+        return baseValue;
+    }
+
+    if (shot.description && shot.description.trim().length > 0) {
+        return shot.description;
+    }
+
+    return fallback;
+};
+
+const createGeneratedShotAsset = ({
+    assetId,
+    type,
+    url,
+    name,
+    scene = MediaScene.REFERENCE
+}: {
+    assetId: string;
+    type: 'image' | 'video' | 'audio';
+    url: string;
+    name: string;
+    scene?: MediaScene;
+}): FilmAssetMediaResource => {
+    return createFilmAssetMediaResource({
+        assetId,
+        type,
+        scene,
+        url,
+        fileName: name
+    });
+};
+
+const appendGeneratedAsset = (
+    shot: FilmShot,
+    asset: FilmAssetMediaResource
+): FilmAssetMediaResource[] => {
+    const existing = shot.generation?.assets || [];
+    const incomingAssetId = typeof asset.assetId === 'string' ? asset.assetId : asset.id;
+    const deduped = existing.filter((item) => {
+        const currentAssetId = typeof item.assetId === 'string' ? item.assetId : item.id;
+        return currentAssetId !== incomingAssetId;
+    });
+    return [...deduped, asset];
+};
 
 interface FilmStoreContextType {
     project: FilmProject;
@@ -67,11 +155,11 @@ interface FilmStoreContextType {
     autoExtractProps: () => Promise<void>;
     
     // Preview Player State
-    previewItems: any[];
+    previewItems: FilmPreviewItem[];
     previewTime: number;
     previewTotalDuration: number;
     isPreviewPlaying: boolean;
-    currentPreviewItem: any | null;
+    currentPreviewItem: FilmPreviewItem | null;
     showSubtitles: boolean;
     isMuted: boolean;
     
@@ -99,6 +187,56 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
     const [showSubtitles, setShowSubtitles] = useState(true);
     const [isMuted, setIsMuted] = useState(false);
+
+    const resolveFilmScope = (): { workspaceId: string; projectId?: string } => {
+        const scope = readWorkspaceScope();
+        return {
+            workspaceId: scope.workspaceId,
+            projectId: project.uuid || scope.projectId
+        };
+    };
+
+    const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+        if (!source) {
+            return undefined;
+        }
+        if (source.startsWith('data:')) {
+            const comma = source.indexOf(',');
+            if (comma < 0) {
+                return undefined;
+            }
+            const base64 = source.slice(comma + 1);
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i += 1) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes;
+        }
+        if (source.startsWith('blob:')) {
+            const response = await fetch(source);
+            return new Uint8Array(await response.arrayBuffer());
+        }
+        return undefined;
+    };
+
+    const importGeneratedAssetToFilmCenter = async (
+        sourceUrl: string,
+        type: FilmImportType,
+        name: string,
+        metadata: Record<string, unknown>
+    ): Promise<string> => {
+        const inlineData = await tryExtractInlineData(sourceUrl);
+        const result = await assetBusinessFacade.importFilmAsset({
+            scope: resolveFilmScope(),
+            type,
+            name,
+            data: inlineData,
+            remoteUrl: inlineData ? undefined : sourceUrl,
+            metadata
+        });
+        return result.asset.assetId;
+    };
 
     // Initial Load
     useEffect(() => {
@@ -246,14 +384,13 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             id: generateUUID(),
             uuid: generateUUID(),
             type: 'FILM_SCENE',
+            sceneNumber: index + 1,
             index: index + 1,
             locationUuid: '',
             summary: 'New Scene',
-            mood: [],
             moodTags: [],
             characterUuids: [],
             propUuids: [],
-            assets: [],
             createdAt: Date.now(),
             updatedAt: Date.now(),
             ...data
@@ -323,36 +460,35 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         });
         
         try {
-            const prompt = shot.generation?.prompt?.base || shot.description || "Cinematic shot";
+            const prompt = resolveGenerationPrompt(shot);
             const url = await filmService.generateImage(prompt, project.settings.aspect);
-            const now = Date.now();
-            const newAsset: AssetMediaResource = {
-                id: generateUUID(),
-                uuid: generateUUID(),
-                type: MediaResourceType.IMAGE,
+            const assetId = await importGeneratedAssetToFilmCenter(
                 url,
-                name: 'Gen Result',
-                scene: MediaScene.REFERENCE,
-                createdAt: now,
-                updatedAt: now
-            } as AssetMediaResource;
+                'image',
+                `film_shot_${shot.index || 0}_image_${Date.now()}.png`,
+                {
+                    origin: 'ai',
+                    source: 'film-shot-image',
+                    shotUuid,
+                    sceneUuid,
+                    prompt
+                }
+            );
+            const newAsset = createGeneratedShotAsset({
+                assetId,
+                type: 'image',
+                url,
+                name: 'Gen Result'
+            });
+            const generationAssets = appendGeneratedAsset(shot, newAsset);
             
             updateShot(sceneUuid, shotUuid, { 
                 generation: { 
                     ...shot.generation, 
                     status: 'SUCCESS',
-                    assets: [...(shot.generation?.assets || []), newAsset]
+                    assets: generationAssets
                 },
-                assets: [{ 
-                    id: generateUUID(), 
-                    uuid: generateUUID(), 
-                    type: MediaResourceType.IMAGE, 
-                    url, 
-                    name: 'Gen Result', 
-                    scene: MediaScene.REFERENCE,
-                    createdAt: now, 
-                    updatedAt: now 
-                } as any]
+                assets: [newAsset]
             });
         } catch (e) {
             updateShot(sceneUuid, shotUuid, { 
@@ -370,25 +506,41 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
          });
 
          try {
-             const prompt = shot.generation?.prompt?.base || shot.description;
+             const prompt = resolveGenerationPrompt(shot, shot.description || 'Cinematic shot');
              const url = await filmService.generateVideo(prompt);
-             const now = Date.now();
+             const assetId = await importGeneratedAssetToFilmCenter(
+                 url,
+                 'video',
+                 `film_shot_${shot.index || 0}_video_${Date.now()}.mp4`,
+                 {
+                     origin: 'ai',
+                     source: 'film-shot-video',
+                     shotUuid,
+                     sceneUuid,
+                     prompt
+                 }
+             );
+             const videoAsset = createGeneratedShotAsset({
+                 assetId,
+                 type: 'video',
+                 url,
+                 name: 'Gen Video'
+             });
+             const generationAssets = appendGeneratedAsset(shot, videoAsset);
              
              updateShot(sceneUuid, shotUuid, { 
-                 generation: { 
-                     ...shot.generation, 
-                     status: 'SUCCESS',
-                     video: { 
-                         id: generateUUID(), 
-                         uuid: generateUUID(), 
-                         type: 'VIDEO' as any, 
-                         url, 
-                         name: 'Gen Video', 
-                         createdAt: now, 
-                         updatedAt: now 
-                     }
-                 }
-             });
+                generation: { 
+                    ...shot.generation, 
+                    status: 'SUCCESS',
+                    video: { 
+                        url,
+                        thumbnailUrl: url,
+                        duration: 5
+                    },
+                    assets: generationAssets
+                },
+                assets: [...(shot.assets || []), videoAsset]
+            });
          } catch (e) {
              updateShot(sceneUuid, shotUuid, { 
                  generation: { ...shot.generation, status: 'FAILED' } 
@@ -402,20 +554,47 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         
         const text = shot.dialogue.items.map(d => d.text).join(' ');
         let voice = 'Kore'; 
+
+        updateShot(sceneUuid, shotUuid, {
+            generation: { ...shot.generation, status: 'GENERATING' }
+        });
         
         try {
              const audioUrl = await genAIService.generateSpeech(text, voice);
-             const asset = await assetService.saveGeneratedAsset(audioUrl, 'audio', { prompt: text }, `shot_${shot.index}_audio.wav`);
-             
-             // Currently FilmShot doesn't strictly have an audio attachment field in the simplified entity,
-             // so we attach it as a resource or update metadata. 
-             // Ideally we add 'audio' field to FilmShot. For now, we put it in metadata or handle it via UI.
-             // Let's assume we update the 'dialogueAudio' field if we had one.
-             // We will mock this update for now as entity extension might be needed.
-             // We can use `resource` field if it was generic, but it's specific. 
-             // Storing as a special reference in `data` or similar.
+             const assetId = await importGeneratedAssetToFilmCenter(
+                 audioUrl,
+                 'audio',
+                 `film_shot_${shot.index || 0}_audio_${Date.now()}.wav`,
+                 {
+                     origin: 'ai',
+                     source: 'film-shot-audio',
+                     shotUuid,
+                     sceneUuid,
+                     prompt: text,
+                     voice
+                 }
+             );
+             const audioAsset = createGeneratedShotAsset({
+                 assetId,
+                 type: 'audio',
+                 url: audioUrl,
+                 name: 'Dialogue Audio'
+             });
+             const generationAssets = appendGeneratedAsset(shot, audioAsset);
+
+             updateShot(sceneUuid, shotUuid, {
+                 generation: {
+                     ...shot.generation,
+                     status: 'SUCCESS',
+                     assets: generationAssets
+                 },
+                 assets: [...(shot.assets || []), audioAsset]
+             });
         } catch (e) {
             console.error("Audio gen failed", e);
+            updateShot(sceneUuid, shotUuid, { 
+                generation: { ...shot.generation, status: 'FAILED' } 
+            });
         }
     };
 
@@ -525,13 +704,13 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     // --- Preview Player Logic ---
-    const previewItems = useMemo(() => {
+    const previewItems = useMemo<FilmPreviewItem[]>(() => {
         if (!project.scenes) return [];
-        let items: any[] = [];
+        const items: FilmPreviewItem[] = [];
         let timeOffset = 0;
         
         project.scenes.forEach(scene => {
-            const sceneShots = project.shots.filter(s => s.sceneUuid === scene.uuid).sort((a,b) => a.index - b.index);
+            const sceneShots = project.shots.filter(s => s.sceneUuid === scene.uuid).sort((a,b) => (a.index || 0) - (b.index || 0));
             sceneShots.forEach(shot => {
                 items.push({
                     shot,
@@ -548,7 +727,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const previewTotalDuration = previewItems.length > 0 ? previewItems[previewItems.length - 1].endTime : 0;
     
-    const currentPreviewItem = useMemo(() => {
+    const currentPreviewItem = useMemo<FilmPreviewItem | null>(() => {
         return previewItems.find(i => previewTime >= i.startTime && previewTime < i.endTime) || null;
     }, [previewTime, previewItems]);
 

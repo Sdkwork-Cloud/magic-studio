@@ -1,4 +1,4 @@
-import { AppNotification, NotificationType } from '../entities/notification.entity';
+import { AppNotification, NotificationType } from '../entities';
 import { notificationService } from '../services/notificationService';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 

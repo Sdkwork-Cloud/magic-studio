@@ -1,13 +1,12 @@
 
-import { AssetType } from '../entities/asset.entity'
-import { ASSET_CATEGORIES } from '../services/assetService'
+import type { AssetType } from '../entities/asset.entity'
 import React from 'react';
 import { useAssetStore } from '../store/assetStore';
+import { ASSET_CENTER_CATEGORIES } from '../asset-center';
 import {
     Image, Video, Music, Mic, LayoutGrid, FileAudio,
     Volume2, Smile, Upload, Sparkles, FolderOpen
 } from 'lucide-react';
-import { useTranslation } from '@sdkwork/react-i18n';
 
 export const AssetSidebar: React.FC = () => {
     const {
@@ -15,7 +14,6 @@ export const AssetSidebar: React.FC = () => {
         filterOrigin, setFilterOrigin,
         allowedTypes
     } = useAssetStore();
-    const { t } = useTranslation(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
     const getIcon = (id: string) => {
         switch (id) {
@@ -73,7 +71,7 @@ export const AssetSidebar: React.FC = () => {
                     icon={<LayoutGrid size={16} />}
                 />
                 
-                {ASSET_CATEGORIES.map(cat => {
+                {ASSET_CENTER_CATEGORIES.map(cat => {
                     // Check if disabled by allowedTypes constraint
                     const isDisabled = allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(cat.id as AssetType);
                     
@@ -96,7 +94,16 @@ export const AssetSidebar: React.FC = () => {
     );
 };
 
-const SidebarItem = ({ id: _id, label, active, onClick, icon, disabled }: any) => ( // eslint-disable-line @typescript-eslint/no-unused-vars
+interface SidebarItemProps {
+    id: string;
+    label: string;
+    active: boolean;
+    onClick: () => void;
+    icon: React.ReactNode;
+    disabled?: boolean;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ id: _id, label, active, onClick, icon, disabled = false }) => ( // eslint-disable-line @typescript-eslint/no-unused-vars
     <button
         onClick={() => !disabled && onClick()}
         disabled={disabled}

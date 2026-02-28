@@ -1,4 +1,4 @@
-import { PlanTier, Subscription } from '../entities/vip.entity';
+import { PlanTier, Subscription } from '../entities';
 
 export const vipService = {
   getPlans: async () => {

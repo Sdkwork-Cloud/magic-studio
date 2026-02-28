@@ -1,4 +1,4 @@
-import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities/magicCut.entity';
+import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { TextureLRUCache } from './TextureLRUCache';
 import { ShaderManager } from './gl/ShaderManager';
@@ -389,6 +389,7 @@ export class WebGLEngine {
         const dummyClip: CutClip = {
             id: clipId,
             uuid: clipId,
+            type: 'CutClip',
             resource: { id: resource.id, uuid: resource.uuid, type: 'MediaResource' },
             track: { id: 'preview', uuid: '', type: 'CutTrack' },
             start: 0,

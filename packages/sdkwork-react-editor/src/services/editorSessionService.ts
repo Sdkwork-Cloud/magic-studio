@@ -1,5 +1,5 @@
 
-import { EditorSession, generateUUID } from '@sdkwork/react-commons';
+import { EditorSession } from '../types';
 import { LocalStorageService } from '@sdkwork/react-core';
 
 const SESSION_KEY = 'open_studio_editor_session_v1';

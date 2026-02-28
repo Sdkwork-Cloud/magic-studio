@@ -1,8 +1,8 @@
-import type { RouteObject } from 'react-router-dom';
+import type { RouteConfig } from '@sdkwork/react-core';
 
 export interface PackageRouteConfig {
     basePath: string;
-    routes: RouteObject[];
+    routes: RouteConfig[];
     guards?: RouteGuard[];
     meta?: Record<string, RouteMeta>;
 }

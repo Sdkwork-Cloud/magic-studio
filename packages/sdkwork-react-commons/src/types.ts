@@ -10,6 +10,7 @@ export type {
   AudioMediaResource,
   MusicMediaResource,
   CharacterMediaResource,
+  AssetAtomicMediaResource,
   AssetMediaResource,
   AnyMediaResource,
   GenerationProduct,

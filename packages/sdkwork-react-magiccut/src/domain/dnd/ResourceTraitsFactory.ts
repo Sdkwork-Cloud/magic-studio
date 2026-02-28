@@ -27,7 +27,7 @@ abstract class BaseResourceTraits implements IResourceTraits {
 class VideoResourceTraits extends BaseResourceTraits {
     getResourceType() { return MediaResourceType.VIDEO; }
     getDefaultDuration(resource: AnyMediaResource): number {
-        return ('duration' in resource) ? resource.duration : 5;
+        return ('duration' in resource && resource.duration) ? resource.duration : 5;
     }
     getPreferredTrackType(): CutTrackType { return 'video'; }
 }
@@ -35,7 +35,7 @@ class VideoResourceTraits extends BaseResourceTraits {
 class AudioResourceTraits extends BaseResourceTraits {
     getResourceType() { return MediaResourceType.AUDIO; }
     getDefaultDuration(resource: AnyMediaResource): number {
-        return ('duration' in resource) ? resource.duration : 10;
+        return ('duration' in resource && resource.duration) ? resource.duration : 10;
     }
     getPreferredTrackType(): CutTrackType { return 'audio'; }
 }

@@ -1,7 +1,6 @@
 
-import { platform } from '@sdkwork/react-core';
 import { ThemeMode, AppearanceConfig } from './types';
-import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS } from '@sdkwork/react-settings';
+import { DEFAULT_SETTINGS } from '@sdkwork/react-settings';
 import { settingsService } from '@sdkwork/react-settings';
 
 class ThemeManager {
@@ -77,7 +76,7 @@ class ThemeManager {
     return () => this.listeners.delete(listener);
   }
 
-  private handleSystemChange = (e: MediaQueryListEvent) => {
+  private handleSystemChange = (_e: MediaQueryListEvent) => {
     if (this._config.theme === 'system') {
       this.apply();
     }

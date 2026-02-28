@@ -9,8 +9,16 @@ import {
 import { platform, uploadHelper } from '@sdkwork/react-core';
 ;
 import { SettingToggle } from '@sdkwork/react-settings';
-import { assetService } from '@sdkwork/react-assets';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 import { Button, useAssetUrl } from '@sdkwork/react-commons';
+
+const resolveImageScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
 
 // --- Canvas Processing Utility ---
 class GridProcessor {
@@ -223,8 +231,16 @@ export const ImageGridEditor: React.FC<ImageGridEditorProps> = ({
                     const buffer = await blob.arrayBuffer();
                     const fileName = `tile_${Date.now()}_${idx + 1}.png`;
                     
-                    // Save to 'image' category in Assets
-                    await assetService.importAsset(new Uint8Array(buffer), fileName, 'image');
+                    await assetBusinessFacade.importImageStudioAsset({
+                        scope: resolveImageScope(),
+                        type: 'image',
+                        name: fileName,
+                        data: new Uint8Array(buffer),
+                        metadata: {
+                            origin: 'upload',
+                            source: 'image-grid-editor-tile'
+                        }
+                    });
                 });
                 
                 await Promise.all(savePromises);

@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNoteStore } from '../store/noteStore';
 import { TreeItem, NoteType, logger } from '@sdkwork/react-commons';
 import { 
@@ -8,10 +8,53 @@ import {
     BookOpen, Layout, Type, Code, MoreHorizontal, ChevronDown,
     File as GenericFile, X
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 
+type TranslateFn = ReturnType<typeof useTranslation>['t'];
+
+interface CreateMenuDividerItem {
+    label: string;
+    divider: true;
+}
+
+interface CreateMenuActionItem {
+    label: string;
+    icon: LucideIcon;
+    type: 'folder' | 'note';
+    subType?: NoteType;
+    color: string;
+    divider?: false;
+}
+
+type CreateMenuItem = CreateMenuDividerItem | CreateMenuActionItem;
+
+interface MenuOptionProps {
+    onClick: () => void;
+    icon: React.ReactNode;
+    label: string;
+    danger?: boolean;
+    shortcut?: string;
+}
+
+interface DragPayload {
+    id: string;
+    kind: TreeItem['kind'];
+}
+
+const isDragPayload = (value: unknown): value is DragPayload => {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+    const candidate = value as Partial<DragPayload>;
+    return (
+        typeof candidate.id === 'string' &&
+        (candidate.kind === 'folder' || candidate.kind === 'note')
+    );
+};
+
 // --- Icons Mapping ---
-const TYPE_ICONS: Record<NoteType, any> = {
+const TYPE_ICONS: Record<NoteType, LucideIcon> = {
     doc: FileText,
     article: Layout,
     novel: BookOpen,
@@ -98,25 +141,28 @@ const SidebarItemInput: React.FC<{
 // --- Creation Dropdown Menu ---
 const CreateDropdown: React.FC<{ 
     onSelect: (type: 'folder' | 'note', subType?: NoteType) => void;
-    t: any;
+    t: TranslateFn;
 }> = ({ onSelect, t }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const timeoutRef = useRef<any>(null);
+    const timeoutRef = useRef<number | null>(null);
 
     const handleMouseEnter = () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current !== null) {
+            window.clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
         setIsOpen(true);
     };
 
     const handleMouseLeave = () => {
-        timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = window.setTimeout(() => {
             setIsOpen(false);
         }, 300); 
     };
 
-    const menuItems = [
+    const menuItems: CreateMenuItem[] = [
         { label: t('notes.sidebar.actions.new_folder'), icon: FolderPlus, type: 'folder', color: 'text-yellow-500' },
-        { divider: true },
+        { label: '', divider: true },
         { label: t('notes.editor.types.doc'), icon: FileText, type: 'note', subType: 'doc', color: 'text-blue-400' },
         { label: t('notes.editor.types.article'), icon: Layout, type: 'note', subType: 'article', color: 'text-purple-400' },
         { label: t('notes.editor.types.code'), icon: Code, type: 'note', subType: 'code', color: 'text-green-400' },
@@ -149,12 +195,12 @@ const CreateDropdown: React.FC<{
                                 key={idx}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onSelect(item.type as any, item.subType as any);
+                                    onSelect(item.type, item.subType);
                                     setIsOpen(false);
                                 }}
                                 className="flex items-center gap-2.5 px-3 py-1.5 text-left text-xs text-gray-300 hover:bg-[#27272a] hover:text-white transition-colors group"
                             >
-                                <item.icon size={14} className={`${item.color} group-hover:text-white transition-colors`} />
+                                {item.icon && <item.icon size={14} className={`${item.color} group-hover:text-white transition-colors`} />}
                                 <span>{item.label}</span>
                             </button>
                         )
@@ -176,7 +222,7 @@ const ContextMenu: React.FC<{
     onCreateNote: () => void;
     onCreateFolder: () => void;
     onToggleFavorite: () => void;
-    t: any;
+    t: TranslateFn;
 }> = ({ x, y, item, onClose, onRename, onDelete, onCreateNote, onCreateFolder, onToggleFavorite, t }) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -228,7 +274,7 @@ const ContextMenu: React.FC<{
     );
 };
 
-const MenuOption = ({ onClick, icon, label, danger, shortcut }: any) => (
+const MenuOption: React.FC<MenuOptionProps> = ({ onClick, icon, label, danger = false, shortcut }) => (
     <button 
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         className={`
@@ -261,7 +307,7 @@ const SidebarItemRow: React.FC<{
     onDragOver: (e: React.DragEvent) => void;
     onDragLeave: () => void;
     onDrop: (e: React.DragEvent) => void;
-    containerRef?: React.RefObject<HTMLDivElement>;
+    containerRef?: React.RefObject<HTMLDivElement | null>;
 }> = ({ 
     item, level, isSelected, isExpanded, isDragOver, isRenaming,
     onRenameCommit, onRenameCancel,
@@ -600,7 +646,8 @@ export const NoteSidebar: React.FC = () => {
 
     const handleDragStart = (e: React.DragEvent, item: TreeItem) => {
         if (renamingId || creationState) { e.preventDefault(); return; }
-        e.dataTransfer.setData('application/json', JSON.stringify({ id: item.id, kind: item.kind }));
+        const dragPayload: DragPayload = { id: item.id, kind: item.kind };
+        e.dataTransfer.setData('application/json', JSON.stringify(dragPayload));
     };
     const handleDragOver = (e: React.DragEvent, item: TreeItem) => {
         e.preventDefault();
@@ -615,8 +662,10 @@ export const NoteSidebar: React.FC = () => {
         try {
             const data = e.dataTransfer.getData('application/json');
             if (data) {
-                const { id, kind } = JSON.parse(data);
-                if (id !== targetId) moveItem(id, kind, targetId);
+                const parsed: unknown = JSON.parse(data);
+                if (isDragPayload(parsed) && parsed.id !== targetId) {
+                    moveItem(parsed.id, parsed.kind, targetId);
+                }
             }
         } catch (err) {
             logger.warn('[NoteSidebar] Drag drop parse failed', err);
@@ -656,7 +705,11 @@ export const NoteSidebar: React.FC = () => {
                         onDragStart={(e) => handleDragStart(e, item)}
                         onDragOver={(e) => handleDragOver(e, item)}
                         onDragLeave={() => setDragOverId(null)}
-                        onDrop={(e) => isFolder && handleDrop(e, item.id)}
+                        onDrop={(e) => {
+                            if (isFolder) {
+                                handleDrop(e, item.id);
+                            }
+                        }}
                         containerRef={itemRef}
                     />
                     {isFolder && item.isExpanded && (
@@ -774,7 +827,7 @@ export const NoteSidebar: React.FC = () => {
                                  {favoriteNotes.map(note => (
                                      <SidebarItemRow 
                                          key={`fav-${note.id}`}
-                                         item={{ ...note, kind: 'note' }}
+                                         item={{ ...note, kind: 'note' } as TreeItem}
                                          level={0}
                                          isSelected={selectedId === note.id}
                                          isExpanded={false}
@@ -782,13 +835,13 @@ export const NoteSidebar: React.FC = () => {
                                          isRenaming={false} 
                                          onRenameCommit={() => {}}
                                          onRenameCancel={() => {}}
-                                         onClick={(e) => handleItemClick(e, { ...note, kind: 'note' })}
+                                         onClick={(e) => handleItemClick(e, { ...note, kind: 'note' } as TreeItem)}
                                          onToggle={() => {}}
-                                         onContextMenu={(e) => handleContextMenu(e, { ...note, kind: 'note' })}
-                                         onDragStart={(e) => handleDragStart(e, { ...note, kind: 'note' })}
+                                         onContextMenu={(e) => handleContextMenu(e, { ...note, kind: 'note' } as TreeItem)}
+                                         onDragStart={(e) => handleDragStart(e, { ...note, kind: 'note' } as TreeItem)}
                                          onDragOver={() => {}}
                                          onDragLeave={() => {}}
-                                         onDrop={() => {}}
+                                         onDrop={(e) => { e.preventDefault(); }}
                                      />
                                  ))}
                              </div>

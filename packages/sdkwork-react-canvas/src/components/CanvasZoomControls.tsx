@@ -1,5 +1,5 @@
 
-import { CanvasBoard, CanvasExportMode } from '../entities/canvas.entity'
+import { CanvasBoard, CanvasExportMode } from '../entities'
 import { canvasExportService } from '../services/canvasExportService'
 import React, { useState } from 'react';
 import { 
@@ -31,6 +31,7 @@ export const CanvasZoomControls: React.FC = () => {
         return {
             id: 'scratchpad-' + Date.now(),
             uuid: 'scratchpad-' + Date.now(),
+            type: 'CANVAS_BOARD',
             title: 'Untitled Canvas',
             elements: elements,
             createdAt: Date.now(),

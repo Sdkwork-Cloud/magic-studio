@@ -1,6 +1,6 @@
 
 import { Button } from '@sdkwork/react-commons'
-import { CanvasExportMode } from '../entities/canvas.entity'
+import { CanvasExportMode } from '../entities'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Clapperboard, Layers, Image as ImageIcon, Video, ArrowRight } from 'lucide-react'; 

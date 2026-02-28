@@ -1,7 +1,4 @@
-import { VideoConfig, GeneratedVideoResult } from '../entities/video.entity';
-import { genAIService } from '@sdkwork/react-core';
-import { assetService } from '@sdkwork/react-assets';
-import { vfs } from '@sdkwork/react-fs';
+import { VideoConfig, GeneratedVideoResult } from '../entities';
 
 // Mock video generation service for demonstration
 export const videoService = {
@@ -71,12 +68,6 @@ export const videoService = {
 
         // Handle file paths
         try {
-            let absPath = source;
-            if (source.startsWith('assets://')) {
-                // Convert asset URL to absolute path
-                absPath = source.replace('assets://', '/assets/');
-            }
-            
             // For demo purposes, return mock data
             // In real implementation, this would read actual file data
             return {

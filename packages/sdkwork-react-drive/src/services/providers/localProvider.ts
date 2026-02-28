@@ -1,4 +1,3 @@
-
 import { IDriveProvider } from './types';
 import { DriveItem, DriveStats } from '../../entities/drive.entity';
 import { vfs } from '@sdkwork/react-fs';
@@ -9,31 +8,35 @@ export class LocalDriveProvider implements IDriveProvider {
   name = 'Local Drive';
 
   async list(path: string): Promise<DriveItem[]> {
-    const entries = await vfs.readDir(path);
+    const entryPaths = await vfs.readdir(path);
     
-    const items: DriveItem[] = await Promise.all(entries.map(async (entry) => {
+    const items: DriveItem[] = await Promise.all(entryPaths.map(async (entryPath: string) => {
        let size = 0;
        let lastModified = Date.now();
        let createdAt = Date.now();
+       let isDirectory = false;
+       let name = pathUtils.basename(entryPath);
 
        try {
-           const stats = await vfs.stat(entry.path);
+           const stats = await vfs.stat(entryPath);
            size = stats.size;
-           lastModified = stats.lastModified;
-           createdAt = stats.createdAt || Date.now();
+           isDirectory = stats.isDirectory;
+           name = stats.name || name;
+           lastModified = typeof (stats as any).lastModified === 'number' ? (stats as any).lastModified : Date.now();
+           createdAt = typeof stats.createdAt === 'number' ? stats.createdAt : Date.now();
        } catch (e) {
-           logger.warn('[LocalDriveProvider] Failed to stat entry', entry.path, e);
+           logger.warn('[LocalDriveProvider] Failed to stat entry', entryPath, e);
        }
 
        return {
-           id: entry.path,
+           id: entryPath,
            parentId: path,
-           name: entry.name,
-           type: entry.isDirectory ? 'folder' : 'file',
+           name: name,
+           type: isDirectory ? 'folder' : 'file',
            size: size,
            updatedAt: lastModified,
            createdAt: createdAt,
-           mimeType: this.guessMimeType(entry.name)
+           mimeType: this.guessMimeType(name)
        };
     }));
 
@@ -54,8 +57,8 @@ export class LocalDriveProvider implements IDriveProvider {
           name: name,
           type: stats.type === 'directory' ? 'folder' : 'file',
           size: stats.size,
-          updatedAt: stats.lastModified,
-          createdAt: stats.createdAt || Date.now(),
+          updatedAt: typeof stats.updatedAt === 'number' ? stats.updatedAt : Date.now(),
+          createdAt: typeof stats.createdAt === 'number' ? stats.createdAt : Date.now(),
           mimeType: this.guessMimeType(name)
       };
   }

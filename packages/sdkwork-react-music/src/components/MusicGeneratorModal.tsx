@@ -1,18 +1,11 @@
 
 import { Button } from '@sdkwork/react-commons'
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MusicLeftGeneratorPanel } from './MusicLeftGeneratorPanel';
-import { MusicStoreProvider, useMusicStore, setAssetServiceAdapter, AssetServiceAdapter } from '../store/musicStore';
+import { MusicStoreProvider, useMusicStore } from '../store/musicStore';
 import { X, Check } from 'lucide-react';
-import { GenerationHistoryListPane, GENERATION_TABS, assetService } from '@sdkwork/react-assets';
-
-const assetAdapter: AssetServiceAdapter = {
-    saveGeneratedAsset: async (data, type, metadata, filename) => {
-        const asset = await assetService.saveGeneratedAsset(data, type as any, metadata, filename);
-        return { path: asset.path };
-    }
-};
+import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
 
 interface MusicGeneratorModalProps {
     onClose: () => void;
@@ -48,7 +41,7 @@ const MusicGeneratorContent: React.FC<MusicGeneratorModalProps> = ({ onClose, on
                     onReuse={(task) => setConfig(task.config)}
                     selectionMode={true}
                     selectedItems={selectedUrl ? [selectedUrl] : []}
-                    onSelect={(url, task) => handleSelect(url, task as any)} // eslint-disable-line @typescript-eslint/no-unused-vars
+                    onSelect={(url, task) => handleSelect(url, task as any)}
                     tabs={GENERATION_TABS.filter(t => t.id === 'music' || t.id === 'all')}
                     activeTab="music"
                     className="w-full h-full"
@@ -71,10 +64,6 @@ const MusicGeneratorContent: React.FC<MusicGeneratorModalProps> = ({ onClose, on
 };
 
 export const MusicGeneratorModal: React.FC<MusicGeneratorModalProps> = (props) => {
-    useEffect(() => {
-        setAssetServiceAdapter(assetAdapter);
-    }, []);
-
     return createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-[95vw] h-[90vh] bg-[#09090b] rounded-2xl shadow-2xl border border-[#333] overflow-hidden">

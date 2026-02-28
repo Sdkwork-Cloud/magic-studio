@@ -1,14 +1,13 @@
 
 import React, { useRef, useCallback } from 'react';
 import { InteractionState } from '../../../../store/magicCutStore';
-;
 import { AnyMediaResource, TrackIntervalIndex } from '@sdkwork/react-commons';
 import { CutTrack, CutClip, CutTrackType } from '../../../../entities/magicCut.entity';
 import { DragContext, DragInput, IPlacementStrategy } from '../../dnd/types';
 import { ClipMoveStrategy } from '../../dnd/strategies/ClipMoveStrategy';
 
 interface UseClipDragOptions {
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
     pixelsPerSecond: number;
     tracks: CutTrack[];
     trackLayouts: { id: string; top: number; height: number }[];

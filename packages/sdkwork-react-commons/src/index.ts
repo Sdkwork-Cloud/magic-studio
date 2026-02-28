@@ -90,6 +90,7 @@ export type {
   FilmUserInput,
   FilmScript,
   FilmCharacter,
+  FilmCharacterType,
   FilmLocation,
   FilmProp,
   FilmScene,
@@ -97,6 +98,8 @@ export type {
   FilmDialogueItem,
   FilmSettings,
   FilmViewMode,
+  FilmImageMediaResource,
+  FilmAssetMediaResource,
 
   // Video types
   VideoModel,
@@ -152,6 +155,7 @@ export type {
   VideoMediaResource,
   ImageMediaResource,
   AudioMediaResource,
+  AssetAtomicMediaResource,
   AnyMediaResource,
   ImageAsset,
   AudioAsset,
@@ -235,6 +239,7 @@ export type {
 
 // Export components
 export { AspectRatioSelector } from './components/AspectRatioSelector';
+export type { Resolution } from './components/AspectRatioSelector';
 export { Button, type ButtonProps } from './components/Button';
 export { Card } from './components/Card';
 export { Confirm, useConfirm } from './components/Confirm';

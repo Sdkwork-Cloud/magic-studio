@@ -1,6 +1,6 @@
 
 import { videoExportService } from '../../services/export/videoExportService';
-import { ExportConfig, ExportResolution, ExportFrameRate, ExportBitrate, ExportFormat, ExportOptions } from '../../services/export/types';
+import { ExportConfig, ExportResolution, ExportFrameRate, ExportBitrate, ExportFormat } from '../../services/export/types';
 import { Button, logger } from '@sdkwork/react-commons';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,7 +47,7 @@ const estimateSize = (duration: number, resolution: ExportResolution, bitrate: E
 };
 
 export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
-    const { project, state, activeTimeline, totalDuration, getResource } = useMagicCutStore();
+    const { project, state, activeTimeline, totalDuration, getResource, inPoint, outPoint } = useMagicCutStore();
     const [isExporting, setIsExporting] = useState(false);
     const [progress, setProgress] = useState(0);
     const [domReady, setDomReady] = useState(false);
@@ -103,7 +103,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         // Find first visual clip
         for (const trackRef of activeTimeline.tracks) {
             const track = state.tracks[trackRef.id];
-            if (track && (track.type === 'video' || track.isMain) && track.clips.length > 0) {
+            if (track && (track.trackType === 'video' || track.isMain) && track.clips.length > 0) {
                 // Sort clips by start time to get the very first one
                 const sortedClips = track.clips
                     .map(ref => state.clips[ref.id])
@@ -153,6 +153,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
     const handleExport = async () => {
         if (!activeTimeline) return;
+        const safeFileName = fileName.trim();
+
+        if (!safeFileName) {
+            await platform.notify('Export Failed', 'Please enter a file name.');
+            return;
+        }
+
+        if (!videoEnabled && !audioEnabled) {
+            await platform.notify('Export Failed', 'Enable video or audio before exporting.');
+            return;
+        }
+
+        if (inPoint !== null && outPoint !== null && outPoint <= inPoint) {
+            await platform.notify('Export Failed', 'Out point must be greater than In point.');
+            return;
+        }
         
         setIsExporting(true);
         setProgress(0);
@@ -162,7 +178,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         abortControllerRef.current = controller;
 
         const config: ExportConfig = {
-            fileName,
+            fileName: safeFileName,
             destinationPath: isDesktop ? exportPath : undefined,
             resolution,
             frameRate: fps,
@@ -173,12 +189,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             smartHdr
         };
 
-        const exportOptions: ExportOptions = {
+        const exportOptions = {
             project,
             timeline: activeTimeline,
             state,
             config,
-            signal: controller.signal
+            signal: controller.signal,
+            inPoint,
+            outPoint
         };
 
         try {
@@ -482,4 +500,3 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; small
         />
     </button>
 );
-

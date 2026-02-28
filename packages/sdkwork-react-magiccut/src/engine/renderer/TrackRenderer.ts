@@ -49,7 +49,7 @@ export class TrackRenderer {
         // 2. Check for active filter effects
         const activeLayers = (clip.layers || [])
             .map(ref => layersMap[ref.id])
-            .filter(l => l && l.enabled && l.type === 'filter');
+            .filter(l => l && l.enabled && l.layerType === 'filter');
 
         // FAST PATH: No effects? Return raw texture directly.
         if (activeLayers.length === 0) {

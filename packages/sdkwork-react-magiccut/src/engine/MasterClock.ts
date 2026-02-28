@@ -7,7 +7,6 @@ type StatusCallback = (isPlaying: boolean) => void;
 export class MasterClock {
     private isPlaying = false;
 
-    private _audioStartTime = 0;
     private systemStartTime = 0;
 
     private offsetTime = 0;
@@ -74,7 +73,6 @@ export class MasterClock {
     public setPlaybackRate(rate: number) {
         if (this.isPlaying) {
             this.offsetTime = this.currentTime;
-            this._audioStartTime = audioEngine.getCurrentContextTime();
             this.systemStartTime = performance.now();
         }
         this.playbackRate = rate;
@@ -83,7 +81,6 @@ export class MasterClock {
     public setPlaybackDirection(direction: 1 | -1) {
         if (this.isPlaying) {
             this.offsetTime = this.currentTime;
-            this._audioStartTime = audioEngine.getCurrentContextTime();
             this.systemStartTime = performance.now();
         }
         this.playbackDirection = direction;
@@ -98,7 +95,6 @@ export class MasterClock {
 
         audioEngine.resume();
 
-        this._audioStartTime = audioEngine.getCurrentContextTime();
         this.systemStartTime = performance.now();
 
         const _startBoundary = this.inPoint ?? 0;
@@ -137,9 +133,6 @@ export class MasterClock {
     public seek(time: number) {
         const wasPlaying = this.isPlaying;
 
-        const _startBoundary = this.inPoint ?? 0;
-        const _endBoundary = this.outPoint ?? this.duration;
-
         let newTime = Math.max(0, Math.min(time, this.duration));
 
         if (this.inPoint !== null && newTime < this.inPoint) {
@@ -152,7 +145,6 @@ export class MasterClock {
         this.offsetTime = newTime;
 
         if (wasPlaying) {
-            this._audioStartTime = audioEngine.getCurrentContextTime();
             this.systemStartTime = performance.now();
         }
 

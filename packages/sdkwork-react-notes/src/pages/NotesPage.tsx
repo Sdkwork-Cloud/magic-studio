@@ -22,7 +22,6 @@ const NotesPageContent: React.FC = () => {
         const saved = localStorage.getItem('notes_sidebar_width');
         return saved ? parseInt(saved, 10) : 260;
     });
-    const [isResizing, setIsResizing] = useState(false);
     
     // Refs for event handlers to avoid re-binding
     const isResizingRef = useRef(false);
@@ -34,7 +33,6 @@ const NotesPageContent: React.FC = () => {
 
     const startResizing = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        setIsResizing(true);
         isResizingRef.current = true;
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
@@ -58,7 +56,6 @@ const NotesPageContent: React.FC = () => {
         const handleMouseUp = () => {
             if (isResizingRef.current) {
                 isResizingRef.current = false;
-                setIsResizing(false);
                 document.body.style.cursor = 'default';
                 document.body.style.userSelect = 'auto';
                 localStorage.setItem('notes_sidebar_width', sidebarWidthRef.current.toString());

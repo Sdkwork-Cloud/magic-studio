@@ -15,9 +15,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "declaration": true,
-    "declarationMap": true,
-    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@sdkwork/react-types": ["../sdkwork-react-types/src/index.ts"],

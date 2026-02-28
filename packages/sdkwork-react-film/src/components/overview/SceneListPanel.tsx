@@ -39,7 +39,7 @@ export const SceneListPanel: React.FC<SceneListPanelProps> = ({
     const [selectedLocationUuid, setSelectedLocationUuid] = useState<string | undefined>(undefined);
 
     // Get standalone shots (shots without scene)
-    const standaloneShots = shots.filter(s => !s.sceneUuid).sort((a, b) => a.index - b.index);
+    const standaloneShots = shots.filter(s => !s.sceneUuid).sort((a, b) => (a.index || 0) - (b.index || 0));
     
     // -- Handlers --
     
@@ -194,7 +194,7 @@ export const SceneListPanel: React.FC<SceneListPanelProps> = ({
 
             {scenes.map((scene, i) => {
                 const location = locations.find(l => l.uuid === scene.locationUuid);
-                const sceneShots = shots.filter(s => s.sceneUuid === scene.uuid).sort((a, b) => a.index - b.index);
+                const sceneShots = shots.filter(s => s.sceneUuid === scene.uuid).sort((a, b) => (a.index || 0) - (b.index || 0));
                 
                 const sceneCharacters = characters.filter(c => scene.characterUuids?.includes(c.uuid));
                 const sceneProps = props.filter(p => scene.propUuids?.includes(p.uuid));
@@ -210,7 +210,7 @@ export const SceneListPanel: React.FC<SceneListPanelProps> = ({
                             onGenerateAllImages={() => handleGenerateAllImages(scene.uuid)}
                             onGenerateAllVideos={() => handleGenerateAllVideos(scene.uuid)}
                             onGenerateAllAudio={() => handleGenerateAllAudio(scene.uuid)}
-                            onEditShot={(shot) => onEditShot(shot, scene.index)}
+                            onEditShot={(shot) => onEditShot(shot, scene.index || 0)}
                             onAddShot={() => onAddShot(scene.uuid)}
                             onGenerateShot={onGenerateShotImage}
                             onDeleteShot={deleteShot}

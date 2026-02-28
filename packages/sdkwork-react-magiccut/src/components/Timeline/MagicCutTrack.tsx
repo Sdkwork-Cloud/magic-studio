@@ -3,14 +3,13 @@ import React, { useMemo } from 'react';
 
 import { MagicCutClip } from './MagicCutClip';
 import { WaveformOverlay } from './WaveformOverlay';
-import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
+import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../entities/magicCut.entity';
 import { getRobustResourceUrl } from '../../utils/resourceUtils';
 import { Film } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
-;
 
 interface MagicCutTrackProps {
     track: CutTrack;
@@ -28,7 +27,7 @@ interface MagicCutTrackProps {
 }
 
 export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
-    track, clips, getResource, pixelsPerSecond, selectedClipId, selectedClipIds, onClipSelect,
+    track, clips, getResource, pixelsPerSecond, selectedClipIds, onClipSelect,
     visibleTimeStart, visibleTimeEnd, height,
     onTrackSelect, onClipDragStart
 }) => {
@@ -98,7 +97,7 @@ export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
                     scrollLeft={scrollLeft}
                     pixelsPerSecond={pixelsPerSecond}
                     clips={visibleClips}
-                    trackType={track.type}
+                    trackType={track.trackType}
                     getResource={getResource}
                 />
             </div>
@@ -141,8 +140,29 @@ export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
                                 setInteraction={setInteraction}
                                 playerController={playerController}
                                 resourceUrl={resourceUrl}
+                                resourceSource={resource || resourceUrl}
                                 resourceMetadata={resource?.metadata}
                                 onDragStart={(e) => onClipDragStart?.(clip.id, e.clientX, e.clientY)}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onClipSelect(clip.id, false);
+
+                                    const trackElement = e.currentTarget.closest('[data-track-id]');
+                                    const rect = trackElement?.getBoundingClientRect();
+                                    const relativeX = rect
+                                        ? (e.clientX - rect.left) + scrollLeft
+                                        : clip.start * pixelsPerSecond;
+                                    const time = Math.max(0, relativeX / pixelsPerSecond);
+
+                                    bus.emit(MagicCutEvents.UI_CONTEXT_MENU, {
+                                        x: e.clientX,
+                                        y: e.clientY,
+                                        type: 'clip',
+                                        id: clip.id,
+                                        time
+                                    });
+                                }}
                             />
                         </div>
                     );
@@ -158,4 +178,3 @@ export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
         </div>
     );
 });
-

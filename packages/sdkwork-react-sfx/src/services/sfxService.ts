@@ -1,4 +1,4 @@
-import { SfxConfig, GeneratedSfxResult } from '../entities/sfx.entity';
+import { SfxConfig, GeneratedSfxResult } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 
 export const sfxService = {

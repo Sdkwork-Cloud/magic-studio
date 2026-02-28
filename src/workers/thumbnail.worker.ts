@@ -22,7 +22,7 @@ interface WorkerResponse {
 
 // Video decoding using WebCodecs API (if available) or fallback message
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
-    const { id, type, videoData, time, quality, targetWidth } = e.data;
+    const { id, type } = e.data;
 
     if (type !== 'extract') {
         self.postMessage({ id, type: 'error', error: 'Unknown request type' } as WorkerResponse);

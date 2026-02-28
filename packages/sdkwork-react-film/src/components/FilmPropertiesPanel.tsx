@@ -50,7 +50,7 @@ export const FilmPropertiesPanel: React.FC = () => {
                 <SettingsSection title="Details">
                     <SettingInput label="Name" value={loc.name} onChange={(v) => updateLocation(loc.uuid, { name: v })} fullWidth />
                     <div className="grid grid-cols-2 gap-4">
-                         <SettingInput label="Time of Day" value={loc.timeOfDay || ''} onChange={(v) => updateLocation(loc.uuid, { timeOfDay: v as any })} fullWidth placeholder="DAY/NIGHT" />
+                         <SettingInput label="Time of Day" value={loc.timeOfDay || ''} onChange={(v) => updateLocation(loc.uuid, { timeOfDay: v })} fullWidth placeholder="DAY/NIGHT" />
                          <div className="flex items-center gap-2 mt-6">
                              <input type="checkbox" checked={loc.indoor} onChange={(e) => updateLocation(loc.uuid, { indoor: e.target.checked })} />
                              <span className="text-xs text-gray-300">Indoor</span>
@@ -92,6 +92,21 @@ export const FilmPropertiesPanel: React.FC = () => {
         if (!shot) return null;
         
         const hasImage = shot.assets && shot.assets.length > 0;
+        const generationPrompt = (() => {
+            const generationRecord = shot.generation as Record<string, unknown> | undefined;
+            const promptValue = generationRecord?.prompt;
+            if (typeof promptValue === 'string') {
+                return promptValue;
+            }
+            if (promptValue && typeof promptValue === 'object') {
+                const promptBase = (promptValue as Record<string, unknown>).base;
+                if (typeof promptBase === 'string') {
+                    return promptBase;
+                }
+            }
+            const basePrompt = generationRecord?.base;
+            return typeof basePrompt === 'string' ? basePrompt : '';
+        })();
 
         return (
             <div className="p-6 space-y-6">
@@ -124,8 +139,8 @@ export const FilmPropertiesPanel: React.FC = () => {
                 </SettingsSection>
                 
                 <SettingsSection title="AI Generation">
-                     <SettingTextArea label="Prompt" value={shot.generation?.prompt?.base || ''} onChange={(v) => updateShot(shot.sceneUuid, shot.uuid, { 
-                         generation: { ...shot.generation, prompt: { ...shot.generation?.prompt, base: v } }
+                     <SettingTextArea label="Prompt" value={generationPrompt} onChange={(v) => updateShot(shot.sceneUuid, shot.uuid, { 
+                         generation: { ...shot.generation, prompt: v, base: v }
                      })} rows={6} fullWidth />
                 </SettingsSection>
             </div>

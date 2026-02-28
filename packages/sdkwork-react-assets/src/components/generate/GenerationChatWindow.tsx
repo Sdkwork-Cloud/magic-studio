@@ -5,24 +5,25 @@ import React, { useState, useRef, useEffect } from 'react';
 
 export interface GenerationTask {
     id: string;
-    config: any;
-    status: 'pending' | 'completed' | 'failed';
+    config?: any;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
     results?: any[];
     error?: string;
 }
 
 export interface GenerationConfig {
-    prompt: string;
+    prompt?: string;
     negativePrompt?: string;
-    aspectRatio: string;
-    styleId: string;
+    aspectRatio?: string;
+    styleId?: string;
     referenceImages?: string[];
     [key: string]: any;
 }
 
 export interface GenerationChatWindowProps {
-    mode: 'image' | 'video' | 'audio' | 'music' | 'voice' | 'sfx' | 'character';
+    mode: 'image' | 'video' | 'audio' | 'music' | 'voice' | 'sfx' | 'character' | 'agent';
     title: string;
+    backLabel?: string;
     onNavigateBack: () => void;
     history: GenerationTask[];
     isGenerating: boolean;
@@ -30,8 +31,8 @@ export interface GenerationChatWindowProps {
     onReuse: (task: GenerationTask) => void;
     config: GenerationConfig;
     setConfig: (config: Partial<GenerationConfig>) => void;
-    onGenerate: () => Promise<void>;
-    onUpload?: () => Promise<void>;
+    onGenerate: () => Promise<void> | void;
+    onUpload?: () => Promise<void> | void;
     onRemoveReferenceImage?: (index: number) => void;
 }
 

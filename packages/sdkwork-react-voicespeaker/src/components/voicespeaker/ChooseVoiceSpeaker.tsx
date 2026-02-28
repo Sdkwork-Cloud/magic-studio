@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mic2, ChevronDown, RotateCcw } from 'lucide-react';
+import { Mic2, ChevronDown } from 'lucide-react';
 import { IVoice, ChooseVoiceSpeakerProps } from './types';
 import { ChooseVoiceSpeakerModal } from './ChooseVoiceSpeakerModal';
 import { VoicePreviewButton } from './VoicePreviewButton';

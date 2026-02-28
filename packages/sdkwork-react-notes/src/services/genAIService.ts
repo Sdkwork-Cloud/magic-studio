@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Modality, Type, Content } from "@google/genai";
-import { audioUtils } from "@sdkwork/react-commons";
+import { audioUtils } from "../utils/audioUtils";
 
 const API_KEY = process.env.API_KEY || ''; 
 
@@ -21,6 +21,33 @@ export interface ArticleConfig {
     context: string;
 }
 
+interface GeminiTextPart {
+    text: string;
+}
+
+interface GeminiInlineDataPart {
+    inlineData: {
+        mimeType: string;
+        data: string;
+    };
+}
+
+type GeminiInputPart = GeminiTextPart | GeminiInlineDataPart;
+
+interface VideoGenerationRequest {
+    model: string;
+    prompt: string;
+    config: {
+        numberOfVideos: number;
+        resolution: string;
+        aspectRatio: string;
+    };
+    image?: {
+        mimeType: string;
+        imageBytes: string;
+    };
+}
+
 export const genAIService = {
   
   isConfigured: () => !!ai,
@@ -34,7 +61,7 @@ export const genAIService = {
     // Normalize input
     const config = typeof options === 'string' ? { prompt: options } : options;
     
-    const parts: any[] = [];
+    const parts: GeminiInputPart[] = [];
     
     // Handle Reference Image
     if (config.referenceImage) {
@@ -117,7 +144,7 @@ export const genAIService = {
   generateVideo: async (prompt: string, image?: string): Promise<string> => {
     if (!ai) throw new Error("API Key not configured");
 
-    let request: any = {
+    const request: VideoGenerationRequest = {
       model: 'veo-3.1-fast-generate-preview',
       prompt: prompt,
       config: {

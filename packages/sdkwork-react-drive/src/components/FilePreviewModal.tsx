@@ -4,7 +4,7 @@ import { X, Download, AlertCircle, FileText } from 'lucide-react';
 import { vfs } from '@sdkwork/react-fs';
 import { viewerRegistry } from '../viewers/viewerRegistry';
 import { Button, pathUtils } from '@sdkwork/react-commons';
-import { DriveItem } from '../entities/drive.entity';
+import { DriveItem } from '../entities';
 import { driveService } from '../services/driveService';
 import { FileIcon } from '@sdkwork/react-editor';
 import { platform } from '@sdkwork/react-core';

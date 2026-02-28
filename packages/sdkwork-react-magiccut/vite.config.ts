@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+﻿import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
@@ -9,7 +9,7 @@ export default defineConfig({
     dts({
       include: ['src/**/*.ts', 'src/**/*.tsx'],
       outDir: 'dist',
-      rollupTypes: true,
+      rollupTypes: false,
     })
   ],
   build: {
@@ -51,3 +51,4 @@ export default defineConfig({
     sourcemap: true
   }
 });
+

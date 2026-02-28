@@ -21,7 +21,7 @@ export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
-  timestamp: string; // ISO 8601 format: yyyy-MM-dd HH:mm:ss
+  timestamp: string | number; // ISO 8601 format or Unix timestamp
   model?: string;
   status?: MessageStatus;
   error?: string;

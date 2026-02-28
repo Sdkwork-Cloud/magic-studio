@@ -3,7 +3,17 @@ import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
 import { IPublishingProvider } from './providers/types';
 import { WeChatProvider } from './providers/wechatProvider';
 import { ToutiaoProvider } from './providers/toutiaoProvider';
-import { MediaAccountConfig } from '../../settings/entities/settings.entity';
+import { MediaAccountConfig } from '@sdkwork/react-settings';
+
+const toErrorMessage = (error: unknown): string => {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    if (typeof error === 'string' && error.trim()) {
+        return error;
+    }
+    return 'Unknown Error';
+};
 
 class PublishingService {
     private providers: Map<string, IPublishingProvider> = new Map();
@@ -43,12 +53,12 @@ class PublishingService {
 
         try {
             return await provider.publish(articles, account);
-        } catch (e: any) {
-            console.error(`[PublishingService] Failed to publish to ${account.name}`, e);
+        } catch (error: unknown) {
+            console.error(`[PublishingService] Failed to publish to ${account.name}`, error);
             return {
                 success: false,
                 platformId: account.platform,
-                message: e.message || 'Unknown Error'
+                message: toErrorMessage(error)
             };
         }
     }

@@ -1,5 +1,5 @@
 import type { PackageRouteConfig } from './types';
-import React, { lazy } from 'react';
+import { lazy } from 'react';
 
 const PromptOptimizerPage = lazy(() => import('../pages/PromptOptimizerPage'));
 
@@ -8,11 +8,13 @@ export const defaultRoutes: PackageRouteConfig = {
     routes: [
         {
             path: '',
-            element: <PromptOptimizerPage />,
+            name: 'Prompt Optimizer',
+            component: PromptOptimizerPage,
         },
         {
             path: 'optimize',
-            element: <PromptOptimizerPage />,
+            name: 'Optimize Prompt',
+            component: PromptOptimizerPage,
         },
     ],
     meta: {

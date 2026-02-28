@@ -13,7 +13,7 @@ export function useShortcuts() {
     const {
         pause, seek, stepForward, stepBackward,
         undo, redo, canUndo, canRedo,
-        selectAllClips, clearSelection, deleteSelectedClips,
+        selectAllClips, clearSelection, deleteSelected,
         copySelectedClips, pasteClips,
         splitClip, nudgeSelectedClips,
         setInPoint, setOutPoint, clearInOutPoints,
@@ -24,6 +24,31 @@ export function useShortcuts() {
     
     const currentTime = useTransientState(s => s.currentTime);
     const zoomLevel = useTransientState(s => s.zoomLevel);
+    const canUndoRef = useRef(canUndo);
+    const canRedoRef = useRef(canRedo);
+    const currentTimeRef = useRef(currentTime);
+    const zoomLevelRef = useRef(zoomLevel);
+    const totalDurationRef = useRef(totalDuration);
+
+    useEffect(() => {
+        canUndoRef.current = canUndo;
+    }, [canUndo]);
+
+    useEffect(() => {
+        canRedoRef.current = canRedo;
+    }, [canRedo]);
+
+    useEffect(() => {
+        currentTimeRef.current = currentTime;
+    }, [currentTime]);
+
+    useEffect(() => {
+        zoomLevelRef.current = zoomLevel;
+    }, [zoomLevel]);
+
+    useEffect(() => {
+        totalDurationRef.current = totalDuration;
+    }, [totalDuration]);
     
     const updateShortcutContext = useCallback((context: Partial<ShortcutContext>) => {
         shortcutManager.updateContext(context);
@@ -117,7 +142,7 @@ export function useShortcuts() {
                 description: 'Jump to end',
                 category: 'navigation',
                 action: () => {
-                    seek(totalDuration);
+                    seek(totalDurationRef.current);
                 }
             },
             {
@@ -144,7 +169,16 @@ export function useShortcuts() {
                 description: 'Delete selected',
                 category: 'editing',
                 action: () => {
-                    deleteSelectedClips();
+                    deleteSelected();
+                }
+            },
+            {
+                id: 'ripple-delete',
+                keys: ['shift+delete', 'shift+backspace'],
+                description: 'Ripple delete selected',
+                category: 'editing',
+                action: () => {
+                    deleteSelected('ripple');
                 }
             },
             {
@@ -162,7 +196,16 @@ export function useShortcuts() {
                 description: 'Paste',
                 category: 'editing',
                 action: () => {
-                    pasteClips(null, currentTime);
+                    pasteClips(null, currentTimeRef.current);
+                }
+            },
+            {
+                id: 'paste-insert',
+                keys: ['ctrl+shift+v'],
+                description: 'Paste insert',
+                category: 'editing',
+                action: () => {
+                    pasteClips(null, currentTimeRef.current, 'insert');
                 }
             },
             {
@@ -171,7 +214,7 @@ export function useShortcuts() {
                 description: 'Undo',
                 category: 'editing',
                 action: () => {
-                    if (canUndo) undo();
+                    if (canUndoRef.current) undo();
                 }
             },
             {
@@ -180,7 +223,7 @@ export function useShortcuts() {
                 description: 'Redo',
                 category: 'editing',
                 action: () => {
-                    if (canRedo) redo();
+                    if (canRedoRef.current) redo();
                 }
             },
             {
@@ -234,7 +277,7 @@ export function useShortcuts() {
                 description: 'Set In point',
                 category: 'editing',
                 action: () => {
-                    setInPoint(currentTime);
+                    setInPoint(currentTimeRef.current);
                 }
             },
             {
@@ -243,7 +286,7 @@ export function useShortcuts() {
                 description: 'Set Out point',
                 category: 'editing',
                 action: () => {
-                    setOutPoint(currentTime);
+                    setOutPoint(currentTimeRef.current);
                 }
             },
             {
@@ -261,7 +304,7 @@ export function useShortcuts() {
                 description: 'Zoom in',
                 category: 'navigation',
                 action: () => {
-                    transientStore.setState({ zoomLevel: Math.min(80, zoomLevel * 1.5) });
+                    transientStore.setState({ zoomLevel: Math.min(80, zoomLevelRef.current * 1.5) });
                 }
             },
             {
@@ -270,7 +313,7 @@ export function useShortcuts() {
                 description: 'Zoom out',
                 category: 'navigation',
                 action: () => {
-                    transientStore.setState({ zoomLevel: Math.max(0.05, zoomLevel / 1.5) });
+                    transientStore.setState({ zoomLevel: Math.max(0.05, zoomLevelRef.current / 1.5) });
                 }
             },
             {
@@ -357,9 +400,9 @@ export function useShortcuts() {
     }, [
         bus, transientStore, pause, stepForward, stepBackward,
         undo, redo, canUndo, canRedo, selectAllClips, clearSelection,
-        deleteSelectedClips, copySelectedClips, pasteClips, splitClip,
+        deleteSelected, copySelectedClips, pasteClips, splitClip,
         nudgeSelectedClips, setInPoint, setOutPoint, clearInOutPoints,
-        toggleSnapping, totalDuration, currentTime, zoomLevel
+        toggleSnapping
     ]);
     
     return {
@@ -368,4 +411,3 @@ export function useShortcuts() {
         shortcuts: shortcutManager.getAllShortcuts(),
     };
 }
-

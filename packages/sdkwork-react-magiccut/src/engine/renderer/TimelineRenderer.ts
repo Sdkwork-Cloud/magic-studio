@@ -12,7 +12,6 @@ export class TimelineRenderer {
     private trackIndices = new Map<string, TrackIntervalIndex>();
     private lastTrackVersion = new Map<string, number>();
     private lastEffectSize = new Map<string, { width: number; height: number }>();
-    private lastEffectSize = new Map<string, { width: number; height: number }>();
 
     private projectionMatrix = Matrix3Ops.create();
     private modelMatrix = Matrix3Ops.create();
@@ -36,7 +35,8 @@ export class TimelineRenderer {
                 }
             });
             this.trackIndices.set(track.id, tree);
-            this.lastTrackVersion.set(track.id, track.updatedAt);
+            const updatedAt = typeof track.updatedAt === 'number' ? track.updatedAt : new Date(track.updatedAt).getTime();
+            this.lastTrackVersion.set(track.id, updatedAt);
         }
         return this.trackIndices.get(track.id)!;
     }
@@ -99,7 +99,7 @@ export class TimelineRenderer {
                 const tf = this.resolveTransform(clip, clipTime);
                 const filterCount = (clip.layers || [])
                     .map(ref => layers[ref.id])
-                    .filter(l => l && l.enabled && l.type === 'filter').length;
+                    .filter(l => l && l.enabled && l.layerType === 'filter').length;
                 const renderSize = this.getEffectRenderSize(ctx, tf, clip.id, filterCount);
                 const result = resource
                     ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying, renderSize)

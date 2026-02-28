@@ -1,9 +1,9 @@
 
-import { assetService } from '@sdkwork/react-assets'
 import { vfs } from '@sdkwork/react-fs';
 import { pathUtils } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 import { storageConfig } from '@sdkwork/react-fs';
+import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
 ;
 
 /**
@@ -45,7 +45,7 @@ class AssetCacheService {
         // This connects the Cache layer to the Standard Asset layer.
         if (url.startsWith('assets://') || url.startsWith('file://') || url.startsWith('blob:') || url.startsWith('data:')) {
             onProgress?.(100);
-            return assetService.resolveAssetUrl({ path: url });
+            return resolveAssetUrlByAssetIdFirst(url);
         }
         
         // 1. Memory Cache Hit

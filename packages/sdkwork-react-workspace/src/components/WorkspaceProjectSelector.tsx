@@ -91,7 +91,6 @@ export const WorkspaceProjectSelector: React.FC<WorkspaceProjectSelectorProps> =
     };
 
     const isPortal = variant === 'portal';
-    const isLight = variant === 'light';
 
     const buttonStyles = isPortal
         ? 'flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors group'

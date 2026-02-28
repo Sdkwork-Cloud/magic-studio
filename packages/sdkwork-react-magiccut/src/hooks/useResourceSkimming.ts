@@ -8,10 +8,10 @@ import { useMagicCutStore } from '../store/magicCutStore';
 interface UseResourceSkimmingProps {
     resourceId: string;
     duration: number;
-    containerRef: React.RefObject<HTMLDivElement>;
-    scrubberLineRef: React.RefObject<HTMLDivElement>;
-    scrubberTimeRef: React.RefObject<HTMLDivElement>;
-    videoRef: React.RefObject<HTMLVideoElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
+    scrubberLineRef: React.RefObject<HTMLDivElement | null>;
+    scrubberTimeRef: React.RefObject<HTMLDivElement | null>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
     isReady: boolean;
     isEffect: boolean;
     isVideo: boolean;

@@ -3,18 +3,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
     X, Download, ChevronLeft, ChevronRight, 
-    ThumbsUp, ThumbsDown, Share2, Info,
-    Maximize2, Edit3, Trash2, Film, Image as ImageIcon, Zap, RefreshCw, Wand2,
-    Copy, Check, Play, LayoutTemplate, Brush,
-    Move, Eraser, Mic, Repeat2, MessageSquare, UserPlus
+    ThumbsUp, Share2, Info,
+    Edit3, Trash2, Film, Image as ImageIcon,
+    Copy, Repeat2, UserPlus
 } from 'lucide-react';
 import { ImageTask, MediaResourceType, GalleryItem, PromptText, useAssetUrl } from '@sdkwork/react-commons';
 import { platform, useRouter, ROUTES, remixService } from '@sdkwork/react-core';
-import { useTranslation } from '@sdkwork/react-i18n';
 
 export type PreviewMode = 'creation' | 'view';
 
-interface EditorComponents {
+export interface EditorComponents {
     GridEditor?: React.ComponentType<{ isOpen: boolean; imageUrl: string; onClose: () => void; onSave: (url: string) => void }>;
     CanvasEditor?: React.ComponentType<{ isOpen: boolean; imageUrl: string; onClose: () => void; onSave: (url: string) => void }>;
 }
@@ -43,7 +41,6 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
     isOwner = false,
     editors = {}
 }) => {
-    const { t } = useTranslation();
     const { navigate } = useRouter();
     
     const [activeIndex, setActiveIndex] = useState(0);
@@ -54,7 +51,7 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
 
     const items = useMemo(() => {
         if (mode === 'creation') {
-            return tasks.reverse();
+            return [...tasks].reverse();
         } else {
             if (!galleryItem) return [];
             if (relatedItems.length > 0) return relatedItems;
@@ -417,7 +414,7 @@ const TooltipButton: React.FC<{ icon: React.ReactNode; tooltip: string; onClick?
     </button>
 );
 
-const ParamItem: React.FC<{ label: string; value: string; copyable?: boolean; highlight?: boolean }> = ({ label, value, copyable, highlight }) => (
+const ParamItem: React.FC<{ label: string; value: string; highlight?: boolean }> = ({ label, value, highlight }) => (
     <div className="flex flex-col gap-1">
         <span className="text-[10px] text-gray-500 font-medium">{label}</span>
         <div className={`text-sm text-gray-300 font-mono flex items-center gap-2 ${highlight ? 'text-white font-bold' : ''}`}>

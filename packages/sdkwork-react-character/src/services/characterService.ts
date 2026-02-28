@@ -1,4 +1,4 @@
-import { CharacterConfig, CharacterTask } from '../entities/character.entity';
+import { CharacterConfig, CharacterTask } from '../entities';
 import { BaseEntity } from '@sdkwork/react-commons';
 
 class CharacterService {

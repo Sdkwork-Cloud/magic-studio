@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { 
-    Puzzle, Download, Star, TrendingUp, Search, Filter, 
-    Plug, Zap, Palette, Video, ImageIcon, Music, 
-    Mic, Wand2, Sparkles, Box, Check, ExternalLink,
+    Puzzle, Download, Star, Search, 
+    Zap, Palette, Video, Music, 
+    Mic, Wand2, Check,
     RefreshCw, Trash2, Settings
 } from 'lucide-react';
 import { PLUGIN_CATEGORIES, Plugin } from '../constants';
 import { PortalHeader } from '@sdkwork/react-portal-video';
 
-// 模拟插件数据
 const DEFAULT_PLUGINS: Plugin[] = [
     {
         id: 'p1',
@@ -28,7 +27,7 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p2',
-        name: '高级滤镜�?,
+        name: '高级滤镜',
         description: '50+ 专业级滤镜效果，让作品更具艺术感',
         icon: Palette,
         category: 'effects',
@@ -39,7 +38,7 @@ const DEFAULT_PLUGINS: Plugin[] = [
         verified: true,
         installed: false,
         price: '¥29',
-        badges: ['精�?],
+        badges: ['精选'],
         updateAvailable: false
     },
     {
@@ -76,8 +75,8 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p5',
-        name: '音效库扩�?,
-        description: '1000+ 高品质音效素�?,
+        name: '音效库扩展',
+        description: '1000+ 高品质音效素材',
         icon: Music,
         category: 'assets',
         version: '2.3.0',
@@ -92,8 +91,8 @@ const DEFAULT_PLUGINS: Plugin[] = [
     },
     {
         id: 'p6',
-        name: '语音增强�?,
-        description: 'AI 降噪，提升语音质�?,
+        name: '语音增强器',
+        description: 'AI 降噪，提升语音质量',
         icon: Mic,
         category: 'ai',
         version: '1.2.5',
@@ -148,10 +147,8 @@ const PluginsPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#020202]">
-            {/* 顶部 Header */}
             <PortalHeader />
             
-            {/* 顶部横幅 */}
             <div className="relative h-40 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -162,7 +159,6 @@ const PluginsPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#020202] to-transparent" />
             </div>
 
-            {/* 筛选栏 */}
             <div className="sticky top-0 z-40 bg-[#020202]/95 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between gap-4">
@@ -199,7 +195,6 @@ const PluginsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* 快捷筛�?*/}
                     <div className="flex items-center gap-4 mt-4 text-xs">
                         <button
                             onClick={() => setShowInstalledOnly(!showInstalledOnly)}
@@ -210,20 +205,21 @@ const PluginsPage: React.FC = () => {
                             }`}
                         >
                             <Check size={12} />
-                            已安�?({installedCount})
+                            已安装 ({installedCount})
                         </button>
                         {updateCount > 0 && (
                             <span className="flex items-center gap-1 text-orange-400">
                                 <RefreshCw size={12} />
-                                {updateCount} 个更新可�?                            </span>
+                                {updateCount} 个更新可用
+                            </span>
                         )}
                         <span className="text-gray-500 ml-auto">
-                            �?{filteredPlugins.length} 个插�?                        </span>
+                            共 {filteredPlugins.length} 个插件
+                        </span>
                     </div>
                 </div>
             </div>
 
-            {/* 内容区域 */}
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {filteredPlugins.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -234,7 +230,6 @@ const PluginsPage: React.FC = () => {
                                     key={plugin.id} 
                                     className="group relative bg-[#1a1a1c] rounded-xl p-4 border border-white/5 hover:border-white/10 transition-all"
                                 >
-                                    {/* 头部 */}
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                                             plugin.category === 'ai' ? 'bg-purple-500/20 text-purple-400' :
@@ -257,23 +252,22 @@ const PluginsPage: React.FC = () => {
                                                 {plugin.updateAvailable && (
                                                     <span className="text-orange-400 flex items-center gap-1">
                                                         <RefreshCw size={10} />
-                                                        可更�?                                                    </span>
+                                                        可更新
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 描述 */}
                                     <p className="text-xs text-gray-400 mb-3 line-clamp-2">{plugin.description}</p>
 
-                                    {/* 徽章 */}
                                     <div className="flex flex-wrap gap-1 mb-3">
                                         {plugin.badges.map((badge, idx) => (
                                             <span 
                                                 key={idx} 
                                                 className={`px-2 py-0.5 text-[10px] font-medium rounded ${
                                                     badge === '热门' ? 'bg-red-500/20 text-red-400' :
-                                                    badge === '精�? ? 'bg-blue-500/20 text-blue-400' :
+                                                    badge === '精选' ? 'bg-blue-500/20 text-blue-400' :
                                                     badge === '官方' ? 'bg-green-500/20 text-green-400' :
                                                     badge === 'AI' ? 'bg-purple-500/20 text-purple-400' :
                                                     'bg-gray-500/20 text-gray-400'
@@ -284,7 +278,6 @@ const PluginsPage: React.FC = () => {
                                         ))}
                                     </div>
 
-                                    {/* 统计信息 */}
                                     <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                                         <span className="flex items-center gap-1">
                                             <Download size={12} />
@@ -297,7 +290,6 @@ const PluginsPage: React.FC = () => {
                                         <span className="text-gray-400">{plugin.price}</span>
                                     </div>
 
-                                    {/* 操作按钮 */}
                                     <div className="flex items-center gap-2">
                                         {plugin.installed ? (
                                             <>
@@ -311,7 +303,8 @@ const PluginsPage: React.FC = () => {
                                                     </button>
                                                 ) : (
                                                     <button className="flex-1 px-3 py-2 bg-[#2a2a2d] text-gray-400 rounded-lg text-xs font-medium cursor-default">
-                                                        已安�?                                                    </button>
+                                                        已安装
+                                                    </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleInstall(plugin.id)}
@@ -340,7 +333,7 @@ const PluginsPage: React.FC = () => {
                 ) : (
                     <div className="text-center py-20">
                         <Puzzle size={48} className="mx-auto text-gray-600 mb-4" />
-                        <p className="text-gray-400 text-sm">暂无符合条件的插�?/p>
+                        <p className="text-gray-400 text-sm">暂无符合条件的插件</p>
                     </div>
                 )}
             </div>

@@ -1,4 +1,4 @@
-import { FileEntry, FileStat } from '@sdkwork/react-types';
+import { FileStat } from '@sdkwork/react-types';
 import { IFileSystemProvider } from '../types';
 
 // Platform API will be injected at runtime
@@ -8,18 +8,33 @@ const getPlatformAPI = () => {
   }
   // Fallback to no-op implementation
   return {
-    readDir: async () => [] as FileEntry[],
+    readDir: async () => [] as string[],
     readFile: async () => '',
     writeFile: async () => {},
     readFileBinary: async () => new Uint8Array(),
     writeFileBinary: async () => {},
     readFileBlob: async () => new Blob(),
     writeFileBlob: async () => {},
-    stat: async () => ({ isFile: false, isDirectory: false, size: 0, createdAt: 0, updatedAt: 0 } as FileStat),
+    stat: async () => ({ 
+      id: '',
+      uuid: '',
+      name: '',
+      type: 'file' as const,
+      isFile: true, 
+      isDirectory: false, 
+      size: 0, 
+      createdAt: new Date().toISOString(), 
+      updatedAt: new Date().toISOString()
+    } as FileStat),
     createDir: async () => {},
     delete: async () => {},
     rename: async () => {},
-    copyFile: async () => {}
+    copyFile: async () => {},
+    exists: async () => false,
+    mkdir: async () => {},
+    readdir: async () => [] as string[],
+    unlink: async () => {},
+    rmdir: async () => {}
   };
 };
 
@@ -35,8 +50,8 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
     return getPlatformAPI();
   }
 
-  async readDir(path: string): Promise<FileEntry[]> {
-    return this.platform.readDir(path);
+  async readdir(path: string): Promise<string[]> {
+    return this.platform.readdir(path);
   }
 
   async readFile(path: string): Promise<string> {
@@ -63,23 +78,31 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
     return this.platform.writeFileBlob(path, content);
   }
 
+  async exists(path: string): Promise<boolean> {
+    return this.platform.exists(path);
+  }
+
+  async mkdir(path: string): Promise<void> {
+    return this.platform.mkdir(path);
+  }
+
   async stat(path: string): Promise<FileStat> {
     return this.platform.stat(path);
   }
 
-  async createDir(path: string): Promise<void> {
-    return this.platform.createDir(path);
+  async unlink(path: string): Promise<void> {
+    return this.platform.unlink(path);
   }
 
-  async delete(path: string): Promise<void> {
-    return this.platform.delete(path);
+  async rmdir(path: string): Promise<void> {
+    return this.platform.rmdir(path);
   }
 
   async rename(oldPath: string, newPath: string): Promise<void> {
     return this.platform.rename(oldPath, newPath);
   }
 
-  async copy(sourcePath: string, destPath: string): Promise<void> {
+  async copyFile(sourcePath: string, destPath: string): Promise<void> {
     return this.platform.copyFile(sourcePath, destPath);
   }
 }

@@ -31,12 +31,12 @@ export const TIMELINE_CONSTANTS = {
 import { StyleOption } from '@sdkwork/react-commons';
 
 export const FILM_STYLES: StyleOption[] = [
-    { value: 'cinematic', label: 'Cinematic', icon: '🎬' },
-    { value: 'realistic', label: 'Realistic', icon: '📷' },
-    { value: 'anime', label: 'Anime', icon: '🎨' },
-    { value: 'cartoon', label: 'Cartoon', icon: '✏️' },
-    { value: 'fantasy', label: 'Fantasy', icon: '🧙' },
-    { value: 'scifi', label: 'Sci-Fi', icon: '🚀' },
-    { value: 'horror', label: 'Horror', icon: '👻' },
-    { value: 'documentary', label: 'Documentary', icon: '📹' },
+    { id: 'cinematic', label: '🎬 Cinematic', value: 'cinematic' },
+    { id: 'realistic', label: '📷 Realistic', value: 'realistic' },
+    { id: 'anime', label: '🎨 Anime', value: 'anime' },
+    { id: 'cartoon', label: '✏️ Cartoon', value: 'cartoon' },
+    { id: 'fantasy', label: '🧙 Fantasy', value: 'fantasy' },
+    { id: 'scifi', label: '🚀 Sci-Fi', value: 'scifi' },
+    { id: 'horror', label: '👻 Horror', value: 'horror' },
+    { id: 'documentary', label: '📹 Documentary', value: 'documentary' },
 ];

@@ -1,5 +1,5 @@
 
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 ;
 import { Folder, FolderOpen } from 'lucide-react';

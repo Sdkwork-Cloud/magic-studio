@@ -1,5 +1,5 @@
 
-import { Presentation, Slide } from '../entities/ppt.entity';
+import { Presentation, Slide } from '../entities';
 import { chatPPTService } from '../services/chatPPTService';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 ;

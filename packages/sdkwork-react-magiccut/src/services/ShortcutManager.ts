@@ -1,4 +1,3 @@
-
 export interface ShortcutDefinition {
     id: string;
     keys: string[];
@@ -24,13 +23,13 @@ class ShortcutManager {
         isEditingText: false,
         isModalOpen: false
     };
-    
+
     private boundHandler = this.handleKeyDown.bind(this);
     private isAttached = false;
 
     register(definition: ShortcutDefinition) {
         this.shortcuts.set(definition.id, definition);
-        
+
         definition.keys.forEach(keyCombo => {
             const normalized = this.normalizeKeyCombo(keyCombo);
             if (!this.keyMap.has(normalized)) {
@@ -43,7 +42,7 @@ class ShortcutManager {
     unregister(id: string) {
         const definition = this.shortcuts.get(id);
         if (!definition) return;
-        
+
         definition.keys.forEach(keyCombo => {
             const normalized = this.normalizeKeyCombo(keyCombo);
             const ids = this.keyMap.get(normalized);
@@ -54,7 +53,7 @@ class ShortcutManager {
                 }
             }
         });
-        
+
         this.shortcuts.delete(id);
     }
 
@@ -78,7 +77,7 @@ class ShortcutManager {
         const parts = combo.toLowerCase().split('+').map(p => p.trim());
         const modifiers: string[] = [];
         let key = '';
-        
+
         parts.forEach(part => {
             if (['ctrl', 'alt', 'shift', 'meta', 'cmd'].includes(part)) {
                 modifiers.push(part === 'cmd' ? 'meta' : part);
@@ -86,46 +85,47 @@ class ShortcutManager {
                 key = part;
             }
         });
-        
+
         modifiers.sort();
         return [...modifiers, key].join('+');
     }
 
     private getEventKeyCombo(e: KeyboardEvent): string {
         const modifiers: string[] = [];
-        
+
         if (e.ctrlKey) modifiers.push('ctrl');
         if (e.altKey) modifiers.push('alt');
         if (e.shiftKey) modifiers.push('shift');
         if (e.metaKey) modifiers.push('meta');
-        
+
         let key = e.key.toLowerCase();
         if (key === ' ') key = 'space';
         if (key === 'arrowleft') key = 'left';
         if (key === 'arrowright') key = 'right';
         if (key === 'arrowup') key = 'up';
         if (key === 'arrowdown') key = 'down';
-        
+
         modifiers.sort();
         return [...modifiers, key].join('+');
     }
 
     private handleKeyDown(e: KeyboardEvent) {
+        if (e.defaultPrevented) return;
         if (this.context.isEditingText || this.context.isModalOpen) {
             return;
         }
-        
+
         const combo = this.getEventKeyCombo(e);
         const ids = this.keyMap.get(combo);
-        
+
         if (!ids || ids.size === 0) return;
-        
+
         for (const id of ids) {
             const definition = this.shortcuts.get(id);
             if (!definition) continue;
-            
+
             if (definition.when && !definition.when()) continue;
-            
+
             e.preventDefault();
             e.stopPropagation();
             definition.action();
@@ -146,19 +146,20 @@ class ShortcutManager {
             .split('+')
             .map(part => {
                 switch (part.toLowerCase()) {
-                    case 'ctrl': return '?';
-                    case 'alt': return '?';
-                    case 'shift': return '?';
-                    case 'meta': case 'cmd': return '?';
-                    case 'space': return 'ç©ºæ ¼';
-                    case 'left': return 'â†?;
-                    case 'right': return 'â†?;
-                    case 'up': return 'â†?;
-                    case 'down': return 'â†?;
+                    case 'ctrl': return 'Ctrl';
+                    case 'alt': return 'Alt';
+                    case 'shift': return 'Shift';
+                    case 'meta':
+                    case 'cmd': return 'Cmd';
+                    case 'space': return 'Space';
+                    case 'left': return 'Left';
+                    case 'right': return 'Right';
+                    case 'up': return 'Up';
+                    case 'down': return 'Down';
                     default: return part.toUpperCase();
                 }
             })
-            .join('');
+            .join('+');
     }
 }
 
@@ -184,7 +185,7 @@ export const DEFAULT_SHORTCUTS: Omit<ShortcutDefinition, 'action'>[] = [
     { id: 'cut', keys: ['ctrl+x'], description: 'Cut', category: 'editing' },
     { id: 'undo', keys: ['ctrl+z'], description: 'Undo', category: 'editing' },
     { id: 'redo', keys: ['ctrl+shift+z', 'ctrl+y'], description: 'Redo', category: 'editing' },
-    { id: 'split', keys: ['ctrl+b', 's'], description: 'Split clip at playhead', category: 'editing' },
+    { id: 'split', keys: ['ctrl+b'], description: 'Split clip at playhead', category: 'editing' },
     { id: 'nudge-left', keys: [','], description: 'Nudge left 1 frame', category: 'editing' },
     { id: 'nudge-right', keys: ['.'], description: 'Nudge right 1 frame', category: 'editing' },
     { id: 'nudge-left-big', keys: ['shift+,'], description: 'Nudge left 10 frames', category: 'editing' },
@@ -198,4 +199,3 @@ export const DEFAULT_SHORTCUTS: Omit<ShortcutDefinition, 'action'>[] = [
     { id: 'toggle-snapping', keys: ['n'], description: 'Toggle snapping', category: 'tools' },
     { id: 'toggle-skimming', keys: ['s'], description: 'Toggle skimming', category: 'tools' },
 ];
-

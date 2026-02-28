@@ -1,7 +1,8 @@
-import { Asset, AssetType } from '../entities/asset.entity'
+import type { Asset, AssetType } from '../entities/asset.entity'
 import { Button } from '@sdkwork/react-commons'
-import React, { useState, useEffect } from 'react';
-import { X, Search, UploadCloud, CheckCircle2, LayoutGrid, FileText, Image as ImageIcon } from 'lucide-react';
+import type { AssetBusinessDomain } from '@sdkwork/react-types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Search, UploadCloud, CheckCircle2, LayoutGrid, FileText } from 'lucide-react';
 import { AssetStoreProvider, useAssetStore } from '../store/assetStore';
 import { AssetSidebar } from './AssetSidebar';
 import { AssetGrid } from './AssetGrid';
@@ -16,6 +17,7 @@ interface ChooseAssetModalContentProps {
     title?: string;
     extractedImages?: string[]; // New: Images parsed from content
     initialTab?: 'library' | 'document';
+    domain?: AssetBusinessDomain;
 }
 
 const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
@@ -26,7 +28,10 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
         selectedAsset, setSelectedAsset,
         importAssets, searchQuery, setSearchQuery,
         filterType: _filterType, setFilterType,
-        deleteAsset
+        filterOrigin,
+        deleteAsset,
+        pageData,
+        isLoading
     } = useAssetStore();
 
     // Initialize tab based on props, defaulting to library unless document requested and images exist
@@ -34,6 +39,30 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
         (initialTab === 'document' && extractedImages.length > 0) ? 'document' : 'library'
     );
     const [docSelection, setDocSelection] = useState<string | null>(null);
+    const [selectedAssets, setSelectedAssets] = useState<Asset[]>([]);
+    const selectedAssetIds = useMemo(() => selectedAssets.map((item) => item.id), [selectedAssets]);
+    const pageSummary = useMemo(() => {
+        if (!pageData) return null;
+        const currentPage = (pageData.number || 0) + 1;
+        const totalPages = Math.max(1, pageData.totalPages || 0);
+        const totalElements = pageData.totalElements || 0;
+        return `${currentPage}/${totalPages} | ${totalElements}`;
+    }, [pageData]);
+    const originLabel = useMemo(() => {
+        switch (filterOrigin) {
+            case 'upload':
+                return 'UPLOAD';
+            case 'ai':
+                return 'AI';
+            case 'stock':
+                return 'STOCK';
+            case 'system':
+                return 'SYSTEM';
+            case 'all':
+            default:
+                return 'ALL';
+        }
+    }, [filterOrigin]);
 
     // Initial Filter Setup
     useEffect(() => {
@@ -41,6 +70,20 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
             setFilterType(_accepts[0]);
         }
     }, [_accepts]);
+
+    const handleGridSelect = (asset: Asset) => {
+        if (_multiple) {
+            setSelectedAssets((prev) => {
+                const exists = prev.some((item) => item.id === asset.id);
+                if (exists) {
+                    return prev.filter((item) => item.id !== asset.id);
+                }
+                return [...prev, asset];
+            });
+            return;
+        }
+        setSelectedAsset(asset);
+    };
 
     const handleConfirm = () => {
         if (tab === 'document' && docSelection) {
@@ -58,6 +101,8 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
                 metadata: {}
             };
             onConfirm([asset]);
+        } else if (_multiple && selectedAssets.length > 0) {
+            onConfirm(selectedAssets);
         } else if (selectedAsset) {
             onConfirm([selectedAsset]);
         }
@@ -102,6 +147,11 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
                 <div className="flex items-center gap-3">
                     {tab === 'library' && (
                         <>
+                            <div className="hidden lg:flex items-center px-2 py-1 rounded-md border border-[#333] bg-[#1b1b1d] text-[11px] text-gray-400 font-mono">
+                                {isLoading && !pageSummary
+                                    ? 'Loading...'
+                                    : `Page ${pageSummary || '1/1 | 0'} | Origin ${originLabel}`}
+                            </div>
                             <div className="relative w-64">
                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                                 <input 
@@ -137,12 +187,19 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
                         <div className="flex-1 bg-[#111] overflow-y-auto p-0 relative">
                              <div className="absolute inset-0">
                                 <AssetGrid 
-                                    onPreview={(asset) => setSelectedAsset(asset)}
+                                    onPreview={handleGridSelect}
+                                    selectedAssetIds={_multiple ? selectedAssetIds : (selectedAsset ? [selectedAsset.id] : [])}
                                     onDelete={handleDelete}
                                 />
                              </div>
                              {/* Overlay Selection Indicator since AssetGrid doesn't show "selected" state persistently for pickers usually */}
-                             {selectedAsset && (
+                             {_multiple && selectedAssets.length > 0 && (
+                                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-[#1e1e1e] border border-[#333] rounded-full px-4 py-2 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
+                                     <span className="text-xs text-gray-300">Selected: <span className="text-white font-medium">{selectedAssets.length}</span></span>
+                                     <button onClick={() => setSelectedAssets([])} className="hover:text-white"><X size={14} /></button>
+                                 </div>
+                             )}
+                             {!_multiple && selectedAsset && (
                                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-[#1e1e1e] border border-[#333] rounded-full px-4 py-2 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
                                      <span className="text-xs text-gray-300">Selected: <span className="text-white font-medium">{selectedAsset.name}</span></span>
                                      <button onClick={() => setSelectedAsset(null)} className="hover:text-white"><X size={14} /></button>
@@ -181,11 +238,11 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
                 <Button variant="secondary" onClick={onClose} size="lg">Cancel</Button>
                 <Button 
                     onClick={handleConfirm} 
-                    disabled={tab === 'library' ? !selectedAsset : !docSelection}
+                    disabled={tab === 'library' ? (_multiple ? selectedAssets.length === 0 : !selectedAsset) : !docSelection}
                     size="lg"
                     className="px-8 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20"
                 >
-                    Confirm Selection
+                    {`Confirm Selection${_multiple && selectedAssets.length > 0 ? ` (${selectedAssets.length})` : ''}`}
                 </Button>
             </div>
         </div>
@@ -202,7 +259,10 @@ export const ChooseAssetModal: React.FC<ChooseAssetModalProps> = (props) => {
     return (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             {/* Wrap in Provider to give it a clean, independent state context */}
-            <AssetStoreProvider>
+            <AssetStoreProvider
+                initialAllowedTypes={props.accepts}
+                domain={props.domain}
+            >
                 <ChooseAssetModalContent {...props} />
             </AssetStoreProvider>
         </div>

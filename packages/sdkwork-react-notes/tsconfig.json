@@ -17,6 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
       "sdkwork-react-assets": ["../sdkwork-react-assets/src/index.ts"],
       "sdkwork-react-auth": ["../sdkwork-react-auth/src/index.ts"],
       "sdkwork-react-chat": ["../sdkwork-react-chat/src/index.ts"],

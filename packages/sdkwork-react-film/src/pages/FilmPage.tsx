@@ -1,6 +1,7 @@
 
 import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import type { FilmViewMode } from '@sdkwork/react-commons';
 import { FilmStoreProvider } from '../store/filmStore';
 import { FilmSidebar, FilmWorkspace, FilmChatPanel, FilmSettingsDropdown, FilmPreviewPanel } from '../index';
 import { 
@@ -90,7 +91,7 @@ const navTabs = [
     { id: 'locations', label: '场景', icon: MapPin },
     { id: 'storyboard', label: '分镜', icon: Clapperboard },
     { id: 'timeline', label: '生成', icon: Sparkles },
-];
+] as Array<{ id: Exclude<FilmViewMode, 'preview'>; label: string; icon: React.ElementType }>;
 
 const FilmHeader: React.FC = () => {
     const { navigate } = useRouter();
@@ -131,7 +132,7 @@ const FilmHeader: React.FC = () => {
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setView(tab.id as any)}
+                                onClick={() => setView(tab.id)}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                                     isActive 
                                         ? 'text-white bg-red-600/20 text-red-400' 

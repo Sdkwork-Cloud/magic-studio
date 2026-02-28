@@ -6,7 +6,7 @@ import type { StoreApi } from 'zustand';
 export const PromptOptimizerStoreContext = createContext<StoreApi<PromptOptimizerStore> | null>(null);
 
 export const PromptOptimizerStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const storeRef = useRef<StoreApi<PromptOptimizerStore>>();
+    const storeRef = useRef<StoreApi<PromptOptimizerStore> | null>(null);
     if (!storeRef.current) {
         storeRef.current = usePromptOptimizerStore as unknown as StoreApi<PromptOptimizerStore>;
     }

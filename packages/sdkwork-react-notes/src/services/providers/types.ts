@@ -1,6 +1,6 @@
 
 import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
-import { MediaAccountConfig } from '../../../settings/entities/settings.entity';
+import { MediaAccountConfig } from '@sdkwork/react-settings';
 
 /**
  * Standard Interface for Media Publishing Providers.

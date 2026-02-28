@@ -4,7 +4,6 @@ export type { MediaAnalysisAdapter, MediaAnalysisResult } from './assetService';
 // Enhanced asset types and services
 export { assetServiceRegistry } from './AssetServiceRegistry';
 export type { IAssetService } from './IAssetService';
-export { MockDatabase } from './MockAssetDatabase';
 export { initializeAssetServices, getAssetService, hasAssetService, getRegisteredCategories } from './assetServiceInitializer';
 
 // Implementation services

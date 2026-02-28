@@ -3,8 +3,9 @@ import { useRouter, ROUTES } from '@sdkwork/react-core'
 import { PortalSidebar } from '../components/PortalSidebar'
 import { PortalHeader } from '../components/PortalHeader'
 import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { 
-    Wand2, Video, Image as ImageIcon, Mic, 
+    Wand2, Video, Mic, 
     Search, Layers, Scissors, Move, Eraser, Play, Sparkles
 } from 'lucide-react';
 
@@ -15,7 +16,7 @@ interface AITool {
     category: 'Video' | 'Image' | 'Audio';
     image: string;
     badge?: string;
-    icon?: any;
+    icon: LucideIcon;
     color?: string;
     route: string;
 }
@@ -246,7 +247,7 @@ const AIToolsPage: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-20">
                             {filteredTools.map(tool => (
-                                <ToolCard key={tool.id} tool={tool} onClick={() => navigate(tool.route as any)} />
+                                <ToolCard key={tool.id} tool={tool} onClick={() => navigate(tool.route)} />
                             ))}
                         </div>
                     </div>

@@ -1,14 +1,6 @@
 
 import { PlanTier, VipPlan } from './entities/vip.entity';
 
-const COMMON_FEATURES = {
-  POINTS: (amount: number) => ({ id: 'pts', text: `${amount.toLocaleString()} Credits / Month`, included: true }),
-  SPEED: (text: string) => ({ id: 'speed', text: text, included: true }),
-  MODEL: (text: string) => ({ id: 'model', text: text, included: true }),
-  SYNC: { id: 'sync', text: 'Cloud Workspace Sync', included: true },
-  SUPPORT: { id: 'support', text: 'Priority Support', included: true },
-};
-
 export const VIP_PLANS: VipPlan[] = [
   {
     id: PlanTier.FREE,

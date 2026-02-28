@@ -9,6 +9,12 @@ interface AIPromptModalProps {
     context: string;
 }
 
+interface ActionButtonProps {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+}
+
 export const AIPromptModal: React.FC<AIPromptModalProps> = ({ onClose, onInsert, context }) => {
     const { t } = useTranslation();
     const [prompt, setPrompt] = useState('');
@@ -74,7 +80,7 @@ export const AIPromptModal: React.FC<AIPromptModalProps> = ({ onClose, onInsert,
     );
 };
 
-const ActionButton = ({ icon, label, onClick }: { icon: any, label: string, onClick: () => void }) => (
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onClick }) => (
     <button 
         onClick={onClick}
         className="flex items-center justify-center gap-2 px-3 py-2 bg-[#2a2a2c] hover:bg-[#333] border border-[#333] rounded-lg text-xs text-gray-300 transition-colors"

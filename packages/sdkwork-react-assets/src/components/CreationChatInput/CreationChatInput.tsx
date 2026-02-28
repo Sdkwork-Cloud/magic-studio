@@ -4,7 +4,6 @@ import { ArrowUp, Loader2, Plus, Zap, FolderOpen, UploadCloud } from 'lucide-rea
 import { CreationChatInputProps, InputAttachment } from './types';
 import { AttachmentGrid } from './components/AttachmentGrid';
 import { MentionPreviewPopover } from './components/MentionPreviewPopover';
-import { getAssetLabel } from './utils';
 import { Popover } from '@sdkwork/react-commons';
 
 // TipTap Imports

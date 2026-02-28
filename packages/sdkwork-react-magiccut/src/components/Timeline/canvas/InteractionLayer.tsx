@@ -1,7 +1,6 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { InteractionState } from '../../../store/types';
-;
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../../entities/magicCut.entity';
 import { DragInput, DragContext } from '../dnd/types';
@@ -9,7 +8,7 @@ import { ClipTrimStrategy, TrimMode } from '../dnd/strategies/ClipTrimStrategy';
 
 interface InteractionLayerProps {
     interaction: InteractionState;
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
     pixelsPerSecond: number;
     trackLayouts: { id: string; top: number; height: number }[];
     clipsMap: Record<string, CutClip>;
@@ -17,10 +16,7 @@ interface InteractionLayerProps {
     calculateSnap: (rawTime: number, duration: number, ignoreClipId?: string | null) => { time: number; lines: number[] };
     prepareSnapPoints: (ignoreClipId?: string | null) => void;
     autoScrollSpeed: React.MutableRefObject<number>;
-    stopAutoScroll: () => void;
-    moveClip: (clipId: string, targetTrackId: string, newStart: number) => void;
     trimClip: (clipId: string, start: number, duration: number, offset: number) => void;
-    insertTrackAndMoveClip: (clipId: string, insertIndex: number, newStart: number) => void;
     setInteraction: (interaction: InteractionState | ((prev: InteractionState) => InteractionState)) => void;
     validateTrackDrop: (trackId: string, resourceType: string) => boolean;
     checkCollision: (trackId: string, start: number, duration: number, exclude: Set<string>) => boolean;
@@ -38,10 +34,7 @@ export const InteractionLayer: React.FC<InteractionLayerProps> = ({
     calculateSnap,
     prepareSnapPoints,
     autoScrollSpeed,
-    stopAutoScroll,
-    moveClip,
     trimClip,
-    insertTrackAndMoveClip,
     setInteraction,
     validateTrackDrop,
     checkCollision,

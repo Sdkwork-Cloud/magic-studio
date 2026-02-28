@@ -10,7 +10,7 @@ import { CanvasEmptyState } from './CanvasEmptyState';
 import { CanvasBackground } from './layers/CanvasBackground';
 import { CanvasConnections } from './layers/CanvasConnections';
 ;
-import { CanvasElement, CanvasElementType, ConnectionDraft, DropMenuState, MarqueeState, ContextMenuState } from '../entities/canvas.entity';
+import { CanvasElement, CanvasElementType, ConnectionDraft, DropMenuState, MarqueeState, ContextMenuState } from '../entities';
 import { QuadTree, Rect } from '@sdkwork/react-commons';
 import { getSmartPath } from '../utils/smartPath';
 import { calculateSnap } from '../utils/snapping';
@@ -476,8 +476,8 @@ export const CanvasBoard: React.FC = () => {
                 
                 if (useCanvasStore.getState().selectedIds.size === 1) {
                      const leadId = dragRef.current.initialPositions.keys().next().value;
-                     const startPos = dragRef.current.initialPositions.get(leadId);
-                     if (startPos) {
+                     const startPos = leadId ? dragRef.current.initialPositions.get(leadId) : undefined;
+                     if (leadId && startPos) {
                          const proposedX = startPos.x + worldDx;
                          const proposedY = startPos.y + worldDy;
                          const visibleRect = { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom, width: window.innerWidth / viewport.zoom, height: window.innerHeight / viewport.zoom };
@@ -608,9 +608,9 @@ export const CanvasBoard: React.FC = () => {
                          let worldDy = dy / viewport.zoom;
                          
                          if (useCanvasStore.getState().selectedIds.size === 1) {
-                             const leadId = dragRef.current.initialPositions.keys().next().value;
-                             const startPos = dragRef.current.initialPositions.get(leadId);
-                             if (startPos) {
+                            const leadId = dragRef.current.initialPositions.keys().next().value;
+                            const startPos = leadId ? dragRef.current.initialPositions.get(leadId) : undefined;
+                            if (leadId && startPos) {
                                  const proposedX = startPos.x + worldDx;
                                  const proposedY = startPos.y + worldDy;
                                  const visibleRect = { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom, width: window.innerWidth / viewport.zoom, height: window.innerHeight / viewport.zoom };

@@ -1,11 +1,10 @@
 
-import { CutTimeline } from '../entities/magicCut.entity'
+import { CutTimeline } from '../entities'
 import { MasterClock } from '../engine/MasterClock';
 import { TimelineStore } from '../store/transientStore';
 import { NormalizedState } from '../store/magicCutStore';
 import { audioEngine } from '../engine/AudioEngine';
 import { TIMELINE_CONSTANTS } from '../constants';
-;
 
 export class PlayerController {
     private clock: MasterClock;
@@ -27,8 +26,8 @@ export class PlayerController {
     private skimRaf: number | null = null;
     private pendingSkimTime: number | null = null;
 
-    private lastPlaybackRate: number = 1;
-    private lastPlaybackDirection: 1 | -1 = 1;
+    private _lastPlaybackRate: number = 1;
+    private _lastPlaybackDirection: 1 | -1 = 1;
     private jklPressCount: number = 0;
     private jklLastKey: string | null = null;
     private jklResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -36,12 +35,12 @@ export class PlayerController {
     private lastStateUpdateTime: number = 0;
     private readonly STATE_UPDATE_INTERVAL = 100;
     
-    private lastDomUpdateTime: number = 0;
+    private _lastDomUpdateTime: number = 0;
     private readonly DOM_UPDATE_INTERVAL = 16;
 
     private lastFrameTime: number = 0;
-    private cachedZoom: number = 1;
-    private cachedScrollLeft: number = 0;
+    private _cachedZoom: number = 1;
+    private _cachedScrollLeft: number = 0;
 
     constructor(store: TimelineStore) {
         this.store = store;
@@ -99,7 +98,7 @@ export class PlayerController {
         }
     }
 
-    public syncScroll = (scrollLeft: number) => {
+    public syncScroll = (_scrollLeft: number) => {
         this.updateDomElements(this.clock.currentTime);
         this.updateSkimmer(null);
     }
@@ -229,7 +228,7 @@ export class PlayerController {
         if (frameDelta >= this.DOM_UPDATE_INTERVAL) {
             this.updateDomElements(time);
             this.handleAutoScroll(time);
-            this.lastDomUpdateTime = now;
+            this._lastDomUpdateTime = now;
             this.lastFrameTime = now;
         }
 

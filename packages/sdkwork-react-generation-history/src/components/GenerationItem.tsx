@@ -3,8 +3,13 @@ import React, { useState, useRef } from 'react';
 import { 
     Trash2, Copy, Repeat2, Check, Maximize2, Play, Image as ImageIcon, Film, Mic, Music, Volume2, Box, Save
 } from 'lucide-react';
-import { ImageTask, GeneratedResult, MediaType, PromptText, useAssetUrl } from '@sdkwork/react-commons';
+import { ImageTask, MediaType, PromptText, useAssetUrl } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
+
+type GeneratedResult = NonNullable<ImageTask['results']>[number] & {
+    modelId?: string;
+    posterUrl?: string;
+};
 
 interface GenerationItemProps {
     task: ImageTask;
@@ -20,7 +25,7 @@ interface GenerationItemProps {
 export const GenerationItem: React.FC<GenerationItemProps> = ({ 
     task, onDelete, onReuse, onPreview, onSelect, selectedItems = [], onSaveToAssets
 }) => {
-    const results = task.results || [];
+    const results = (task.results || []) as GeneratedResult[];
     const mediaType = task.config.mediaType || 'image';
     const aspectRatio = task.config.aspectRatio || '1:1';
     const [isSaving, setIsSaving] = useState(false);
@@ -102,7 +107,6 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
                         type={mediaType} 
                         aspectRatio={aspectRatio}
                         onClick={handleMediaClick}
-                        selectionMode={!!onSelect}
                         selectedItems={selectedItems}
                     />
                 )}
@@ -306,9 +310,8 @@ const MediaGrid: React.FC<{
     type: MediaType,
     aspectRatio: string,
     onClick: (url: string) => void,
-    selectionMode: boolean,
     selectedItems: string[]
-}> = ({ results, type, aspectRatio, onClick, selectionMode, selectedItems }) => {
+}> = ({ results, type, aspectRatio, onClick, selectedItems }) => {
     const count = results.length;
     if (count === 0) return null;
 

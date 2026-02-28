@@ -1,7 +1,6 @@
 
 import { StyleOption } from '@sdkwork/react-commons'
-import { Clapperboard, Video, Image as ImageIcon, Type, ArrowRightLeft, Layers, Grid3x3, Bot, Music, Mic, Zap, ScanFace, Sparkles } from 'lucide-react';
-;
+import { Clapperboard, Video, Image as ImageIcon, ArrowRightLeft, Layers, Bot, Music, ScanFace, Sparkles, Type } from 'lucide-react';
 
 export const PORTAL_MODES = [
     { id: 'short_drama', label: 'AI 短剧', icon: Clapperboard, color: 'text-orange-500', desc: '一键生成连贯故事短片' },

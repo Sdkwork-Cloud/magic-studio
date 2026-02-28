@@ -1,6 +1,6 @@
 
 import React, { useRef, useMemo, useLayoutEffect } from 'react';
-import { Plus, Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Film, Music, Type, Sparkles, AlertCircle } from 'lucide-react';
 
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip, CutTrackType } from '../../../entities/magicCut.entity';
@@ -11,7 +11,6 @@ import { MagicCutClip } from '../MagicCutClip';
 
 import { ResourceTraitsFactory } from '../../../domain/dnd/ResourceTraitsFactory';
 import { TrackFactory } from '../../../services/TrackFactory';
-;
 
 interface DragOverlayProps {
     isVisible: boolean;
@@ -71,6 +70,8 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
             resource = dragOperation.payload;
             clip = {
                 id: 'ghost-drag',
+                uuid: 'ghost-drag',
+                type: 'CutClip',
                 resource: { id: resource.id, type: 'MediaResource', uuid: '' },
                 start: 0,
                 duration: dragOperation.duration,
@@ -82,7 +83,7 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
                     ? (resource.metadata?.text || resource.name) 
                     : undefined,
                 transform: { x: 0, y: 0, width: 0, height: 0, rotation: 0, scale: 1, opacity: 1 }
-            } as CutClip;
+            } as unknown as CutClip;
             
             operationLabel = isInsert ? "New Track" : "Add Clip";
 
@@ -136,7 +137,7 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
         }
 
         const { currentTime, currentTrackId, insertTrackIndex, snapLines } = interaction;
-        const { clip, visualConfig, operationLabel, trackHeight, trackType, isInsert, isDropInside } = ghostData;
+        const { clip, visualConfig, operationLabel, trackType, isInsert, isDropInside } = ghostData;
         const left = Math.round(currentTime * pixelsPerSecond);
 
         let top = 0;

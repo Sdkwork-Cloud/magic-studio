@@ -1,9 +1,7 @@
 
-import { CutClip } from '../../../../entities/magicCut.entity'
 import { useCallback, useRef } from 'react';
 import { useMagicCutStore } from '../../../../store/magicCutStore';
 import { SnapIndex } from '../../../../domain/dnd/SnapIndex';
-;
 
 interface UseSnapPointsOptions {
     pixelsPerSecond: number;
@@ -67,7 +65,7 @@ export const useSnapPoints = ({
     const calculateSnap = useCallback((
         rawTime: number, 
         clipDuration: number, 
-        ignoreClipId?: string | null
+        _ignoreClipId?: string | null
     ): SnapResult => {
         if (!isSnappingEnabled) return { time: rawTime, lines: [], isSnapping: false };
         if (!snapIndexRef.current) return { time: rawTime, lines: [], isSnapping: false };

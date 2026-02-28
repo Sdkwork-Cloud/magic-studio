@@ -19,7 +19,7 @@ export const RenderSortUtils = {
     ): CutTrack[] => {
         const tracks = timeline.tracks
             .map(ref => trackMap[ref.id])
-            .filter(t => t && t.visible !== false && t.type !== 'audio');
+            .filter(t => t && t.visible !== false && t.trackType !== 'audio');
 
         // Sort descending: e.g. [Track 3, Track 2, Track 1, Track 0]
         // This ensures Track 0 is rendered last, appearing on top of other tracks.

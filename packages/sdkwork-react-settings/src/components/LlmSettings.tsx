@@ -1,5 +1,5 @@
 
-import { LlmProviderConfig } from '../entities/settings.entity'
+import { LlmProviderConfig } from '../entities'
 import React, { useState, useMemo } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 

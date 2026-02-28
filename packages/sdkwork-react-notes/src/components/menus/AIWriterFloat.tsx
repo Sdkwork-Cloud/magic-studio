@@ -6,12 +6,18 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 
+export interface AIWriterGenerateOptions {
+    tone: string;
+    language: string;
+    format: 'html' | 'markdown';
+}
+
 interface AIWriterFloatProps {
     visible: boolean;
     position: { top: number; left: number } | null;
     initialPrompt?: string;
     onClose: () => void;
-    onGenerate: (prompt: string, options: any) => Promise<void>;
+    onGenerate: (prompt: string, options: AIWriterGenerateOptions) => Promise<void>;
     isGenerating: boolean;
     onStop: () => void;
 }
@@ -59,7 +65,7 @@ export const AIWriterFloat: React.FC<AIWriterFloatProps> = ({
     // Click outside to close
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            // Check if click is inside container or any portal/dropdowns rooted in document
+            // Check if click is inside container or all related portal/dropdown roots
             if (containerRef.current && !containerRef.current.contains(e.target as Node) && !isGenerating) {
                 // Ensure we aren't clicking a dropdown item that might be portaled (though we render inline here)
                 const target = e.target as HTMLElement;

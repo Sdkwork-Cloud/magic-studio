@@ -3,23 +3,14 @@ import { TIMELINE_CONSTANTS } from '../../constants'
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { MagicCutRuler } from './MagicCutRuler';
-;
 
 interface TimelineEditAxisProps {
     duration: number;
     pixelsPerSecond: number;
     containerWidth: number;
-    scrollContainerRef: React.RefObject<HTMLElement>;
+    scrollContainerRef: React.RefObject<HTMLElement | null>;
 }
 
-/**
- * TimelineEditAxis - Edit Axis (Ruler + Playhead)
- * 
- * Responsibilities:
- * - Displays the time ruler.
- * - Handles Playhead (Red) dragging and clicking.
- * - Ensures precise seeking.
- */
 export const TimelineEditAxis: React.FC<TimelineEditAxisProps> = ({
     duration,
     pixelsPerSecond,
@@ -31,16 +22,14 @@ export const TimelineEditAxis: React.FC<TimelineEditAxisProps> = ({
         state, 
         activeTimelineId, 
         previewRange,
-        playerController,
-        store
+        playerController
     } = useMagicCutStore();
 
     const timeline = activeTimelineId ? state.timelines[activeTimelineId] : null;
     const containerRef = useRef<HTMLDivElement>(null);
     const handleRef = useRef<HTMLDivElement>(null);
     
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [isDragging, setIsDragging] = useState(false);
+    const [_isDragging, setIsDragging] = useState(false);
     
     // Calculate time from mouse X
     const getTimeAtMouse = useCallback((clientX: number) => {

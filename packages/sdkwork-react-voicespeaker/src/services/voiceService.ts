@@ -1,4 +1,4 @@
-import { VoiceConfig, GeneratedVoiceResult, VoiceProfile, VoiceTask } from '../entities/voice.entity';
+import { VoiceConfig, GeneratedVoiceResult, VoiceProfile, VoiceTask } from '../entities';
 import { PRESET_VOICES } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
 
@@ -13,7 +13,7 @@ export const voiceService = {
         let audioUrl = '';
         
         try {
-            audioUrl = `mock-audio-${generateUUID()}.wav`;
+            audioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
         } catch (e) {
             console.error("Voice generation failed", e);
             throw e;

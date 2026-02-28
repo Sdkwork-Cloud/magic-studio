@@ -41,14 +41,24 @@ export interface CanvasNodeData {
 
 export interface CanvasMediaResource {
   id: string;
+  uuid?: string;
+  name?: string;
   type: 'image' | 'video' | 'audio';
   url: string;
+  path?: string;
   thumbnailUrl?: string;
   duration?: number;
   width?: number;
   height?: number;
   size?: number;
   format?: string;
+  metadata?: {
+    text?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    fontWeight?: string;
+    [key: string]: any;
+  };
 }
 
 // ============================================================================

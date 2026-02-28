@@ -1,7 +1,7 @@
 
 import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
 import { IPublishingProvider } from './types';
-import { MediaAccountConfig } from '../../../settings/entities/settings.entity';
+import { MediaAccountConfig } from '@sdkwork/react-settings';
 
 export class ToutiaoProvider implements IPublishingProvider {
     platformType = 'toutiao';
@@ -11,7 +11,7 @@ export class ToutiaoProvider implements IPublishingProvider {
         return !!config.token || (!!config.appId && !!config.appSecret);
     }
 
-    async publish(articles: ArticlePayload[], config: MediaAccountConfig): Promise<PublishResult> {
+    async publish(articles: ArticlePayload[], _config: MediaAccountConfig): Promise<PublishResult> {
         // Toutiao typically publishes items individually unless using a specific batch API.
         // For simulation, we process them sequentially or just publish the first one if the API implies single.
         console.log(`[ToutiaoProvider] Publishing batch of ${articles.length}...`);

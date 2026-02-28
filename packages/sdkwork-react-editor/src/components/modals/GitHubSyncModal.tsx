@@ -16,6 +16,8 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ onClose, onSyn
     const { t } = useTranslation();
     const [message, setMessage] = useState('');
     const [branch, setBranch] = useState('main');
+    const [repository, setRepository] = useState('');
+    const [token, setToken] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
@@ -23,7 +25,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ onClose, onSyn
         if (!message.trim()) return;
         setIsSyncing(true);
         try {
-            await onSync({ message, branch });
+            await onSync({ message, branch, repository, token });
             setIsSuccess(true);
             setTimeout(onClose, 1500);
         } catch (e) {

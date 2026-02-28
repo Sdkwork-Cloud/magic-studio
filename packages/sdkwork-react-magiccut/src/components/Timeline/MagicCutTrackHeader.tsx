@@ -2,15 +2,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Video, Mic, Layers, Lock, Unlock, Eye, EyeOff, Volume2, VolumeX, Type, Sparkles, Image as ImageIcon, Trash2, Upload, Loader2, X, GripVertical } from 'lucide-react';
-;
 import { useMagicCutStore } from '../../store/magicCutStore';
-import { platform, uploadHelper } from '@sdkwork/react-core';
+import { uploadHelper } from '@sdkwork/react-core';
 import { CutTrack } from '../../entities/magicCut.entity';
 import { thumbnailGenerator } from '@sdkwork/react-core';
 import { downloadService } from '@sdkwork/react-core';
 import { Confirm, useConfirm } from '@sdkwork/react-commons';
 import { MediaResourceType } from '@sdkwork/react-commons';
-import { assetService } from '@sdkwork/react-assets';
+import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
 
 interface MagicCutTrackHeaderProps {
     track: CutTrack;
@@ -124,7 +123,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
     }, [isResizing, height, track.id, resizeTrack]);
 
     const getTrackIcon = () => {
-        switch (track.type) {
+        switch (track.trackType) {
             case 'video': return <Video size={14} />;
             case 'audio': return <Mic size={14} />;
             case 'text': return <Type size={14} />;
@@ -136,7 +135,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
 
     const getTypeColorClass = () => {
         if (track.isMain) return 'text-blue-400 bg-blue-500/5 border-l-blue-500';
-        switch (track.type) {
+        switch (track.trackType) {
             case 'video': return 'text-cyan-400 bg-cyan-500/5 border-l-cyan-500';
             case 'audio': return 'text-emerald-400 bg-emerald-500/5 border-l-emerald-500';
             case 'text': return 'text-yellow-400 bg-yellow-500/5 border-l-yellow-500';
@@ -196,7 +195,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
 
             // Ensure ready
             await downloadService.hydrateState(resource);
-            const url = await assetService.resolveAssetUrl(resource);
+            const url = await resolveAssetUrlByAssetIdFirst(resource);
             if (!url) return null;
 
             return {
@@ -299,9 +298,9 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
         e.dataTransfer.effectAllowed = 'move';
     };
 
-    const isVisual = track.type !== 'audio';
+    const isVisual = track.trackType !== 'audio';
     const isMain = track.isMain;
-    const canHaveVolume = track.type === 'video' || track.type === 'audio';
+    const canHaveVolume = track.trackType === 'video' || track.trackType === 'audio';
     const isSelected = selectedTrackId === track.id;
 
     const baseClasses = `
@@ -329,7 +328,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             {/* 2. Icon Section */}
             <div
                 className={`w-8 h-8 rounded-lg flex-none flex items-center justify-center mr-2 shadow-sm border border-white/5 ${getTypeColorClass().split(' ').slice(0, 2).join(' ')}`}
-                title={`${track.type.toUpperCase()} Track`}
+                title={`${track.trackType.toUpperCase()} Track`}
             >
                 {getTrackIcon()}
             </div>
@@ -339,7 +338,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                 <div className="text-[11px] font-bold text-gray-300 truncate mb-1 leading-none">{track.name}</div>
                 <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                     <ControlBtn
-                        active={track.locked}
+                        active={track.locked || false}
                         activeIcon={Lock} inactiveIcon={Unlock}
                         onClick={() => updateTrack(track.id, { locked: !track.locked })}
                         activeClass="text-red-500 bg-red-500/10"
@@ -358,7 +357,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                     )}
                     {(canHaveVolume) && (
                         <ControlBtn
-                            active={track.muted}
+                            active={track.muted || false}
                             activeIcon={VolumeX} inactiveIcon={Volume2}
                             onClick={() => updateTrack(track.id, { muted: !track.muted })}
                             activeClass="text-orange-500 bg-orange-500/10"
@@ -474,4 +473,3 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
         </div>
     );
 });
-

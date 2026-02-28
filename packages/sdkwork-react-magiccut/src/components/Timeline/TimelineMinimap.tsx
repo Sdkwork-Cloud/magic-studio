@@ -75,10 +75,10 @@ export const TimelineMinimap: React.FC<TimelineMinimapProps> = ({
                  const w = Math.max(2, clip.duration * pixelsPerSecond);
                  
                  // Color coding
-                 if (track.type === 'video') ctx.fillStyle = '#3b82f6'; // Blue
-                 else if (track.type === 'audio') ctx.fillStyle = '#10b981'; // Green
-                 else if (track.type === 'text') ctx.fillStyle = '#eab308'; // Yellow
-                 else ctx.fillStyle = '#6b7280'; // Gray
+                if (track.trackType === 'video') ctx.fillStyle = '#3b82f6'; // Blue
+                else if (track.trackType === 'audio') ctx.fillStyle = '#10b981'; // Green
+                else if (track.trackType === 'text') ctx.fillStyle = '#eab308'; // Yellow
+                else ctx.fillStyle = '#6b7280'; // Gray
                  
                  ctx.fillRect(x, y, w, h);
              });

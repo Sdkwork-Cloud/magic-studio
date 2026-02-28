@@ -2,14 +2,13 @@
 import { TIMELINE_CONSTANTS } from '../../constants'
 import React, { useRef, useEffect } from 'react';
 import { useMagicCutStore } from '../../store/magicCutStore';
-;
 
 interface MagicCutPlayheadProps {
-    scrollContainerRef: React.RefObject<HTMLElement>;
+    scrollContainerRef: React.RefObject<HTMLElement | null>;
     containerHeight: number;
 }
 
-export const MagicCutPlayhead: React.FC<MagicCutPlayheadProps> = ({ scrollContainerRef, containerHeight }) => {
+export const MagicCutPlayhead: React.FC<MagicCutPlayheadProps> = ({ scrollContainerRef: _scrollContainerRef, containerHeight }) => {
     const { useTransientState, playerController, store } = useMagicCutStore();
     const zoomLevel = useTransientState(s => s.zoomLevel);
     

@@ -1,5 +1,5 @@
 
-import { OpencodeConfig } from '../entities/settings.entity'
+import { OpencodeConfig } from '../entities'
 import React from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 import { useTranslation } from '@sdkwork/react-i18n';

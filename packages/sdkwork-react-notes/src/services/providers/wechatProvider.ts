@@ -1,7 +1,7 @@
 
 import { ArticlePayload, PublishResult } from '@sdkwork/react-commons';
 import { IPublishingProvider } from './types';
-import { MediaAccountConfig } from '../../../settings/entities/settings.entity';
+import { MediaAccountConfig } from '@sdkwork/react-settings';
 
 export class WeChatProvider implements IPublishingProvider {
     platformType = 'wechat-mp';

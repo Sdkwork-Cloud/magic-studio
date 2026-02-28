@@ -1,5 +1,5 @@
 
-import { PlanTier, Subscription } from '../entities/vip.entity'
+import { PlanTier, Subscription } from '../entities'
 import { vipService } from '../services/vipService'
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 

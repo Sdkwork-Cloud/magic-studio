@@ -37,8 +37,9 @@ class TimelineOperationService {
         const newAudioClip: CutClip = {
             id: generateUUID(),
             uuid: generateUUID(),
+            type: 'CutClip',
             resource: { id: audioResourceId, uuid: generateUUID(), type: 'MediaResource' },
-            track: { id: '', uuid: '', type: 'CutTrack' }, // Will be set by store
+            track: { id: '', uuid: '', type: 'CutTrack' },
             start: videoClip.start,
             duration: videoClip.duration,
             offset: videoClip.offset,
@@ -67,7 +68,7 @@ class TimelineOperationService {
             const track = tracks[i];
             
             // We only want to place on Audio tracks
-            if (track.type === 'audio') {
+            if (track.trackType === 'audio') {
                 // Check Collision
                 // Build a temp index for this check (or use existing if exposed, but for single op linear is fast enough)
                 const hasCollision = this.checkCollisionInTrack(state, track, start, end);

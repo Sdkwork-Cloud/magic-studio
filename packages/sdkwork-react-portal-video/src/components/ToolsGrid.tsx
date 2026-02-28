@@ -1,18 +1,29 @@
 
 import { useRouter, ROUTES, remixService } from '@sdkwork/react-core'
 import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { 
-    Mic, Move, Image as ImageIcon, Type, Scissors, 
-    Wand2, Eraser, Layers, ChevronRight, Sparkles, Zap, 
-    MonitorPlay, Speaker, ScanFace
+    Mic, Move, Image as ImageIcon, Scissors, 
+    Wand2, Eraser, Layers, ChevronRight, Sparkles, Zap
 } from 'lucide-react';
+
+interface ToolItem {
+    id: string;
+    label: string;
+    desc: string;
+    icon: LucideIcon;
+    color: string;
+    bg: string;
+    border: string;
+    route: string;
+}
 
 export const ToolsGrid: React.FC = () => {
     // Use useRouter safely - it returns default values if not wrapped in RouterProvider
     const routerContext = useRouter();
     const navigate = routerContext?.navigate || (() => {});
 
-    const TOOLS = [
+    const TOOLS: ToolItem[] = [
         { id: 'lipsync', label: '对口型', desc: '逼真唇形同步', icon: Mic, color: 'text-blue-400', bg: 'bg-[#1a1d26]', border: 'border-blue-500/20', route: ROUTES.VIDEO },
         { id: 'motion', label: '动作模仿', desc: '视频动作迁移', icon: Move, color: 'text-purple-400', bg: 'bg-[#221a26]', border: 'border-purple-500/20', route: ROUTES.VIDEO },
         { id: 'upscale', label: '4K 升级', desc: '画质增强', icon: Wand2, color: 'text-green-400', bg: 'bg-[#1a261d]', border: 'border-green-500/20', route: ROUTES.IMAGE },
@@ -23,13 +34,13 @@ export const ToolsGrid: React.FC = () => {
         { id: 'obj-remove', label: '物体消除', desc: '一键移除', icon: Scissors, color: 'text-orange-400', bg: 'bg-[#26201a]', border: 'border-orange-500/20', route: ROUTES.IMAGE },
     ];
 
-    const handleToolClick = (tool: typeof TOOLS[0]) => {
+    const handleToolClick = (tool: ToolItem) => {
         if (tool.id === 'lipsync') {
             remixService.setIntent({ targetModule: 'video', modeHint: 'lip-sync', prompt: '', mediaReferences: [] });
         } else if (tool.id === 'motion') {
             remixService.setIntent({ targetModule: 'video', modeHint: 'motion', prompt: '', mediaReferences: [] });
         }
-        navigate(tool.route as any);
+        navigate(tool.route);
     };
 
     return (

@@ -8,8 +8,19 @@ import {
     LayoutGrid, FileText, Sparkles, Upload, Loader2
 } from 'lucide-react';
 import { useAssetUrl } from '../hooks/useAssetUrl';
-import { Asset, AssetType } from '../entities/asset.entity';
+import {
+    assetBusinessFacade,
+    detectAssetTypeByFilename,
+    mapUnifiedAssetToAsset,
+    readWorkspaceScope,
+    resolveAcceptExtensionsByTypes,
+    resolveDomainAssetTypes,
+    resolveAssetUrlByAssetIdFirst,
+    toContentKey
+} from '../asset-center';
+import type { Asset, AssetType } from '../entities/asset.entity';
 import { generateUUID } from '@sdkwork/react-commons';
+import type { AssetBusinessDomain } from '@sdkwork/react-types';
 
 interface AIGeneratorProps {
     contextText?: string;
@@ -29,12 +40,13 @@ interface ChooseAssetProps {
     contextText?: string;
     imageFit?: 'cover' | 'contain' | 'fill';
     aiGenerator?: React.ComponentType<AIGeneratorProps>;
+    domain?: AssetBusinessDomain;
 }
 
 export const ChooseAsset: React.FC<ChooseAssetProps> = ({ 
     value, onChange, accepts, label = "Select Asset", aspectRatio = "aspect-video", 
     className = "", readOnly = false, extractedImages, contextText = "", imageFit = "contain",
-    aiGenerator: AIGenerator
+    aiGenerator: AIGenerator, domain = 'asset-center'
 }) => {
     const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -44,8 +56,12 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
     const assetPath = typeof value === 'string' ? value : value?.path || value?.id;
     const assetType = typeof value === 'object' && value ? value.type : 'unknown';
     const assetName = typeof value === 'object' && value ? value.name : (typeof value === 'string' ? value.split('/').pop() : 'Unknown');
+    const imageFitClass = imageFit === 'cover' ? 'object-cover' : imageFit === 'fill' ? 'object-fill' : 'object-contain';
 
-    const { url: displayUrl, loading } = useAssetUrl(assetPath);
+    const { url: displayUrl, loading } = useAssetUrl(
+        typeof value === 'object' && value ? value : assetPath,
+        { resolver: resolveAssetUrlByAssetIdFirst }
+    );
 
     const handleConfirm = (assets: Asset[]) => {
         if (assets.length > 0) {
@@ -77,31 +93,52 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
         setIsReplaceMenuOpen(false);
         
         try {
-            let acceptStr = '*';
-            if (accepts?.includes('image')) acceptStr = 'image/*';
-            else if (accepts?.includes('video')) acceptStr = 'video/*';
+            const effectiveCandidates = accepts && accepts.length > 0
+                ? accepts
+                : resolveDomainAssetTypes(domain);
+            const acceptExtensions = resolveAcceptExtensionsByTypes(effectiveCandidates);
+            const acceptStr = acceptExtensions.length > 0 ? acceptExtensions.join(',') : '*';
 
             const files = await uploadHelper.pickFiles(false, acceptStr);
             if (files.length > 0) {
                 const file = files[0];
-                let binary = '';
-                const len = file.data.byteLength;
-                for (let i = 0; i < len; i++) { binary += String.fromCharCode(file.data[i]); }
-                const base64 = `data:${accepts?.includes('image') ? 'image/png' : 'application/octet-stream'};base64,${btoa(binary)}`;
-                
-                const asset: Asset = {
-                    id: base64,
-                    uuid: generateUUID(),
+                const detectedType = detectAssetTypeByFilename(file.name, {
+                    candidates: effectiveCandidates,
+                    fallback: effectiveCandidates.includes('file') ? 'file' : effectiveCandidates[0] || 'file'
+                });
+                const scope = readWorkspaceScope();
+                const sourcePath = typeof file.path === 'string' && file.path.trim().length > 0
+                    ? file.path
+                    : undefined;
+
+                const imported = await assetBusinessFacade.importByDomain(domain, {
+                    scope,
+                    type: toContentKey(detectedType),
                     name: file.name,
-                    type: accepts?.[0] || 'file' as any,
-                    path: base64,
-                    size: file.data.byteLength,
-                    createdAt: Date.now(),
-                    updatedAt: Date.now(),
-                    origin: 'upload',
-                    metadata: {}
-                };
-                onChange(asset);
+                    data: sourcePath ? undefined : file.data,
+                    sourcePath,
+                    metadata: {
+                        origin: 'upload',
+                        source: 'choose-asset-upload'
+                    }
+                });
+                const mapped = mapUnifiedAssetToAsset(imported.asset);
+                if (mapped) {
+                    onChange(mapped);
+                } else {
+                    onChange({
+                        id: imported.asset.assetId,
+                        uuid: imported.asset.uuid,
+                        name: imported.asset.title,
+                        type: detectedType,
+                        path: imported.primaryLocator.uri,
+                        size: 0,
+                        createdAt: imported.asset.createdAt,
+                        updatedAt: imported.asset.updatedAt,
+                        origin: 'upload',
+                        metadata: {}
+                    });
+                }
             }
         } catch (err) {
             console.error("Local upload failed", err);
@@ -140,7 +177,7 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
                 <img 
                     src={finalSrc} 
                     alt="Preview" 
-                    className={`w-full h-full object-${imageFit}`} 
+                    className={`w-full h-full ${imageFitClass}`} 
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
             );
@@ -161,35 +198,35 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
     const renderSourceMenu = () => (
         <div className="bg-[#252526] border border-[#333] rounded-lg shadow-xl p-1 flex flex-col gap-1 min-w-[160px] animate-in fade-in zoom-in-95 duration-150 select-none" onClick={(e) => e.stopPropagation()}>
              {extractedImages && extractedImages.length > 0 && (
-                <button 
+                <button
                     onClick={(e) => { e.stopPropagation(); openLibrary('document'); }}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs text-gray-300 hover:bg-[#094771] hover:text-white rounded-md transition-colors text-left"
                 >
                     <FileText size={14} className="text-blue-400" />
-                    <span>从文档选择</span>
+                    <span>Select from document</span>
                 </button>
              )}
-             <button 
+             <button
                 onClick={(e) => { e.stopPropagation(); openLibrary('library'); }}
                 className="flex items-center gap-2.5 px-3 py-2 text-xs text-gray-300 hover:bg-[#094771] hover:text-white rounded-md transition-colors text-left"
              >
                  <LayoutGrid size={14} className="text-orange-400" />
-                 <span>从素材库选择</span>
+                 <span>Select from library</span>
              </button>
-             <button 
+             <button
                 onClick={handleLocalUpload}
                 className="flex items-center gap-2.5 px-3 py-2 text-xs text-gray-300 hover:bg-[#094771] hover:text-white rounded-md transition-colors text-left"
              >
                  <Upload size={14} className="text-green-400" />
-                 <span>本地上传</span>
+                 <span>Upload local file</span>
              </button>
              {AIGenerator && (
-                 <button 
+                 <button
                     onClick={(e) => { e.stopPropagation(); setIsAIModalOpen(true); setIsReplaceMenuOpen(false); }}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs text-gray-300 hover:bg-[#094771] hover:text-white rounded-md transition-colors text-left"
                  >
                      <Sparkles size={14} className="text-purple-400" />
-                     <span>AI 生成</span>
+                     <span>AI generate</span>
                  </button>
              )}
         </div>
@@ -262,6 +299,7 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
                 title={label}
                 extractedImages={extractedImages}
                 initialTab={initialTab}
+                domain={domain}
             />
 
             {isAIModalOpen && AIGenerator && (
@@ -274,3 +312,4 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
         </>
     );
 };
+

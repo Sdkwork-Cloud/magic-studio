@@ -1,8 +1,8 @@
 
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { downloadService } from '@sdkwork/react-core';
-import { assetService } from '@sdkwork/react-assets';
 import { getRobustResourceUrl, isVfsPath } from '../../utils/resourceUtils';
+import { getAssetIdCandidate, resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
 
 
 const logger = {
@@ -142,15 +142,43 @@ export class ResourceManager {
     }
 
     public resolveResourceUrl(resource: AnyMediaResource): string | null {
+        const assetId = getAssetIdCandidate(resource);
+        if (assetId) {
+            const cached = this.resolvedAssetUrls.get(assetId);
+            if (cached) {
+                return cached;
+            }
+
+            if (!this.pendingAssetResolves.has(assetId)) {
+                const task = resolveAssetUrlByAssetIdFirst(resource).then((resolved) => {
+                    if (resolved) {
+                        this.resolvedAssetUrls.set(assetId, resolved);
+                        if (this.onFrameReady) {
+                            this.onFrameReady();
+                        }
+                    }
+                }).catch((e) => {
+                    logger.warn('[ResourceManager] asset resolve failed', e);
+                }).finally(() => {
+                    this.pendingAssetResolves.delete(assetId);
+                });
+                this.pendingAssetResolves.set(assetId, task.then(() => {}));
+            }
+
+            return null;
+        }
+
         let url = getRobustResourceUrl(resource);
-        if (!url) return null;
+        if (!url) {
+            return null;
+        }
 
         if (url.startsWith('assets://')) {
             const cached = this.resolvedAssetUrls.get(resource.id);
             if (cached) return cached;
 
             if (!this.pendingAssetResolves.has(resource.id)) {
-                const task = assetService.resolveAssetUrl(resource).then(resolved => {
+                const task = resolveAssetUrlByAssetIdFirst(resource).then(resolved => {
                     if (resolved) {
                         this.resolvedAssetUrls.set(resource.id, resolved);
                         if (this.onFrameReady) this.onFrameReady();

@@ -1,5 +1,3 @@
-
-;
 import { NormalizedState } from '../store/types';
 import { vfs } from '@sdkwork/react-fs';
 import { CutProject, CutTemplate, CutTimeline, CutTrack, CutClip, CutLayer, TemplateMetadata } from '../entities/magicCut.entity';
@@ -7,6 +5,10 @@ import { pathUtils } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 import { storageConfig } from '@sdkwork/react-fs';
 import { generateUUID } from '@sdkwork/react-commons';
+import {
+    normalizeProjectAssetReferences,
+    normalizeStateAssetReferences
+} from '../utils/assetReferenceNormalization';
 
 class TemplateService {
     
@@ -25,20 +27,26 @@ class TemplateService {
         const id = generateUUID();
         const filename = `${metadata.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${id}.json`;
         const path = pathUtils.join(dir, filename);
+        const normalizedState = normalizeStateAssetReferences(state);
+        const normalizedProject = normalizeProjectAssetReferences({
+            ...project,
+            normalizedState: normalizedState
+        });
 
         // Serialize the full state into the template so we can restore it accurately
         // We embed the NormalizedState inside the ProjectData to keep references intact
         const templateData: CutTemplate = {
             id,
             uuid: id,
+            type: 'CUT_TEMPLATE',
             ...metadata,
             createdAt: Date.now(),
             updatedAt: Date.now(),
             projectData: {
-                ...project,
+                ...normalizedProject,
                 // We add a custom property to store the flattened state, 
                 // which makes hydration easier than reconstructing from tree
-                normalizedState: state 
+                normalizedState: normalizedState
             }
         };
 
@@ -51,21 +59,26 @@ class TemplateService {
     async listTemplates(): Promise<CutTemplate[]> {
         const dir = await this.getTemplatesDir();
         try {
-            const files = await vfs.readDir(dir);
+            const files = await vfs.readdir(dir);
             const templates: CutTemplate[] = [];
 
-            for (const file of files) {
-                if (file.name.endsWith('.json')) {
+            for (const filePath of files) {
+                const fileName = pathUtils.basename(filePath);
+                if (fileName.endsWith('.json')) {
                     try {
-                        const content = await vfs.readFile(file.path);
+                        const content = await vfs.readFile(filePath);
                         const tmpl = JSON.parse(content);
                         templates.push(tmpl);
                     } catch (e) {
-                        console.warn(`Failed to parse template ${file.name}`, e);
+                        console.warn(`Failed to parse template ${fileName}`, e);
                     }
                 }
             }
-            return templates.sort((a, b) => b.createdAt - a.createdAt);
+            return templates.sort((a, b) => {
+                const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+                const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+                return bTime - aTime;
+            });
         } catch (e) {
             return [];
         }
@@ -185,7 +198,12 @@ class TemplateService {
             layers: newLayers
         };
 
-        return { project: newProject, state: newState };
+        const normalizedState = normalizeStateAssetReferences(newState);
+        const normalizedProject = normalizeProjectAssetReferences({
+            ...newProject,
+            normalizedState
+        });
+        return { project: normalizedProject, state: normalizedState };
     }
 }
 

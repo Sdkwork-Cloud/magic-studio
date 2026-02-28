@@ -3,6 +3,7 @@ import React from 'react';
 import { Box, Package } from 'lucide-react';
 
 import { FilmProp, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
+import { resolveFilmAssetUrlByAssetIdFirst, toFilmUseAssetSource } from '../../utils/filmAssetUrlResolver';
 
 export interface PropCardProps {
     prop: FilmProp;
@@ -11,10 +12,11 @@ export interface PropCardProps {
 }
 
 export const PropCard: React.FC<PropCardProps> = ({ prop, onClick, isSelected }) => {
-    const faceImageUrl = prop.faceImage?.url;
     const visualAsset = prop.refAssets?.find(a => a.scene === MediaScene.PROP_VISUAL);
-    const mediaUrl = faceImageUrl || visualAsset?.url || visualAsset?.image?.url;
-    const { url: displayUrl } = useAssetUrl(mediaUrl || null);
+    const mediaSource = visualAsset || prop.faceImage || null;
+    const { url: displayUrl } = useAssetUrl(toFilmUseAssetSource(mediaSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     return (
         <div 

@@ -1,5 +1,5 @@
 
-import { ChatSession, ChatMessage, ChatTranscript } from '../entities/chat.entity';
+import { ChatSession, ChatMessage, ChatTranscript } from '../entities';
 import { genAIService } from '@sdkwork/react-core';
 import { generateUUID, ServiceResult, Result, Page, PageRequest, pathUtils, TextSearchEngine } from '@sdkwork/react-commons';
 import { LocalStorageService } from '@sdkwork/react-core';
@@ -72,7 +72,7 @@ class ChatService extends LocalStorageService<ChatSession> implements IChatServi
             content = [...(this.cache || [])];
             content.sort((a, b) => {
                 if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-                return b.updatedAt - a.updatedAt;
+                return Number(b.updatedAt) - Number(a.updatedAt);
             });
         }
 

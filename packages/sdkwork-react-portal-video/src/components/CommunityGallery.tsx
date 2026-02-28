@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { Flame, Clock, Filter } from 'lucide-react';
 import { GalleryCard, GalleryItem } from '@sdkwork/react-commons';
-;
 import { GenerationPreview } from '@sdkwork/react-image';
 
 const MOCK_WORKS: GalleryItem[] = [
@@ -12,10 +12,10 @@ const MOCK_WORKS: GalleryItem[] = [
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
         aspectRatio: '9:16',
         author: { id: 'u1', name: 'NeonDrifter', initial: 'M', color: 'bg-pink-600', followers: '1.2k' },
-        stats: { likes: 856, views: '12.5k' },
+        stats: { likes: 856, views: 12500 },
         prompt: "A futuristic cyberpunk city street at night, neon signs, wet pavement, rain, high detail, cinematic lighting, volumetric fog, 8k",
         model: "Sora v1",
-        createdAt: Date.now(),
+        createdAt: Date.now().toString(),
         badges: [{ text: 'HOT', color: 'bg-red-600', icon: 'fire' }]
     },
     { 
@@ -23,30 +23,30 @@ const MOCK_WORKS: GalleryItem[] = [
         url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600', 
         aspectRatio: '16:9',
         author: { id: 'u2', name: 'NatureLens', initial: 'N', color: 'bg-blue-600' },
-        stats: { likes: 1205, views: '8.2k' },
+        stats: { likes: 1205, views: 8200 },
         prompt: "A calm lake reflecting the snowy mountains, golden hour, photorealistic, wide angle",
         model: "Gemini 3 Pro",
-        createdAt: Date.now()
+        createdAt: Date.now().toString()
     },
     { 
         id: '3', title: 'Abstract Fluid', type: 'video', 
         url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600', 
         aspectRatio: '1:1',
         author: { id: 'u3', name: 'MotionMaster', initial: 'M', color: 'bg-orange-500' },
-        stats: { likes: 3400, views: '45k' },
+        stats: { likes: 3400, views: 45000 },
         prompt: "Abstract fluid simulation, colorful liquid, 3d render, octane render, smooth motion",
         model: "Runway Gen-3",
-        createdAt: Date.now()
+        createdAt: Date.now().toString()
     },
     { 
         id: '4', title: 'Character Kora', type: 'image', 
         url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600', 
         aspectRatio: '3:4',
         author: { id: 'u4', name: 'ArtStationPro', initial: 'A', color: 'bg-purple-500' },
-        stats: { likes: 156, views: '2.1k' },
+        stats: { likes: 156, views: 2100 },
         prompt: "Concept art of a female warrior, sci-fi armor, glowing blue energy sword, dynamic pose",
         model: "Midjourney v6",
-        createdAt: Date.now()
+        createdAt: Date.now().toString()
     }
 ];
 
@@ -103,7 +103,14 @@ export const CommunityGallery: React.FC = () => {
     );
 };
 
-const FilterButton = ({ label, icon: Icon, active, onClick }: any) => (
+interface FilterButtonProps {
+    label: string;
+    icon: LucideIcon;
+    active: boolean;
+    onClick: () => void;
+}
+
+const FilterButton: React.FC<FilterButtonProps> = ({ label, icon: Icon, active, onClick }) => (
     <button 
         onClick={onClick}
         className={`

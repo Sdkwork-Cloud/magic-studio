@@ -1,5 +1,5 @@
 import { LocalStorageService } from '@sdkwork/react-core';
-import { SfxTask } from '../entities/sfx.entity';
+import { SfxTask } from '../entities';
 import { generateUUID as _generateUUID } from '@sdkwork/react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { STORAGE_KEY_SFX_HISTORY } from '../constants';
 

@@ -9,7 +9,7 @@ export default defineConfig({
     dts({
       include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
-      rollupTypes: true,
+      rollupTypes: false,
     }),
   ],
   build: {
@@ -46,3 +46,4 @@ export default defineConfig({
     sourcemap: true,
   },
 });
+

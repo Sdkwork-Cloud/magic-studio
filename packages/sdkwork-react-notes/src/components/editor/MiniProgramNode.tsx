@@ -5,7 +5,7 @@ import { AppWindow, Image as ImageIcon, Link2 } from 'lucide-react';
 
 export const MiniProgramNode: React.FC<NodeViewProps> = (props) => {
   const { node, selected } = props;
-  const { appid, title, image, type, text } = node.attrs;
+  const { title, image, type, text } = node.attrs;
 
   return (
     <NodeViewWrapper className="mini-program-component my-4 select-none flex justify-center w-full">

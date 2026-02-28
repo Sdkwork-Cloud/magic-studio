@@ -1,4 +1,4 @@
-import { CharacterTask } from '../entities/character.entity';
+import { CharacterTask } from '../entities';
 
 class CharacterHistoryService {
     private history: CharacterTask[] = [];

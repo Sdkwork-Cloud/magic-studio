@@ -16,12 +16,12 @@ const VoiceChatContent: React.FC = () => {
             title="Voice Lab Chat"
             backLabel="Voice Library"
             onNavigateBack={() => navigate(ROUTES.VOICE)}
-            history={history}
+            history={history as any}
             isGenerating={isGenerating}
             onDelete={deleteTask}
-            onReuse={(task) => setConfig(task.config)}
-            config={config}
-            setConfig={setConfig}
+            onReuse={(task) => setConfig(task.config as any)}
+            config={config as any}
+            setConfig={setConfig as any}
             onGenerate={generate}
             onUpload={() => {}}
         />

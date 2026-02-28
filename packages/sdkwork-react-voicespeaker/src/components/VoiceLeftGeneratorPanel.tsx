@@ -1,22 +1,42 @@
 
 import React, { useState, useEffect } from 'react';
 import { useVoiceStore } from '../store/voiceStore';
-import { PRESET_VOICES } from '../constants';
 import { VoiceModelSelector } from './VoiceModelSelector';
 import { 
     Mic2, Loader2, Play, Volume2, 
-    Settings2, UserPlus, Type, Sparkles, Upload, Mic, Copy, User, Trash2
+    UserPlus, Sparkles, Upload, Mic, Copy, User, Trash2
 } from 'lucide-react';
 
-import { Button, UploadedFile, AudioUpload } from '@sdkwork/react-commons';
+import { AudioUpload } from '@sdkwork/react-commons';
+
+interface UploadedFile {
+    data: Uint8Array | File;
+    name: string;
+    url: string;
+    path?: string;
+}
 import { AudioRecorder } from '@sdkwork/react-audio';
-import { ChooseVoiceSpeaker, PromptTextInput, ChooseAsset, assetService } from '@sdkwork/react-assets';
+import {
+    PromptTextInput,
+    ChooseAsset,
+    assetBusinessFacade,
+    readWorkspaceScope,
+    resolveAssetUrlByAssetIdFirst
+} from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { SettingInput, SettingSelect, SettingSlider, SettingTextArea } from '@sdkwork/react-settings';
 
 type VoiceMode = 'design' | 'clone';
 type InputMethod = 'upload' | 'mic';
+
+const resolveVoiceScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
 
 export const VoiceLeftGeneratorPanel: React.FC = () => {
     const { config, setConfig, generate, isGenerating } = useVoiceStore();
@@ -33,13 +53,31 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
 
     const handleRecordingComplete = async (blob: Blob) => {
         const buffer = new Uint8Array(await blob.arrayBuffer());
-        const asset = await assetService.importAsset(buffer, `rec_${Date.now()}.webm`, 'voice');
-        setConfig({ referenceAudio: asset.path });
+        const result = await assetBusinessFacade.importVoiceSpeakerAsset({
+            scope: resolveVoiceScope(),
+            type: 'voice',
+            name: `rec_${Date.now()}.webm`,
+            data: buffer,
+            metadata: {
+                origin: 'upload',
+                source: 'voice-recorder'
+            }
+        });
+        setConfig({ referenceAudio: result.primaryLocator.uri });
     };
 
     const handleAudioUpload = async (file: UploadedFile) => {
-        const asset = await assetService.importAsset(file.data, file.name, 'voice');
-        setConfig({ referenceAudio: asset.path });
+        const result = await assetBusinessFacade.importVoiceSpeakerAsset({
+            scope: resolveVoiceScope(),
+            type: 'voice',
+            name: file.name,
+            data: file.data,
+            metadata: {
+                origin: 'upload',
+                source: 'voice-upload'
+            }
+        });
+        setConfig({ referenceAudio: result.primaryLocator.uri });
     };
 
     const handleAIImageSuccess = (url: string | string[]) => {
@@ -50,7 +88,7 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
 
     const handlePlayAudio = async () => {
         if (config.referenceAudio) {
-             const url = await assetService.resolveAssetUrl({ path: config.referenceAudio });
+             const url = await resolveAssetUrlByAssetIdFirst({ path: config.referenceAudio });
              if (url) {
                  const audio = new Audio(url);
                  audio.play().catch(e => console.error("Playback failed", e));
@@ -108,6 +146,7 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
                                 value={config.avatarUrl || null}
                                 onChange={(asset) => setConfig({ avatarUrl: asset?.path || asset?.id || undefined })}
                                 accepts={['image']}
+                                domain="voice-speaker"
                                 className="w-32 h-32 bg-[#18181b]"
                                 label="Avatar"
                                 aspectRatio="aspect-square"
@@ -121,7 +160,7 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
                                  <SettingInput 
                                     label="Name" 
                                     value={config.name || ''} 
-                                    onChange={(v) => setConfig({ name: v })}
+                                    onChange={(v: string) => setConfig({ name: v })}
                                     placeholder={mode === 'design' ? "e.g. Narrator Pro" : "e.g. My Clone"}
                                     fullWidth
                                     labelClassName="text-[10px] text-gray-500 font-bold uppercase"
@@ -131,7 +170,7 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
                                          <SettingSelect 
                                             label="Gender" 
                                             value={config.voiceId === 'Kore' ? 'female' : 'male'} 
-                                            onChange={(v) => { }} 
+                                            onChange={(_v: string) => { }} 
                                             options={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
                                             fullWidth
                                             labelClassName="text-[10px] text-gray-500 font-bold uppercase"
@@ -170,13 +209,13 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
                              <SettingSlider 
                                 label="Stability"
                                 value={config.stability || 0.5}
-                                onChange={(v) => setConfig({ stability: v })}
+                                onChange={(v: number) => setConfig({ stability: v })}
                                 min={0} max={1} step={0.05}
                              />
                              <SettingSlider 
                                 label="Similarity"
                                 value={config.similarityBoost || 0.75}
-                                onChange={(v) => setConfig({ similarityBoost: v })}
+                                onChange={(v: number) => setConfig({ similarityBoost: v })}
                                 min={0} max={1} step={0.05}
                              />
                         </div>
@@ -259,7 +298,7 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
                         label="Preview Text"
                         description="Text to speak for the generated preview."
                         value={config.previewText || ''}
-                        onChange={(v) => setConfig({ previewText: v })}
+                        onChange={(v: string) => setConfig({ previewText: v })}
                         rows={2}
                         fullWidth
                         placeholder="Hello, this is a preview of my new voice."

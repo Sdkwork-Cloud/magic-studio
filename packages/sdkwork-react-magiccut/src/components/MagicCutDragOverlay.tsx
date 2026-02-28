@@ -1,9 +1,9 @@
 
-import { assetService } from '@sdkwork/react-assets'
 import React, { useEffect, useRef, useState } from 'react';
 import { useMagicCutStore } from '../store/magicCutStore';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { Film, Image as ImageIcon, Music, Sparkles, AlertCircle, Type } from 'lucide-react';
+import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
 ;
 
 const formatTime = (seconds: number) => {
@@ -45,10 +45,10 @@ export const MagicCutDragOverlay: React.FC = () => {
 
             if (item.metadata?.thumbnailUrl) {
                 // If explicit thumbnail provided
-                assetService.resolveAssetUrl({ path: item.metadata.thumbnailUrl }).then(setResolvedThumbnail);
+                resolveAssetUrlByAssetIdFirst(item.metadata.thumbnailUrl).then(setResolvedThumbnail);
             } else if (!isAudio && !isEffect && !isText) {
                 // If visual media, try resolving the main URL/Path
-                assetService.resolveAssetUrl(item).then(setResolvedThumbnail);
+                resolveAssetUrlByAssetIdFirst(item).then(setResolvedThumbnail);
             } else {
                 setResolvedThumbnail(null);
             }

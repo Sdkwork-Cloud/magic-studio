@@ -2,11 +2,15 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, MapPin, Image as ImageIcon, Users, Box, Check, Plus, Sparkles, Sun, Moon, Sunrise, Sunset, Home, TreePine, Wand2, ChevronDown } from 'lucide-react';
 
-import { Button, FilmScene, FilmLocation, FilmCharacter, FilmProp, MediaScene } from '@sdkwork/react-commons';
+import { Button, FilmScene, FilmLocation, FilmCharacter, FilmProp, MediaScene, useAssetUrl } from '@sdkwork/react-commons';
 import { useFilmStore } from '../store/filmStore';
 import { CharacterModal } from './CharacterModal';
 import { PropModal } from './PropModal';
 import { genAIService } from '@sdkwork/react-core';
+import {
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../utils/filmAssetUrlResolver';
 
 interface SceneModalProps {
     isOpen: boolean;
@@ -145,6 +149,19 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
     const TimeIcon = getTimeIcon(selectedLocation?.timeOfDay);
     const displayChars = showAllChars ? project.characters : project.characters.slice(0, 4);
     const displayProps = showAllProps ? project.props : project.props.slice(0, 4);
+    const locationPreviewSource = selectedLocation
+        ? (
+            selectedLocation.refAssets?.find(
+                (asset) => asset.scene === MediaScene.LOCATION_VISUAL
+            ) ||
+            selectedLocation.image ||
+            selectedLocation.faceImage ||
+            null
+        )
+        : null;
+    const { url: locationPreviewUrl } = useAssetUrl(toFilmUseAssetSource(locationPreviewSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     return createPortal(
         <>
@@ -201,19 +218,21 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
                                     
                                     {/* 16:9 Preview */}
                                     <div className="relative w-full aspect-video bg-[#0a0a0b] border border-[#252528] rounded-lg overflow-hidden">
-                                        {selectedLocation?.image?.url ? (
+                                        {locationPreviewUrl ? (
                                             <>
                                                 <img 
-                                                    src={selectedLocation.image.url} 
+                                                    src={locationPreviewUrl} 
                                                     className="w-full h-full object-cover"
-                                                    alt={selectedLocation.name}
+                                                    alt={selectedLocation?.name || 'Location'}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                                                    <span className="text-white text-[11px] font-medium">{selectedLocation.name}</span>
+                                                    <span className="text-white text-[11px] font-medium">
+                                                        {selectedLocation?.name || 'Location'}
+                                                    </span>
                                                     <div className="flex items-center gap-1.5">
                                                         <TimeIcon size={11} className="text-amber-400" />
-                                                        {selectedLocation.indoor ? (
+                                                        {selectedLocation?.indoor ? (
                                                             <Home size={11} className="text-blue-400" />
                                                         ) : (
                                                             <TreePine size={11} className="text-green-400" />
@@ -313,7 +332,6 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
                                             {displayChars.map(char => {
                                                 const isSelected = selectedCharIds.includes(char.uuid);
                                                 const avatarAsset = char.refAssets?.find(a => a.scene === MediaScene.AVATAR);
-                                                const avatarUrl = avatarAsset?.url || avatarAsset?.image?.url;
                                                 return (
                                                     <button
                                                         key={char.uuid}
@@ -327,13 +345,14 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
                                                         `}
                                                     >
                                                         <div className="w-5 h-5 rounded bg-[#1a1a1c] overflow-hidden flex-shrink-0">
-                                                            {avatarUrl ? (
-                                                                <img src={avatarUrl} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center">
-                                                                    <Users size={8} className="text-gray-600" />
-                                                                </div>
-                                                            )}
+                                                            <SceneAssetThumbnail
+                                                                source={avatarAsset || char.faceImage || null}
+                                                                fallback={
+                                                                    <div className="w-full h-full flex items-center justify-center">
+                                                                        <Users size={8} className="text-gray-600" />
+                                                                    </div>
+                                                                }
+                                                            />
                                                         </div>
                                                         <span className="text-[11px] font-medium">{char.name}</span>
                                                         {isSelected && <Check size={10} className="text-blue-400" />}
@@ -386,7 +405,6 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
                                             {displayProps.map(prop => {
                                                 const isSelected = selectedPropIds.includes(prop.uuid);
                                                 const visualAsset = prop.refAssets?.find(a => a.scene === MediaScene.PROP_VISUAL);
-                                                const visualUrl = visualAsset?.url || visualAsset?.image?.url;
                                                 return (
                                                     <button
                                                         key={prop.uuid}
@@ -400,13 +418,14 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
                                                         `}
                                                     >
                                                         <div className="w-5 h-5 rounded bg-[#1a1a1c] overflow-hidden flex-shrink-0">
-                                                            {visualUrl ? (
-                                                                <img src={visualUrl} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center">
-                                                                    <Box size={8} className="text-gray-600" />
-                                                                </div>
-                                                            )}
+                                                            <SceneAssetThumbnail
+                                                                source={visualAsset || prop.faceImage || null}
+                                                                fallback={
+                                                                    <div className="w-full h-full flex items-center justify-center">
+                                                                        <Box size={8} className="text-gray-600" />
+                                                                    </div>
+                                                                }
+                                                            />
                                                         </div>
                                                         <span className="text-[11px] font-medium">{prop.name}</span>
                                                         {isSelected && <Check size={10} className="text-orange-400" />}
@@ -501,4 +520,19 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
         </>,
         document.body
     );
+};
+
+const SceneAssetThumbnail: React.FC<{ source: unknown; fallback: React.ReactNode }> = ({
+    source,
+    fallback
+}) => {
+    const { url } = useAssetUrl(toFilmUseAssetSource(source), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+
+    if (!url) {
+        return <>{fallback}</>;
+    }
+
+    return <img src={url} className="w-full h-full object-cover" />;
 };

@@ -1,14 +1,12 @@
 import { TIMELINE_CONSTANTS } from '../../constants';
 import React, { useMemo } from 'react';
 import { useMagicCutStore } from '../../store/magicCutStore';
-;
 
 export const InOutPointOverlay: React.FC = () => {
     const { 
         inPoint, 
         outPoint, 
-        useTransientState,
-        totalDuration
+        useTransientState
     } = useMagicCutStore();
     
     const zoomLevel = useTransientState(s => s.zoomLevel);

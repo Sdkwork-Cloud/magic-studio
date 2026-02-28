@@ -1,4 +1,4 @@
-import { StyleOption, ModelProvider, IMAGE_STYLES } from '@sdkwork/react-commons'
+import { ModelProvider, IMAGE_STYLES } from '@sdkwork/react-commons'
 import React from 'react';
 import { Globe, Image, Cpu, Video } from 'lucide-react';
 

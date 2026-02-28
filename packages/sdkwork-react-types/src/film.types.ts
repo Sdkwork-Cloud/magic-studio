@@ -2,7 +2,6 @@
 // All film-related types are defined here to avoid circular dependencies
 
 import type { BaseEntity } from './base.types';
-import type { AssetMediaResource, ImageMediaResource } from './media.types';
 
 // ============================================================================
 // Enums and Type Aliases
@@ -127,6 +126,7 @@ export interface FilmCharacterInteractionSettings {
   greeting?: string;
   tone?: string;
   formality?: string;
+  voiceId?: string;
 }
 
 // ============================================================================
@@ -138,10 +138,15 @@ export interface FilmLocation extends BaseEntity {
   name: string;
   description?: string;
   tags: string[];
+  atmosphereTags?: string[];
   visualDescription?: string;
+  image?: FilmImageMediaResource;
   faceImage?: FilmImageMediaResource;
   threeViewImage?: FilmImageMediaResource;
   gridViewImage?: FilmImageMediaResource;
+  refAssets?: FilmAssetMediaResource[];
+  indoor?: boolean;
+  timeOfDay?: string;
 }
 
 // ============================================================================
@@ -156,6 +161,7 @@ export interface FilmProp extends BaseEntity {
   faceImage?: FilmImageMediaResource;
   threeViewImage?: FilmImageMediaResource;
   gridViewImage?: FilmImageMediaResource;
+  refAssets?: FilmAssetMediaResource[];
 }
 
 // ============================================================================
@@ -165,6 +171,7 @@ export interface FilmProp extends BaseEntity {
 export interface FilmScene extends BaseEntity {
   type: 'FILM_SCENE';
   sceneNumber: number;
+  index?: number;
   summary: string;
   locationId?: string;
   locationUuid?: string;
@@ -182,8 +189,10 @@ export interface FilmScene extends BaseEntity {
 export interface FilmShot extends BaseEntity {
   type: 'FILM_SHOT';
   shotNumber: number;
+  index?: number;
   sceneId?: string;
   sceneUuid?: string;
+  locationUuid?: string;
   description: string;
   dialogue?: FilmDialogue;
   duration: number;
@@ -207,6 +216,9 @@ export interface FilmShotGeneration {
   prompt?: string;
   video?: FilmVideoResource;
   assets?: FilmAssetMediaResource[];
+  product?: string;
+  modelId?: string;
+  base?: string;
 }
 
 export type FilmGenerationStatus = 'PENDING' | 'GENERATING' | 'SUCCESS' | 'FAILED';
@@ -218,6 +230,7 @@ export type FilmGenerationStatus = 'PENDING' | 'GENERATING' | 'SUCCESS' | 'FAILE
 export interface FilmSettings extends BaseEntity {
   theme?: string;
   style?: string;
+  aspect?: string;
   aspectRatio?: string;
   resolution?: string;
   fps?: number;
@@ -239,8 +252,7 @@ export interface FilmVideo extends BaseEntity {
 // Media Resources (Film-specific)
 // ============================================================================
 
-export interface FilmMediaResource {
-  id: string;
+export interface FilmMediaResource extends BaseEntity {
   type: FilmMediaType;
   url: string;
   thumbnailUrl?: string;
@@ -252,8 +264,8 @@ export interface FilmMediaResource {
 }
 
 export interface FilmFileMediaResource extends FilmMediaResource {
-  fileId: string;
-  fileName: string;
+  fileId?: string;
+  fileName?: string;
 }
 
 export interface FilmVideoMediaResource extends FilmFileMediaResource {
@@ -274,10 +286,12 @@ export interface FilmAudioMediaResource extends FilmFileMediaResource {
   sampleRate?: number;
 }
 
-export interface FilmAssetMediaResource extends FilmFileMediaResource {
-  type: 'image' | 'video' | 'audio';
-  assetId: string;
-  assetType: FilmAssetType;
+export interface FilmAssetMediaResource extends Omit<FilmFileMediaResource, 'type'> {
+  type?: 'image' | 'video' | 'audio';
+  assetId?: string;
+  assetType?: FilmAssetType;
+  scene?: string;
+  image?: FilmImageMediaResource;
 }
 
 export type FilmMediaType = 'image' | 'video' | 'audio' | 'voice' | 'music' | 'speech';

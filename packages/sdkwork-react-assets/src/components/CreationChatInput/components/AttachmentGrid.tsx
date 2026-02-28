@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { X, FileText, Image as ImageIcon, Video, Mic, Paperclip, FileCode } from 'lucide-react';
-import type { InputAttachment } from '@sdkwork/react-commons';
+import type { InputAttachmentData } from '@sdkwork/react-commons';
 import { getAssetLabel } from '@sdkwork/react-commons';
 import { useAssetUrl } from '@sdkwork/react-commons';
 
 interface AttachmentGridProps {
-    attachments: InputAttachment[];
+    attachments: InputAttachmentData[];
     onRemove: (id: string) => void;
 }
 
@@ -29,7 +29,7 @@ export const AttachmentGrid: React.FC<AttachmentGridProps> = ({ attachments, onR
     );
 };
 
-const AttachmentCard: React.FC<{ file: InputAttachment; index: number; onRemove: () => void }> = ({ file, index, onRemove }) => {
+const AttachmentCard: React.FC<{ file: InputAttachmentData; index: number; onRemove: () => void }> = ({ file, index, onRemove }) => {
     const isVisual = file.type === 'image' || file.type === 'video';
     const label = getAssetLabel(index);
 

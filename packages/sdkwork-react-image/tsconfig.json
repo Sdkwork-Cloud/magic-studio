@@ -24,7 +24,8 @@
       "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
       "@sdkwork/react-fs": ["../sdkwork-react-fs/src/index.ts"],
       "@sdkwork/react-generation-history": ["../sdkwork-react-generation-history/src/index.ts"],
-      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"]
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/react-settings": ["../sdkwork-react-settings/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

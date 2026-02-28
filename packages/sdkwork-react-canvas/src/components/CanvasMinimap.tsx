@@ -1,5 +1,5 @@
 
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useCanvasStore } from '../store/canvasStore'; 
 

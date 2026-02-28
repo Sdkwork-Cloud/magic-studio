@@ -2,7 +2,7 @@
 import { useRouter } from '@sdkwork/react-core'
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-    ChevronLeft, ChevronDown, Check, 
+    ChevronLeft, 
     Image as ImageIcon, Smile, Video, AudioWaveform, Music, Mic2, Volume2
 } from 'lucide-react';
 ;
@@ -34,10 +34,6 @@ export const GenerationLayoutSidebar: React.FC<GenerationLayoutSidebarProps> = (
         { id: 'voice', labelKey: 'sidebar.voice_workspace', route: ROUTES.VOICE, icon: Mic2, color: 'text-green-400', bgColor: 'bg-green-500/10', borderColor: 'border-green-500/20' },
         { id: 'audio', labelKey: 'sidebar.audio_workspace', route: ROUTES.AUDIO, icon: Volume2, color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/20' },
     ], []);
-
-    const currentTool = TOOLS.find(t => t.route === currentPath) || TOOLS[0];
-
-    const CurrentIcon = currentTool.icon;
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {

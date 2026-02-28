@@ -3,11 +3,7 @@ import { CutClip, CutTrack } from '../../../../entities/magicCut.entity'
 import { TimelineEditService } from '../../../../services/TimelineEditService'
 import { ClipLinkService } from '../../../../services/ClipLinkService'
 import { useRef, useCallback, useEffect } from 'react';
-import { InteractionState, EditTool } from '../../../../store/types';
-;
-;
-;
-import { NormalizedState } from '../../../../store/magicCutStore';
+import { InteractionState, EditTool, NormalizedState } from '../../../../store/types';
 
 interface ClipEditOptions {
     state: NormalizedState;
@@ -266,7 +262,9 @@ export const useClipEditInteractions = ({
     }, [editTool, getTimeFromX, setInteraction]);
 
     const handleClipMouseMove = useCallback((e: MouseEvent) => {
-        if (interaction.type === 'idle' || !interaction.clipId || !initialClipState.current) return;
+        const clipId = interaction.clipId;
+        const initialState = initialClipState.current;
+        if (interaction.type === 'idle' || !clipId || !initialState) return;
         
         if (rafId.current) {
             cancelAnimationFrame(rafId.current);
@@ -275,7 +273,7 @@ export const useClipEditInteractions = ({
         rafId.current = requestAnimationFrame(() => {
             const deltaX = e.clientX - initialMousePos.current.x;
             const deltaTime = deltaX / pixelsPerSecond;
-            const clip = state.clips[interaction.clipId];
+            const clip = state.clips[clipId];
             if (!clip) return;
             
             switch (interaction.type) {
@@ -287,8 +285,8 @@ export const useClipEditInteractions = ({
                     );
                     if (trimType) {
                         const newTime = trimType === 'start' 
-                            ? Math.max(0, initialClipState.current.start + deltaTime)
-                            : initialClipState.current.start + initialClipState.current.duration + deltaTime;
+                            ? Math.max(0, initialState.start + deltaTime)
+                            : initialState.start + initialState.duration + deltaTime;
                         
                         const result = TimelineEditService.calculateRippleTrim(
                             clip, trimType, newTime, state
@@ -309,8 +307,8 @@ export const useClipEditInteractions = ({
                     );
                     if (trimType) {
                         const newTime = trimType === 'start' 
-                            ? Math.max(0, initialClipState.current.start + deltaTime)
-                            : initialClipState.current.start + initialClipState.current.duration + deltaTime;
+                            ? Math.max(0, initialState.start + deltaTime)
+                            : initialState.start + initialState.duration + deltaTime;
                         
                         const result = TimelineEditService.calculateRollTrim(
                             clip, trimType, newTime, state
@@ -324,7 +322,7 @@ export const useClipEditInteractions = ({
                 }
                 
                 case 'slip-trim': {
-                    const newOffset = Math.max(0, initialClipState.current.offset - deltaTime);
+                    const newOffset = Math.max(0, initialState.offset - deltaTime);
                     updateClip(clip.id, { offset: newOffset });
                     break;
                 }
@@ -337,8 +335,8 @@ export const useClipEditInteractions = ({
                     );
                     if (trimType) {
                         const newTime = trimType === 'start' 
-                            ? Math.max(0, initialClipState.current.start + deltaTime)
-                            : initialClipState.current.start + initialClipState.current.duration + deltaTime;
+                            ? Math.max(0, initialState.start + deltaTime)
+                            : initialState.start + initialState.duration + deltaTime;
                         
                         const result = TimelineEditService.calculateSlideTrim(
                             clip, trimType, newTime, state
@@ -352,9 +350,9 @@ export const useClipEditInteractions = ({
                 }
                 
                 case 'trim-start': {
-                    const newStart = Math.max(0, initialClipState.current.start + deltaTime);
-                    const newDuration = initialClipState.current.duration - deltaTime;
-                    const newOffset = initialClipState.current.offset + deltaTime;
+                    const newStart = Math.max(0, initialState.start + deltaTime);
+                    const newDuration = initialState.duration - deltaTime;
+                    const newOffset = initialState.offset + deltaTime;
                     
                     if (newDuration > 0.1 && newOffset >= 0) {
                         const linkedUpdates = ClipLinkService.calculateLinkedTrim(
@@ -366,7 +364,7 @@ export const useClipEditInteractions = ({
                 }
                 
                 case 'trim-end': {
-                    const newDuration = initialClipState.current.duration + deltaTime;
+                    const newDuration = initialState.duration + deltaTime;
                     if (newDuration > 0.1) {
                         updateClip(clip.id, { duration: newDuration });
                     }
@@ -374,7 +372,6 @@ export const useClipEditInteractions = ({
                 }
                 
                 case 'move': {
-                    const newStart = Math.max(0, initialClipState.current.start + deltaTime);
                     const linkedUpdates = ClipLinkService.calculateLinkedMovement(
                         clip.id, deltaTime, state, linkedSelectionEnabled
                     );
@@ -390,7 +387,7 @@ export const useClipEditInteractions = ({
         });
     }, [interaction, state, pixelsPerSecond, updateClip, updateClips, linkedSelectionEnabled]);
 
-    const handleClipMouseUp = useCallback((e: MouseEvent) => {
+    const handleClipMouseUp = useCallback(() => {
         if (interaction.type === 'idle') return;
         
         if (rafId.current) {

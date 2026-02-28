@@ -20,14 +20,14 @@ export interface BaseEntity {
   uuid: string;
 
   /**
-   * Creation timestamp in ISO 8601 format (yyyy-MM-dd HH:mm:ss)
+   * Creation timestamp in ISO 8601 format (yyyy-MM-dd HH:mm:ss) or Unix timestamp
    */
-  createdAt: string;
+  createdAt: string | number;
 
   /**
-   * Last update timestamp in ISO 8601 format (yyyy-MM-dd HH:mm:ss)
+   * Last update timestamp in ISO 8601 format (yyyy-MM-dd HH:mm:ss) or Unix timestamp
    */
-  updatedAt: string;
+  updatedAt: string | number;
 
   /**
    * Soft delete timestamp in ISO 8601 format (yyyy-MM-dd HH:mm:ss)

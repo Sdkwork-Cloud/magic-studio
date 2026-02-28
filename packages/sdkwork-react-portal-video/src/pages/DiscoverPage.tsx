@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { PortalSidebar } from '../components/PortalSidebar';
 import { PortalHeader } from '../components/PortalHeader';
 import { 
-    Flame, Clock, ChevronDown, Filter, LayoutGrid
+    Filter, LayoutGrid
 } from 'lucide-react';
 import { GalleryItem, GalleryCard } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
@@ -16,10 +16,10 @@ const DISCOVER_ITEMS: GalleryItem[] = [
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
         aspectRatio: '9:16',
         author: { id: 'u1', name: 'Mateus Stefan', initial: 'M', color: 'bg-pink-600', followers: '1.2k' },
-        stats: { likes: 1240, views: '45k' },
+        stats: { likes: 1240, views: 45000 },
         model: 'Kling 1.6',
         prompt: 'Cyberpunk city at golden hour, neon lights, futuristic, cinematic',
-        createdAt: Date.now(),
+        createdAt: Date.now().toString(),
     },
     {
         id: '2', title: 'Ethereal Forest', type: 'video',
@@ -27,10 +27,10 @@ const DISCOVER_ITEMS: GalleryItem[] = [
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
         aspectRatio: '16:9',
         author: { id: 'u2', name: 'Alice Chen', initial: 'A', color: 'bg-blue-600', followers: '856' },
-        stats: { likes: 892, views: '23k' },
+        stats: { likes: 892, views: 23000 },
         model: 'Vidu',
         prompt: 'Mystical forest with glowing particles, fantasy style',
-        createdAt: Date.now() - 86400000,
+        createdAt: (Date.now() - 86400000).toString(),
     },
     {
         id: '3', title: 'Space Station', type: 'video',
@@ -38,10 +38,10 @@ const DISCOVER_ITEMS: GalleryItem[] = [
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
         aspectRatio: '1:1',
         author: { id: 'u3', name: 'Bob Smith', initial: 'B', color: 'bg-green-600', followers: '2.3k' },
-        stats: { likes: 2100, views: '78k' },
+        stats: { likes: 2100, views: 78000 },
         model: 'Kling 1.6',
         prompt: 'Space station orbiting Earth, sci-fi, realistic',
-        createdAt: Date.now() - 172800000,
+        createdAt: (Date.now() - 172800000).toString(),
     },
     {
         id: '4', title: 'Ocean Waves', type: 'video',
@@ -49,10 +49,10 @@ const DISCOVER_ITEMS: GalleryItem[] = [
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
         aspectRatio: '9:16',
         author: { id: 'u4', name: 'Carol White', initial: 'C', color: 'bg-purple-600', followers: '567' },
-        stats: { likes: 456, views: '12k' },
+        stats: { likes: 456, views: 12000 },
         model: 'Jimeng',
         prompt: 'Ocean waves crashing on rocks, dramatic lighting',
-        createdAt: Date.now() - 259200000,
+        createdAt: (Date.now() - 259200000).toString(),
     },
 ];
 
@@ -115,7 +115,7 @@ const DiscoverPage: React.FC = () => {
             
             {previewItem && (
                 <GenerationPreview 
-                    item={previewItem}
+                    galleryItem={previewItem}
                     onClose={() => setPreviewItem(null)}
                 />
             )}

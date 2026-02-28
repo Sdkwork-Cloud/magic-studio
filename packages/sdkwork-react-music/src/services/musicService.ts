@@ -1,4 +1,4 @@
-import { MusicConfig, GeneratedMusicResult } from '../entities/music.entity';
+import { MusicConfig, GeneratedMusicResult } from '../entities';
 
 // Mock music generation service for demonstration
 export const musicService = {

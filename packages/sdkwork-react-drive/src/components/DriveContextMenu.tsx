@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { DriveItem } from '../entities/drive.entity';
+import { DriveItem } from '../entities';
 import { FileUp, FolderPlus, RefreshCw, X, Star, StarOff, Trash2, RotateCcw } from 'lucide-react';
 ;
 import { useTranslation } from '@sdkwork/react-i18n';

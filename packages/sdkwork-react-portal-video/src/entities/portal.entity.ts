@@ -1,3 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
+
 export interface StyleOption {
     id: string;
     label: string;
@@ -17,7 +19,7 @@ export interface StyleOption {
 export interface PortalMode {
     id: string;
     label: string;
-    icon: any;
+    icon: LucideIcon;
     color: string;
     desc: string;
 }
@@ -25,7 +27,7 @@ export interface PortalMode {
 export interface GenMode {
     id: string;
     label: string;
-    icon: any;
+    icon: LucideIcon;
     desc: string;
     validTabs: string[];
 }

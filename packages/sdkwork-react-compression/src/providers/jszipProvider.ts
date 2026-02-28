@@ -1,8 +1,39 @@
-import JSZip from 'jszip';
 import { ICompressionProvider } from '../types';
+
+interface JsZipEntry {
+  dir: boolean;
+  async: (type: 'uint8array') => Promise<Uint8Array>;
+}
+
+interface JsZipLike {
+  files: Record<string, JsZipEntry>;
+  generateAsync: (options: { type: 'uint8array' }) => Promise<Uint8Array>;
+}
+
+interface JsZipConstructor {
+  new (): JsZipLike;
+  loadAsync: (data: Uint8Array) => Promise<JsZipLike>;
+}
+
+const loadJsZip = async (): Promise<JsZipConstructor> => {
+  const moduleName = 'jszip';
+  const jsZipModule: unknown = await import(moduleName);
+  const constructor =
+    typeof jsZipModule === 'object' &&
+    jsZipModule !== null &&
+    'default' in jsZipModule
+      ? (jsZipModule.default as JsZipConstructor | undefined)
+      : undefined;
+
+  if (!constructor) {
+    throw new Error('JSZip module is unavailable');
+  }
+  return constructor;
+};
 
 export class JszipProvider implements ICompressionProvider {
   async decompress(data: Uint8Array, targetPath: string): Promise<void> {
+    const JSZip = await loadJsZip();
     const zip = await JSZip.loadAsync(data);
     
     for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
@@ -19,6 +50,7 @@ export class JszipProvider implements ICompressionProvider {
   }
 
   async compress(sourcePaths: string[]): Promise<Uint8Array> {
+    const JSZip = await loadJsZip();
     const zip = new JSZip();
     
     console.log(`[JszipProvider] Would compress: ${sourcePaths.join(', ')}`);

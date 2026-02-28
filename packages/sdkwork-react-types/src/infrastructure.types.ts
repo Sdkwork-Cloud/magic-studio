@@ -26,14 +26,25 @@ export interface ExportConfig {
 // ============================================================================
 
 export interface IFileSystemProvider {
+  scheme?: string;
+  capabilities?: {
+    readonly?: boolean;
+    supportsStreaming?: boolean;
+  };
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): Promise<void>;
+  readFileBinary?(path: string): Promise<Uint8Array>;
+  writeFileBinary?(path: string, content: Uint8Array): Promise<void>;
+  readFileBlob?(path: string): Promise<Blob>;
+  writeFileBlob?(path: string, content: Blob): Promise<void>;
   exists(path: string): Promise<boolean>;
   mkdir(path: string): Promise<void>;
   readdir(path: string): Promise<string[]>;
   stat(path: string): Promise<FileStat>;
   unlink(path: string): Promise<void>;
   rmdir(path: string): Promise<void>;
+  rename?(oldPath: string, newPath: string): Promise<void>;
+  copyFile?(sourcePath: string, destPath: string): Promise<void>;
 }
 
 export interface FileStat extends BaseEntity {

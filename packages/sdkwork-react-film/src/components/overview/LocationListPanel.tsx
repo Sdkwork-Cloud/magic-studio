@@ -5,8 +5,18 @@ import { MapPin, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { LocationCard } from './LocationCard';
 
 import { useFilmStore } from '../../store/filmStore';
-import { FilmLocation, generateUUID } from '@sdkwork/react-commons';
+import {
+    FilmLocation,
+    MediaScene
+} from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
+import { hasFilmAssetReference } from '../../utils/filmAssetUrlResolver';
+import { importFilmAssetFromUrl } from '../../utils/filmModalAssetImport';
+import {
+    createFilmAssetMediaResource,
+    createFilmImageMediaResource,
+    upsertFilmRefAssetByScene
+} from '../../utils/filmAssetFactories';
 
 interface LocationListPanelProps {
     locations: FilmLocation[];
@@ -27,17 +37,35 @@ export const LocationListPanel: React.FC<LocationListPanelProps> = ({
         setIsGenerating(true);
         
         for (const loc of locations) {
-            if (loc.image?.url) continue;
+            const visualAsset = loc.refAssets?.find((asset) => asset.scene === MediaScene.LOCATION_VISUAL);
+            if (hasFilmAssetReference(visualAsset || loc.image || loc.faceImage || null)) continue;
             const prompt = `Location concept art, ${loc.name}, ${loc.indoor ? 'interior' : 'exterior'}, ${loc.timeOfDay?.toLowerCase() || 'day'}, ${loc.visualDescription || ''}, cinematic lighting, wide shot, 8k`;
             try {
                 const url = await filmService.generateImage(prompt, '16:9');
+                const imported = await importFilmAssetFromUrl(
+                    url,
+                    `${loc.name}_concept`,
+                    'image',
+                    {
+                        origin: 'film-location-auto-gen',
+                        locationUuid: loc.uuid
+                    }
+                );
+                const newAsset = createFilmAssetMediaResource({
+                    assetId: imported.assetId,
+                    type: 'image',
+                    scene: MediaScene.LOCATION_VISUAL,
+                    url: imported.url,
+                    fileName: `${loc.name}_concept`
+                });
+                const image = createFilmImageMediaResource({
+                    assetId: imported.assetId,
+                    url: imported.url,
+                    fileName: `${loc.name}_concept`
+                });
                 updateLocation(loc.uuid, { 
-                    image: { 
-                        id: generateUUID(), 
-                        url, 
-                        type: 'IMAGE', 
-                        name: `${loc.name}_concept` 
-                    } as any 
+                    image,
+                    refAssets: upsertFilmRefAssetByScene(loc.refAssets, newAsset)
                 });
             } catch (e) {
                 console.error(`Failed to generate location ${loc.name}`, e);

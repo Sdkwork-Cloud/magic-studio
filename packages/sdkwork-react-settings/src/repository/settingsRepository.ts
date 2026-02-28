@@ -1,5 +1,5 @@
 
-import { AppSettings } from '../entities/settings.entity'
+import { AppSettings } from '../entities'
 import { platform } from '@sdkwork/react-core';
 ;
 import { SETTINGS_STORAGE_KEY } from '../constants';

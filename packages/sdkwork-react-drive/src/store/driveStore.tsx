@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { DriveItem, DriveStats } from '../entities/drive.entity';
+import { DriveItem, DriveStats } from '../entities';
 import { driveService } from '../services/driveService';
 import { pathUtils } from '@sdkwork/react-commons';
 import { uploadHelper, UploadFile } from '../utils/uploadHelper';

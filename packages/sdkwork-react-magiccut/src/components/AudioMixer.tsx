@@ -24,7 +24,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
         
         return activeTimeline.tracks
             .map(ref => state.tracks[ref.id])
-            .filter(track => track && (track.type === 'audio' || track.type === 'video'));
+            .filter(track => track && (track.trackType === 'audio' || track.trackType === 'video'));
     }, [activeTimeline, state.tracks]);
     
     const handleVolumeChange = useCallback((trackId: string, volume: number) => {
@@ -82,7 +82,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                 <div className="flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${isMuted ? 'bg-gray-500' : 'bg-emerald-400'}`} />
                                     <span className="text-xs font-medium text-gray-300 truncate max-w-[100px]">
-                                        {track.name || `${track.type === 'audio' ? 'Audio' : 'Video'} Track`}
+                                        {track.name || `${track.trackType === 'audio' ? 'Audio' : 'Video'} Track`}
                                     </span>
                                 </div>
                                 

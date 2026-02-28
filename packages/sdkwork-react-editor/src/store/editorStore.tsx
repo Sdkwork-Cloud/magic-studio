@@ -99,7 +99,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
                       setExpandedPaths(new Set(session.expandedPaths || []));
                       setFileTree(rootRes.data || []);
                       
-                      session.expandedPaths.forEach(p => refreshDirectory(p));
+                      session.expandedPaths.forEach((p: string) => refreshDirectory(p));
                   } else {
                       console.warn("Saved session root path invalid or inaccessible.");
                   }
@@ -446,10 +446,12 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
         return;
     }
     try {
-        const children = await vfs.readDir(rootPath);
+        const children = await vfs.readdir(rootPath);
         const sourcePaths = children
-            .filter(c => c.name !== 'node_modules' && c.name !== '.git' && c.name !== '.DS_Store' && c.name !== '__MACOSX')
-            .map(c => c.path);
+            .filter((p: string) => {
+                const name = pathUtils.basename(p);
+                return name !== 'node_modules' && name !== '.git' && name !== '.DS_Store' && name !== '__MACOSX';
+            });
 
         if (sourcePaths.length === 0) {
             alert('Workspace is empty.');

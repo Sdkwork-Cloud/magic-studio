@@ -282,6 +282,13 @@ export const createDesktopPlatform = (): PlatformAPI => {
       };
   },
   convertFileSrc: (filePath: string) => {
+      try {
+          if (tauriModules?.convertFileSrc) {
+              return tauriModules.convertFileSrc(filePath);
+          }
+      } catch (e) {
+          logger.warn('[Platform] convertFileSrc failed', e);
+      }
       return filePath;
   },
   createDir: async (path: string) => {

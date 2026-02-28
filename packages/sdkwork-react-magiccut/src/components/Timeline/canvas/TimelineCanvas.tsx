@@ -1,6 +1,5 @@
 
-import React, { useRef, useCallback, useEffect, useMemo, memo } from 'react';
-;
+import React, { useMemo } from 'react';
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
@@ -29,7 +28,7 @@ export interface TimelineCanvasProps {
     visibleTimeStart: number;
     visibleTimeEnd: number;
     visibleTrackIndices: number[];
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
@@ -58,19 +57,14 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
         trimClip,
         insertTrackAndMoveClip,
         validateTrackDrop,
-        checkCollision,
-        selectClipsInRegion,
-        state,
-        updateClip,
-        updateClips,
-        commitHistory
+        checkCollision
     } = useMagicCutStore();
 
     const dragOperation = useTransientState(s => s.dragOperation);
     const interaction = useTransientState(s => s.interaction);
     const scrollLeft = useTransientState(s => s.scrollLeft);
 
-    const { autoScrollSpeed, startAutoScroll, stopAutoScroll } = useAutoScroll(containerRef, store);
+    const { autoScrollSpeed } = useAutoScroll(containerRef, store);
     const { calculateSnap, prepareSnapPoints } = useSnapPoints({ pixelsPerSecond, isSnappingEnabled: true });
 
     const {
@@ -85,16 +79,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
         interaction,
         dragOperation,
         trackLayouts,
-        selectRegion: (startTime, endTime, trackIds) => {
-            selectClipsInRegion(startTime, endTime, trackIds);
-        },
-        selectClip,
-        state,
-        applyEditResult: (result) => {
-            if (result.clipsToUpdate) {
-                updateClips(result.clipsToUpdate);
-            }
-        }
+        selectClip
     });
 
     const containerDimensions = useMemo(() => ({
@@ -192,10 +177,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     calculateSnap={calculateSnap}
                     prepareSnapPoints={prepareSnapPoints}
                     autoScrollSpeed={autoScrollSpeed}
-                    stopAutoScroll={stopAutoScroll}
-                    moveClip={moveClip}
                     trimClip={trimClip}
-                    insertTrackAndMoveClip={insertTrackAndMoveClip}
                     setInteraction={setInteraction}
                     validateTrackDrop={validateTrackDrop}
                     checkCollision={checkCollision}

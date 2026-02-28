@@ -1,4 +1,4 @@
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 import React, { useEffect, useRef } from 'react';
 import { X, Image, Film, FileText, Settings } from 'lucide-react';
 ;

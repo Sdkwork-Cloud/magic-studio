@@ -33,7 +33,7 @@ const ImageChatContent: React.FC = () => {
 
     const removeReferenceImage = (index: number) => {
         const currentImages = config.referenceImages || [];
-        const updated = currentImages.filter((_, i) => i !== index);
+        const updated = currentImages.filter((_url: string, i: number) => i !== index);
         setConfig({ referenceImages: updated });
     };
 

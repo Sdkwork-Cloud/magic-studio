@@ -1,12 +1,16 @@
 
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
     Scissors, Trash2, MousePointer2, Magnet, ScanLine,
     Undo, Redo, ArrowLeftToLine, ArrowRightToLine, MapPin, Minimize2, ZoomIn, ZoomOut,
     Sparkles, Film, Mic, AudioWaveform, Music,
     ArrowRightLeft, MoveHorizontal, GitBranch, Eraser
 } from 'lucide-react';
-;
+import {
+    assetBusinessFacade,
+    mapUnifiedAssetToAnyAsset,
+    readWorkspaceScope
+} from '@sdkwork/react-assets';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents, ZoomPayload, TimelineAddClipPayload } from '../../events';
@@ -16,9 +20,9 @@ import { AudioGeneratorModal } from '@sdkwork/react-audio';
 import { SfxGeneratorModal } from '@sdkwork/react-sfx';
 import { MusicGeneratorModal } from '@sdkwork/react-music';
 import { TIMELINE_CONSTANTS } from '../../constants';
-import { generateUUID } from '../../utils/uuid';
-import { MediaResourceType } from '@sdkwork/react-commons';
-import { EditTool } from '../../store/types';
+import type { AnyMediaResource } from '@sdkwork/react-commons';
+import type { AssetContentKey } from '@sdkwork/react-types';
+import { normalizeResourceForTimeline } from '../../utils/assetReferenceNormalization';
 
 // --- Constants & Math Helpers ---
 const LOG_MIN = Math.log(TIMELINE_CONSTANTS.MIN_ZOOM);
@@ -37,6 +41,63 @@ const sliderToZoom = (val: number) => {
     const percent = val / 100;
     const logZoom = LOG_MIN + (percent * SCALE_RANGE);
     return Math.exp(logZoom);
+};
+
+const resolveMagiccutScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+
+    return undefined;
+};
+
+const toMagiccutImportedResource = async (
+    url: string,
+    type: AssetContentKey,
+    name: string,
+    metadata: Record<string, unknown>
+): Promise<AnyMediaResource> => {
+    const inlineData = await tryExtractInlineData(url);
+    const imported = await assetBusinessFacade.importMagiccutAsset({
+        scope: resolveMagiccutScope(),
+        type,
+        name,
+        data: inlineData,
+        remoteUrl: inlineData ? undefined : url,
+        metadata
+    });
+    const mapped = mapUnifiedAssetToAnyAsset(imported.asset);
+    if (!mapped) {
+        throw new Error('Failed to map imported asset to timeline resource.');
+    }
+    return normalizeResourceForTimeline(mapped as AnyMediaResource);
 };
 
 // --- Custom High-Performance Zoom Control ---
@@ -128,15 +189,6 @@ const ZoomSlider: React.FC<{
 
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
-    };
-
-    // Calculate click-to-jump
-    const handleClick = (e: React.MouseEvent) => {
-        // Only trigger if not dragging (simple click)
-        // But our mouseDown logic handles drag initiation immediately.
-        // This is mainly for jumping to position if we clicked the track directly.
-        // Implementing jump logic inside MouseDown is better for consistency.
-        // So we skip onClick.
     };
 
     // Reset on double click
@@ -238,7 +290,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
     const hasSelection = !!selectedClipId;
 
     const selectedTrack = selectedTrackId ? state.tracks[selectedTrackId] : null;
-    const trackType = selectedTrack?.type;
+    const trackType = selectedTrack?.trackType;
 
     const isVisualTrack = trackType === 'video' || trackType === 'ai';
     const isAudioTrack = trackType === 'audio';
@@ -295,68 +347,118 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
         });
     };
 
-    const handleImageGenSuccess = (url: string) => {
-        emitAddClip({
-            id: generateUUID(),
-            type: MediaResourceType.IMAGE,
-            name: 'AI Generated Image',
-            url: url,
-            duration: 5,
-            width: 1024,
-            height: 1024,
-            origin: 'ai'
-        }, 5);
-        setShowImageGen(false);
+    const handleImageGenSuccess = async (url: string) => {
+        try {
+            if (!selectedTrackId) return;
+            const duration = 5;
+            const resource = await toMagiccutImportedResource(
+                url,
+                'image',
+                `magiccut_ai_image_${Date.now()}.png`,
+                {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration,
+                    width: 1024,
+                    height: 1024
+                }
+            );
+            emitAddClip(resource, duration);
+        } catch (error) {
+            console.error('Failed to import generated image into asset center', error);
+        } finally {
+            setShowImageGen(false);
+        }
     };
 
-    const handleVideoGenSuccess = (url: string) => {
-        emitAddClip({
-            id: generateUUID(),
-            type: MediaResourceType.VIDEO,
-            name: 'AI Generated Video',
-            url: url,
-            duration: 5,
-            width: 1280,
-            height: 720,
-            origin: 'ai'
-        }, 5);
-        setShowVideoGen(false);
+    const handleVideoGenSuccess = async (url: string) => {
+        try {
+            if (!selectedTrackId) return;
+            const duration = 5;
+            const resource = await toMagiccutImportedResource(
+                url,
+                'video',
+                `magiccut_ai_video_${Date.now()}.mp4`,
+                {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration,
+                    width: 1280,
+                    height: 720
+                }
+            );
+            emitAddClip(resource, duration);
+        } catch (error) {
+            console.error('Failed to import generated video into asset center', error);
+        } finally {
+            setShowVideoGen(false);
+        }
     };
 
-    const handleAudioGenSuccess = (url: string, duration?: number) => {
-        emitAddClip({
-            id: generateUUID(),
-            type: MediaResourceType.AUDIO,
-            name: 'AI Generated Speech',
-            url: url,
-            duration: duration || 10,
-            origin: 'ai'
-        }, duration || 10);
-        setShowAudioGen(false);
+    const handleAudioGenSuccess = async (url: string, duration?: number) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = duration || 10;
+            const resource = await toMagiccutImportedResource(
+                url,
+                'audio',
+                `magiccut_ai_speech_${Date.now()}.wav`,
+                {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                }
+            );
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated speech into asset center', error);
+        } finally {
+            setShowAudioGen(false);
+        }
     };
 
-    const handleSfxGenSuccess = (url: string, duration?: number) => {
-        emitAddClip({
-            id: generateUUID(),
-            type: MediaResourceType.AUDIO,
-            name: 'AI Generated SFX',
-            url: url,
-            duration: duration || 5,
-            origin: 'ai'
-        }, duration || 5);
-        setShowSfxGen(false);
+    const handleSfxGenSuccess = async (url: string, duration?: number) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = duration || 5;
+            const resource = await toMagiccutImportedResource(
+                url,
+                'sfx',
+                `magiccut_ai_sfx_${Date.now()}.wav`,
+                {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                }
+            );
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated sfx into asset center', error);
+        } finally {
+            setShowSfxGen(false);
+        }
     };
 
-    const handleMusicGenSuccess = (url: string, duration?: number) => {
-        emitAddClip({
-            id: generateUUID(),
-            type: MediaResourceType.MUSIC,
-            name: 'AI Generated Music',
-            url: url,
-            duration: duration || 120,
-            origin: 'ai'
-        }, duration || 120);
-        setShowMusicGen(false);
+    const handleMusicGenSuccess = async (url: string, duration?: number) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = duration || 120;
+            const resource = await toMagiccutImportedResource(
+                url,
+                'music',
+                `magiccut_ai_music_${Date.now()}.mp3`,
+                {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                }
+            );
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated music into asset center', error);
+        } finally {
+            setShowMusicGen(false);
+        }
     };
 
     return (
@@ -597,4 +699,3 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
         </>
     );
 });
-

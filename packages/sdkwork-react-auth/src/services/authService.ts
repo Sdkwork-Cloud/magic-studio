@@ -35,7 +35,7 @@ class AuthService {
             return Result.success({ user, loginVO });
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Login failed';
-            return Result.failure(message);
+            return Result.error(message);
         }
     }
 
@@ -54,7 +54,7 @@ class AuthService {
             return Result.success(undefined);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Logout failed';
-            return Result.failure(message);
+            return Result.error(message);
         }
     }
 
@@ -68,7 +68,7 @@ class AuthService {
             return Result.success(user);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Registration failed';
-            return Result.failure(message);
+            return Result.error(message);
         }
     }
 
@@ -79,7 +79,7 @@ class AuthService {
             return Result.success(loginVO);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Token refresh failed';
-            return Result.failure(message);
+            return Result.error(message);
         }
     }
 

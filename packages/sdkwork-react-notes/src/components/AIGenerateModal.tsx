@@ -1,5 +1,6 @@
 
-import { Button, genAIService } from '@sdkwork/react-commons';
+import { Button } from '@sdkwork/react-commons';
+import { genAIService } from '@sdkwork/react-core';
 import React, { useState } from 'react';
 import { 
     X, Image as ImageIcon, Video, Mic, Sparkles, 
@@ -15,8 +16,22 @@ interface AIGenerateModalProps {
     onInsert: (type: MediaType, src: string) => void;
 }
 
+interface TabButtonProps {
+    active: boolean;
+    onClick: () => void;
+    icon: React.ReactNode;
+    label: string;
+}
+
+const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return 'Generation failed';
+};
+
 export const AIGenerateModal: React.FC<AIGenerateModalProps> = ({ initialType, onClose, onInsert }) => {
-    const { t } = useTranslation();
+    const { t: _t } = useTranslation();
     const [activeTab, setActiveTab] = useState<MediaType>(initialType);
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -40,9 +55,9 @@ export const AIGenerateModal: React.FC<AIGenerateModalProps> = ({ initialType, o
                 src = await genAIService.generateSpeech(prompt);
             }
             setResultSrc(src);
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            setError(e.message || "Generation failed");
+            setError(getErrorMessage(e));
         } finally {
             setIsGenerating(false);
         }
@@ -186,7 +201,7 @@ export const AIGenerateModal: React.FC<AIGenerateModalProps> = ({ initialType, o
     );
 };
 
-const TabButton = ({ active, onClick, icon, label }: any) => (
+const TabButton: React.FC<TabButtonProps> = ({ active, onClick, icon, label }) => (
     <button
         onClick={onClick}
         className={`

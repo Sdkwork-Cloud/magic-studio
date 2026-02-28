@@ -20,6 +20,12 @@ interface MenuStyle {
     zIndex?: number;
 }
 
+interface MenuButtonProps {
+    onClick: () => void;
+    icon: React.ReactNode;
+    label?: string;
+}
+
 export const BlockFloatingMenu: React.FC<BlockFloatingMenuProps> = ({ editor }) => {
     const [style, setStyle] = useState<MenuStyle>({ display: 'none' });
 
@@ -101,7 +107,11 @@ export const BlockFloatingMenu: React.FC<BlockFloatingMenuProps> = ({ editor }) 
 
                 const src = `data:${mime};base64,${base64}`;
 
-                (editor.chain().focus() as any).setImage({ src }).run();
+                editor
+                    .chain()
+                    .focus()
+                    .insertContent({ type: 'image', attrs: { src } })
+                    .run();
             }
         } catch (e) {
             console.error('Image insertion failed', e);
@@ -113,16 +123,16 @@ export const BlockFloatingMenu: React.FC<BlockFloatingMenuProps> = ({ editor }) 
     return (
         <div 
             className="flex items-center gap-1 p-1 absolute"
-            style={style as React.CSSProperties}
+            style={style}
         >
              <div className="flex items-center gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#333] shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-right-2 duration-150 -translate-x-full">
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleHeading({ level: 1 }).run()} 
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} 
                     icon={<Heading1 size={16} />} 
                     // label="H1" -> Removed redundant label
                 />
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleHeading({ level: 2 }).run()} 
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} 
                     icon={<Heading2 size={16} />} 
                     // label="H2" -> Removed redundant label
                 />
@@ -130,26 +140,26 @@ export const BlockFloatingMenu: React.FC<BlockFloatingMenuProps> = ({ editor }) 
                 <div className="w-[1px] h-4 bg-[#333] mx-1" />
                 
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleBulletList().run()} 
+                    onClick={() => editor.chain().focus().toggleBulletList().run()} 
                     icon={<List size={16} />} 
                 />
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleOrderedList().run()} 
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()} 
                     icon={<ListOrdered size={16} />} 
                 />
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleTaskList().run()} 
+                    onClick={() => editor.chain().focus().toggleTaskList().run()} 
                     icon={<CheckSquare size={16} />} 
                 />
                 
                 <div className="w-[1px] h-4 bg-[#333] mx-1" />
 
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleCodeBlock().run()} 
+                    onClick={() => editor.chain().focus().toggleCodeBlock().run()} 
                     icon={<Code size={16} />} 
                 />
                 <MenuBtn 
-                    onClick={() => (editor.chain().focus() as any).toggleBlockquote().run()} 
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()} 
                     icon={<Quote size={16} />} 
                 />
                 
@@ -164,7 +174,7 @@ export const BlockFloatingMenu: React.FC<BlockFloatingMenuProps> = ({ editor }) 
     );
 };
 
-const MenuBtn = ({ onClick, icon, label }: any) => (
+const MenuBtn: React.FC<MenuButtonProps> = ({ onClick, icon, label }) => (
     <button
         onClick={onClick}
         onMouseDown={(e) => e.preventDefault()}

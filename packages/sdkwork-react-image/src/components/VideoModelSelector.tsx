@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModelSelector } from '@sdkwork/react-commons';
-import { VIDEO_PROVIDERS } from '../constants';
+import { IMAGE_PROVIDERS } from '../constants';
 
 interface VideoModelSelectorProps {
     value: string;
@@ -16,7 +16,7 @@ export const VideoModelSelector: React.FC<VideoModelSelectorProps> = ({ value, o
         <ModelSelector 
             value={value}
             onChange={onChange}
-            providers={VIDEO_PROVIDERS}
+            providers={IMAGE_PROVIDERS}
             className={className}
             disabled={disabled}
             isOpen={isOpen}

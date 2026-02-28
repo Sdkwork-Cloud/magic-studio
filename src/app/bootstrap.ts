@@ -1,6 +1,6 @@
 import { platform } from '@sdkwork/react-core';
 import { uploadHelper } from '@sdkwork/react-core';
-import { initializeAssetServices } from '@sdkwork/react-assets';
+import { initializeAssetServices, assetCenterService } from '@sdkwork/react-assets';
 import { i18nService, registerPackageI18n } from '@sdkwork/react-i18n';
 import { initSdkworkFromEnv } from '@sdkwork/react-core';
 
@@ -106,6 +106,11 @@ export const bootstrap = async () => {
 
   // Initialize asset services for the asset center
   initializeAssetServices();
+  try {
+    await assetCenterService.initialize();
+  } catch (e) {
+    console.warn('[Magic Studio] Asset center initialization failed:', e);
+  }
 
   const platformName = platform.getPlatform();
   console.log(`[Magic Studio] Initialized on ${platformName} platform.`);

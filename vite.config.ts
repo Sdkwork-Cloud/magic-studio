@@ -6,6 +6,25 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const normalizeModuleId = (id: string): string => id.replace(/\\/g, '/');
+
+const resolveManualChunk = (id: string): string | undefined => {
+    const normalized = normalizeModuleId(id);
+
+    if (normalized.includes('/node_modules/')) {
+      return 'vendor';
+    }
+
+    if (normalized.includes('/packages/sdkwork-react-magiccut/')) return 'feature-magiccut';
+    if (normalized.includes('/packages/sdkwork-react-film/')) return 'feature-film';
+    if (normalized.includes('/packages/sdkwork-react-notes/')) return 'feature-notes';
+    if (normalized.includes('/packages/sdkwork-react-editor/')) return 'feature-editor';
+    if (normalized.includes('/packages/sdkwork-react-drive/')) return 'feature-drive';
+    if (normalized.includes('/packages/sdkwork-react-portal-video/')) return 'feature-portal-video';
+    if (normalized.includes('/packages/sdkwork-react-assets/')) return 'feature-assets';
+    return undefined;
+};
+
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
@@ -17,6 +36,14 @@ export default defineConfig(({ mode }) => {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      build: {
+        chunkSizeWarningLimit: 1200,
+        rollupOptions: {
+          output: {
+            manualChunks: resolveManualChunk
+          }
+        }
       },
       resolve: {
         alias: [

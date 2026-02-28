@@ -14,7 +14,13 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sdkwork/react-*": ["../sdkwork-react-*/src/index.ts"],
+      "sdkwork-react-*": ["../sdkwork-react-*/src/index.ts"],
+      "@sdkwork/app-sdk": ["../sdkwork-app-sdk-typescript/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

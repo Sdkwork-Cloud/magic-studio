@@ -68,6 +68,7 @@ class NotificationService {
         } else {
             const newNotification: AppNotification = {
                 id: notification.id,
+                uuid: generateUUID(),
                 title: notification.title ?? '',
                 message: notification.message ?? '',
                 type: notification.type ?? NotificationType.INFO,
@@ -89,15 +90,18 @@ class NotificationService {
         type: NotificationType = NotificationType.INFO,
         options?: { actionUrl?: string; actionLabel?: string }
     ): Promise<ServiceResult<AppNotification>> {
+        const now = Date.now();
         const notification: AppNotification = {
             id: generateUUID(),
+            uuid: generateUUID(),
             title,
             message,
             type,
             isRead: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            ...options
+            createdAt: now,
+            updatedAt: now,
+            actionUrl: options?.actionUrl,
+            actionLabel: options?.actionLabel
         };
 
         return await this.save(notification);

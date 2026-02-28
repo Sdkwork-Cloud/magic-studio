@@ -1,5 +1,5 @@
 
-import { StorageConfig, StorageProviderType } from '../entities/settings.entity'
+import { StorageConfig, StorageProviderType } from '../entities'
 import { Button } from '@sdkwork/react-commons'
 import { storageManager, S3Provider, ServerProvider } from '@sdkwork/react-core'
 import React, { useState } from 'react';
@@ -7,7 +7,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     HardDrive, Plus, Trash2, Edit2, AlertCircle, CheckCircle2, 
-    Wifi, Check, Globe, FolderTree, Key, Server, Lock
+    Wifi, Key, Server
 } from 'lucide-react';
 import { SettingsSection, SettingInput, SettingSelect, SettingToggle } from './SettingsWidgets';
 import { STORAGE_PROVIDERS } from '../data/storageProviders';
@@ -90,10 +90,10 @@ const StorageSettings: React.FC = () => {
         try {
             let success = false;
             if (config.mode === 'server') {
-                const provider = new ServerProvider(config);
+                const provider = new ServerProvider(config as any);
                 success = await provider.testConnection();
             } else {
-                const provider = new S3Provider(config);
+                const provider = new S3Provider(config as any);
                 success = await provider.testConnection();
             }
             

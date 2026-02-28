@@ -1,5 +1,5 @@
 
-import { LspConfig } from '../entities/settings.entity'
+import { LspConfig } from '../entities'
 import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 

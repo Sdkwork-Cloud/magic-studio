@@ -2,7 +2,7 @@
 ;
 ;
 import { LocalStorageService } from '@sdkwork/react-core';
-import { Presentation, Slide } from '../entities/ppt.entity';
+import { Presentation, Slide } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { ServiceResult, Result } from '@sdkwork/react-commons';
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, User, Settings2, Captions, Type } from 'lucide-react';
 import { PropertySection, ScrubbableInput, Dropdown, ActionButton } from '../widgets/PropertyWidgets';
-;
 import { PRESET_VOICES } from '@sdkwork/react-voicespeaker';
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../../entities/magicCut.entity';
@@ -17,7 +16,6 @@ interface VoiceSettingsPanelProps {
 }
 
 export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, resource, onUpdate, onUpdateResource }) => {
-    const { t } = useTranslation();
     const { setClipSpeed } = useMagicCutStore(); // Access store for speed control
 
     const [script, setScript] = useState('');

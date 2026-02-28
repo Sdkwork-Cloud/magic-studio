@@ -19,6 +19,17 @@ export interface DriveItem {
   accessedAt?: number;
 }
 
+export interface DriveMetadata {
+  id: string;
+  uuid: string;
+  createdAt: number;
+  updatedAt: number;
+  isStarred?: boolean;
+  trashedAt?: number | null;
+  accessedAt?: number;
+  labels?: string[];
+}
+
 export interface DriveStats {
   usedBytes: number;
   totalBytes: number;

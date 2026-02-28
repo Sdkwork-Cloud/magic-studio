@@ -1,4 +1,4 @@
-import { Viewport } from '../entities/canvas.entity'
+import { Viewport } from '../entities'
 import { useMemo, useCallback } from 'react';
 ;
 

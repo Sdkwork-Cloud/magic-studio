@@ -2,11 +2,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { TimelineStore } from '../../../../store/transientStore';
 
-interface UseAutoScrollOptions {
-    containerRef: React.RefObject<HTMLDivElement>;
-    store: TimelineStore;
-}
-
 interface UseAutoScrollReturn {
     autoScrollSpeed: React.MutableRefObject<number>;
     startAutoScroll: (speed: number) => void;
@@ -16,10 +11,10 @@ interface UseAutoScrollReturn {
 /**
  * useAutoScroll - 自动滚动 Hook
  * 
- * 职责：管理拖拽时的边缘自动滚�? * 优化：使�?RAF 循环实现平滑滚动，并同步 Zustand Transient Store
+ * 职责：管理拖拽时的边缘自动滚�? * 优化：使�?RAF 循环实现平滑滚动，并同步 Zustand Transient Store
  */
 export const useAutoScroll = (
-    containerRef: React.RefObject<HTMLDivElement>,
+    containerRef: React.RefObject<HTMLDivElement | null>,
     store: TimelineStore
 ): UseAutoScrollReturn => {
     const autoScrollSpeed = useRef<number>(0);

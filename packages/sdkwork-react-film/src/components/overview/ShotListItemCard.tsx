@@ -1,6 +1,11 @@
 import { FilmShot, useAssetUrl } from '@sdkwork/react-commons'
 import React, { useState, useRef, useEffect } from 'react';
 import { Clapperboard, Video, Image as ImageIcon, Sparkles, Play, Mic, AlertCircle, Trash2, Clock, MoreHorizontal, Edit2, Wand2, Check, X, Type } from 'lucide-react';
+import {
+    hasFilmAssetReference,
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../../utils/filmAssetUrlResolver';
 
 export interface ShotListItemCardProps {
     shot: FilmShot;
@@ -23,19 +28,25 @@ export const ShotListItemCard: React.FC<ShotListItemCardProps> = ({
     const [promptText, setPromptText] = useState(typeof initialPrompt === 'string' ? initialPrompt : String(initialPrompt || ''));
     const promptInputRef = useRef<HTMLTextAreaElement>(null);
     
-    const hasVideo = !!shot.generation?.video?.url;
-    const hasImage = !!(shot.assets && shot.assets.length > 0);
+    const hasVideo = hasFilmAssetReference(shot.generation?.video || null);
+    const primaryImageAsset =
+        shot.assets?.find((asset) => hasFilmAssetReference(asset)) ?? null;
+    const hasImage = !!primaryImageAsset;
     const hasAudio = !!(shot.dialogue?.items && shot.dialogue.items.length > 0);
     const isGenerating = shot.generation?.status === 'GENERATING';
     const isError = shot.generation?.status === 'FAILED';
 
-    const rawSource = hasVideo ? shot.generation.video?.url : (hasImage ? shot.assets?.[0]?.url : null);
-    const { url: displayUrl } = useAssetUrl(rawSource);
+    const previewSource = hasVideo
+        ? shot.generation?.video || null
+        : primaryImageAsset;
+    const { url: displayUrl } = useAssetUrl(toFilmUseAssetSource(previewSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     // 获取对话文本
     const dialogueText = shot.dialogue?.items?.map(item => item.text).join(' ') || '';
-
-    // 自动聚焦输入�?    useEffect(() => {
+    // Auto focus prompt input when entering edit mode.
+    useEffect(() => {
         if (isEditingPrompt && promptInputRef.current) {
             promptInputRef.current.focus();
             promptInputRef.current.select();
@@ -62,8 +73,8 @@ export const ShotListItemCard: React.FC<ShotListItemCardProps> = ({
             handleCancelEdit();
         }
     };
-
-    // 获取要显示的提示词（确保是字符串�?    const rawPrompt = shot.generation?.prompt || shot.description || '';
+    // Normalize display prompt to string.
+    const rawPrompt = shot.generation?.prompt || shot.description || '';
     const displayPrompt = typeof rawPrompt === 'string' ? rawPrompt : String(rawPrompt || '');
 
     return (
@@ -266,7 +277,7 @@ export const ShotListItemCard: React.FC<ShotListItemCardProps> = ({
     );
 };
 
-// 状态徽章组�?function StatusBadge({ active, icon: Icon, label, color }: {
+function StatusBadge({ active, icon: Icon, label, color }: {
     active: boolean;
     icon: React.ElementType;
     label: string;
@@ -279,3 +290,4 @@ export const ShotListItemCard: React.FC<ShotListItemCardProps> = ({
         </div>
     );
 }
+

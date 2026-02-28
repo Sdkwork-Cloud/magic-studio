@@ -1,11 +1,29 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-;
-;
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode
+} from 'react';
 import { uploadHelper } from '@sdkwork/react-core';
-import { Asset, AssetType, AssetOrigin } from '../entities/asset.entity';
-import { Page } from '@sdkwork/react-commons';
-import { assetService, ASSET_CATEGORIES } from '../services/assetService';
+import type { Page } from '@sdkwork/react-commons';
+import type { AssetBusinessDomain, AssetContentKey } from '@sdkwork/react-types';
+import type { Asset, AssetType, AssetOrigin } from '../entities';
+import { createSpringPage } from '../services/impl/springPage';
+import {
+  assetBusinessFacade,
+  assetCenterService,
+  detectAssetTypeByFilename,
+  mapUnifiedPageToAssetPage,
+  normalizeSpringPageRequest,
+  readWorkspaceScope,
+  resolveAcceptExtensionsByTypes,
+  resolveDomainAssetTypes,
+  toContentKey
+} from '../asset-center';
 
 interface AssetStoreContextType {
   assets: Asset[];
@@ -37,178 +55,254 @@ interface AssetStoreContextType {
 const AssetStoreContext = createContext<AssetStoreContextType | undefined>(undefined);
 
 interface AssetStoreProviderProps {
-    children: ReactNode;
-    initialAllowedTypes?: AssetType[];
+  children: ReactNode;
+  initialAllowedTypes?: AssetType[];
+  domain?: AssetBusinessDomain;
 }
 
-export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({ children, initialAllowedTypes }) => {
+const createEmptyPage = (
+  page: number,
+  size: number,
+  sort?: string[]
+): Page<Asset> => createSpringPage([], { page, size, sort });
+
+const ASSET_PAGE_SIZE = 60;
+
+const resolveQueryContentKeys = (
+  filterType: AssetType | 'all',
+  allowedTypes?: AssetType[]
+): AssetContentKey[] | undefined => {
+  if (filterType !== 'all') {
+    return [toContentKey(filterType)];
+  }
+  if (allowedTypes && allowedTypes.length > 0) {
+    return allowedTypes.map((item) => toContentKey(item));
+  }
+  return undefined;
+};
+
+export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
+  children,
+  initialAllowedTypes,
+  domain = 'asset-center'
+}) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [pageData, setPageData] = useState<Page<Asset> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Filter State
   const [filterType, setFilterType] = useState<AssetType | 'all'>('all');
   const [filterOrigin, setFilterOrigin] = useState<AssetOrigin | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  
-  const allowedTypes = initialAllowedTypes;
 
-  const load = async (page = 0) => {
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const requestSequenceRef = useRef(0);
+
+  const allowedTypes = useMemo<AssetType[] | undefined>(() => {
+    const domainTypes = resolveDomainAssetTypes(domain);
+    if (!initialAllowedTypes || initialAllowedTypes.length === 0) {
+      return domainTypes;
+    }
+    const allowed = new Set(domainTypes);
+    return initialAllowedTypes.filter((item) => allowed.has(item));
+  }, [domain, initialAllowedTypes]);
+
+  const load = useCallback(async (page = 0) => {
+    const requestId = ++requestSequenceRef.current;
     setIsLoading(true);
     try {
-        const result = await assetService.findAll({
-            page,
-            size: 1000, // Load larger batch for client-side filtering fluidity
-            keyword: searchQuery
-        });
+      const normalized = normalizeSpringPageRequest({
+        page,
+        size: ASSET_PAGE_SIZE,
+        keyword: searchQuery,
+        sort: ['updatedAt,desc']
+      });
+      const scope = readWorkspaceScope();
+      await assetCenterService.initialize();
 
-        if (result.success && result.data) {
-            setPageData(result.data);
-            if (page === 0) {
-                setAssets(result.data.content);
-            } else {
-                setAssets(prev => [...prev, ...(result.data?.content || [])]);
-            }
-        }
+      if (requestId !== requestSequenceRef.current) {
+        return;
+      }
+
+      if (initialAllowedTypes && initialAllowedTypes.length > 0 && (!allowedTypes || allowedTypes.length === 0)) {
+        const emptyPage = createEmptyPage(normalized.page, normalized.size, normalized.sort);
+        setPageData(emptyPage);
+        setAssets([]);
+        return;
+      }
+
+      const centerPage = await assetBusinessFacade.queryByDomain(domain, {
+        page: normalized.page,
+        size: normalized.size,
+        keyword: normalized.keyword,
+        sort: normalized.sort,
+        scope,
+        types: resolveQueryContentKeys(filterType, allowedTypes),
+        origins: filterOrigin === 'all' ? undefined : [filterOrigin],
+        includeDeleted: false
+      });
+
+      if (requestId !== requestSequenceRef.current) {
+        return;
+      }
+
+      const mappedPage = mapUnifiedPageToAssetPage(centerPage);
+      const content = mappedPage.content;
+      setPageData(mappedPage);
+      if (page === 0) {
+        setAssets(content);
+      } else {
+        setAssets((prev) => [...prev, ...content]);
+      }
     } catch (e) {
-        console.error("Failed to load assets", e);
+      console.error('Failed to load assets from unified asset-center', e);
     } finally {
+      if (requestId === requestSequenceRef.current) {
         setIsLoading(false);
+      }
     }
-  };
+  }, [allowedTypes, domain, filterOrigin, filterType, initialAllowedTypes, searchQuery]);
 
   useEffect(() => {
     // Debounce search
     const timer = setTimeout(() => {
-        load(0);
+      load(0);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery]); 
+  }, [load]);
 
   // Initialize filter if props provided
   useEffect(() => {
-      if (allowedTypes && allowedTypes.length > 0 && allowedTypes.length === 1) {
-          setFilterType(allowedTypes[0]);
-      }
+    if (allowedTypes && allowedTypes.length > 0 && allowedTypes.length === 1) {
+      setFilterType(allowedTypes[0]);
+    }
   }, [allowedTypes]);
 
+  useEffect(() => {
+    if (filterType !== 'all' && allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(filterType)) {
+      setFilterType('all');
+    }
+  }, [allowedTypes, filterType]);
+
   const refresh = async () => {
-      await assetService.refreshIndex();
-      await load(0);
+    await load(0);
   };
 
   const importAssets = async () => {
-      try {
-          let accept = '*';
-          if (allowedTypes && allowedTypes.length > 0) {
-              const extensions = allowedTypes.flatMap(type => {
-                  const cat = ASSET_CATEGORIES.find(c => c.id === type);
-                  return cat ? cat.accepts : [];
-              });
-              if (extensions.length > 0) {
-                  accept = extensions.join(',');
-              }
-          }
-
-          // Use optimized file picker
-          const files = await uploadHelper.pickFiles(true, accept);
-          if (files.length === 0) return;
-          
-          setIsLoading(true);
-          
-          for (const file of files) {
-              const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-              let targetCat: AssetType = 'image';
-              
-              // Auto-detect type
-              for (const cat of ASSET_CATEGORIES) {
-                  if (cat.accepts.includes(ext)) {
-                      targetCat = cat.id as AssetType;
-                      break;
-                  }
-              }
-              
-              if (allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(targetCat)) {
-                  continue;
-              }
-
-              // Explicitly mark as 'upload' origin
-              const newAsset = await assetService.importAsset(
-                  file.data, 
-                  file.name, 
-                  targetCat, 
-                  'upload', // Origin: User Upload
-                  file.path // Source Path (Desktop optimization)
-              );
-              
-              setAssets(prev => [newAsset, ...prev]);
-          }
-      } catch (e) {
-          console.error(e);
-          alert("Import failed");
-      } finally {
-          setIsLoading(false);
+    try {
+      const effectiveTypes = allowedTypes && allowedTypes.length > 0
+        ? allowedTypes
+        : resolveDomainAssetTypes(domain);
+      const extensions = resolveAcceptExtensionsByTypes(effectiveTypes);
+      const accept = extensions.length > 0 ? extensions.join(',') : '*';
+      const files = await uploadHelper.pickFiles(true, accept);
+      if (files.length === 0) {
+        return;
       }
+
+      setIsLoading(true);
+      const scope = readWorkspaceScope();
+      for (const file of files) {
+        const detected = detectAssetTypeByFilename(file.name, {
+          preferred: filterType === 'all' ? undefined : filterType,
+          candidates: effectiveTypes,
+          fallback: effectiveTypes.includes('file')
+            ? 'file'
+            : effectiveTypes[0] || 'file'
+        });
+        if (
+          effectiveTypes &&
+          effectiveTypes.length > 0 &&
+          !effectiveTypes.includes(detected)
+        ) {
+          continue;
+        }
+
+        const sourcePath = typeof file.path === 'string' && file.path.trim().length > 0
+          ? file.path
+          : undefined;
+        await assetBusinessFacade.importByDomain(domain, {
+          scope,
+          type: toContentKey(detected),
+          name: file.name,
+          data: sourcePath ? undefined : file.data,
+          sourcePath,
+          metadata: {
+            origin: 'upload',
+            source: 'asset-center-import'
+          }
+        });
+      }
+      await load(0);
+    } catch (e) {
+      console.error(e);
+      alert('Import failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteAsset = async (asset: Asset) => {
-      try {
-          const res = await assetService.delete(asset);
-          if (res.success) {
-              setAssets(prev => prev.filter(a => a.id !== asset.id));
-              if (selectedAsset?.id === asset.id) setSelectedAsset(null);
-          }
-      } catch (e) { console.error(e); }
+    try {
+      await assetCenterService.deleteById(asset.id);
+      setAssets((prev) => prev.filter((item) => item.id !== asset.id));
+      if (selectedAsset?.id === asset.id) {
+        setSelectedAsset(null);
+      }
+      await load(0);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const renameAsset = async (asset: Asset, newName: string) => {
-       try {
-           await assetService.renameAsset(asset.path, newName);
-           await refresh();
-       } catch (e) { console.error(e); }
+    try {
+      await assetCenterService.renameAsset(asset.id, newName);
+      await refresh();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Client-side filtering logic
   const displayedAssets = useMemo(() => {
-      return assets.filter(asset => {
-          // 1. Type Constraint (Prop)
-          if (allowedTypes && allowedTypes.length > 0) {
-              if (!allowedTypes.includes(asset.type)) return false;
-          }
-          
-          // 2. Type Filter (UI)
-          const matchesType = filterType === 'all' || asset.type === filterType;
-          if (!matchesType) return false;
+    return assets.filter((asset) => {
+      // 1. Type Constraint (Prop/Domain)
+      if (allowedTypes && allowedTypes.length > 0) {
+        if (!allowedTypes.includes(asset.type)) return false;
+      }
 
-          // 3. Origin Filter (UI)
-          const matchesOrigin = filterOrigin === 'all' || asset.origin === filterOrigin;
-          if (!matchesOrigin) return false;
+      // 2. Type Filter (UI)
+      const matchesType = filterType === 'all' || asset.type === filterType;
+      if (!matchesType) return false;
 
-          return true;
-      });
+      // 3. Origin Filter (UI)
+      const matchesOrigin = filterOrigin === 'all' || asset.origin === filterOrigin;
+      if (!matchesOrigin) return false;
+
+      return true;
+    });
   }, [assets, filterType, filterOrigin, allowedTypes]);
 
   return (
     <AssetStoreContext.Provider value={{
-        assets: displayedAssets,
-        pageData,
-        isLoading,
-        filterType,
-        filterOrigin,
-        searchQuery,
-        selectedAsset,
-        allowedTypes,
-        setFilterType,
-        setFilterOrigin,
-        setSearchQuery,
-        setSelectedAsset,
-        refresh,
-        loadPage: load,
-        importAssets,
-        deleteAsset,
-        renameAsset
+      assets: displayedAssets,
+      pageData,
+      isLoading,
+      filterType,
+      filterOrigin,
+      searchQuery,
+      selectedAsset,
+      allowedTypes,
+      setFilterType,
+      setFilterOrigin,
+      setSearchQuery,
+      setSelectedAsset,
+      refresh,
+      loadPage: load,
+      importAssets,
+      deleteAsset,
+      renameAsset
     }}>
       {children}
     </AssetStoreContext.Provider>

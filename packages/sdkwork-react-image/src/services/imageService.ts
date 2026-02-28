@@ -1,9 +1,9 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { GenerationConfig } from '../entities/image.entity';
-export type { GenerationConfig };
+import { ImageGenerationConfig } from '../entities';
+export type GenerationConfig = ImageGenerationConfig;
 import { vfs } from '@sdkwork/react-fs';
-import { assetService } from '@sdkwork/react-assets';
+import { resolveAssetUrlByAssetIdFirst } from '@sdkwork/react-assets';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { platform as _platform } from '@sdkwork/react-core';
 
@@ -19,10 +19,16 @@ const resolveToData = async (source: string): Promise<{ mimeType: string, data: 
     }
 
     try {
-        let buffer: Uint8Array;
+        let buffer: Uint8Array | null = null;
         let mimeType = 'image/png';
 
-        if (source.startsWith('http')) {
+        if (
+            source.startsWith('http://') ||
+            source.startsWith('https://') ||
+            source.startsWith('blob:') ||
+            source.startsWith('data:') ||
+            source.startsWith('asset:')
+        ) {
             const res = await fetch(source);
             const blob = await res.blob();
             buffer = new Uint8Array(await blob.arrayBuffer());
@@ -30,13 +36,29 @@ const resolveToData = async (source: string): Promise<{ mimeType: string, data: 
         } else {
             let absPath = source;
             if (source.startsWith('assets://')) {
-                absPath = await assetService.toAbsolutePath(source);
+                const resolved = await resolveAssetUrlByAssetIdFirst(source);
+                if (resolved) {
+                    const res = await fetch(resolved);
+                    const blob = await res.blob();
+                    buffer = new Uint8Array(await blob.arrayBuffer());
+                    mimeType = blob.type || mimeType;
+                    absPath = '';
+                } else {
+                    return null;
+                }
             }
-            buffer = await vfs.readFileBinary(absPath);
-            
-            if (absPath.endsWith('.jpg') || absPath.endsWith('.jpeg')) mimeType = 'image/jpeg';
-            if (absPath.endsWith('.png')) mimeType = 'image/png';
-            if (absPath.endsWith('.webp')) mimeType = 'image/webp';
+
+            if (absPath) {
+                buffer = await vfs.readFileBinary(absPath);
+                
+                if (absPath.endsWith('.jpg') || absPath.endsWith('.jpeg')) mimeType = 'image/jpeg';
+                if (absPath.endsWith('.png')) mimeType = 'image/png';
+                if (absPath.endsWith('.webp')) mimeType = 'image/webp';
+            }
+        }
+
+        if (!buffer) {
+            return null;
         }
 
         let binary = '';

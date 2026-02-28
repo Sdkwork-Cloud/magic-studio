@@ -26,7 +26,6 @@ export const ChooseVoiceSpeakerModal: React.FC<ChooseVoiceSpeakerModalProps> = (
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGender, setActiveGender] = useState<string>('all');
   const [activeLang, setActiveLang] = useState<string>('all');
-  const [activeCategory, setActiveCategory] = useState<string>('all'); // Future extension
 
   // Load Data Strategy
   useEffect(() => {

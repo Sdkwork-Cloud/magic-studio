@@ -2,7 +2,7 @@
 import { WindowControls } from '@sdkwork/react-commons'
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  ChevronRight, Home, Terminal, Code, Cpu, Settings, User,
+  ChevronRight, Home, Terminal, Code, Settings, User,
   BookOpen, Bug, RefreshCw,
   Github, Rocket, Zap
 } from 'lucide-react';

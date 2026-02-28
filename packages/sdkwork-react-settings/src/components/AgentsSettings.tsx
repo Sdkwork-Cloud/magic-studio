@@ -7,7 +7,7 @@ import {
 import { SettingsSection, SettingInput, SettingSelect, SettingSlider } from './SettingsWidgets';
 
 import { genAIService } from '@sdkwork/react-core';
-import { AgentConfig, McpConfig } from '../entities/settings.entity';
+import { AgentConfig, McpConfig } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 
 // PromptTextInput will be implemented locally or moved to commons
@@ -218,7 +218,7 @@ const AgentsSettings: React.FC = () => {
                                     <label className="block text-sm font-medium leading-none text-gray-700 dark:text-gray-200 mb-1.5">{t('settings.agents.system_prompt')}</label>
                                     <PromptTextInput
                                         value={settings.agents[editingId].systemPrompt}
-                                        onChange={(v) => updateAgent(editingId, { systemPrompt: v })}
+                                        onChange={(v: string) => updateAgent(editingId, { systemPrompt: v })}
                                         rows={8}
                                         placeholder="You are an expert software engineer..."
                                         onEnhance={handleEnhancePrompt}
@@ -234,7 +234,7 @@ const AgentsSettings: React.FC = () => {
                                         label={t('settings.ai.temperature.label')}
                                         value={settings.agents[editingId].temperature}
                                         min={0} max={1} step={0.1}
-                                        onChange={(v) => updateAgent(editingId, { temperature: v })}
+                                        onChange={(v: number) => updateAgent(editingId, { temperature: v })}
                                     />
                                 </div>
                              </SettingsSection>

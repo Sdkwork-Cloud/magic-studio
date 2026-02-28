@@ -29,9 +29,7 @@ export const LocationList: React.FC = () => {
         if (editingLocation) {
             updateLocation(editingLocation.uuid, data);
         } else {
-             // Use temp helper from store hook if direct action unavailable, 
-             // but assuming updateLocation handles logic or we use injected method
-             if ((window as any)._tempCreateLocation) (window as any)._tempCreateLocation(data);
+            createLocation(data);
         }
     };
 

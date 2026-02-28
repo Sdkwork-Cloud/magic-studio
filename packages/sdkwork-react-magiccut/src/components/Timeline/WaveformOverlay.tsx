@@ -1,10 +1,9 @@
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { CutClip, CutTrackType } from '@sdkwork/react-types';
 import { mediaService } from '@sdkwork/react-core';
 import { TIMELINE_CONSTANTS } from '../../constants';
-;
 
 interface WaveformOverlayProps {
     width: number;

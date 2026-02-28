@@ -1,5 +1,5 @@
 
-import { SidebarItemConfig } from '../entities/settings.entity'
+import { SidebarItemConfig } from '../entities'
 import React from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 import { useTranslation } from '@sdkwork/react-i18n';

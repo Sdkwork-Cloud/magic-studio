@@ -82,7 +82,7 @@ export class ClipTrimStrategy {
 
             // Constraint B: Resource Bounds (cannot trim past duration)
             if (this.isMediaLimited() && this.resource) {
-                 const sourceDuration = ('duration' in this.resource) ? this.resource.duration : 0;
+                 const sourceDuration = ('duration' in this.resource && this.resource.duration) ? this.resource.duration : 0;
                  // NewDuration = NewEnd - Start
                  // NewEndOffset = Offset + (NewDuration * Speed)
                  // Constraint: NewEndOffset <= SourceDuration
@@ -91,7 +91,7 @@ export class ClipTrimStrategy {
                  const newDuration = finalTime - this.initialState.startTime;
                  const requiredSourceDuration = this.initialState.offset + (newDuration * speed);
                  
-                 if (requiredSourceDuration > sourceDuration) {
+                 if (sourceDuration > 0 && requiredSourceDuration > sourceDuration) {
                      // Clamp
                      const maxDuration = (sourceDuration - this.initialState.offset) / speed;
                      finalTime = this.initialState.startTime + maxDuration;

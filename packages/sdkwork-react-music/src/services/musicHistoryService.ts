@@ -1,4 +1,4 @@
-import { MusicTask } from '../entities/music.entity';
+import { MusicTask } from '../entities';
 
 // Mock history service for music tasks
 export class MusicHistoryService {

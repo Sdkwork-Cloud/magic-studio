@@ -27,8 +27,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onCreateProject }) => 
         if (onCreateProject) onCreateProject();
     };
 
-    const formatDate = (timestamp: number) => {
-        const date = new Date(timestamp);
+    const formatDate = (timestamp: number | string) => {
+        const date = new Date(typeof timestamp === 'number' ? timestamp : parseInt(timestamp));
         return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     };
 

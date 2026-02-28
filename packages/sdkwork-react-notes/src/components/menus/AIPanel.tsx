@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Wand2, Languages, FileText, Check, X, Loader2, PenTool } from 'lucide-react';
+import { Sparkles, Wand2, Languages, FileText, Check, Loader2, PenTool } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AIPanelProps {
@@ -10,6 +10,12 @@ interface AIPanelProps {
     selectionText: string;
     contextText: string;
     position: { top: number; left: number } | null;
+}
+
+interface MenuOptionProps {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
 }
 
 export const AIPanel: React.FC<AIPanelProps> = ({ onClose, onInsert, onDraft, selectionText, position }) => {
@@ -157,7 +163,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({ onClose, onInsert, onDraft, se
     );
 };
 
-const MenuOption: React.FC<{ icon: any, label: string, onClick: () => void }> = ({ icon, label, onClick }) => (
+const MenuOption: React.FC<MenuOptionProps> = ({ icon, label, onClick }) => (
     <button 
         onClick={onClick}
         className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:bg-[#2a2a2c] hover:text-white rounded-md transition-colors text-left"

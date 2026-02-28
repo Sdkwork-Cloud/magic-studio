@@ -1,10 +1,44 @@
 
-import { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from '../entities/asset.entity';
+import { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from '../entities';
 import { vfs } from '@sdkwork/react-fs';
 import { pathUtils, generateUUID, IBaseService, ServiceResult, Result, Page, PageRequest, logger, MediaResource as _MediaResource, MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 import { storageConfig, LIBRARY_SUBDIRS } from '@sdkwork/react-fs';
 import { mediaAnalysisService } from '@sdkwork/react-core';
+import type { AssetContentKey, AssetLocator, AssetScope } from '@sdkwork/react-types';
+import { assetCenterService, readWorkspaceScope } from '../asset-center';
+import { createSpringPage } from './impl/springPage';
+
+const formatTimestamp = () => new Date().toISOString();
+const toEpochMillis = (value?: string | number): number => {
+    if (typeof value === 'number') return value;
+    if (!value) return 0;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+type AssetSortField = 'name' | 'createdAt' | 'updatedAt' | 'size';
+type AssetSortDirection = 'asc' | 'desc';
+type AssetSortOrder = { field: AssetSortField; direction: AssetSortDirection };
+
+const DEFAULT_SORT_ORDER: AssetSortOrder = { field: 'updatedAt', direction: 'desc' };
+
+const parseSortOrders = (sort?: string[], fallback = true): AssetSortOrder[] => {
+    if (!sort || sort.length === 0) return fallback ? [DEFAULT_SORT_ORDER] : [];
+    const orders: AssetSortOrder[] = [];
+    for (const item of sort) {
+        const [rawField, rawDir] = item.split(',');
+        const field = (rawField || '').trim();
+        const direction = rawDir?.trim().toLowerCase() === 'asc' ? 'asc' : 'desc';
+        if (field === 'name' || field === 'createdAt' || field === 'updatedAt' || field === 'size') {
+            orders.push({ field, direction });
+        }
+    }
+    if (orders.length > 0) {
+        return orders;
+    }
+    return fallback ? [DEFAULT_SORT_ORDER] : [];
+};
 
 export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'image', label: 'Images', accepts: ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.bmp', '.tiff'] },
@@ -12,9 +46,13 @@ export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'audio', label: 'Audio', accepts: ['.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a'] },
   { id: 'music', label: 'Music', accepts: ['.mp3', '.wav', '.ogg', '.flac'] },
   { id: 'voice', label: 'Voices', accepts: ['.json', '.voice', '.wav', '.mp3'] },
+  { id: 'text', label: 'Texts', accepts: ['.txt', '.md'] },
   { id: 'character', label: 'Characters', accepts: ['.json', '.char', '.png'] },
   { id: 'digital-human', label: 'Digital Humans', accepts: ['.json', '.dh', '.glb', '.gltf', '.fbx'] },
   { id: 'sfx', label: 'Sound Effects', accepts: ['.wav', '.mp3', '.ogg', '.aac'] },
+  { id: 'effect', label: 'Effects', accepts: ['.effect', '.cube', '.lut', '.fx'] },
+  { id: 'transition', label: 'Transitions', accepts: ['.transition', '.trans'] },
+  { id: 'subtitle', label: 'Subtitles', accepts: ['.srt', '.ass', '.vtt'] },
   { id: 'model3d', label: '3D Models', accepts: ['.glb', '.gltf', '.obj', '.fbx'] },
   { id: 'lottie', label: 'Animations', accepts: ['.json', '.lottie'] },
   { id: 'file', label: 'Files', accepts: [] }
@@ -78,6 +116,91 @@ class AssetService implements IBaseService<Asset> {
         const root = await this.getLibraryRoot();
         const relative = virtualPath.substring(PROTOCOL.length);
         return pathUtils.join(root, relative);
+    }
+
+    private toAssetContentKey(type: AssetType): AssetContentKey {
+        switch (type) {
+            case 'digital-human':
+                return 'digitalHuman';
+            default:
+                return type;
+        }
+    }
+
+    private resolveScopeByType(type: AssetType): AssetScope {
+        const workspaceScope = readWorkspaceScope();
+        const workspaceId = workspaceScope.workspaceId;
+        const projectId = workspaceScope.projectId;
+
+        const domainMap: Record<AssetType, AssetScope['domain']> = {
+            image: 'image-studio',
+            video: 'video-studio',
+            audio: 'audio-studio',
+            music: 'music',
+            voice: 'voice-speaker',
+            text: 'notes',
+            character: 'character',
+            'digital-human': 'character',
+            sfx: 'sfx',
+            effect: 'magiccut',
+            transition: 'magiccut',
+            subtitle: 'magiccut',
+            model3d: 'canvas',
+            lottie: 'canvas',
+            file: 'asset-center'
+        };
+
+        return {
+            workspaceId,
+            projectId,
+            domain: domainMap[type] || 'asset-center'
+        };
+    }
+
+    private async registerToAssetCenter(asset: Asset): Promise<void> {
+        try {
+            await assetCenterService.initialize();
+            const contentType = this.toAssetContentKey(asset.type);
+            const scope = this.resolveScopeByType(asset.type);
+            const isRemote = asset.path.startsWith('http://') || asset.path.startsWith('https://');
+            const absolutePath = isRemote ? undefined : await this.toAbsolutePath(asset.path);
+            const locator: AssetLocator = isRemote
+                ? {
+                    protocol: asset.path.startsWith('https://') ? 'https' : 'http',
+                    uri: asset.path,
+                    url: asset.path
+                }
+                : {
+                    protocol: 'assets' as const,
+                    uri: asset.path,
+                    path: absolutePath
+                };
+
+            const status =
+                asset.origin === 'ai'
+                    ? 'generated'
+                    : asset.origin === 'upload'
+                        ? 'imported'
+                        : 'ready';
+
+            await assetCenterService.registerExistingAsset({
+                assetId: asset.id,
+                scope,
+                type: contentType,
+                name: asset.name,
+                locator,
+                metadata: {
+                    ...asset.metadata,
+                    origin: asset.origin
+                },
+                status,
+                size: asset.size,
+                createdAt: String(asset.createdAt),
+                updatedAt: String(asset.updatedAt)
+            });
+        } catch (e) {
+            logger.warn('[AssetService] Failed to register asset into asset-center', e);
+        }
     }
 
     public async importAsset(
@@ -167,7 +290,7 @@ class AssetService implements IBaseService<Asset> {
             origin,
             type, 
             name: originalName,
-            createdAt: Date.now()
+            createdAt: formatTimestamp()
         }, null, 2));
 
         const asset: Asset = {
@@ -178,8 +301,8 @@ class AssetService implements IBaseService<Asset> {
             path: virtualPath,
             size: (dataOrBlob instanceof Blob) ? dataOrBlob.size : (dataOrBlob ? dataOrBlob.length : 0), 
             origin,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            createdAt: formatTimestamp(),
+            updatedAt: formatTimestamp(),
             metadata: assetMeta
         };
 
@@ -192,6 +315,7 @@ class AssetService implements IBaseService<Asset> {
 
         this._cache.unshift(asset);
         this._urlCache.set(virtualPath, viewableUrl);
+        await this.registerToAssetCenter(asset);
 
         return asset;
     }
@@ -279,10 +403,11 @@ class AssetService implements IBaseService<Asset> {
         await vfs.copyFile(absSourcePath, finalPath);
         const meta: AssetMetadata = { ...(sourceAsset.metadata || {}), originalName: newDisplayName, source: `derived:${sourceAsset.id}` };
         const metaPath = `${finalPath}.meta.json`;
-        await vfs.writeFile(metaPath, JSON.stringify({ metadata: meta, origin: 'system', type: newType, name: newDisplayName, createdAt: Date.now() }, null, 2));
+        await vfs.writeFile(metaPath, JSON.stringify({ metadata: meta, origin: 'system', type: newType, name: newDisplayName, createdAt: formatTimestamp() }, null, 2));
         const virtualPath = await this.toVirtualPath(finalPath);
-        const newAsset: Asset = { id: virtualPath, uuid: storageId, name: newDisplayName, type: newType, path: virtualPath, size: sourceAsset.size || 0, origin: 'system', createdAt: Date.now(), updatedAt: Date.now(), metadata: meta };
+        const newAsset: Asset = { id: virtualPath, uuid: storageId, name: newDisplayName, type: newType, path: virtualPath, size: sourceAsset.size || 0, origin: 'system', createdAt: formatTimestamp(), updatedAt: formatTimestamp(), metadata: meta };
         this._cache.unshift(newAsset);
+        await this.registerToAssetCenter(newAsset);
         return newAsset;
     }
     
@@ -298,7 +423,7 @@ class AssetService implements IBaseService<Asset> {
             try { const content = await vfs.readFile(metaPath); existingMeta = JSON.parse(content); } catch {}
             existingMeta.name = newName; 
             await vfs.writeFile(metaPath, JSON.stringify(existingMeta, null, 2));
-            this._cache[assetIndex] = { ...asset, name: newName, updatedAt: Date.now() };
+            this._cache[assetIndex] = { ...asset, name: newName, updatedAt: formatTimestamp() };
             return Result.success(virtualPath); 
         } catch (e: any) { return Result.error(e.message); }
     }
@@ -314,20 +439,22 @@ class AssetService implements IBaseService<Asset> {
         }
         const scan = async (dir: string) => {
             try {
-                const entries = await vfs.readDir(dir);
-                for (const entry of entries) {
-                    if (entry.name.startsWith('.')) continue;
-                    if (entry.name.endsWith('.meta.json')) continue;
-                    if (entry.isDirectory) {
-                        await scan(entry.path);
+                const entries = await vfs.readdir(dir);
+                for (const entryPath of entries) {
+                    const name = pathUtils.basename(entryPath);
+                    if (name.startsWith('.')) continue;
+                    if (name.endsWith('.meta.json')) continue;
+                    const stat = await vfs.stat(entryPath);
+                    if (stat.isDirectory) {
+                        await scan(entryPath);
                     } else {
-                        const ext = pathUtils.extname(entry.name);
-                        const metaPath = `${entry.path}.meta.json`;
-                        let metadata: AssetMetadata = { extension: ext, originalName: entry.name };
+                        const ext = pathUtils.extname(name);
+                        const metaPath = `${entryPath}.meta.json`;
+                        let metadata: AssetMetadata = { extension: ext, originalName: name };
                         let origin: AssetOrigin = 'stock';
                         let createdAt = Date.now();
                         let storedType: AssetType | undefined;
-                        let displayName = entry.name; 
+                        let displayName = name; 
                         try {
                             const metaContent = await vfs.readFile(metaPath);
                             const saved = JSON.parse(metaContent);
@@ -339,15 +466,15 @@ class AssetService implements IBaseService<Asset> {
                         } catch (e) {
                             logger.warn('[AssetService] Failed to read meta file', metaPath, e);
                         }
-                        const virtualPath = await this.toVirtualPath(entry.path);
+                        const virtualPath = await this.toVirtualPath(entryPath);
                         const type = storedType || this.getTypeFromExt(ext);
-                        const uuidCandidate = pathUtils.basename(entry.name).replace(ext, '');
+                        const uuidCandidate = pathUtils.basename(name).replace(ext, '');
                         const uuid = uuidCandidate.length > 20 ? uuidCandidate : generateUUID();
                         let size = 0;
-                        try { const s = await vfs.stat(entry.path); size = s.size; } catch (e) {
-                            logger.warn('[AssetService] Failed to stat asset', entry.path, e);
+                        try { const s = await vfs.stat(entryPath); size = s.size; } catch (e) {
+                            logger.warn('[AssetService] Failed to stat asset', entryPath, e);
                         }
-                        assets.push({ id: virtualPath, uuid, name: displayName, type, path: virtualPath, size, origin, createdAt, updatedAt: Date.now(), metadata });
+                        assets.push({ id: virtualPath, uuid, name: displayName, type, path: virtualPath, size, origin, createdAt, updatedAt: formatTimestamp(), metadata });
                     }
                 }
             } catch (e) {
@@ -355,17 +482,85 @@ class AssetService implements IBaseService<Asset> {
             }
         };
         await scan(root);
-        this._cache = assets.sort((a, b) => b.createdAt - a.createdAt);
+        this._cache = assets.sort((a, b) => toEpochMillis(b.createdAt) - toEpochMillis(a.createdAt));
+        await Promise.all(this._cache.map((asset) => this.registerToAssetCenter(asset)));
     }
     
-    private getTypeFromExt(ext: string): AssetType { const e = ext.toLowerCase(); for (const cat of ASSET_CATEGORIES) { if (cat.accepts.includes(e)) return cat.id as AssetType; } return 'file'; }
-    private getSubDirForType(type: AssetType): string { switch(type) { case 'image': return LIBRARY_SUBDIRS.IMAGES; case 'video': return LIBRARY_SUBDIRS.VIDEO; case 'audio': case 'music': case 'voice': return LIBRARY_SUBDIRS.AUDIO; case 'model3d': return LIBRARY_SUBDIRS.MODELS; default: return 'misc'; } }
-    private getExtensionForType(type: AssetType): string { switch(type) { case 'image': return '.png'; case 'video': return '.mp4'; case 'audio': case 'music': return '.mp3'; default: return '.bin'; } }
+    private getTypeFromExt(ext: string): AssetType {
+        const e = ext.toLowerCase();
+        for (const cat of ASSET_CATEGORIES) {
+            if (cat.accepts.includes(e)) return cat.id as AssetType;
+        }
+        return 'file';
+    }
+    private getSubDirForType(type: AssetType): string {
+        switch(type) {
+            case 'image':
+                return LIBRARY_SUBDIRS.IMAGES;
+            case 'video':
+                return LIBRARY_SUBDIRS.VIDEO;
+            case 'audio':
+            case 'music':
+            case 'voice':
+            case 'sfx':
+                return LIBRARY_SUBDIRS.AUDIO;
+            case 'model3d':
+            case 'digital-human':
+                return LIBRARY_SUBDIRS.MODELS;
+            case 'text':
+            case 'effect':
+            case 'transition':
+            case 'subtitle':
+                return LIBRARY_SUBDIRS.DOWNLOADS;
+            default:
+                return 'misc';
+        }
+    }
+    private getExtensionForType(type: AssetType): string {
+        switch(type) {
+            case 'image':
+                return '.png';
+            case 'video':
+                return '.mp4';
+            case 'audio':
+            case 'music':
+            case 'voice':
+            case 'sfx':
+                return '.mp3';
+            case 'text':
+                return '.txt';
+            case 'effect':
+                return '.effect';
+            case 'transition':
+                return '.transition';
+            case 'subtitle':
+                return '.srt';
+            case 'model3d':
+                return '.glb';
+            default:
+                return '.bin';
+        }
+    }
     private getExtensionFromMime(mime: string): string { if (mime.includes('image/jpeg')) return '.jpg'; if (mime.includes('image/png')) return '.png'; if (mime.includes('image/webp')) return '.webp'; if (mime.includes('image/gif')) return '.gif'; if (mime.includes('video/mp4')) return '.mp4'; if (mime.includes('video/webm')) return '.webm'; if (mime.includes('audio/mpeg')) return '.mp3'; if (mime.includes('audio/wav')) return '.wav'; return ''; }
     private guessMimeType(filename: string): string { const ext = pathUtils.extname(filename).toLowerCase(); const map: any = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg' }; return map[ext] || 'application/octet-stream'; }
     
     public toMediaResource(asset: Asset): AnyMediaResource { 
-        const typeMap: Record<string, MediaResourceType> = { 'image': MediaResourceType.IMAGE, 'video': MediaResourceType.VIDEO, 'audio': MediaResourceType.AUDIO, 'music': MediaResourceType.MUSIC, 'voice': MediaResourceType.VOICE, 'text': MediaResourceType.TEXT }; 
+        const typeMap: Record<string, MediaResourceType> = {
+            image: MediaResourceType.IMAGE,
+            video: MediaResourceType.VIDEO,
+            audio: MediaResourceType.AUDIO,
+            music: MediaResourceType.MUSIC,
+            voice: MediaResourceType.VOICE,
+            text: MediaResourceType.TEXT,
+            character: MediaResourceType.CHARACTER,
+            'digital-human': MediaResourceType.CHARACTER,
+            model3d: MediaResourceType.MODEL_3D,
+            lottie: MediaResourceType.LOTTIE,
+            effect: MediaResourceType.EFFECT,
+            transition: MediaResourceType.TRANSITION,
+            subtitle: MediaResourceType.SUBTITLE,
+            sfx: MediaResourceType.AUDIO
+        }; 
         const mediaType = typeMap[asset.type] || MediaResourceType.FILE; 
         const effectiveMetadata: any = { ...asset.metadata }; 
         if (effectiveMetadata.thumbnailPath && !effectiveMetadata.thumbnailUrl) { effectiveMetadata.thumbnailUrl = effectiveMetadata.thumbnailPath; } 
@@ -397,30 +592,58 @@ class AssetService implements IBaseService<Asset> {
             try { existing = JSON.parse(await vfs.readFile(metaPath)); } catch {} 
             await vfs.writeFile(metaPath, JSON.stringify({ ...existing, metadata: asset.metadata }, null, 2)); 
         } 
+        await this.registerToAssetCenter(asset);
         return asset; 
     }
     
-    async findAll(pageRequest?: PageRequest, typeFilter?: AssetType): Promise<ServiceResult<Page<Asset>>> { 
+    async findAll(pageRequest?: PageRequest, typeFilter?: AssetType, typeFilters?: AssetType[]): Promise<ServiceResult<Page<Asset>>> { 
         await this.ensureInitialized(); 
         let items = this._cache; 
-        if (pageRequest?.keyword) items = items.filter(a => a.name.toLowerCase().includes(pageRequest.keyword!.toLowerCase())); 
-        if (typeFilter) items = items.filter(a => a.type === typeFilter); 
-        const size = pageRequest?.size || 50; 
-        const page = pageRequest?.page || 0; 
-        const paged = items.slice(page * size, (page + 1) * size); 
-        return Result.success({ 
-            content: paged, 
-            pageable: { pageNumber: page, pageSize: size, offset: page * size, paged: true, unpaged: false, sort: { sorted: false, unsorted: true, empty: true } }, 
-            last: (page + 1) * size >= items.length, 
-            totalPages: Math.ceil(items.length / size), 
-            totalElements: items.length, 
-            size, 
-            number: page, 
-            first: page === 0, 
-            numberOfElements: paged.length, 
-            empty: paged.length === 0, 
-            sort: { sorted: false, unsorted: true, empty: true } 
-        }); 
+        const keyword = pageRequest?.keyword?.trim().toLowerCase();
+        if (keyword) items = items.filter(a => a.name.toLowerCase().includes(keyword)); 
+        if (typeFilters && typeFilters.length > 0) {
+            const filterSet = new Set(typeFilters);
+            items = items.filter(a => filterSet.has(a.type));
+        } else if (typeFilter) {
+            items = items.filter(a => a.type === typeFilter);
+        }
+
+        const requestedSortOrders = parseSortOrders(pageRequest?.sort, false);
+        const sortOrders = requestedSortOrders.length > 0 ? requestedSortOrders : [DEFAULT_SORT_ORDER];
+        items = [...items].sort((a, b) => {
+            for (const sortOption of sortOrders) {
+                const factor = sortOption.direction === 'asc' ? 1 : -1;
+                let compared = 0;
+                switch (sortOption.field) {
+                    case 'name':
+                        compared = a.name.localeCompare(b.name);
+                        break;
+                    case 'size':
+                        compared = (a.size || 0) - (b.size || 0);
+                        break;
+                    case 'createdAt':
+                        compared = toEpochMillis(a.createdAt) - toEpochMillis(b.createdAt);
+                        break;
+                    case 'updatedAt':
+                    default:
+                        compared = toEpochMillis(a.updatedAt) - toEpochMillis(b.updatedAt);
+                        break;
+                }
+                if (compared !== 0) {
+                    return compared * factor;
+                }
+            }
+            return 0;
+        });
+
+        const size = Math.max(1, pageRequest?.size ?? 50); 
+        const page = Math.max(0, pageRequest?.page ?? 0); 
+        const pageResult = createSpringPage(items, {
+            page,
+            size,
+            sort: requestedSortOrders.map((order) => `${order.field},${order.direction}`)
+        });
+        return Result.success(pageResult); 
     }
     
     async findById(id: string): Promise<ServiceResult<Asset | null>> { await this.ensureInitialized(); return Result.success(this._cache.find(a => a.id === id) || null); }
@@ -439,6 +662,11 @@ class AssetService implements IBaseService<Asset> {
                 const url = this._urlCache.get(asset.path);
                 if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
                 this._urlCache.delete(asset.path);
+            }
+            try {
+                await assetCenterService.deleteById(id);
+            } catch (e) {
+                logger.warn('[AssetService] Failed to delete asset from asset-center', e);
             }
         } 
         return Result.success(undefined); 

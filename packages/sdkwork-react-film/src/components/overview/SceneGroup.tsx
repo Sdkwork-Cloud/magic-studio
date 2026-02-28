@@ -2,8 +2,20 @@
 import React from 'react';
 import { MapPin, Plus, Edit2, Trash2, Image as ImageIcon, Video, Mic, User, Clock, Clapperboard } from 'lucide-react';
 
-import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp, MediaScene } from '@sdkwork/react-commons';
+import {
+    FilmScene,
+    FilmShot,
+    FilmLocation,
+    FilmCharacter,
+    FilmProp,
+    MediaScene,
+    useAssetUrl
+} from '@sdkwork/react-commons';
 import { ShotCard } from './ShotCard';
+import {
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../../utils/filmAssetUrlResolver';
 
 export interface SceneGroupProps {
     scene: FilmScene;
@@ -88,16 +100,10 @@ export const SceneGroup: React.FC<SceneGroupProps> = ({
                                 <div className="flex -space-x-1.5">
                                     {characters.slice(0, 3).map(char => {
                                         const avatarAsset = char.refAssets?.find(a => a.scene === MediaScene.AVATAR);
-                                        const avatarUrl = avatarAsset?.url || avatarAsset?.image?.url;
+                                        const avatarSource = avatarAsset || char.faceImage || null;
                                         return (
                                             <div key={char.uuid} className="w-6 h-6 rounded-full border border-[#0e0e10] bg-[#252526] overflow-hidden" title={char.name}>
-                                                {avatarUrl ? (
-                                                    <img src={avatarUrl} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                        <User size={10}/>
-                                                    </div>
-                                                )}
+                                                <CharacterBadgeAvatar source={avatarSource} />
                                             </div>
                                         );
                                     })}
@@ -196,4 +202,20 @@ export const SceneGroup: React.FC<SceneGroupProps> = ({
             </div>
         </div>
     );
+};
+
+const CharacterBadgeAvatar: React.FC<{ source: unknown }> = ({ source }) => {
+    const { url } = useAssetUrl(toFilmUseAssetSource(source), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+
+    if (!url) {
+        return (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                <User size={10}/>
+            </div>
+        );
+    }
+
+    return <img src={url} className="w-full h-full object-cover" />;
 };

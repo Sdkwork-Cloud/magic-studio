@@ -41,6 +41,9 @@ export type * from './magiccut.types';
 // Re-export all assets-related types
 export type * from './assets.types';
 
+// Re-export unified asset-center types
+export type * from './asset-center.types';
+
 // Re-export all character-related types
 export type * from './character.types';
 

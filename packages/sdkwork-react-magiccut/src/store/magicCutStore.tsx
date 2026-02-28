@@ -1,11 +1,16 @@
 
-import { assetService } from '@sdkwork/react-assets'
+import {
+    assetBusinessFacade,
+    mapUnifiedAssetToAnyAsset,
+    readWorkspaceScope,
+    type AssetMutationResult
+} from '@sdkwork/react-assets';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { produce, enableMapSet, enablePatches, applyPatches, Patch } from 'immer';
 import { useStore } from 'zustand';
 
-import { CutProject, CutTimeline, CutTrack, CutClip, CutLayer, CutTrackType, TemplateMetadata, CutClipTransform, CutProjectSettings } from '../entities/magicCut.entity';
-import { MediaResourceType, AnyMediaResource, generateUUID } from '@sdkwork/react-commons';
+import { CutProject, CutTimeline, CutTrack, CutClip, CutLayer, CutTrackType, TemplateMetadata, CutClipTransform, CutProjectSettings } from '../entities';
+import { MediaResourceType, AnyMediaResource, generateUUID, pathUtils } from '@sdkwork/react-commons';
 import { createTimelineStore, TimelineStore } from './transientStore';
 import { PlayerController } from '../controllers/PlayerController';
 import { NormalizedState, InteractionState, DragOperation } from './types';
@@ -17,13 +22,30 @@ import { templateService } from '../services/templateService';
 ;
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
-import { uploadHelper } from '@sdkwork/react-core';
+import { uploadHelper, platform } from '@sdkwork/react-core';
+import type { AssetContentKey } from '@sdkwork/react-types';
+import { storageConfig } from '@sdkwork/react-fs';
 import { textRenderer, DEFAULT_TEXT_STYLE } from '../engine/text/TextRenderer';
+import {
+    normalizeProjectAssetReferences,
+    normalizeResourceForTimeline,
+    normalizeStateAssetReferences
+} from '../utils/assetReferenceNormalization';
 ;
 ;
 
 // Local type definition for asset types
 type AssetType = 'image' | 'video' | 'audio' | 'music' | 'voice' | 'text' | 'effect' | 'transition' | 'subtitle' | 'character' | 'sfx';
+export type DeleteMode = 'lift' | 'ripple';
+export type PasteMode = 'normal' | 'insert' | 'overwrite';
+
+type AssetImportSource = {
+    data?: Uint8Array;
+    sourcePath?: string;
+    remoteUrl?: string;
+};
+
+const ASSET_PROTOCOL_PREFIX = 'assets://';
 
 // Re-export types for consumers
 export * from './types';
@@ -40,6 +62,80 @@ function updateTrackOrders(draft: NormalizedState, timelineId: string) {
         if (tr) tr.order = idx;
     });
 }
+
+const resolveMagiccutScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const toMagiccutResource = (result: AssetMutationResult): AnyMediaResource => {
+    const resource = mapUnifiedAssetToAnyAsset(result.asset);
+    if (!resource) {
+        throw new Error('Invalid asset payload: primary media resource is missing.');
+    }
+    return normalizeResourceForTimeline(resource as AnyMediaResource);
+};
+
+const isAbsoluteFsPath = (value: string): boolean => {
+    return /^[a-zA-Z]:\\/.test(value) || value.startsWith('/');
+};
+
+const toAbsoluteAssetPath = async (path: string): Promise<string> => {
+    if (!path.startsWith(ASSET_PROTOCOL_PREFIX)) {
+        return path;
+    }
+    const documentsDir = await platform.getPath('documents');
+    const libraryRoot = pathUtils.join(documentsDir, storageConfig.library.root);
+    const relativePath = path.slice(ASSET_PROTOCOL_PREFIX.length);
+    return pathUtils.join(libraryRoot, relativePath);
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source.startsWith('data:') && !source.startsWith('blob:')) {
+        return undefined;
+    }
+    const response = await fetch(source);
+    return new Uint8Array(await response.arrayBuffer());
+};
+
+const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<AssetImportSource> => {
+    const candidates = [resource.path, resource.url]
+        .filter((item): item is string => typeof item === 'string' && item.length > 0);
+
+    for (const source of candidates) {
+        if (source.startsWith('http://') || source.startsWith('https://')) {
+            return { remoteUrl: source };
+        }
+        if (source.startsWith(ASSET_PROTOCOL_PREFIX)) {
+            return { sourcePath: await toAbsoluteAssetPath(source) };
+        }
+        if (isAbsoluteFsPath(source)) {
+            return { sourcePath: source };
+        }
+        const inlineData = await tryExtractInlineData(source);
+        if (inlineData) {
+            return { data: inlineData };
+        }
+    }
+
+    throw new Error(`Unable to resolve import source for resource ${resource.id}`);
+};
+
+const resolveAssetNameExtension = (resource: AnyMediaResource): string => {
+    const fromName = pathUtils.extname(resource.name || '');
+    if (fromName && fromName !== '.') {
+        return fromName;
+    }
+    const sourcePath = resource.path || resource.url || '';
+    const fromPath = pathUtils.extname(sourcePath);
+    if (fromPath && fromPath !== '.') {
+        return fromPath;
+    }
+    return '.mp4';
+};
 
 class ClipTransformFactory {
     static calculate(resource: AnyMediaResource, resolutionStr: string): CutClipTransform {
@@ -135,8 +231,8 @@ export interface MagicCutStoreContextType {
     trimEnd: (time?: number) => void;
     trimClip: (clipId: string, start: number, duration: number, offset: number) => void;
     copyClip: (clipId: string) => void;
-    pasteClip: (trackId: string | null, time: number) => void;
-    deleteSelected: () => void;
+    pasteClip: (trackId: string | null, time: number, mode?: PasteMode) => void;
+    deleteSelected: (mode?: DeleteMode) => void;
     selectClip: (id: string | null, multi?: boolean) => void;
     detachAudio: (clipId: string) => Promise<void>;
 
@@ -183,9 +279,9 @@ export interface MagicCutStoreContextType {
     stepBackward: () => void;
     selectAllClips: () => void;
     clearSelection: () => void;
-    deleteSelectedClips: () => void;
+    deleteSelectedClips: (mode?: DeleteMode) => void;
     copySelectedClips: () => void;
-    pasteClips: (trackId: string | null, time: number) => void;
+    pasteClips: (trackId: string | null, time: number, mode?: PasteMode) => void;
     nudgeSelectedClips: (delta: number) => void;
     setInPoint: (time: number) => void;
     setOutPoint: (time: number) => void;
@@ -210,7 +306,7 @@ export interface MagicCutStoreContextType {
     getGlobalSnapPoints: () => number[];
     
     importFileObjects: (files: File[]) => Promise<AnyMediaResource[]>;
-    importAssets: (accept?: string, forcedType?: AssetType) => Promise<void>;
+    importAssets: (accept?: string, forcedType?: AssetType) => Promise<AnyMediaResource[]>;
 
     updateProjectSettings: (settings: Partial<CutProjectSettings>) => void;
     updateProjectMetadata: (data: Partial<CutProject>) => void;
@@ -244,25 +340,33 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     initialProject, 
     onSave 
 }) => {
+    const resolvedInitialProject = useMemo<CutProject>(() => {
+        if (initialProject) {
+            return normalizeProjectAssetReferences(initialProject);
+        }
+        return createDefaultProject();
+    }, [initialProject]);
+
     const storeRef = useRef<TimelineStore>(createTimelineStore());
     const useTransientState = useCallback(<T,>(selector: (state: import('./transientStore').TimelineState) => T): T => {
         return useStore(storeRef.current, selector);
     }, []);
 
-    const [project, setProject] = useState<CutProject>(initialProject || createDefaultProject());
+    const [project, setProject] = useState<CutProject>(resolvedInitialProject);
     const [activeTimelineId, setActiveTimelineId] = useState<string | null>(null);
     
     const [state, setState] = useState<NormalizedState>(() => {
-        if (initialProject && initialProject.normalizedState) {
-            return initialProject.normalizedState as NormalizedState;
+        if (resolvedInitialProject.normalizedState) {
+            return normalizeStateAssetReferences(resolvedInitialProject.normalizedState as NormalizedState);
         }
-        return normalizeProject(project);
+        return normalizeStateAssetReferences(normalizeProject(resolvedInitialProject));
     });
 
     const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
     const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
     const [selectedClipIds, setSelectedClipIds] = useState<Set<string>>(new Set());
     const [clipboard, setClipboard] = useState<CutClip | null>(null);
+    const clipboardClipsRef = useRef<CutClip[]>([]);
     const [inPoint, setInPointState] = useState<number | null>(null);
     const [outPoint, setOutPointState] = useState<number | null>(null);
     const [isProcessing, _setIsProcessing] = useState(false);
@@ -379,10 +483,16 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
 
     useEffect(() => {
         const timer = setTimeout(() => {
+             const normalizedState = normalizeStateAssetReferences(state);
              const updatedProject: CutProject = {
                 ...project,
-                normalizedState: state,
-                timelines: Object.keys(state.timelines).map(id => ({ id, uuid: state.timelines[id].uuid, type: 'CutTimeline' }))
+                normalizedState,
+                timelines: Object.keys(normalizedState.timelines).map(id => ({ id, uuid: normalizedState.timelines[id].uuid, type: 'CutTimeline' })),
+                mediaResources: Object.keys(normalizedState.resources).map((id) => ({
+                    id,
+                    uuid: normalizedState.resources[id]?.uuid,
+                    type: 'MediaResource'
+                }))
             };
             if (onSave) onSave(updatedProject);
         }, 2000);
@@ -400,7 +510,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             
             const newTrack: CutTrack = {
                 id, uuid: generateUUID(), 
-                type, 
+                type: 'CutTrack',
+                trackType: type,
                 name: name || config.name,
                 order: 0,
                 clips: [], visible: true, locked: false, muted: false,
@@ -457,13 +568,16 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const track = draft.tracks[trackId];
             if (!track) return;
 
-            if (!draft.resources[resource.id]) draft.resources[resource.id] = resource;
+            const normalizedResource = normalizeResourceForTimeline(resource);
+            if (!draft.resources[normalizedResource.id]) {
+                draft.resources[normalizedResource.id] = normalizedResource;
+            }
             let finalDuration = duration;
             if (finalDuration === undefined || finalDuration <= 0) {
-                if (resource.metadata?.duration && typeof resource.metadata.duration === 'number') {
-                    finalDuration = resource.metadata.duration;
+                if (normalizedResource.metadata?.duration && typeof normalizedResource.metadata.duration === 'number') {
+                    finalDuration = normalizedResource.metadata.duration;
                 } else {
-                    switch(resource.type) {
+                    switch(normalizedResource.type) {
                         case 'VIDEO':
                         case 'AUDIO':
                             finalDuration = 10;
@@ -474,13 +588,14 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 }
             }
             if (!finalDuration) finalDuration = 5;
-            const transform: CutClipTransform = ClipTransformFactory.calculate(resource, project.settings.resolution);
+            const transform: CutClipTransform = ClipTransformFactory.calculate(normalizedResource, project.settings.resolution);
 
             const newClip: CutClip = {
                 id,
                 uuid: generateUUID(),
+                type: 'CutClip',
                 track: { id: trackId, uuid: track.uuid, type: 'CutTrack' },
-                resource: { id: resource.id, uuid: resource.uuid, type: 'MediaResource' },
+                resource: { id: normalizedResource.id, uuid: normalizedResource.uuid, type: 'MediaResource' },
                 start: Math.max(0, start),
                 duration: finalDuration,
                 offset: 0,
@@ -490,8 +605,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
                 transform: transform,
-                content: (resource.type === MediaResourceType.TEXT || resource.type === MediaResourceType.SUBTITLE)
-                    ? (resource.metadata?.text || resource.name)
+                content: (normalizedResource.type === MediaResourceType.TEXT || normalizedResource.type === MediaResourceType.SUBTITLE)
+                    ? (normalizedResource.metadata?.text || normalizedResource.name)
                     : undefined
             };
             draft.clips[id] = newClip;
@@ -578,7 +693,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const newTrack: CutTrack = {
                 id: trackId,
                 uuid: generateUUID(),
-                type: trackType,
+                type: 'CutTrack',
+                trackType: trackType,
                 name: config.name,
                 order: 0,
                 clips: [],
@@ -586,6 +702,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 locked: false,
                 muted: false,
                 height: config.height,
+                isMain: false,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
@@ -596,14 +713,18 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 tl.tracks.push({ id: trackId, uuid: newTrack.uuid, type: 'CutTrack' });
             }
             updateTrackOrders(draft, activeTimelineId);
-            if (!draft.resources[resource.id]) draft.resources[resource.id] = resource;
+            const normalizedResource = normalizeResourceForTimeline(resource);
+            if (!draft.resources[normalizedResource.id]) {
+                draft.resources[normalizedResource.id] = normalizedResource;
+            }
             const clipId = generateUUID();
-            const transform: CutClipTransform = ClipTransformFactory.calculate(resource, project.settings.resolution);
+            const transform: CutClipTransform = ClipTransformFactory.calculate(normalizedResource, project.settings.resolution);
             const newClip: CutClip = {
                 id: clipId,
                 uuid: generateUUID(),
+                type: 'CutClip',
                 track: { id: trackId, uuid: newTrack.uuid, type: 'CutTrack' },
-                resource: { id: resource.id, uuid: resource.uuid, type: 'MediaResource' },
+                resource: { id: normalizedResource.id, uuid: normalizedResource.uuid, type: 'MediaResource' },
                 start: Math.max(0, start),
                 duration: duration,
                 offset: 0,
@@ -613,8 +734,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
                 transform: transform,
-                content: (resource.type === MediaResourceType.TEXT || resource.type === MediaResourceType.SUBTITLE)
-                    ? (resource.metadata?.text || resource.name)
+                content: (normalizedResource.type === MediaResourceType.TEXT || normalizedResource.type === MediaResourceType.SUBTITLE)
+                    ? (normalizedResource.metadata?.text || normalizedResource.name)
                     : undefined
             };
             draft.clips[clipId] = newClip;
@@ -631,7 +752,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const newTrack: CutTrack = {
                 id: trackId,
                 uuid: generateUUID(),
-                type: trackType,
+                type: 'CutTrack',
+                trackType: trackType,
                 name: config.name,
                 order: 0,
                 clips: [],
@@ -639,6 +761,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 locked: false,
                 muted: false,
                 height: config.height,
+                isMain: false,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
@@ -687,6 +810,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             track.clips.push({ id: newId, uuid: newClip.uuid, type: 'CutClip' });
             track.updatedAt = Date.now();
             setSelectedClipId(newId);
+            setSelectedClipIds(new Set([newId]));
         });
     };
 
@@ -717,28 +841,95 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         });
     };
 
-    const copyClip = (clipId: string) => {
-        const clip = state.clips[clipId];
-        if (clip) setClipboard(clip);
+    const getSelectedClipSet = (): Set<string> => {
+        const ids = new Set<string>();
+        selectedClipIds.forEach((id) => {
+            if (state.clips[id]) ids.add(id);
+        });
+        if (ids.size === 0 && selectedClipId && state.clips[selectedClipId]) {
+            ids.add(selectedClipId);
+        }
+        return ids;
     };
-    
-    const pasteClip = (trackId: string | null, time: number) => {
-        if (!clipboard) return;
-        updateState(draft => {
-            let targetTrackId = trackId;
-            if (!targetTrackId) {
-                if (activeTimelineId) {
-                    const tl = draft.timelines[activeTimelineId];
-                    if (tl.tracks.length > 0) targetTrackId = tl.tracks[0].id;
-                }
+
+    const getPrimarySelectedClipId = (clipIds?: Set<string>): string | null => {
+        const ids = clipIds || getSelectedClipSet();
+        if (selectedClipId && ids.has(selectedClipId) && state.clips[selectedClipId]) {
+            return selectedClipId;
+        }
+        for (const id of ids) {
+            if (state.clips[id]) return id;
+        }
+        return null;
+    };
+
+    const copyFromSelection = () => {
+        const selectedIds = getSelectedClipSet();
+        if (selectedIds.size === 0) return;
+
+        const clips = Array.from(selectedIds)
+            .map((id) => state.clips[id])
+            .filter((clip): clip is CutClip => !!clip);
+        if (clips.length === 0) return;
+
+        clips.sort((a, b) => {
+            const trackOrderA = state.tracks[a.track.id]?.order ?? Number.MAX_SAFE_INTEGER;
+            const trackOrderB = state.tracks[b.track.id]?.order ?? Number.MAX_SAFE_INTEGER;
+            if (trackOrderA !== trackOrderB) return trackOrderA - trackOrderB;
+            if (Math.abs(a.start - b.start) > 0.0001) return a.start - b.start;
+            return a.id.localeCompare(b.id);
+        });
+
+        const primaryClipId = getPrimarySelectedClipId(selectedIds);
+        if (primaryClipId) {
+            const primaryIndex = clips.findIndex((clip) => clip.id === primaryClipId);
+            if (primaryIndex > 0) {
+                const [primaryClip] = clips.splice(primaryIndex, 1);
+                clips.unshift(primaryClip);
             }
-            if (!targetTrackId) {
-                const tid = generateUUID();
-                const config = TrackFactory.getTrackConfig('video', false);
+        }
+
+        clipboardClipsRef.current = clips;
+        setClipboard(clips[0] || null);
+    };
+
+    const pasteFromClipboard = (trackId: string | null, time: number, mode: PasteMode = 'normal') => {
+        const clipboardClips =
+            clipboardClipsRef.current.length > 0
+                ? clipboardClipsRef.current
+                : (clipboard ? [clipboard] : []);
+        if (clipboardClips.length === 0 || !activeTimelineId) return;
+
+        const primaryClipboardClip = clipboardClips[0];
+        const primaryClipboardClipId = primaryClipboardClip.id;
+        const normalizedPasteStart = Math.max(0, time);
+        const earliestStart = Math.min(...clipboardClips.map((clip) => clip.start));
+
+        let pastedClipIds: string[] = [];
+        let primaryPastedClipId: string | null = null;
+        let finalTrackId: string | null = null;
+
+        updateState(draft => {
+            const timeline = draft.timelines[activeTimelineId];
+            if (!timeline) return;
+
+            let hasTrackStructureChange = false;
+
+            const inferClipTrackType = (clip: CutClip): CutTrackType => {
+                const sourceTrack = draft.tracks[clip.track.id];
+                if (sourceTrack) return sourceTrack.trackType;
+                const sourceResource = draft.resources[clip.resource.id];
+                return sourceResource ? TrackFactory.inferTrackType(sourceResource.type) : 'video';
+            };
+
+            const createTrack = (trackType: CutTrackType, insertIndex?: number): string => {
+                const newTrackId = generateUUID();
+                const config = TrackFactory.getTrackConfig(trackType, false);
                 const newTrack: CutTrack = {
-                    id: tid,
+                    id: newTrackId,
                     uuid: generateUUID(),
-                    type: 'video',
+                    type: 'CutTrack',
+                    trackType,
                     name: config.name,
                     order: 0,
                     clips: [],
@@ -746,42 +937,288 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                     locked: false,
                     muted: false,
                     height: config.height,
+                    isMain: false,
                     createdAt: Date.now(),
                     updatedAt: Date.now()
                 };
-                draft.tracks[tid] = newTrack;
-                const tl = draft.timelines[activeTimelineId!];
-                tl.tracks.push({ id: tid, uuid: newTrack.uuid, type: 'CutTrack' });
-                targetTrackId = tid;
+                draft.tracks[newTrackId] = newTrack;
+
+                const index = typeof insertIndex === 'number'
+                    ? Math.max(0, Math.min(insertIndex, timeline.tracks.length))
+                    : timeline.tracks.length;
+                timeline.tracks.splice(index, 0, { id: newTrackId, uuid: newTrack.uuid, type: 'CutTrack' });
+                hasTrackStructureChange = true;
+                return newTrackId;
+            };
+
+            const isTrackCompatibleForClip = (candidateTrackId: string | null, clip: CutClip): candidateTrackId is string => {
+                if (!candidateTrackId) return false;
+                const candidateTrack = draft.tracks[candidateTrackId];
+                if (!candidateTrack) return false;
+                const resource = draft.resources[clip.resource.id];
+                if (!resource) return true;
+                return TrackFactory.isCompatible(candidateTrack.trackType, resource.type);
+            };
+
+            const sourceTrackIds = Array.from(new Set(clipboardClips.map((clip) => clip.track.id))).sort((a, b) => {
+                const orderA = draft.tracks[a]?.order ?? Number.MAX_SAFE_INTEGER;
+                const orderB = draft.tracks[b]?.order ?? Number.MAX_SAFE_INTEGER;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.localeCompare(b);
+            });
+
+            const sourceToTargetTrackMap = new Map<string, string>();
+            const primarySourceTrackId = primaryClipboardClip.track.id;
+
+            let primaryTargetTrackId: string | null = null;
+            if (isTrackCompatibleForClip(trackId, primaryClipboardClip)) {
+                primaryTargetTrackId = trackId;
+            } else if (isTrackCompatibleForClip(selectedTrackId, primaryClipboardClip)) {
+                primaryTargetTrackId = selectedTrackId;
+            } else {
+                primaryTargetTrackId =
+                    timeline.tracks.map((ref) => ref.id).find((id) => isTrackCompatibleForClip(id, primaryClipboardClip)) || null;
             }
-            const newId = generateUUID();
-            const newClip: CutClip = {
-                ...clipboard,
-                id: newId,
-                uuid: generateUUID(),
-                track: { id: targetTrackId, uuid: '', type: 'CutTrack' },
-                start: time,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-            } as CutClip;
-            draft.clips[newId] = newClip;
-            draft.tracks[targetTrackId].clips.push({ id: newId, uuid: newClip.uuid, type: 'CutClip' });
-            draft.tracks[targetTrackId].updatedAt = Date.now();
+
+            if (!primaryTargetTrackId) {
+                primaryTargetTrackId = createTrack(inferClipTrackType(primaryClipboardClip));
+            }
+
+            sourceToTargetTrackMap.set(primarySourceTrackId, primaryTargetTrackId);
+            const usedTargetTrackIds = new Set<string>([primaryTargetTrackId]);
+
+            let insertIndex = timeline.tracks.findIndex((ref) => ref.id === primaryTargetTrackId);
+            insertIndex = insertIndex === -1 ? timeline.tracks.length : insertIndex + 1;
+            const existingTrackIds = timeline.tracks.map((ref) => ref.id);
+
+            sourceTrackIds.forEach((sourceTrackId) => {
+                if (sourceToTargetTrackMap.has(sourceTrackId)) return;
+                const representativeClip = clipboardClips.find((clip) => clip.track.id === sourceTrackId);
+                if (!representativeClip) return;
+
+                const reusableTrackId = existingTrackIds.find((candidateTrackId) => {
+                    if (usedTargetTrackIds.has(candidateTrackId)) return false;
+                    return isTrackCompatibleForClip(candidateTrackId, representativeClip);
+                });
+
+                if (reusableTrackId) {
+                    sourceToTargetTrackMap.set(sourceTrackId, reusableTrackId);
+                    usedTargetTrackIds.add(reusableTrackId);
+                    return;
+                }
+
+                const mappedTrackId = createTrack(inferClipTrackType(representativeClip), insertIndex);
+                sourceToTargetTrackMap.set(sourceTrackId, mappedTrackId);
+                usedTargetTrackIds.add(mappedTrackId);
+                insertIndex += 1;
+            });
+
+            if (hasTrackStructureChange) {
+                updateTrackOrders(draft, activeTimelineId);
+            }
+
+            const targetTrackIds = Array.from(new Set(sourceToTargetTrackMap.values()));
+            const pasteSpan = Math.max(
+                0,
+                Math.max(...clipboardClips.map((clip) => clip.start + clip.duration)) - earliestStart
+            );
+
+            if (mode === 'insert' && pasteSpan > 0) {
+                targetTrackIds.forEach((targetTrackId) => {
+                    const targetTrack = draft.tracks[targetTrackId];
+                    if (!targetTrack) return;
+
+                    targetTrack.clips.forEach((clipRef) => {
+                        const clip = draft.clips[clipRef.id];
+                        if (!clip) return;
+                        if (clip.start >= normalizedPasteStart) {
+                            clip.start += pasteSpan;
+                            clip.updatedAt = Date.now();
+                        }
+                    });
+                    targetTrack.updatedAt = Date.now();
+                });
+            }
+
+            const clipsForPaste = [...clipboardClips].sort((a, b) => {
+                if (Math.abs(a.start - b.start) > 0.0001) return a.start - b.start;
+                const orderA = draft.tracks[a.track.id]?.order ?? Number.MAX_SAFE_INTEGER;
+                const orderB = draft.tracks[b.track.id]?.order ?? Number.MAX_SAFE_INTEGER;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.id.localeCompare(b.id);
+            });
+
+            if (mode === 'overwrite') {
+                const overwriteRangesByTrack = new Map<string, Array<{ start: number; end: number }>>();
+
+                clipsForPaste.forEach((sourceClip) => {
+                    const targetTrackId = sourceToTargetTrackMap.get(sourceClip.track.id) || primaryTargetTrackId;
+                    if (!targetTrackId) return;
+                    const rangeStart = normalizedPasteStart + (sourceClip.start - earliestStart);
+                    const rangeEnd = rangeStart + sourceClip.duration;
+                    const ranges = overwriteRangesByTrack.get(targetTrackId) || [];
+                    ranges.push({ start: rangeStart, end: rangeEnd });
+                    overwriteRangesByTrack.set(targetTrackId, ranges);
+                });
+
+                overwriteRangesByTrack.forEach((ranges, targetTrackId) => {
+                    const targetTrack = draft.tracks[targetTrackId];
+                    if (!targetTrack || ranges.length === 0) return;
+
+                    const sortedRanges = [...ranges].sort((a, b) => a.start - b.start);
+                    const mergedRanges: Array<{ start: number; end: number }> = [];
+                    sortedRanges.forEach((range) => {
+                        const lastRange = mergedRanges[mergedRanges.length - 1];
+                        if (lastRange && range.start <= lastRange.end) {
+                            lastRange.end = Math.max(lastRange.end, range.end);
+                        } else {
+                            mergedRanges.push({ ...range });
+                        }
+                    });
+
+                    const shouldRemove = (clip: CutClip): boolean => {
+                        const clipStart = clip.start;
+                        const clipEnd = clip.start + clip.duration;
+                        return mergedRanges.some((range) => clipStart < range.end && clipEnd > range.start);
+                    };
+
+                    targetTrack.clips = targetTrack.clips.filter((clipRef) => {
+                        const clip = draft.clips[clipRef.id];
+                        if (!clip) return false;
+                        if (!shouldRemove(clip)) return true;
+                        delete draft.clips[clipRef.id];
+                        return false;
+                    });
+                    targetTrack.updatedAt = Date.now();
+                });
+            }
+
+            const createdClipIds: string[] = [];
+
+            clipsForPaste.forEach((sourceClip) => {
+                const targetTrackId = sourceToTargetTrackMap.get(sourceClip.track.id) || primaryTargetTrackId;
+                if (!targetTrackId) return;
+                const targetTrack = draft.tracks[targetTrackId];
+                if (!targetTrack) return;
+
+                const newClipId = generateUUID();
+                const newClip: CutClip = {
+                    ...sourceClip,
+                    id: newClipId,
+                    uuid: generateUUID(),
+                    track: { id: targetTrackId, uuid: targetTrack.uuid, type: 'CutTrack' },
+                    start: normalizedPasteStart + (sourceClip.start - earliestStart),
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                } as CutClip;
+
+                draft.clips[newClipId] = newClip;
+                targetTrack.clips.push({ id: newClipId, uuid: newClip.uuid, type: 'CutClip' });
+                targetTrack.updatedAt = Date.now();
+
+                createdClipIds.push(newClipId);
+                if (sourceClip.id === primaryClipboardClipId && !primaryPastedClipId) {
+                    primaryPastedClipId = newClipId;
+                }
+            });
+
+            if (createdClipIds.length > 0) {
+                pastedClipIds = createdClipIds;
+                finalTrackId = primaryTargetTrackId;
+                if (!primaryPastedClipId) {
+                    primaryPastedClipId = createdClipIds[0];
+                }
+            }
         });
+
+        if (finalTrackId) setSelectedTrackId(finalTrackId);
+        if (pastedClipIds.length > 0) {
+            setSelectedClipId(primaryPastedClipId || pastedClipIds[0]);
+            setSelectedClipIds(new Set(pastedClipIds));
+        }
+    };
+
+    const deleteSelectedClipSet = (mode: DeleteMode = 'lift'): boolean => {
+        const selectedIds = getSelectedClipSet();
+        if (selectedIds.size === 0) return false;
+
+        updateState(draft => {
+            const removedRangesByTrack = new Map<string, Array<{ start: number; end: number }>>();
+
+            selectedIds.forEach((clipId) => {
+                const clip = draft.clips[clipId];
+                if (!clip) return;
+
+                const track = draft.tracks[clip.track.id];
+                if (track) {
+                    const ranges = removedRangesByTrack.get(track.id) || [];
+                    ranges.push({ start: clip.start, end: clip.start + clip.duration });
+                    removedRangesByTrack.set(track.id, ranges);
+                    track.clips = track.clips.filter(c => c.id !== clipId);
+                    track.updatedAt = Date.now();
+                }
+                delete draft.clips[clipId];
+            });
+
+            if (mode !== 'ripple') return;
+
+            removedRangesByTrack.forEach((ranges, trackId) => {
+                const track = draft.tracks[trackId];
+                if (!track || ranges.length === 0) return;
+
+                const sortedRanges = [...ranges].sort((a, b) => a.start - b.start);
+                const mergedRanges: Array<{ start: number; end: number }> = [];
+                sortedRanges.forEach((range) => {
+                    const lastRange = mergedRanges[mergedRanges.length - 1];
+                    if (lastRange && range.start <= lastRange.end) {
+                        lastRange.end = Math.max(lastRange.end, range.end);
+                    } else {
+                        mergedRanges.push({ ...range });
+                    }
+                });
+
+                const removedBeforeTime = (t: number): number => {
+                    return mergedRanges.reduce((sum, range) => {
+                        if (t <= range.start) return sum;
+                        return sum + (Math.min(t, range.end) - range.start);
+                    }, 0);
+                };
+
+                track.clips.forEach((clipRef) => {
+                    const clip = draft.clips[clipRef.id];
+                    if (!clip) return;
+                    const removedBefore = removedBeforeTime(clip.start);
+                    if (removedBefore <= 0) return;
+                    clip.start = Math.max(0, clip.start - removedBefore);
+                    clip.updatedAt = Date.now();
+                });
+
+                track.updatedAt = Date.now();
+            });
+        });
+
+        setSelectedClipIds(new Set());
+        setSelectedClipId(null);
+        return true;
+    };
+
+    const copyClip = (clipId: string) => {
+        const clip = state.clips[clipId];
+        if (!clip) return;
+        setSelectedClipId(clipId);
+        setSelectedClipIds(new Set([clipId]));
+        setSelectedTrackId(clip.track.id);
+        clipboardClipsRef.current = [clip];
+        setClipboard(clip);
     };
     
-    const deleteSelected = () => {
-        if (selectedClipId) {
-            updateState(draft => {
-                const clip = draft.clips[selectedClipId];
-                if (!clip) return;
-                const track = draft.tracks[clip.track.id];
-                track.clips = track.clips.filter(c => c.id !== selectedClipId);
-                track.updatedAt = Date.now();
-                delete draft.clips[selectedClipId];
-            });
-            setSelectedClipId(null);
-        } else if (selectedTrackId) {
+    const pasteClip = (trackId: string | null, time: number, mode: PasteMode = 'normal') => {
+        pasteFromClipboard(trackId, time, mode);
+    };
+    
+    const deleteSelected = (mode: DeleteMode = 'lift') => {
+        if (deleteSelectedClipSet(mode)) return;
+        if (selectedTrackId) {
             removeTrack(selectedTrackId);
             setSelectedTrackId(null);
         }
@@ -789,10 +1226,31 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
 
     const detachAudio = async (clipId: string) => {
         const clip = state.clips[clipId];
+        if (!clip) {
+            return;
+        }
         const resource = state.resources[clip.resource.id];
-        
-        const audioAsset = await assetService.createDerivativeAsset(resource, 'audio');
-        const audioResource = assetService.toMediaResource(audioAsset);
+        if (!resource) {
+            return;
+        }
+
+        const extension = resolveAssetNameExtension(resource);
+        const baseName = resource.name && resource.name.endsWith(extension)
+            ? resource.name.slice(0, Math.max(0, resource.name.length - extension.length))
+            : (resource.name || 'audio');
+        const source = await resolveResourceImportSource(resource);
+        const imported = await assetBusinessFacade.importMagiccutAsset({
+            scope: resolveMagiccutScope(),
+            type: 'audio',
+            name: `${baseName}_audio${extension}`,
+            ...source,
+            metadata: {
+                ...(resource.metadata || {}),
+                origin: 'system',
+                source: `derived:${resource.id}`
+            }
+        });
+        const audioResource = toMagiccutResource(imported);
 
         const result = timelineOperationService.calculateDetachAudio(state, clipId, audioResource.id);
         
@@ -814,8 +1272,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                     
                     const config = TrackFactory.getTrackConfig('audio', false);
                     const newTrack: CutTrack = {
-                        id: trackId, uuid: generateUUID(), type: 'audio',
-                        name: config.name, order: 0, clips: [], 
+                        id: trackId, uuid: generateUUID(), type: 'CutTrack', trackType: 'audio',
+                        name: config.name, order: 0, clips: [], isMain: false,
                         visible: true, locked: false, muted: false, height: config.height,
                         createdAt: Date.now(), updatedAt: Date.now()
                     };
@@ -836,27 +1294,56 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                      track: { id: finalTrackId, uuid: draft.tracks[finalTrackId].uuid, type: 'CutTrack' }
                 } as CutClip;
                 
-                draft.clips[newClipId] = newClip;
-                draft.tracks[finalTrackId].clips.push({ id: newClipId, uuid: newClip.uuid, type: 'CutClip' });
-                draft.tracks[finalTrackId].updatedAt = Date.now();
+                 draft.clips[newClipId] = newClip;
+                 draft.tracks[finalTrackId].clips.push({ id: newClipId, uuid: newClip.uuid, type: 'CutClip' });
+                 draft.tracks[finalTrackId].updatedAt = Date.now();
 
-                setSelectedClipId(newClipId);
-            });
-        }
-    };
+                 setSelectedClipId(newClipId);
+                 setSelectedClipIds(new Set([newClipId]));
+             });
+         }
+     };
     
-    const selectClip = (id: string | null, _multi = false) => {
-        setSelectedClipId(id);
-        if (id) {
-            const clip = state.clips[id];
-            if (clip) setSelectedTrackId(clip.track.id);
-        } else {
+    const selectClip = (id: string | null, multi = false) => {
+        if (!id) {
+            setSelectedClipId(null);
+            setSelectedClipIds(new Set());
             setSelectedTrackId(null);
+            return;
         }
+
+        const clip = state.clips[id];
+        if (!clip) return;
+        setSelectedTrackId(clip.track.id);
+
+        if (!multi) {
+            setSelectedClipId(id);
+            setSelectedClipIds(new Set([id]));
+            return;
+        }
+
+        const nextSelectedClipIds = new Set(selectedClipIds);
+        if (nextSelectedClipIds.has(id)) {
+            nextSelectedClipIds.delete(id);
+            if (nextSelectedClipIds.size === 0) {
+                setSelectedClipId(null);
+            } else if (selectedClipId === id) {
+                let fallbackId: string | null = null;
+                for (const candidateId of nextSelectedClipIds) {
+                    fallbackId = candidateId;
+                }
+                setSelectedClipId(fallbackId);
+            }
+        } else {
+            nextSelectedClipIds.add(id);
+            setSelectedClipId(id);
+        }
+        setSelectedClipIds(nextSelectedClipIds);
     };
     const selectTrack = (id: string | null) => {
         setSelectedTrackId(id);
         setSelectedClipId(null);
+        setSelectedClipIds(new Set());
     };
 
     const updateResource = (id: string, updates: Partial<AnyMediaResource>) => {
@@ -876,7 +1363,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 id,
                 uuid: generateUUID(),
                 clip: { id: clipId, uuid: clip.uuid, type: 'CutClip' },
-                type: 'filter',
+                type: 'CutLayer',
+                layerType: 'filter',
                 enabled: true,
                 order: clip.layers.length,
                 params: { definitionId: effectId },
@@ -947,7 +1435,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     const validateTrackDrop = useCallback((trackId: string, resourceType: string) => {
         const track = state.tracks[trackId];
         if (!track) return false;
-        const rules = TrackRulesFactory.getRules(track.type);
+        const rules = TrackRulesFactory.getRules(track.trackType);
         return rules.isCompatible(resourceType as MediaResourceType);
     }, [state.tracks]);
 
@@ -975,7 +1463,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     }, [state.tracks, state.clips]);
 
     const importFileObjects = async (files: File[]) => {
-        const resources = [];
+        const resources: AnyMediaResource[] = [];
         for (const file of files) {
             const buffer = new Uint8Array(await file.arrayBuffer());
             let typeStr = file.type;
@@ -985,14 +1473,24 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 else if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext || '')) typeStr = 'audio/mpeg';
                 else if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext || '')) typeStr = 'image/png';
             }
-            let type: any = 'file';
+            let type: AssetContentKey = 'file';
             if (typeStr.startsWith('video')) type = 'video';
             else if (typeStr.startsWith('audio')) type = 'audio';
             else if (typeStr.startsWith('image')) type = 'image';
             else if (typeStr.startsWith('text')) type = 'text';
             const sourcePath = (file as any).path;
-            const asset = await assetService.importAsset(buffer, file.name, type, 'upload', sourcePath);
-            const resource = assetService.toMediaResource(asset);
+            const imported = await assetBusinessFacade.importMagiccutAsset({
+                scope: resolveMagiccutScope(),
+                type,
+                name: file.name,
+                data: buffer,
+                sourcePath: sourcePath ? await toAbsoluteAssetPath(sourcePath) : undefined,
+                metadata: {
+                    origin: 'upload',
+                    source: 'magiccut-dnd-import'
+                }
+            });
+            const resource = toMagiccutResource(imported);
             resources.push(resource);
             updateState(draft => {
                 draft.resources[resource.id] = resource;
@@ -1000,39 +1498,59 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         }
         return resources;
     };
-    const importAssets = async (accept?: string, forcedType?: AssetType) => {
+    const importAssets = async (accept?: string, forcedType?: AssetType): Promise<AnyMediaResource[]> => {
         try {
             const files = await uploadHelper.pickFiles(true, accept || '*');
-            if (files.length === 0) return;
+            if (files.length === 0) return [];
+            const importedResources: AnyMediaResource[] = [];
             for (const f of files) {
                 const ext = f.name.split('.').pop()?.toLowerCase();
-                let type: AssetType = 'image';
+                let type: AssetContentKey = 'image';
                 if (forcedType) {
-                    type = forcedType;
+                    type = forcedType as AssetContentKey;
                 } else {
                     if (['mp4', 'mov', 'webm', 'mkv', 'avi'].includes(ext || '')) type = 'video';
                     else if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext || '')) type = 'audio';
                 }
-                const asset = await assetService.importAsset(f.data, f.name, type, 'upload', f.path);
-                const resource = assetService.toMediaResource(asset);
+                const imported = await assetBusinessFacade.importMagiccutAsset({
+                    scope: resolveMagiccutScope(),
+                    type,
+                    name: f.name,
+                    data: f.data,
+                    sourcePath: f.path ? await toAbsoluteAssetPath(f.path) : undefined,
+                    metadata: {
+                        origin: 'upload',
+                        source: 'magiccut-picker-import'
+                    }
+                });
+                const resource = toMagiccutResource(imported);
+                importedResources.push(resource);
                 updateState(draft => {
                     draft.resources[resource.id] = resource;
                 });
             }
+            return importedResources;
         } catch (e) {
             console.error("Import failed", e);
+            return [];
         }
     };
     const switchProject = async (id: string) => {
         const res = await magicCutProjectService.findById(id);
         if (res.success && res.data) {
-            setProject(res.data);
-            if (res.data.normalizedState) {
-                setState(res.data.normalizedState as NormalizedState);
+            const normalizedProject = normalizeProjectAssetReferences(res.data);
+            setProject(normalizedProject);
+            if (normalizedProject.normalizedState) {
+                setState(normalizeStateAssetReferences(normalizedProject.normalizedState as NormalizedState));
             } else {
-                setState(normalizeProject(res.data));
+                setState(normalizeStateAssetReferences(normalizeProject(normalizedProject)));
             }
-            if (res.data.timelines.length > 0) setActiveTimelineId(res.data.timelines[0].id);
+            if (normalizedProject.timelines.length > 0) setActiveTimelineId(normalizedProject.timelines[0].id);
+            setSelectedClipId(null);
+            setSelectedClipIds(new Set());
+            setSelectedTrackId(null);
+            setClipboard(null);
+            clipboardClipsRef.current = [];
         }
     };
     const loadLastProject = async () => {
@@ -1043,8 +1561,13 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const newP = createDefaultProject();
             await magicCutProjectService.save(newP);
             setProject(newP);
-            setState(normalizeProject(newP));
+            setState(normalizeStateAssetReferences(normalizeProject(newP)));
             setActiveTimelineId(newP.timelines[0].id);
+            setSelectedClipId(null);
+            setSelectedClipIds(new Set());
+            setSelectedTrackId(null);
+            setClipboard(null);
+            clipboardClipsRef.current = [];
         }
     };
     const addMarker = () => {
@@ -1096,13 +1619,20 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     };
 
     const saveAsTemplate = async (metadata: TemplateMetadata) => {
-        await templateService.saveTemplate(metadata, project, state);
+        const normalizedState = normalizeStateAssetReferences(state);
+        await templateService.saveTemplate(metadata, project, normalizedState);
     };
     const loadTemplate = async (template: any) => {
         const { project: newP, state: newS } = templateService.instantiateTemplate(template);
-        setProject(newP);
-        setState(newS);
-        if (newP.timelines.length > 0) setActiveTimelineId(newP.timelines[0].id);
+        const normalizedProject = normalizeProjectAssetReferences(newP);
+        setProject(normalizedProject);
+        setState(normalizeStateAssetReferences(newS));
+        if (normalizedProject.timelines.length > 0) setActiveTimelineId(normalizedProject.timelines[0].id);
+        setSelectedClipId(null);
+        setSelectedClipIds(new Set());
+        setSelectedTrackId(null);
+        setClipboard(null);
+        clipboardClipsRef.current = [];
     };
     const setDragOperation = (op: DragOperation | null) => storeRef.current.setState({ dragOperation: op });
     const setInteraction = (interaction: InteractionState | ((prev: InteractionState) => InteractionState)) =>
@@ -1118,6 +1648,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const newTl: CutTimeline = {
                 id,
                 uuid: generateUUID(),
+                type: 'CutTimeline',
                 name,
                 fps: 30,
                 duration: 60,
@@ -1127,10 +1658,11 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             };
             const tid = generateUUID();
             const config = TrackFactory.getTrackConfig('video', true);
-            const track = {
+            const track: CutTrack = {
                 id: tid,
                 uuid: generateUUID(),
-                type: 'video' as CutTrackType,
+                type: 'CutTrack',
+                trackType: 'video',
                 name: 'Main',
                 order: 0,
                 isMain: true,
@@ -1184,6 +1716,12 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             }
         });
         setSelectedClipIds(allClipIds);
+        const firstId = allClipIds.values().next().value ?? null;
+        setSelectedClipId(firstId);
+        if (firstId) {
+            const firstClip = state.clips[firstId];
+            if (firstClip) setSelectedTrackId(firstClip.track.id);
+        }
     };
     
     const clearSelection = () => {
@@ -1191,56 +1729,23 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         setSelectedClipId(null);
     };
     
-    const deleteSelectedClips = () => {
-        if (selectedClipIds.size === 0) return;
-        updateState(draft => {
-            selectedClipIds.forEach(clipId => {
-                const clip = draft.clips[clipId];
-                if (clip) {
-                    const track = draft.tracks[clip.track.id];
-                    if (track) {
-                        track.clips = track.clips.filter(c => c.id !== clipId);
-                    }
-                    delete draft.clips[clipId];
-                }
-            });
-        });
-        setSelectedClipIds(new Set());
-        setSelectedClipId(null);
+    const deleteSelectedClips = (mode: DeleteMode = 'lift') => {
+        deleteSelectedClipSet(mode);
     };
     
     const copySelectedClips = () => {
-        if (selectedClipId) {
-            setClipboard(state.clips[selectedClipId] || null);
-        }
+        copyFromSelection();
     };
     
-    const pasteClips = (trackId: string | null, time: number) => {
-        if (!clipboard || !activeTimelineId) return;
-        const targetTrackId = trackId || Object.keys(state.tracks)[0];
-        if (!targetTrackId) return;
-        
-        const newClip: CutClip = {
-            ...clipboard,
-            id: generateUUID(),
-            uuid: generateUUID(),
-            start: time,
-            track: { id: targetTrackId, uuid: state.tracks[targetTrackId].uuid, type: 'CutTrack' }
-        };
-        
-        updateState(draft => {
-            draft.clips[newClip.id] = newClip;
-            const track = draft.tracks[targetTrackId];
-            if (track) {
-                track.clips.push({ id: newClip.id, uuid: newClip.uuid, type: 'CutClip' });
-            }
-        });
+    const pasteClips = (trackId: string | null, time: number, mode: PasteMode = 'normal') => {
+        pasteFromClipboard(trackId, time, mode);
     };
     
     const nudgeSelectedClips = (delta: number) => {
-        if (selectedClipIds.size === 0) return;
+        const selectedIds = getSelectedClipSet();
+        if (selectedIds.size === 0) return;
         updateState(draft => {
-            selectedClipIds.forEach(clipId => {
+            selectedIds.forEach(clipId => {
                 const clip = draft.clips[clipId];
                 if (clip) {
                     clip.start = Math.max(0, clip.start + delta);
@@ -1272,6 +1777,12 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             }
         });
         setSelectedClipIds(ids);
+        const firstId = ids.values().next().value ?? null;
+        setSelectedClipId(firstId);
+        if (firstId) {
+            const firstClip = state.clips[firstId];
+            if (firstClip) setSelectedTrackId(firstClip.track.id);
+        }
     };
     
     const updateClips = (updates: Array<{ id: string; changes: Partial<CutClip> }>) => {
@@ -1362,12 +1873,13 @@ function createDefaultProject(): CutProject {
     const pid = generateUUID();
     const tid = generateUUID();
     const mainTrack: CutTrack = {
-        id: generateUUID(), uuid: generateUUID(), type: 'video', name: 'Main Track', order: 0, isMain: true,
+        id: generateUUID(), uuid: generateUUID(), type: 'CutTrack', trackType: 'video', name: 'Main Track', order: 0, isMain: true,
         clips: [], height: TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO, visible: true, locked: false, muted: false, volume: 1.0, createdAt: Date.now(), updatedAt: Date.now()
     };
     
     return {
         id: pid, uuid: pid, name: 'Untitled Project', version: 1,
+        type: 'CUT_PROJECT',
         timelines: [{ id: tid, uuid: tid, type: 'CutTimeline' }],
         mediaResources: [],
         settings: { resolution: '1920x1080', fps: 30, aspectRatio: '16:9' },
@@ -1375,7 +1887,7 @@ function createDefaultProject(): CutProject {
         normalizedState: {
             resources: {},
             timelines: {
-                [tid]: { id: tid, uuid: tid, name: 'Sequence 1', fps: 30, duration: 60, tracks: [{ id: mainTrack.id, uuid: mainTrack.uuid, type: 'CutTrack' }], createdAt: Date.now(), updatedAt: Date.now() }
+                [tid]: { id: tid, uuid: tid, type: 'CutTimeline', name: 'Sequence 1', fps: 30, duration: 60, tracks: [{ id: mainTrack.id, uuid: mainTrack.uuid, type: 'CutTrack' }], createdAt: Date.now(), updatedAt: Date.now() }
             },
             tracks: { [mainTrack.id]: mainTrack },
             clips: {},
@@ -1388,4 +1900,3 @@ function normalizeProject(project: CutProject): NormalizedState {
     if (project.normalizedState) return project.normalizedState as NormalizedState;
     return { resources: {}, timelines: {}, tracks: {}, clips: {}, layers: {} };
 }
-

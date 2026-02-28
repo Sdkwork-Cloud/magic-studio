@@ -29,7 +29,7 @@ export { assetService, ASSET_CATEGORIES, setMediaAnalysisAdapter } from './servi
 export type { MediaAnalysisAdapter, MediaAnalysisResult } from './services/assetService';
 
 // Enhanced asset services
-export { assetServiceRegistry, MockDatabase, initializeAssetServices, getAssetService, hasAssetService, getRegisteredCategories } from './services';
+export { assetServiceRegistry, initializeAssetServices, getAssetService, hasAssetService, getRegisteredCategories } from './services';
 export type { IAssetService } from './services';
 export {
     MediaAssetService,
@@ -59,3 +59,6 @@ export type {
     AnyAsset,
     MediaResourceType
 } from './entities';
+
+// Unified asset-center architecture
+export * from './asset-center';

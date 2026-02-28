@@ -1,4 +1,4 @@
-import { FileEntry, FileStat, IFileSystemProvider } from '@sdkwork/react-types';
+import { FileStat, IFileSystemProvider } from '@sdkwork/react-types';
 import { LocalFileSystemProvider } from './providers/local';
 
 class FileSystemManager {
@@ -9,7 +9,8 @@ class FileSystemManager {
   }
 
   registerProvider(provider: IFileSystemProvider) {
-    this.providers.set(provider.scheme, provider);
+    const scheme = provider.scheme || 'file';
+    this.providers.set(scheme, provider);
   }
 
   private getProvider(path: string): IFileSystemProvider {
@@ -27,8 +28,8 @@ class FileSystemManager {
     return provider;
   }
 
-  async readDir(path: string): Promise<FileEntry[]> {
-    return this.getProvider(path).readDir(path);
+  async readdir(path: string): Promise<string[]> {
+    return this.getProvider(path).readdir(path);
   }
 
   async readFile(path: string): Promise<string> {
@@ -40,41 +41,101 @@ class FileSystemManager {
   }
 
   async readFileBinary(path: string): Promise<Uint8Array> {
-    return this.getProvider(path).readFileBinary(path);
+    const provider = this.getProvider(path);
+    if (provider.readFileBinary) {
+      return provider.readFileBinary(path);
+    }
+    const content = await provider.readFile(path);
+    return new TextEncoder().encode(content);
   }
 
   async writeFileBinary(path: string, content: Uint8Array): Promise<void> {
-    return this.getProvider(path).writeFileBinary(path, content);
+    const provider = this.getProvider(path);
+    if (provider.writeFileBinary) {
+      return provider.writeFileBinary(path, content);
+    }
+    const text = new TextDecoder().decode(content);
+    return provider.writeFile(path, text);
   }
 
   async readFileBlob(path: string): Promise<Blob> {
-    return this.getProvider(path).readFileBlob(path);
+    const provider = this.getProvider(path);
+    if (provider.readFileBlob) {
+      return provider.readFileBlob(path);
+    }
+    if (provider.readFileBinary) {
+      const binary = await provider.readFileBinary(path);
+      const copy = new Uint8Array(binary.byteLength);
+      copy.set(binary);
+      return new Blob([copy.buffer]);
+    }
+    const content = await provider.readFile(path);
+    return new Blob([content]);
   }
 
   async writeFileBlob(path: string, content: Blob): Promise<void> {
-    return this.getProvider(path).writeFileBlob(path, content);
+    const provider = this.getProvider(path);
+    if (provider.writeFileBlob) {
+      return provider.writeFileBlob(path, content);
+    }
+    if (provider.writeFileBinary) {
+      const buffer = await content.arrayBuffer();
+      return provider.writeFileBinary(path, new Uint8Array(buffer));
+    }
+    const text = await content.text();
+    return provider.writeFile(path, text);
   }
 
   async stat(path: string): Promise<FileStat> {
     return this.getProvider(path).stat(path);
   }
 
-  async createDir(path: string): Promise<void> {
-    return this.getProvider(path).createDir(path);
+  async mkdir(path: string): Promise<void> {
+    return this.getProvider(path).mkdir(path);
   }
 
   async delete(path: string): Promise<void> {
-    return this.getProvider(path).delete(path);
+    return this.getProvider(path).unlink(path);
   }
 
   async rename(oldPath: string, newPath: string): Promise<void> {
-    const provider = this.getProvider(oldPath);
-    return provider.rename(oldPath, newPath);
+    const sourceProvider = this.getProvider(oldPath);
+    const targetProvider = this.getProvider(newPath);
+    if (sourceProvider === targetProvider && sourceProvider.rename) {
+      return sourceProvider.rename(oldPath, newPath);
+    }
+
+    const content = await this.readFileBinary(oldPath);
+    await this.writeFileBinary(newPath, content);
+    await this.delete(oldPath);
   }
 
   async copyFile(sourcePath: string, destPath: string): Promise<void> {
-    const provider = this.getProvider(sourcePath);
-    return provider.copy(sourcePath, destPath);
+    const sourceProvider = this.getProvider(sourcePath);
+    const targetProvider = this.getProvider(destPath);
+    if (sourceProvider === targetProvider && sourceProvider.copyFile) {
+      return sourceProvider.copyFile(sourcePath, destPath);
+    }
+
+    const content = await this.readFileBinary(sourcePath);
+    await this.writeFileBinary(destPath, content);
+  }
+
+  async exists(path: string): Promise<boolean> {
+    return this.getProvider(path).exists(path);
+  }
+
+  async unlink(path: string): Promise<void> {
+    return this.getProvider(path).unlink(path);
+  }
+
+  async rmdir(path: string): Promise<void> {
+    return this.getProvider(path).rmdir(path);
+  }
+
+  // Alias for mkdir for backward compatibility
+  async createDir(path: string): Promise<void> {
+    return this.mkdir(path);
   }
 }
 

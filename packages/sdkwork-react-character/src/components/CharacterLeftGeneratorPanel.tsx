@@ -229,7 +229,7 @@ export const CharacterLeftGeneratorPanel: React.FC = () => {
                     </div>
 
                     {/* Visualizer Area */}
-                     <div className={`relative group w-full ${getAspectRatioClass(config.aspectRatio)} bg-[#121214] border border-[#27272a] hover:border-cyan-500/30 rounded-xl overflow-hidden flex flex-col transition-all items-center justify-center`}>
+                     <div className={`relative group w-full ${getAspectRatioClass(config.aspectRatio || '1:1')} bg-[#121214] border border-[#27272a] hover:border-cyan-500/30 rounded-xl overflow-hidden flex flex-col transition-all items-center justify-center`}>
                         {config.avatarImage ? (
                             <>
                                 <img src={config.avatarImage} className="w-full h-full object-contain" alt="Character" />

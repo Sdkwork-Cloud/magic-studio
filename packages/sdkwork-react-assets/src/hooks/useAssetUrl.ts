@@ -30,7 +30,7 @@ export interface UseAssetUrlOptions {
  * @example
  * // With custom resolver
  * const { url, loading } = useAssetUrl(assetId, { 
- *   resolver: async (source) => assetService.resolveAssetUrl(source) 
+ *   resolver: async (source) => resolveAssetUrlByAssetIdFirst(source as any) 
  * });
  */
 export const useAssetUrl = (source: AssetSource, options?: UseAssetUrlOptions) => {
@@ -104,10 +104,10 @@ export const useAssetUrl = (source: AssetSource, options?: UseAssetUrlOptions) =
                 if (isMounted) {
                     setUrl(resolved);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.warn("[useAssetUrl] Failed to resolve:", source);
                 if (isMounted) {
-                    setError(err);
+                    setError(err instanceof Error ? err : new Error('Failed to resolve asset URL'));
                     setUrl(null);
                 }
             } finally {

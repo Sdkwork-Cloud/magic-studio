@@ -3,6 +3,7 @@ import React from 'react';
 import { MapPin, Sun, Moon, Cloud, Home, Edit3 } from 'lucide-react';
 
 import { FilmLocation, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
+import { resolveFilmAssetUrlByAssetIdFirst, toFilmUseAssetSource } from '../../utils/filmAssetUrlResolver';
 
 export interface LocationCardProps {
     location: FilmLocation;
@@ -11,10 +12,11 @@ export interface LocationCardProps {
 }
 
 export const LocationCard: React.FC<LocationCardProps> = ({ location, onClick, isSelected }) => {
-    const faceImageUrl = location.faceImage?.url;
     const visualAsset = location.refAssets?.find(a => a.scene === MediaScene.LOCATION_VISUAL);
-    const imageUrl = faceImageUrl || visualAsset?.url || visualAsset?.image?.url;
-    const { url: displayUrl } = useAssetUrl(imageUrl || null);
+    const imageSource = visualAsset || location.image || location.faceImage || null;
+    const { url: displayUrl } = useAssetUrl(toFilmUseAssetSource(imageSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     const getTimeIcon = (t?: string) => {
         switch (t) {

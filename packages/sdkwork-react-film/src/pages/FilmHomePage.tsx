@@ -5,14 +5,49 @@ import { FilmHeader } from '../components/FilmHeader';
 import { Sparkles, Play, Heart, ChevronDown, Clock, Check, Type } from 'lucide-react';
 import { useFilmStore, FilmStoreProvider } from '../store/filmStore';
 import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector } from '@sdkwork/react-assets';
-import { generateUUID, ModelSelector, AspectRatioSelector, AspectRatio, GalleryCard, GalleryItem, StyleOption } from '@sdkwork/react-commons';
+import { ModelSelector, AspectRatioSelector, GalleryCard, GalleryItem, StyleOption } from '@sdkwork/react-commons';
+import type { Resolution } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
 import { VIDEO_PROVIDERS } from '@sdkwork/react-video';
 import { IMAGE_PROVIDERS } from '@sdkwork/react-image';
 import { FILM_STYLES } from '../constants';
 import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
+import { importFilmAssetFromFile } from '../utils/filmModalAssetImport';
 
-type Resolution = '2k' | '4k';
+type FilmHomeAttachment = InputAttachment & {
+    assetId?: string;
+    content?: string;
+};
+type FilmAspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
+
+const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'svg', 'bmp', 'gif']);
+const VIDEO_EXTS = new Set(['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v']);
+const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma']);
+const SCRIPT_EXTS = new Set(['txt', 'md', 'markdown', 'rtf', 'fountain', 'doc', 'docx', 'pdf']);
+const PLAIN_TEXT_SCRIPT_EXTS = new Set(['txt', 'md', 'markdown', 'rtf', 'fountain']);
+
+const classifyFilmHomeFile = (
+    fileName: string
+): { attachmentType: FilmHomeAttachment['type']; importType: 'image' | 'video' | 'audio' | 'text' | 'file'; ext: string } => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (IMAGE_EXTS.has(ext)) {
+        return { attachmentType: 'image', importType: 'image', ext };
+    }
+    if (VIDEO_EXTS.has(ext)) {
+        return { attachmentType: 'video', importType: 'video', ext };
+    }
+    if (AUDIO_EXTS.has(ext)) {
+        return { attachmentType: 'audio', importType: 'audio', ext };
+    }
+    if (SCRIPT_EXTS.has(ext)) {
+        return {
+            attachmentType: 'script',
+            importType: PLAIN_TEXT_SCRIPT_EXTS.has(ext) ? 'text' : 'file',
+            ext
+        };
+    }
+    return { attachmentType: 'file', importType: 'file', ext };
+};
 
 // Mapped to GalleryItem structure
 const MOCK_SHORTS: GalleryItem[] = [
@@ -20,32 +55,32 @@ const MOCK_SHORTS: GalleryItem[] = [
         id: '1', title: 'Global AI Creation', type: 'short', url: 'https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=800&auto=format&fit=crop', 
         aspectRatio: '16:10', 
         author: { id: 'u1', name: 'CCTV_AI', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cctv' }, 
-        stats: { likes: 1200, views: '10k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
+        stats: { likes: 1200, views: 10000 }, 
+        prompt: '', model: '', createdAt: '2024-01-15 10:30:00',
         badges: [{ text: 'Featured', color: 'bg-red-600' }]
     },
     { 
         id: '2', title: 'Journey to the West Reimagined', type: 'short', url: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop', 
         aspectRatio: '16:10', 
         author: { id: 'u2', name: 'Director_Li', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li' }, 
-        stats: { likes: 856, views: '5k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
+        stats: { likes: 856, views: 5000 }, 
+        prompt: '', model: '', createdAt: '2024-01-14 15:20:00',
         badges: [{ text: 'Trending', color: 'bg-orange-500' }]
     },
     { 
         id: '3', title: 'Zootopia: Origins', type: 'short', url: 'https://images.unsplash.com/photo-1626544827763-d516dce335ca?q=80&w=800&auto=format&fit=crop', 
         aspectRatio: '16:10', 
         author: { id: 'u3', name: 'DisneyFan', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=disney' }, 
-        stats: { likes: 4500, views: '50k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
+        stats: { likes: 4500, views: 50000 }, 
+        prompt: '', model: '', createdAt: '2024-01-13 09:00:00',
         badges: [{ text: 'Fan Film', color: 'bg-blue-600' }]
     },
     { 
         id: '4', title: 'Cyberpunk 2078', type: 'short', url: 'https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=800&auto=format&fit=crop', 
         aspectRatio: '16:10', 
         author: { id: 'u4', name: 'NeoTokyo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neo' }, 
-        stats: { likes: 3200, views: '22k' }, 
-        prompt: '', model: '', createdAt: Date.now(),
+        stats: { likes: 3200, views: 22000 }, 
+        prompt: '', model: '', createdAt: '2024-01-12 14:45:00',
         badges: [{ text: 'Sci-Fi', color: 'bg-purple-600' }]
     },
 ];
@@ -67,12 +102,12 @@ const FilmHomePageContent: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     
     // Config State
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
+    const [aspectRatio, setAspectRatio] = useState<FilmAspectRatio>('16:9');
     const [resolution, setResolution] = useState<Resolution>('2k');
     const [duration, setDuration] = useState('5s');
     const [activeStyle, setActiveStyle] = useState('realistic');
     const [activeModel, setActiveModel] = useState<string>('');
-    const [attachments, setAttachments] = useState<InputAttachment[]>([]);
+    const [attachments, setAttachments] = useState<FilmHomeAttachment[]>([]);
     
     // Menus
     const [showDurationMenu, setShowDurationMenu] = useState(false);
@@ -109,9 +144,10 @@ const FilmHomePageContent: React.FC = () => {
         try {
             if (activeTab === 'short_drama') {
                  const scriptAttachment = attachments.find(a => a.type === 'script');
-                 if (scriptAttachment && scriptAttachment.url) {
-                      const res = await fetch(scriptAttachment.url);
-                      const text = await res.text();
+                 if (scriptAttachment && (scriptAttachment.content || scriptAttachment.url)) {
+                      const text =
+                          scriptAttachment.content ||
+                          (scriptAttachment.url ? await (await fetch(scriptAttachment.url)).text() : '');
                       const name = prompt.slice(0, 30) || scriptAttachment.name.replace(/\.[^/.]+$/, "") || "New Short Drama";
                       await createProjectFromInput(name, text);
                  } else {
@@ -142,25 +178,36 @@ const FilmHomePageContent: React.FC = () => {
             const files = await uploadHelper.pickFiles(false, accept);
             if (files.length > 0) {
                 const file = files[0];
-                let type: InputAttachment['type'] = 'file';
-                const ext = file.name.split('.').pop()?.toLowerCase() || '';
+                const fileName = file.name || `film-home-${Date.now()}`;
+                const bytes = new Uint8Array(file.data);
+                const classified = classifyFilmHomeFile(fileName);
+                const localFile = new File([bytes], fileName);
+                const imported = await importFilmAssetFromFile(localFile, classified.importType, {
+                    origin: 'upload',
+                    source: 'film-home-upload',
+                    tab: activeTab,
+                    attachmentType: classified.attachmentType
+                });
+                const scriptContent =
+                    classified.attachmentType === 'script' && PLAIN_TEXT_SCRIPT_EXTS.has(classified.ext)
+                        ? new TextDecoder('utf-8').decode(bytes)
+                        : undefined;
 
-                if (['jpg', 'png', 'jpeg', 'webp'].includes(ext)) type = 'image';
-                else if (['mp4', 'mov', 'webm'].includes(ext)) type = 'video';
-                else if (['txt', 'md', 'doc', 'docx', 'pdf'].includes(ext)) type = 'script';
-                
-                let url = URL.createObjectURL(new Blob([new Uint8Array(file.data)]));
-                
-                if (type === 'script' && activeTab === 'short_drama') {
+                if (classified.attachmentType === 'script' && activeTab === 'short_drama') {
                     if (!prompt) setPrompt(`Based on script: ${file.name}...`);
                 }
 
-                setAttachments([...attachments, {
-                    id: generateUUID(),
-                    name: file.name,
-                    type,
-                    url
-                }]);
+                setAttachments((prev) => [
+                    ...prev,
+                    {
+                        id: imported.assetId,
+                        assetId: imported.assetId,
+                        name: fileName,
+                        type: classified.attachmentType,
+                        url: imported.url,
+                        content: scriptContent
+                    }
+                ]);
             }
         } catch (e) { console.error(e); }
     };
@@ -195,9 +242,9 @@ const FilmHomePageContent: React.FC = () => {
                 {/* 3. Aspect Ratio */}
                 <AspectRatioSelector 
                     value={aspectRatio}
-                    onChange={setAspectRatio}
-                    resolution={resolution}
-                    onResolutionChange={setResolution}
+                    onChange={(ratio) => setAspectRatio(ratio)}
+                    resolution={resolution as Resolution}
+                    onResolutionChange={(res) => setResolution(res)}
                     className="bg-[#1a1a1c] hover:bg-[#202022] hover:border-[#333] border-transparent"
                 />
 

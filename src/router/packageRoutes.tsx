@@ -35,12 +35,16 @@ const CommunityPage = lazy(() => import('@sdkwork/react-portal-video').then(m =>
 const TheaterPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.TheaterPage })));
 const DownloadAppPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DownloadAppPage })));
 const SkillsPage = lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillsPage })));
-const SkillDetailPage = lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillDetailPage })));
 const PluginsPage = lazy(() => import('@sdkwork/react-plugins'));
 const ChatPPTPage = lazy(() => import('@sdkwork/react-chatppt').then(m => ({ default: m.ChatPPTPage })));
 const CanvasPage = lazy(() => import('@sdkwork/react-canvas').then(m => ({ default: m.CanvasPage })));
 const TaskMarketPage = lazy(() => import('@sdkwork/react-trade').then(m => ({ default: m.TaskMarketPage })));
 const MyTasksPage = lazy(() => import('@sdkwork/react-trade').then(m => ({ default: m.MyTasksPage })));
+
+// Lazy load local pages
+const SettingsPage = lazy(() => import('../pages/SettingsPage').then(m => ({ default: m.default })));
+const ProfilePageLazy = lazy(() => import('../pages/ProfilePage').then(m => ({ default: m.default })));
+const LoginPageLazy = lazy(() => import('../pages/LoginPage').then(m => ({ default: m.default })));
 
 // TaskMarket wrapper
 const TaskMarketWithLayout = () => (
@@ -132,15 +136,15 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
         leftPane: AssetSidebar,
         provider: AssetStoreProvider
     },
-    { path: ROUTES.SETTINGS, component: LazyPageWrapper(() => import('../pages/SettingsPage')), layout: 'none' },
-    { path: ROUTES.PROFILE, component: LazyPageWrapper(() => import('../pages/ProfilePage')), layout: 'main' },
+    { path: ROUTES.SETTINGS, component: LazyPageWrapper(SettingsPage), layout: 'none' },
+    { path: ROUTES.PROFILE, component: LazyPageWrapper(ProfilePageLazy), layout: 'main' },
     { path: ROUTES.VIP, component: PricingPage, layout: 'main' },
     
     // --- Specific Tool Layouts ---
     { path: ROUTES.NOTES, component: NotesPage, layout: 'notes' },
     
     // --- Standalone Routes ---
-    { path: ROUTES.LOGIN, component: LazyPageWrapper(() => import('../pages/LoginPage')), layout: 'none' },
+    { path: ROUTES.LOGIN, component: LazyPageWrapper(LoginPageLazy), layout: 'none' },
     
     // --- Generation Tool Routes ---
     { 

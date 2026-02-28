@@ -1,6 +1,6 @@
 
 import { Button } from '@sdkwork/react-commons'
-import { AudioTask } from '../entities/audio.entity'
+import { AudioTask } from '../entities'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AudioLeftGeneratorPanel } from './AudioLeftGeneratorPanel';
@@ -40,7 +40,7 @@ const AudioGeneratorContent: React.FC<AudioGeneratorModalProps> = ({ onClose, on
                 <GenerationHistoryListPane 
                     tasks={history}
                     onDelete={deleteTask}
-                    onReuse={(task: AudioTask) => setConfig(task.config)}
+                    onReuse={(task: AudioTask) => setConfig(task.config || {})}
                     selectionMode={true}
                     selectedItems={selectedUrl ? [selectedUrl] : []}
                     onSelect={(url: string, task: AudioTask) => handleSelect(url, task)}

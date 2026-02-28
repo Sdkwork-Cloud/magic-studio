@@ -1,16 +1,16 @@
 
-import React, {
+import {
   forwardRef,
   useEffect,
   useImperativeHandle,
   useState,
-} from 'react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+} from 'react';
 import { FileText, Image as ImageIcon, Video, Mic } from 'lucide-react';
-import type { InputAttachment } from '@sdkwork/react-commons';
+import type { InputAttachmentData } from '@sdkwork/react-commons';
 import { getAssetLabel } from '@sdkwork/react-commons';
 
 export interface MentionListProps {
-  items: InputAttachment[];
+  items: InputAttachmentData[];
   command: (props: any) => void;
 }
 

@@ -1,3 +1,4 @@
+export * from './CoreAssetQueryService';
 export * from './MediaAssetService';
 export * from './VideoAssetService';
 export * from './ImageAssetService';
@@ -8,3 +9,4 @@ export * from './TransitionAssetService';
 export * from './MusicAssetService';
 export * from './DigitalHumanAssetService';
 export * from './SfxAssetService';
+export * from './springPage';

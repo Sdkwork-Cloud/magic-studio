@@ -140,7 +140,7 @@ class MediaService {
                 if (url.startsWith('blob:') || url.startsWith('http') || url.startsWith('https://asset.localhost')) {
                     fetchUrl = url;
                 } else if (url.startsWith('asset:')) {
-                    // Older asset protocol â€“ strip prefix and treat as VFS path
+                    // Older asset protocol â€?strip prefix and treat as VFS path
                     vfsPath = url.replace(/^asset:\/\//, '');
                 } else if (plat === 'desktop') {
                     // Desktop: local filesystem path, convert to fetchable URL

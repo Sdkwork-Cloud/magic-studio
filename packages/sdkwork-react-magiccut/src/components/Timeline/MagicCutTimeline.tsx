@@ -13,13 +13,9 @@ import { MagicCutTimelineToolbar } from './MagicCutTimelineToolbar';
 import { TimelineTabBar } from './TimelineTabBar';
 import { useTimeline } from './hooks/useTimeline';
 import { MagicCutTrackHeader } from './MagicCutTrackHeader';
-import { InOutPointOverlay } from './InOutPointOverlay';
-;
 import { Plus, Video, Mic, Type, Sparkles } from 'lucide-react';
-;
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
-;
 import { MagicCutErrorBoundary } from '../ErrorBoundary/MagicCutErrorBoundary';
 
 export interface MagicCutTimelineProps {
@@ -33,9 +29,6 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
         totalDuration,
         selectedClipId, selectClip, selectedClipIds,
         getResource,
-        activeTimeline,
-        updateTrack,
-        selectTrack,
         addTrack,
         playerController,
         store,
@@ -159,8 +152,6 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
         visibleTrackIndices,
         clipsMap,
         handleMouseDown,
-        handleMouseMove,
-        handleMouseLeave,
         handleDragEnterEmpty,
         handleDragOverEmpty,
         handleDragLeaveEmpty,
@@ -259,7 +250,6 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                             scrollContainerRef={tracksContainerRef}
                         />
                         <TimelinePreviewAxis
-                            duration={totalDuration}
                             pixelsPerSecond={pixelsPerSecond}
                             containerWidth={Math.max(containerSize.width, 0)}
                             scrollContainerRef={tracksContainerRef}

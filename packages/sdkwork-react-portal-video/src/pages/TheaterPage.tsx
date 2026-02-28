@@ -4,6 +4,7 @@ import {
     ChevronRight, Filter, Search, Clapperboard, Tv, Film
 } from 'lucide-react';
 import { PortalHeader } from '../components/PortalHeader';
+import { useRouter, ROUTES } from '@sdkwork/react-core';
 
 // 模拟剧场数据
 const DRAMA_SERIES = [
@@ -83,9 +84,9 @@ const CATEGORY_FILTERS = [
 ];
 
 const TheaterPage: React.FC = () => {
+    const { navigate } = useRouter();
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [playingId, setPlayingId] = useState<string | null>(null);
 
     const filteredDramas = DRAMA_SERIES.filter(drama => {
         const matchesCategory = activeCategory === 'all' || 
@@ -209,7 +210,7 @@ const TheaterPage: React.FC = () => {
                             <div 
                                 key={drama.id} 
                                 className="group relative bg-[#1a1a1c] rounded-xl overflow-hidden border border-white/5 hover:border-white/10 transition-all cursor-pointer"
-                                onClick={() => setPlayingId(drama.id)}
+                                onClick={() => navigate(ROUTES.PORTAL_VIDEO)}
                             >
                                 {/* 封面图 */}
                                 <div className="relative aspect-[3/4] overflow-hidden">

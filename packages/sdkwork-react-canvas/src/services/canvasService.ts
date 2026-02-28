@@ -1,7 +1,5 @@
-
-;
 import { canvasHistoryService } from './canvasHistoryService';
-import { CanvasBoard, CanvasElement } from '../entities/canvas.entity';
+import { CanvasBoard, CanvasElement } from '../entities';
 import { IBaseService, ServiceResult, Result, Page, PageRequest, generateUUID, MediaResourceType } from '@sdkwork/react-commons';
 
 class CanvasService implements IBaseService<CanvasBoard> {
@@ -67,8 +65,8 @@ class CanvasService implements IBaseService<CanvasBoard> {
                         id: s1Id, type: 'shape', x: startX, y: startY, width: 200, height: 100, 
                         zIndex: zCounter++,
                         resource: {
-                             id: generateUUID(), uuid: generateUUID(), type: MediaResourceType.TEXT, name: 'Start', 
-                             metadata: { text: 'Start' }, createdAt: Date.now(), updatedAt: Date.now()
+                             id: generateUUID(), type: 'image', url: '',
+                             metadata: { text: 'Start' }
                         }, 
                         color: '#10b981', style: { borderRadius: '50px' }
                     },
@@ -82,8 +80,8 @@ class CanvasService implements IBaseService<CanvasBoard> {
                         id: s2Id, type: 'shape', x: startX + 300, y: startY, width: 200, height: 100, 
                         zIndex: zCounter++,
                         resource: {
-                             id: generateUUID(), uuid: generateUUID(), type: MediaResourceType.TEXT, name: 'Step', 
-                             metadata: { text: 'Process Step' }, createdAt: Date.now(), updatedAt: Date.now()
+                             id: generateUUID(), type: 'image', url: '',
+                             metadata: { text: 'Process Step' }
                         },
                         color: '#3b82f6', style: { borderRadius: '8px' }
                     }
@@ -95,8 +93,8 @@ class CanvasService implements IBaseService<CanvasBoard> {
                         id: generateUUID(), type: 'note', x: startX, y: startY, width: 250, height: 250, 
                         zIndex: zCounter++,
                         resource: {
-                             id: generateUUID(), uuid: generateUUID(), type: MediaResourceType.TEXT, name: 'Note', 
-                             metadata: { text: 'Idea 1: ' + prompt }, createdAt: Date.now(), updatedAt: Date.now()
+                             id: generateUUID(), type: 'image', url: '',
+                             metadata: { text: 'Idea 1: ' + prompt }
                         },
                         color: '#fef3c7'
                     },
@@ -104,8 +102,8 @@ class CanvasService implements IBaseService<CanvasBoard> {
                         id: generateUUID(), type: 'note', x: startX + 270, y: startY + 20, width: 250, height: 250, 
                         zIndex: zCounter++,
                         resource: {
-                             id: generateUUID(), uuid: generateUUID(), type: MediaResourceType.TEXT, name: 'Note 2', 
-                             metadata: { text: 'Idea 2: Expand on...' }, createdAt: Date.now(), updatedAt: Date.now()
+                             id: generateUUID(), type: 'image', url: '',
+                             metadata: { text: 'Idea 2: Expand on...' }
                         },
                         color: '#dbeafe'
                     }
@@ -120,8 +118,8 @@ class CanvasService implements IBaseService<CanvasBoard> {
                     height: 100,
                     zIndex: 0,
                     resource: {
-                         id: generateUUID(), uuid: generateUUID(), type: MediaResourceType.TEXT, name: 'Gen Text', 
-                         metadata: { text: `Generated result for: "${prompt}"` }, createdAt: Date.now(), updatedAt: Date.now()
+                         id: generateUUID(), type: 'image', url: '',
+                         metadata: { text: `Generated result for: "${prompt}"` }
                     },
                     color: 'transparent',
                     style: { fontSize: '24px', fontWeight: 'bold', color: '#fff' }

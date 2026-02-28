@@ -100,11 +100,11 @@ export class ResourceDropStrategy implements IPlacementStrategy {
                     // We WANT to drop into this track. But is it compatible?
                     const trackObj = context.tracks.find(t => t.id === bestAction.id);
                     if (trackObj) {
-                        const rules = TrackRulesFactory.getRules(trackObj.type);
+                        const rules = TrackRulesFactory.getRules(trackObj.trackType);
                         if (rules.isCompatible(this.resource.type)) {
                             // Compatible! Lock it in.
                             targetTrackId = bestAction.id;
-                            hoverTrackType = trackObj.type;
+                            hoverTrackType = trackObj.trackType;
                             insertIndex = null;
                         } else {
                             // Incompatible! (e.g. Effect dragged over Video Track)
@@ -126,7 +126,7 @@ export class ResourceDropStrategy implements IPlacementStrategy {
                         }
                     }
                 } else if (bestAction.type === 'insert') {
-                    insertIndex = bestAction.index;
+                    insertIndex = bestAction.index ?? null;
                     targetTrackId = null;
                 }
             }

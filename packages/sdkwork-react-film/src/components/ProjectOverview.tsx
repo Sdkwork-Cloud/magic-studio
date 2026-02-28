@@ -5,7 +5,19 @@ import {
     BookOpen, Palette, Edit2, Clapperboard, MapPin, Users, Box, BarChart3, TrendingUp
 } from 'lucide-react';
 
-import { FilmShot, FilmCharacter, FilmLocation, FilmProp, MediaScene } from '@sdkwork/react-commons';
+import {
+    FilmShot,
+    FilmCharacter,
+    FilmLocation,
+    FilmProp,
+    MediaScene,
+    useAssetUrl
+} from '@sdkwork/react-commons';
+import {
+    hasFilmAssetReference,
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../utils/filmAssetUrlResolver';
 
 // Modals
 import { ShotModal } from './ShotModal';
@@ -48,24 +60,30 @@ export const ProjectOverview: React.FC = () => {
 
     // Stats
     const totalShots = project.shots.length;
-    const generatedShots = project.shots.filter(s => s.generation?.video?.url || s.assets?.length).length;
+    const generatedShots = project.shots.filter((shot) => {
+        const hasVideo = hasFilmAssetReference(shot.generation?.video || null);
+        const hasImage = !!shot.assets?.find((asset) => hasFilmAssetReference(asset));
+        return hasVideo || hasImage;
+    }).length;
     const progress = totalShots > 0 ? Math.round(((generatedShots / totalShots) * 100)) : 0;
 
     // Moodboard Logic - Get top 4 images for the header banner
-    const moodImages = [
+    const moodImageSources = [
         ...project.locations.map(l => {
             const visualAsset = l.refAssets?.find(a => a.scene === MediaScene.LOCATION_VISUAL);
-            return visualAsset?.url || visualAsset?.image?.url;
+            return visualAsset || l.image || null;
         }),
         ...project.characters.map(c => {
             const avatarAsset = c.refAssets?.find(a => a.scene === MediaScene.AVATAR);
-            return avatarAsset?.url || avatarAsset?.image?.url;
+            return avatarAsset || c.faceImage || null;
         }),
         ...project.props.map(p => {
             const visualAsset = p.refAssets?.find(a => a.scene === MediaScene.PROP_VISUAL);
-            return visualAsset?.url || visualAsset?.image?.url;
+            return visualAsset || p.faceImage || null;
         })
-    ].filter(Boolean).slice(0, 4);
+    ]
+        .filter((source) => hasFilmAssetReference(source))
+        .slice(0, 4);
 
     // Handlers
     const handleEditShot = (shot: FilmShot, sceneIndex: number) => {
@@ -113,11 +131,11 @@ export const ProjectOverview: React.FC = () => {
                              
                              {/* Mood Header (Cover) */}
                              <div className="relative h-44 shrink-0 w-full bg-[#0a0a0a]">
-                                 {moodImages.length > 0 ? (
+                                 {moodImageSources.length > 0 ? (
                                      <div className="absolute inset-0 flex">
-                                         {moodImages.map((src, i) => (
+                                         {moodImageSources.map((source, i) => (
                                              <div key={i} className="flex-1 relative overflow-hidden border-r border-black/20 last:border-0">
-                                                 <img src={src} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-700 hover:scale-105" alt="Mood" />
+                                                 <MoodImageTile source={source} />
                                                  <div className="absolute inset-0 bg-gradient-to-t from-[#121214] via-[#121214]/20 to-transparent" />
                                              </div>
                                          ))}
@@ -324,5 +342,23 @@ export const ProjectOverview: React.FC = () => {
                 title="Edit Synopsis"
             />
         </div>
+    );
+};
+
+const MoodImageTile: React.FC<{ source: unknown }> = ({ source }) => {
+    const { url } = useAssetUrl(toFilmUseAssetSource(source), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+
+    if (!url) {
+        return <div className="w-full h-full bg-[#101012]" />;
+    }
+
+    return (
+        <img
+            src={url}
+            className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-700 hover:scale-105"
+            alt="Mood"
+        />
     );
 };

@@ -4,8 +4,7 @@ import { WebGLEngine, RenderOverrideClip, RenderData } from '../../engine/WebGLE
 import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { playerPreviewService } from '../../services';
 import { Monitor } from 'lucide-react';
-import { useMagicCutStore as TimelineStore } from '../../store/magicCutStore';
-;
+import type { TimelineStore } from '../../store/transientStore';
 
 // Export RenderData for consumers (like MagicCutPlayer)
 export type { RenderData };
@@ -15,7 +14,7 @@ interface PlayerContextType {
     projectResolution: { width: number, height: number };
     stageDimensions: { width: number, height: number };
     scale: number; // Project to Screen scale
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
     // Helpers
     projectToScreen: (x: number, y: number) => { x: number, y: number };
     screenToProject: (x: number, y: number) => { x: number, y: number };
@@ -136,7 +135,7 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
 
     useEffect(() => {
         if (playerHandleRef.current) {
-            playerPreviewService.registerPlayer({ current: playerHandleRef.current } as React.RefObject<UniversalPlayerHandle>);
+            playerPreviewService.registerPlayer(playerHandleRef);
         }
         return () => {
             playerPreviewService.unregisterPlayer();

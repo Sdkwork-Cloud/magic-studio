@@ -1,5 +1,5 @@
 
-import { AppSettings } from '../entities/settings.entity'
+import { AppSettings } from '../entities'
 import { settingsService } from '../services/settingsService'
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from '../constants';

@@ -3,7 +3,7 @@ import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../../../../constants';
 import React from 'react';
 import { Film, Image as ImageIcon, Music, Type, FileVideo, Sparkles } from 'lucide-react';
-import { GhostVisualConfig } from '../../../domain/dnd/IResourceTraits';
+import { GhostVisualConfig } from '../../../../domain/dnd/IResourceTraits';
 
 export class GhostFactory {
     static getTrackHeight(type: string): number {

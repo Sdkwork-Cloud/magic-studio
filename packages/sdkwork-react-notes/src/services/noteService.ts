@@ -1,13 +1,22 @@
 
-;
 import { vfs } from '@sdkwork/react-fs';
-import { Note, NoteSummary, NoteFolder, pathUtils } from '@sdkwork/react-commons';
+import { Note, NoteSummary, NoteFolder, pathUtils, generateUUID } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 import { IBaseService, ServiceResult, Result, Page, PageRequest } from '@sdkwork/react-commons';
 import { TextSearchEngine } from '@sdkwork/react-commons';
 import { logger } from '@sdkwork/react-commons';
 
 const NOTES_ROOT_DIR = 'OpenStudio/Notes';
+
+const toErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error && error.message) {
+      return error.message;
+  }
+  if (typeof error === 'string' && error.trim()) {
+      return error;
+  }
+  return fallback;
+};
 
 /**
  * Note Service (Optimized v2)
@@ -65,6 +74,27 @@ class NoteService implements IBaseService<NoteSummary> {
       return `${id}.osnote`;
   }
 
+  private createSnippet(content: string): string {
+      return content.replace(/<[^>]+>/g, ' ').slice(0, 300);
+  }
+
+  private toNoteSummary(note: Note, parentIdOverride?: string | null): NoteSummary {
+      return {
+          id: note.id,
+          uuid: note.uuid,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+          title: note.title,
+          type: note.type,
+          parentId: parentIdOverride ?? note.parentId ?? null,
+          tags: note.tags || [],
+          isFavorite: note.isFavorite || false,
+          snippet: this.createSnippet(note.content),
+          metadata: note.metadata,
+          publishStatus: note.publishStatus
+      };
+  }
+
   /**
    * Re-scan filesystem and rebuild memory index.
    */
@@ -80,52 +110,39 @@ class NoteService implements IBaseService<NoteSummary> {
   }
 
   private async scanDir(dirPath: string): Promise<void> {
-      const entries = await vfs.readDir(dirPath);
+      const entries = await vfs.readdir(dirPath);
       const root = await this.getRootPath();
 
-      for (const entry of entries) {
-          if (entry.name.startsWith('.')) continue; 
+      for (const entryPath of entries) {
+          const entryName = entryPath.split('/').pop() || '';
+          if (entryName.startsWith('.')) continue; 
 
-          if (entry.isDirectory) {
+          const isDirectory = !entryName.includes('.'); // Simple check if it's a directory path
+          if (isDirectory) {
               const folder: NoteFolder = {
-                  id: entry.path,
-                  name: entry.name,
+                  id: entryPath,
+                  uuid: generateUUID(),
+                  name: entryName,
                   parentId: dirPath === root ? null : dirPath,
-                  createdAt: Date.now() 
+                  createdAt: Date.now(),
+                  updatedAt: Date.now()
               };
               this._foldersCache.push(folder);
-              await this.scanDir(entry.path);
-          } else if (entry.name.endsWith('.osnote')) {
+              await this.scanDir(entryPath);
+          } else if (entryName.endsWith('.osnote')) {
               try {
                   // We must read the file to get metadata for the index
                   // Optimization: In a real DB we wouldn't do this. 
                   // Here, we do it once on startup.
-                  const raw = await vfs.readFile(entry.path);
+                  const raw = await vfs.readFile(entryPath);
                   const fullNote: Note = JSON.parse(raw);
                   
-                  // Create Summary (Strip HTML Content)
-                  // Simple regex to strip tags for snippet
-                  const plainText = fullNote.content.replace(/<[^>]+>/g, ' ').slice(0, 300);
-                  
-                  const summary: NoteSummary = {
-                      id: fullNote.id,
-                      uuid: fullNote.uuid,
-                      createdAt: fullNote.createdAt,
-                      updatedAt: fullNote.updatedAt,
-                      title: fullNote.title,
-                      type: fullNote.type,
-                      parentId: dirPath === root ? null : dirPath,
-                      tags: fullNote.tags || [],
-                      isFavorite: fullNote.isFavorite || false,
-                      snippet: plainText,
-                      metadata: fullNote.metadata,
-                      publishStatus: fullNote.publishStatus
-                  };
+                  const summary = this.toNoteSummary(fullNote, dirPath === root ? null : dirPath);
 
                   this._summaryCache.push(summary);
                   this._searchEngine.add(summary);
               } catch (e) {
-                  console.warn(`Failed to parse note: ${entry.path}`, e);
+                  console.warn(`Failed to parse note: ${entryPath}`, e);
               }
           }
       }
@@ -146,7 +163,11 @@ class NoteService implements IBaseService<NoteSummary> {
           // Default: All items
           content = [...this._summaryCache];
           // Default Sort: UpdatedAt Desc
-          content.sort((a, b) => b.updatedAt - a.updatedAt);
+          content.sort((a, b) => {
+              const aTime = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
+              const bTime = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
+              return bTime - aTime;
+          });
       }
 
       // 2. Pagination
@@ -190,8 +211,8 @@ class NoteService implements IBaseService<NoteSummary> {
           const raw = await vfs.readFile(filePath);
           const note: Note = JSON.parse(raw);
           return Result.success(note);
-      } catch (e: any) {
-          return Result.error("Failed to read note file");
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to read note file'));
       }
   }
 
@@ -205,47 +226,53 @@ class NoteService implements IBaseService<NoteSummary> {
       
       if (!entity.id) return Result.error("ID required for save");
 
-      // 1. Get Existing or Create New Full Note
+      const existingSummary = this._summaryCache.find(n => n.id === entity.id);
+      const now = Date.now();
       let fullNote: Note;
       
-      const existingSummary = this._summaryCache.find(n => n.id === entity.id);
-      
       if (existingSummary) {
-          // If update doesn't include content, we must load it first to avoid overwriting with empty
-          if (entity.content === undefined) {
-              const loaded = await this.findById(entity.id);
-              if (loaded.data) {
-                  fullNote = { ...loaded.data, ...entity, updatedAt: Date.now() };
-              } else {
-                  return Result.error("Original file missing");
-              }
-          } else {
-              // We have new content, merge with summary metadata
-              fullNote = { 
-                  ...existingSummary, 
-                  content: entity.content, // Placeholder, ts will complain if we don't cast or merge properly
-                  ...entity, 
-                  updatedAt: Date.now() 
-              } as Note;
+          const loaded = await this.findById(entity.id);
+          if (!loaded.data) {
+              return Result.error('Original file missing');
           }
+          const original = loaded.data;
+          const mergedContent = entity.content ?? original.content;
+          fullNote = {
+              ...original,
+              ...entity,
+              id: original.id,
+              uuid: entity.uuid ?? original.uuid,
+              title: entity.title ?? original.title,
+              content: mergedContent,
+              type: entity.type ?? original.type,
+              parentId: entity.parentId ?? original.parentId ?? null,
+              tags: entity.tags ?? original.tags ?? [],
+              isFavorite: entity.isFavorite ?? original.isFavorite ?? false,
+              snippet: this.createSnippet(mergedContent),
+              metadata: entity.metadata ?? original.metadata,
+              publishStatus: entity.publishStatus ?? original.publishStatus,
+              createdAt: original.createdAt,
+              updatedAt: now
+          };
       } else {
-          // New Note
+          const content = entity.content ?? '';
           fullNote = {
               id: entity.id,
-              uuid: entity.uuid || entity.id,
-              title: entity.title || 'Untitled',
-              content: entity.content || '',
-              type: entity.type || 'doc',
-              parentId: entity.parentId || null,
-              tags: entity.tags || [],
-              isFavorite: entity.isFavorite || false,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-              ...entity
-          } as Note;
+              uuid: entity.uuid ?? entity.id,
+              title: entity.title ?? 'Untitled',
+              content,
+              type: entity.type ?? 'doc',
+              parentId: entity.parentId ?? null,
+              tags: entity.tags ?? [],
+              isFavorite: entity.isFavorite ?? false,
+              snippet: this.createSnippet(content),
+              metadata: entity.metadata,
+              publishStatus: entity.publishStatus,
+              createdAt: now,
+              updatedAt: now
+          };
       }
 
-      // 2. Persist to Disk
       const root = await this.getRootPath();
       const parentPath = fullNote.parentId || root;
       const filePath = pathUtils.join(parentPath, this.getFilename(fullNote.id));
@@ -253,28 +280,20 @@ class NoteService implements IBaseService<NoteSummary> {
       try {
           await vfs.writeFile(filePath, JSON.stringify(fullNote, null, 2));
           
-          // 3. Update Memory Index (Summary)
-          const plainText = fullNote.content.replace(/<[^>]+>/g, ' ').slice(0, 300);
-          const newSummary: NoteSummary = {
-              ...fullNote,
-              snippet: plainText
-          };
-          // Ensure content is stripped from summary to save memory
-          delete (newSummary as any).content;
+          const newSummary = this.toNoteSummary(fullNote);
 
           if (existingSummary) {
               const idx = this._summaryCache.indexOf(existingSummary);
               this._summaryCache[idx] = newSummary;
+              this._searchEngine.update(newSummary);
           } else {
               this._summaryCache.unshift(newSummary);
+              this._searchEngine.add(newSummary);
           }
-          
-          // Update Search Engine
-          this._searchEngine.update(newSummary);
 
           return Result.success(newSummary);
-      } catch (e: any) {
-          return Result.error(e.message);
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to save note'));
       }
   }
 
@@ -295,16 +314,16 @@ class NoteService implements IBaseService<NoteSummary> {
           this._searchEngine.remove(id);
           
           return Result.success(undefined);
-      } catch (e: any) {
-          return Result.error(e.message);
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to delete note'));
       }
   }
 
   // Stubs
   async delete(entity: NoteSummary): Promise<ServiceResult<void>> { return this.deleteById(entity.id); }
-  async deleteAll(ids: string[]): Promise<ServiceResult<void>> { for(const id of ids) await this.deleteById(id); return Result.success(undefined); }
-  async findAllById(ids: string[]): Promise<ServiceResult<NoteSummary[]>> { return Result.success([]); }
-  async saveAll(entities: Partial<NoteSummary>[]): Promise<ServiceResult<NoteSummary[]>> { throw new Error("Method not implemented."); }
+  async deleteAll(_ids: string[]): Promise<ServiceResult<void>> { return Result.success(undefined); }
+  async findAllById(_ids: string[]): Promise<ServiceResult<NoteSummary[]>> { return Result.success([]); }
+  async saveAll(_entities: Partial<NoteSummary>[]): Promise<ServiceResult<NoteSummary[]>> { throw new Error("Method not implemented."); }
   
   async count(): Promise<number> {
       await this.ensureInitialized();
@@ -324,17 +343,19 @@ class NoteService implements IBaseService<NoteSummary> {
       const newPath = pathUtils.join(parentPath, name);
       
       try {
-          await vfs.createDir(newPath);
+          await vfs.mkdir(newPath);
           const newFolder: NoteFolder = {
               id: newPath,
+              uuid: generateUUID(),
               name,
               parentId,
-              createdAt: Date.now()
+              createdAt: Date.now(),
+              updatedAt: Date.now()
           };
           this._foldersCache.push(newFolder);
           return Result.success(newFolder);
-      } catch (e: any) {
-          return Result.error(e.message);
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to create folder'));
       }
   }
 
@@ -349,8 +370,8 @@ class NoteService implements IBaseService<NoteSummary> {
           this._summaryCache = this._summaryCache.filter(n => !n.parentId?.startsWith(id));
           
           return Result.success(undefined);
-      } catch (e: any) {
-          return Result.error(e.message);
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to delete folder'));
       }
   }
 
@@ -361,8 +382,8 @@ class NoteService implements IBaseService<NoteSummary> {
           await vfs.rename(id, newPath);
           await this.refreshIndex(); 
           return Result.success(newPath);
-      } catch (e: any) {
-          return Result.error(e.message);
+      } catch (error: unknown) {
+          return Result.error(toErrorMessage(error, 'Failed to rename folder'));
       }
   }
   
@@ -394,8 +415,8 @@ class NoteService implements IBaseService<NoteSummary> {
               }
               
               return Result.success(undefined);
-          } catch (e: any) {
-              return Result.error(e.message);
+          } catch (error: unknown) {
+              return Result.error(toErrorMessage(error, 'Failed to move note'));
           }
       }
       return Result.success(undefined);

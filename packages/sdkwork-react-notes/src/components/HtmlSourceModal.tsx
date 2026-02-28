@@ -3,7 +3,6 @@ import { Button } from '@sdkwork/react-commons';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Check, FileCode } from 'lucide-react';
-;
 import { platform } from '@sdkwork/react-core';
 import { useTranslation } from '@sdkwork/react-i18n';
 
@@ -16,7 +15,7 @@ interface HtmlSourceModalProps {
 export const HtmlSourceModal: React.FC<HtmlSourceModalProps> = ({ isOpen, onClose, content }) => {
     const [source, setSource] = useState('');
     const [copied, setCopied] = useState(false);
-    const { t } = useTranslation();
+    const { t: _t } = useTranslation();
 
     useEffect(() => {
         if (isOpen) {

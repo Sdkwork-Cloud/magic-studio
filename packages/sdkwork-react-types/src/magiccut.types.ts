@@ -34,11 +34,13 @@ export interface CutProject extends BaseEntity {
 export interface CutTimelineRef {
   type: 'CutTimeline';
   id: string;
+  uuid?: string;
 }
 
 export interface CutMediaResourceRef {
   type: 'MediaResource';
   id: string;
+  uuid?: string;
 }
 
 // ============================================================================
@@ -86,6 +88,7 @@ export interface CutTimeline extends BaseEntity {
 export interface CutTrackRef {
   type: 'CutTrack';
   id: string;
+  uuid?: string;
 }
 
 // ============================================================================
@@ -114,15 +117,18 @@ export interface CutTrack extends BaseEntity {
 export interface CutClipRef {
   type: 'CutClip';
   id: string;
+  uuid?: string;
 }
 
 // ============================================================================
 // Audio Effect Config
 // ============================================================================
 
+export type AudioEffectType = 'eq' | 'compressor' | 'noiseGate' | 'reverb' | 'limiter' | 'deEsser';
+
 export interface AudioEffectConfig {
   id: string;
-  type: string;
+  type: AudioEffectType;
   enabled: boolean;
   params: Record<string, any>;
 }
@@ -213,6 +219,7 @@ export interface CutClip extends BaseEntity {
 export interface CutLayerRef {
   type: 'CutLayer';
   id: string;
+  uuid?: string;
 }
 
 // ============================================================================

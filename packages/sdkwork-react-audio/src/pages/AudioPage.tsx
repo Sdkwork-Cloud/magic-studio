@@ -1,8 +1,14 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core'
-import { ImportData, GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets'
+import {
+    ImportData,
+    GenerationHistoryListPane,
+    GENERATION_TABS,
+    consumePortalLaunchSession,
+    type PortalLaunchAttachmentRef
+} from '@sdkwork/react-assets'
 import React, { useState, useEffect } from 'react';
 import { useAudioStore } from '../store/audioStore';
-import { AudioTask } from '../entities/audio.entity';
+import { AudioTask } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 
 const AudioPage: React.FC = () => {
@@ -14,6 +20,33 @@ const AudioPage: React.FC = () => {
     useEffect(() => {
         loadHistory();
     }, [loadHistory]);
+
+    useEffect(() => {
+        const session = consumePortalLaunchSession('speech');
+        if (!session) {
+            return;
+        }
+
+        const scriptContent = session.attachments.find(
+            (item: PortalLaunchAttachmentRef) => item.type === 'script'
+        )?.content;
+        const durationFromSession =
+            typeof session.duration === 'string' && session.duration.endsWith('s')
+                ? Number.parseInt(session.duration, 10)
+                : Number.parseInt(session.duration || '', 10);
+
+        const updates: Record<string, unknown> = {
+            prompt: session.prompt || scriptContent || ''
+        };
+        if (session.model) {
+            updates.model = session.model;
+        }
+        if (Number.isFinite(durationFromSession) && durationFromSession > 0) {
+            updates.duration = durationFromSession;
+        }
+
+        setConfig(updates as any);
+    }, [setConfig]);
 
     const displayTasks = showFavorites 
         ? history.filter(t => t.isFavorite)

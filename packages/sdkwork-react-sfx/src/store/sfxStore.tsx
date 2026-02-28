@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { SfxTask, SfxConfig } from '../entities/sfx.entity';
+import { SfxTask, SfxConfig } from '../entities';
 import { sfxService } from '../services/sfxService';
 import { sfxHistoryService } from '../services/sfxHistoryService';
 import { SFX_MODELS } from '../constants';

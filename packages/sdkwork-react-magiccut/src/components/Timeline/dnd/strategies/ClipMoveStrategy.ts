@@ -68,7 +68,7 @@ export class ClipMoveStrategy implements IPlacementStrategy {
                         targetTrackId = layout.id;
                         hoverTrackIndex = i;
                         const trackObj = tracks.find(t => t.id === layout.id);
-                        if (trackObj) hoverTrackType = trackObj.type;
+                        if (trackObj) hoverTrackType = trackObj.trackType;
                         break; // Found target, stop looking
                     }
                     
@@ -145,7 +145,7 @@ export class ClipMoveStrategy implements IPlacementStrategy {
             isValid,
             hasCollision,
             snapLines: finalSnapLines,
-            suggestedTrackType: currentTrack?.type
+            suggestedTrackType: currentTrack?.trackType
         };
     }
 }

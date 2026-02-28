@@ -14,7 +14,15 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
+      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/react-types": ["../sdkwork-react-types/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

@@ -1,15 +1,15 @@
 
-import { MediaAccountConfig, MediaPlatformType } from '../entities/settings.entity'
-import React, { useState, useMemo } from 'react';
-import { useSettingsStore } from '../store/settingsStore';
+import { MediaAccountConfig, MediaPlatformType } from '../entities'
+import React, { useState } from 'react';
+import { useSettingsStore } from '../store/settingsStore'
 
 import { useTranslation } from '@sdkwork/react-i18n';
 import { 
-    MessageCircle, Newspaper, Globe, Video, Plus, Trash2, Edit2, 
-    Share2, AlertCircle, CheckCircle2, RefreshCw, Key, Shield,
+    MessageCircle, Newspaper, Globe, Plus, Trash2, 
+    Share2,
     Twitter, Facebook, Linkedin, Instagram, Youtube, MessagesSquare, Hash
 } from 'lucide-react';
-import { SettingsSection, SettingInput, SettingSelect, SettingToggle, SettingTextArea } from './SettingsWidgets';
+import { SettingsSection, SettingInput, SettingToggle } from './SettingsWidgets';
 
 // Custom icons not in Lucide or needing specific style
 const TikTokIcon = ({size}: {size:number}) => (

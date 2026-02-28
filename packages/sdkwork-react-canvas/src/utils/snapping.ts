@@ -1,4 +1,4 @@
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 
 ;
 

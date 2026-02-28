@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { VoiceTask, VoiceConfig } from '../entities/voice.entity';
+import { VoiceTask, VoiceConfig } from '../entities';
 import { voiceService } from '../services/voiceService';
 import { voiceHistoryService } from '../services/voiceHistoryService';
 import { VOICE_MODELS, PRESET_VOICES } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 
 interface VoiceStoreContextType {
     history: VoiceTask[];
@@ -19,6 +20,38 @@ interface VoiceStoreContextType {
 }
 
 const VoiceStoreContext = createContext<VoiceStoreContextType | undefined>(undefined);
+
+const resolveVoiceScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+    return undefined;
+};
 
 export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<VoiceTask[]>([]);
@@ -73,11 +106,32 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
         try {
             const rawResults = await voiceService.generateSpeech(config);
+            const persistedResults = await Promise.all(rawResults.map(async (result, index) => {
+                const inlineData = await tryExtractInlineData(result.url);
+                const persisted = await assetBusinessFacade.importVoiceSpeakerAsset({
+                    scope: resolveVoiceScope(),
+                    type: 'voice',
+                    name: `voice_gen_${taskId}_${index + 1}.wav`,
+                    data: inlineData,
+                    remoteUrl: inlineData ? undefined : result.url,
+                    metadata: {
+                        origin: 'ai',
+                        source: 'voice-speaker-generate',
+                        text: result.text,
+                        speakerName: result.speakerName,
+                        duration: result.duration
+                    }
+                });
+                return {
+                    ...result,
+                    url: persisted.primaryLocator.uri
+                };
+            }));
             
             const completedTask: VoiceTask = {
                 ...newTask,
                 status: 'completed',
-                results: rawResults,
+                results: persistedResults,
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));

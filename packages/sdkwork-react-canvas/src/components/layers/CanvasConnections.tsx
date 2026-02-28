@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useCanvasStore } from '../../store/canvasStore';
 ;
-import { CanvasElement } from '../../entities/canvas.entity';
+import { CanvasElement } from '../../entities';
 import { getSmartPath } from '../../utils/smartPath';
 
 interface CanvasConnectionsProps {

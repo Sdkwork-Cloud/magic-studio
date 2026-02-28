@@ -1,5 +1,5 @@
 import { LocalStorageService } from '@sdkwork/react-core';
-import { AudioTask } from '../entities/audio.entity';
+import { AudioTask } from '../entities';
 
 const STORAGE_KEY_AUDIO_HISTORY = 'open_studio_audio_history_v1';
 

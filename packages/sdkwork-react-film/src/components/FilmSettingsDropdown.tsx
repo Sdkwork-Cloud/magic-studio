@@ -46,8 +46,8 @@ export const FilmSettingsDropdown: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen]);
 
-    const handleChange = (key: keyof FilmSettings, value: any) => {
-        updateProjectSettings({ [key]: value });
+    const handleChange = <K extends keyof FilmSettings>(key: K, value: FilmSettings[K]) => {
+        updateProjectSettings({ [key]: value } as Partial<FilmSettings>);
     };
 
     return (

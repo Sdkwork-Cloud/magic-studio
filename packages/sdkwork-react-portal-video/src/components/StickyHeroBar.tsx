@@ -1,8 +1,7 @@
 
-import { PortalTab } from '@sdkwork/react-commons'
+import { PortalTab } from '@sdkwork/react-assets'
 import React from 'react';
 import { Sparkles, ArrowUp, Loader2, Maximize2 } from 'lucide-react';
-;
 
 interface StickyHeroBarProps {
     prompt: string;

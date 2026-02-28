@@ -192,7 +192,7 @@ export const PACKAGE_BASED_ROUTES: RouteDefinition[] = [
 
     {
         path: ROUTES.PORTAL_SKILLS,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-skills'))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillsPage })))),
         layout: 'none'
     },
 

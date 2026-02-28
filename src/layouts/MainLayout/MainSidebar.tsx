@@ -1,8 +1,8 @@
 
 import { useRouter } from '@sdkwork/react-core'
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
-    Settings, User, Crown, ChevronRight, LayoutGrid
+    Settings, Crown, ChevronRight
 } from 'lucide-react';
 ;
 import { ROUTES } from '../../router/routes';
@@ -203,6 +203,10 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
     const timeoutRef = useRef<any>(null);
     const Icon = getIconComponent(config.icon);
 
+    if (!Icon) {
+        return null;
+    }
+
     const handleMouseEnter = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setIsHovered(true);
@@ -249,9 +253,13 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
                     </div>
                     
                     <div className="p-1.5 flex flex-col gap-0.5">
-                        {config.children?.filter(c => c.visible).map((item) => {
+                        {config.children?.filter((c: SidebarItemConfig) => c.visible).map((item: SidebarItemConfig) => {
                             const isItemActive = currentPath === item.route;
                             const ItemIcon = getIconComponent(item.icon);
+                            
+                            if (!ItemIcon) {
+                                return null;
+                            }
                             
                             return (
                                 <button

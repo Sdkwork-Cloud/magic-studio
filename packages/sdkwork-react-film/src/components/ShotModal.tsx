@@ -3,12 +3,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Clapperboard, Video, Image as ImageIcon, Wand2, Clock, FileText, MessageSquare, Play, Layers, Grid3x3, ArrowRightLeft, FileImage, Type, Upload, Plus, Trash2, User, Music, Zap, Sparkles, Cpu, Cloud, Brain, Star, Activity, LayoutGrid, ChevronDown } from 'lucide-react';
 import { SettingInput, SettingSelect, SettingTextArea, SettingSlider } from '@sdkwork/react-settings';
-import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, InputAttachment, MediaScene, GenerationProduct, AssetMediaResource, MediaResourceType } from '@sdkwork/react-commons';
-import { PromptTextInput, ChooseAssetModal } from '@sdkwork/react-assets';
+import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, MediaScene, GenerationProduct, AssetAtomicMediaResource, MediaResourceType, Asset } from '@sdkwork/react-commons';
+import { PromptTextInput, ChooseAssetModal, type InputAttachment } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 import { genAIService, uploadHelper } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
-import { Asset, AssetType } from '../../assets/entities/asset.entity';
+import {
+    buildAtomicAssetResource,
+    resolveAtomicAssetResourceType,
+    resolveAtomicAssetResourceUrl,
+    toFilmShotAssetResource
+} from '../utils/filmAtomicAssetAdapters';
 
 interface ShotModalProps {
     isOpen: boolean;
@@ -29,6 +34,28 @@ const GENERATION_MODES = [
     { value: 'MULTI_FRAME_INTELLIGENT', label: '智能多帧', icon: Grid3x3, description: '智能多帧/分镜' },
     { value: 'UNIVERSAL_REFERENCE', label: '全能智能参考', icon: Activity, description: '图片/视频/音频参考' },
 ];
+
+const isGenerationProduct = (value: string): value is GenerationProduct => {
+    return GENERATION_MODES.some((mode) => mode.value === value);
+};
+
+const resolveShotPromptText = (shot?: FilmShot): string => {
+    const generation = shot?.generation;
+    const promptValue = generation?.prompt;
+    if (typeof promptValue === 'string' && promptValue.trim().length > 0) {
+        return promptValue;
+    }
+    if (promptValue && typeof promptValue === 'object') {
+        const promptBase = (promptValue as { base?: unknown }).base;
+        if (typeof promptBase === 'string') {
+            return promptBase;
+        }
+    }
+    if (typeof generation?.base === 'string') {
+        return generation.base;
+    }
+    return '';
+};
 
 const ASSET_ROLES = {
     START_FRAME: '开始帧',
@@ -116,7 +143,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
     const [showAIModal, setShowAIModal] = useState(false);
     const [genProduct, setGenProduct] = useState<GenerationProduct>('TEXT_TO_VIDEO');
     const [selectedPlatform, setSelectedPlatform] = useState<string>('keling-v1');
-    const [assets, setAssets] = useState<AssetMediaResource[]>([]);
+    const [assets, setAssets] = useState<AssetAtomicMediaResource[]>([]);
     const [activeAssetIndex, setActiveAssetIndex] = useState<number | null>(null);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [showAssetModal, setShowAssetModal] = useState(false);
@@ -131,7 +158,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
         if (isOpen && initialData) {
             setDuration(initialData.duration || 3);
             setDescription(initialData.description || '');
-            setVisualPrompt(initialData.generation?.prompt?.base || '');
+            setVisualPrompt(resolveShotPromptText(initialData));
 
             if (initialData.dialogue?.items && initialData.dialogue.items.length > 0) {
                 setDialogueItems(initialData.dialogue.items);
@@ -139,10 +166,10 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 setDialogueItems([]);
             }
 
-            const savedProduct = localStorage.getItem(STORAGE_KEY_PRODUCT) as GenerationProduct;
-            if (initialData.generation?.product) {
+            const savedProduct = localStorage.getItem(STORAGE_KEY_PRODUCT);
+            if (typeof initialData.generation?.product === 'string' && isGenerationProduct(initialData.generation.product)) {
                 setGenProduct(initialData.generation.product);
-            } else if (savedProduct) {
+            } else if (savedProduct && isGenerationProduct(savedProduct)) {
                 setGenProduct(savedProduct);
             }
 
@@ -150,11 +177,40 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 setSelectedPlatform(initialData.generation.modelId);
             }
 
-            let loadedAssets = initialData.generation?.assets || [];
-            setAssets(loadedAssets);
+            const loadedAssets = (initialData.generation?.assets || []) as Array<Partial<AssetAtomicMediaResource>>;
+            const normalizedAssets: AssetAtomicMediaResource[] = loadedAssets.map((asset, idx) => {
+                const type = resolveAtomicAssetResourceType(asset);
+                const metadataAssetId =
+                    typeof asset.metadata?.assetId === 'string' ? asset.metadata.assetId : undefined;
+                const baseId =
+                    metadataAssetId ||
+                    (typeof asset.id === 'string' && asset.id.length > 0 ? asset.id : generateUUID());
+                const normalized = buildAtomicAssetResource({
+                    assetId: baseId,
+                    type,
+                    url: resolveAtomicAssetResourceUrl(asset) || asset.url || '',
+                    name: asset.name || `${type.toLowerCase()}-${idx + 1}`,
+                    scene: asset.scene || MediaScene.REFERENCE,
+                    metadata: {
+                        ...(asset.metadata || {}),
+                        assetId: baseId
+                    }
+                });
+                return {
+                    ...asset,
+                    ...normalized,
+                    metadata: {
+                        ...(asset.metadata || {}),
+                        ...(normalized.metadata || {})
+                    }
+                };
+            });
+            setAssets(normalizedAssets);
 
             const videoUrl = initialData.generation?.video?.url;
-            const imageUrl = initialData.assets?.[0]?.url || loadedAssets.find(a => a.type === MediaResourceType.IMAGE)?.url;
+            const imageUrl =
+                initialData.assets?.[0]?.url ||
+                normalizedAssets.find((a) => resolveAtomicAssetResourceType(a) === MediaResourceType.IMAGE)?.url;
 
             if (videoUrl) {
                 setMediaUrl(videoUrl);
@@ -169,6 +225,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
     }, [isOpen, initialData]);
 
     const handleSave = () => {
+        const filmAssets = assets.map(toFilmShotAssetResource);
         const data: Partial<FilmShot> = {
             duration,
             description,
@@ -178,14 +235,12 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 product: genProduct,
                 modelId: selectedPlatform,
                 status: initialData?.generation?.status || 'PENDING',
-                prompt: {
-                    ...initialData?.generation?.prompt,
-                    base: visualPrompt
-                },
-                assets: assets,
+                prompt: visualPrompt,
+                base: visualPrompt,
+                assets: filmAssets,
                 video: initialData?.generation?.video
-            } as any,
-            assets: initialData?.assets || []
+            } as FilmShot['generation'],
+            assets: filmAssets
         };
 
         onSave(data);
@@ -209,21 +264,27 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
     };
 
     const addAsset = (kind: MediaResourceType, role?: string) => {
-        const now = Date.now();
-        const newAsset: AssetMediaResource = {
-            id: generateUUID(),
-            uuid: generateUUID(),
+        const scene =
+            role === 'FIRST_FRAME'
+                ? MediaScene.FIRST_FRAME
+                : role === 'END_FRAME'
+                ? MediaScene.END_FRAME
+                : MediaScene.REFERENCE;
+        const newAsset: AssetAtomicMediaResource = buildAtomicAssetResource({
+            assetId: generateUUID(),
             type: kind,
             url: '',
             name: `${kind.toLowerCase()}-${assets.length + 1}`,
-            scene: MediaScene.REFERENCE,
-            createdAt: now,
-            updatedAt: now
-        } as AssetMediaResource;
+            scene,
+            metadata: {
+                origin: 'manual',
+                source: 'film-shot-modal-add-slot'
+            }
+        });
         setAssets([...assets, newAsset]);
     };
 
-    const updateAsset = (index: number, updates: Partial<AssetMediaResource>) => {
+    const updateAsset = (index: number, updates: Partial<AssetAtomicMediaResource>) => {
         setAssets(prev => prev.map((asset, i) => 
             i === index ? { ...asset, ...updates, updatedAt: Date.now() } : asset
         ));
@@ -250,13 +311,14 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
     const handleAssetSelected = (selectedAssets: Asset[]) => {
         if (selectedAssets.length > 0 && assetModalIndex !== null) {
             const asset = selectedAssets[0];
+            const assetWithLocator = asset as Asset & { remoteUrl?: string; url?: string; name?: string };
             const resourceType: MediaResourceType = 
                 asset.type === 'video' ? MediaResourceType.VIDEO : 
                 asset.type === 'audio' || asset.type === 'music' || asset.type === 'voice' ? MediaResourceType.AUDIO : MediaResourceType.IMAGE;
             
             updateAsset(assetModalIndex, {
-                url: asset.remoteUrl || asset.path,
-                name: asset.name,
+                url: assetWithLocator.remoteUrl || assetWithLocator.url || asset.path,
+                name: assetWithLocator.name,
                 type: resourceType
             });
         }
@@ -329,7 +391,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
         }
     };
 
-    const renderAssetSlot = (asset: AssetMediaResource, index: number) => {
+    const renderAssetSlot = (asset: AssetAtomicMediaResource, index: number) => {
         const Icon = getAssetIcon(asset.type as MediaResourceType);
         
         const getTypeColor = () => {
@@ -555,7 +617,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                             {(() => {
                                 const startFrame = assets.find(a => a.scene === MediaScene.FIRST_FRAME);
                                 const endFrame = assets.find(a => a.scene === MediaScene.END_FRAME);
-                                const displayAssets: AssetMediaResource[] = [];
+                                const displayAssets: AssetAtomicMediaResource[] = [];
                                 if (startFrame) displayAssets.push(startFrame);
                                 if (endFrame) displayAssets.push(endFrame);
                                 return displayAssets.map((asset) => renderAssetSlot(asset, assets.indexOf(asset)));
@@ -704,7 +766,12 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                     <div className="relative">
                                         <select
                                             value={genProduct}
-                                            onChange={(e) => handleProductChange(e.target.value as any)}
+                                            onChange={(e) => {
+                                                const nextProduct = e.target.value;
+                                                if (isGenerationProduct(nextProduct)) {
+                                                    handleProductChange(nextProduct);
+                                                }
+                                            }}
                                             className={`
                                                 w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border transition-all text-xs font-medium 
                                                 bg-[#18181b] border-[#333] hover:border-[#444] hover:bg-[#202023] text-gray-300

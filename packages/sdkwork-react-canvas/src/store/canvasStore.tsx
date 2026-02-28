@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { produceWithPatches, applyPatches, enablePatches, Patch } from 'immer';
-import { CanvasBoard, CanvasElement, Viewport, SnapLine, CanvasNodeData } from '../entities/canvas.entity';
+import { CanvasBoard, CanvasElement, Viewport, SnapLine, CanvasNodeData } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { canvasService } from '../services/canvasService';
 

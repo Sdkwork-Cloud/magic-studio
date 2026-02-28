@@ -5,6 +5,7 @@ export interface Asset {
   id: string;
   path: string;
   url?: string;
+  remoteUrl?: string;
   type?: string;
 }
 

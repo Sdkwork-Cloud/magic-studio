@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Mic, Bot, Workflow, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 
-import { ChatMode } from '../entities/chat.entity';
+import { ChatMode } from '../entities';
 
 interface ChatInputProps {
   onSend: (text: string, mode: ChatMode, model: string) => void;

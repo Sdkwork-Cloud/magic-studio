@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { i18nService } from './I18nService';
-import { packageI18nRegistry } from './registryInstance';
 
 export { packageI18nRegistry } from './registryInstance';
 export { registerPackageI18n, getPackageI18nConfig } from './registryInstance';

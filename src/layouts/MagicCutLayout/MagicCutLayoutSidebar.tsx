@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export const MagicCutLayoutSidebar: React.FC<SidebarProps> = ({ onSelectTab, activeTab }) => {
-    const { t } = useTranslation();
+    const { t: _t } = useTranslation();
 
     const TABS = [
         { id: 'video', icon: Film, label: 'Video' },

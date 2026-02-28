@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChatMessage } from '../entities/chat.entity';
+import { ChatMessage } from '../entities';
 import { Copy, ArrowLeftToLine, RefreshCw, ThumbsUp } from 'lucide-react';
 import { platform } from '@sdkwork/react-core';
 

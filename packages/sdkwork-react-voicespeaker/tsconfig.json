@@ -14,7 +14,16 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
+      "@sdkwork/react-audio": ["../sdkwork-react-audio/src/index.ts"],
+      "@sdkwork/react-image": ["../sdkwork-react-image/src/index.ts"],
+      "@sdkwork/react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/react-settings": ["../sdkwork-react-settings/src/index.ts"],
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

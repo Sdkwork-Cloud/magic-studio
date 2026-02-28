@@ -1,6 +1,6 @@
 
 import { LocalStorageService } from '@sdkwork/react-core';
-import { ImageTask } from '../entities/image.entity';
+import { ImageTask } from '../entities';
 import { STORAGE_KEY_HISTORY } from '../constants';
 
 class ImageHistoryService extends LocalStorageService<ImageTask> {

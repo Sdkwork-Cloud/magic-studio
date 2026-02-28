@@ -1,12 +1,11 @@
 
 import { useRouter } from '@sdkwork/react-core'
-import React, { useEffect, Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo } from 'react';
 import { AppProvider } from './AppProvider';
 ;
 import { bootstrap } from './bootstrap';
 import { APP_ROUTES } from '../router/registry';
-import HomePage from '../pages/HomePage';
-import { Loader2 } from 'lucide-react';
+import { scheduleRoutePreload } from '../router/routePreload';
 
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { GenerationLayout } from '../layouts/GenerationLayout/GenerationLayout';
@@ -15,13 +14,6 @@ import { VibeLayout } from '../layouts/VibeLayout/VibeLayout';
 import { MagicCutLayout } from '../layouts/MagicCutLayout/MagicCutLayout';
 import { NotesLayout } from '../layouts/NotesLayout/NotesLayout';
 import { BlankLayout } from '../layouts/BlankLayout/BlankLayout';
-
-const LoadingFallback = () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
-        <Loader2 size={24} className="animate-spin text-blue-500" />
-        <span className="text-xs font-medium">Loading Module...</span>
-    </div>
-);
 
 const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.ReactNode; leftPane?: React.ComponentType<any> }>> = {
     main: MainLayout,
@@ -32,6 +24,14 @@ const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.Re
     notes: NotesLayout,
     none: BlankLayout,
 };
+
+const RouteLoadingFallback: React.FC = () => (
+  <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
+    <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+    <span className="text-xs font-medium">Loading Route...</span>
+  </div>
+);
+const HomePage = React.lazy(() => import('../pages/HomePage'));
 
 const matchRoute = (routePath: string, currentPath: string): { matched: boolean; params: Record<string, string> } => {
     const routeParts = routePath.split('/');
@@ -64,6 +64,9 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
       console.log('[AppContent] currentPath changed:', currentPath);
   }, [currentPath]);
+  useEffect(() => {
+      return scheduleRoutePreload(currentPath);
+  }, [currentPath]);
 
   const { route, params } = useMemo(() => {
       for (const r of APP_ROUTES) {
@@ -78,7 +81,11 @@ const AppContent: React.FC = () => {
   }, [currentPath]);
 
   if (!route) {
-      return <HomePage />;
+      return (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <HomePage />
+        </Suspense>
+      );
   }
 
   const { component: Component, layout, leftPane: LeftPaneComponent, provider: RouteProvider } = route;
@@ -87,21 +94,21 @@ const AppContent: React.FC = () => {
 
   const LayoutComponent = LAYOUT_COMPONENTS[layout] || BlankLayout;
 
-  const contentWithComponent = (
-      <Component key={`${currentPath}-component`} {...params} />
-  );
-
   const contentWithLayout = (
+    <Suspense fallback={<RouteLoadingFallback />}>
       <LayoutComponent key={`${currentPath}-layout`} leftPane={LeftPaneComponent || undefined}>
-          {contentWithComponent}
+        <Component key={`${currentPath}-component`} {...params} />
       </LayoutComponent>
+    </Suspense>
   );
 
   if (RouteProvider) {
       return (
-          <RouteProvider key={`${currentPath}-provider`}>
-              {contentWithLayout}
-          </RouteProvider>
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <RouteProvider key={`${currentPath}-provider`}>
+                {contentWithLayout}
+            </RouteProvider>
+          </Suspense>
       );
   }
 

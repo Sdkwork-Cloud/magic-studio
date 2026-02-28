@@ -9,10 +9,9 @@ import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents, SkimPayload } from '../../events';
 
 interface TimelinePreviewAxisProps {
-    duration: number;
     pixelsPerSecond: number;
     containerWidth: number;
-    scrollContainerRef: React.RefObject<HTMLElement>;
+    scrollContainerRef: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -24,10 +23,9 @@ interface TimelinePreviewAxisProps {
  * - Uses direct store access for 'scrollLeft' to prevent jitter during scroll.
  */
 export const TimelinePreviewAxis: React.FC<TimelinePreviewAxisProps> = ({
-    duration,
     pixelsPerSecond,
     containerWidth,
-    scrollContainerRef
+    scrollContainerRef: _scrollContainerRef
 }) => {
     const { store } = useMagicCutStore(); // Access vanilla store for direct reading
     const bus = useMagicCutBus();

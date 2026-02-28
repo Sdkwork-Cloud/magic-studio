@@ -17,8 +17,14 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
+      "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
+      "@sdkwork/react-chat": ["../sdkwork-react-chat/src/index.ts"],
       "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
-      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"]
+      "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
+      "@sdkwork/react-fs": ["../sdkwork-react-fs/src/index.ts"],
+      "@sdkwork/react-image": ["../sdkwork-react-image/src/index.ts"],
+      "@sdkwork/react-magiccut": ["../sdkwork-react-magiccut/src/index.ts"],
+      "@sdkwork/react-video": ["../sdkwork-react-video/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

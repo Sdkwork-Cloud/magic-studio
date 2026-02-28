@@ -4,7 +4,7 @@ import { useChatStore } from '../store/chatStore';
 import { ChatSidebar } from '../components/ChatSidebar';
 import { ChatInput } from '../components/ChatInput';
 import { MessageBubble } from '../components/MessageBubble';
-import { ChatMode } from '../entities/chat.entity';
+import { ChatMode } from '../entities';
 import { PanelLeft, Sparkles, ArrowLeft } from 'lucide-react';
 import { useRouter } from '@sdkwork/react-core';
 

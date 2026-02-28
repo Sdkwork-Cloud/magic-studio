@@ -2,9 +2,6 @@
 import { GenerationChatWindow } from '@sdkwork/react-assets'
 import React from 'react';
 import { VideoStoreProvider, useVideoStore } from '../store/videoStore';
-;
-;
-;
 import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 
 const VideoChatContent: React.FC = () => {
@@ -30,24 +27,19 @@ const VideoChatContent: React.FC = () => {
         }
     };
 
-    const removeStartFrame = () => {
-        setConfig({ image: undefined, mode: 'text' });
-    };
-
     return (
         <GenerationChatWindow 
             mode="video"
             title="Video Studio Chat"
             onNavigateBack={() => navigate(ROUTES.VIDEO)}
-            history={history}
+            history={history as any}
             isGenerating={isGenerating}
             onDelete={deleteTask}
-            onReuse={(task) => setConfig(task.config)}
-            config={config}
-            setConfig={setConfig}
+            onReuse={(task) => setConfig(task.config as any)}
+            config={config as any}
+            setConfig={setConfig as any}
             onGenerate={generate}
             onUpload={handleUpload}
-            onRemoveStartFrame={removeStartFrame}
         />
     );
 };

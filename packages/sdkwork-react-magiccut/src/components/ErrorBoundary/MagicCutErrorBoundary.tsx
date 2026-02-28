@@ -1,10 +1,10 @@
 
-import { ErrorBoundary, ErrorBoundaryProps, logger } from '@sdkwork/react-commons'
+import { ErrorBoundary, logger } from '@sdkwork/react-commons'
 import React, { ReactNode } from 'react';
-;
-;
 
-export interface MagicCutErrorBoundaryProps extends Omit<ErrorBoundaryProps, 'fallback'> {
+type ErrorBoundaryBaseProps = React.ComponentProps<typeof ErrorBoundary>;
+
+export interface MagicCutErrorBoundaryProps extends Omit<ErrorBoundaryBaseProps, 'fallback' | 'children'> {
     children: ReactNode;
     componentName?: string;
 }

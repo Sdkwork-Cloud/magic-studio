@@ -1,33 +1,72 @@
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useVideoStore } from '../store/videoStore';
 import { VIDEO_DURATIONS, VIDEO_ASPECT_RATIOS, VIDEO_GENERATION_MODES, VIDEO_STYLES, VIDEO_MODELS } from '../constants';
 import { 
-    Film, ChevronDown, Check, Loader2, Sparkles, Zap, ArrowRight, Settings2, Palette
+    Film, ChevronDown, Loader2, Sparkles, Zap, Settings2, Palette
 } from 'lucide-react';
-import { VideoGenerationMode, InputAttachment, ImageUpload } from '@sdkwork/react-commons';
-import { StyleSelector } from '@sdkwork/react-assets';
-import { useTranslation } from '@sdkwork/react-i18n';
+import {
+    StyleSelector,
+    PromptTextInput,
+    ChooseAssetModal,
+    ChooseAsset,
+    assetBusinessFacade,
+    readWorkspaceScope,
+    useAssetUrl,
+    resolveAssetUrlByAssetIdFirst,
+    type InputAttachment
+} from '@sdkwork/react-assets';
 import { VideoModelSelector } from './VideoModelSelector';
-import { PromptTextInput, ChooseAssetModal, assetService } from '@sdkwork/react-assets';
-import { AssetType, Asset } from '@sdkwork/react-commons';
-import { SettingSelect } from '@sdkwork/react-settings';
-import { ChooseAsset } from '@sdkwork/react-assets';
+import { Asset } from '@sdkwork/react-commons';
 import { genAIService } from '@sdkwork/react-core';
+
+const resolveVideoScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const isRenderableUrl = (value: string): boolean => {
+    return (
+        value.startsWith('http://') ||
+        value.startsWith('https://') ||
+        value.startsWith('data:') ||
+        value.startsWith('blob:') ||
+        value.startsWith('asset:')
+    );
+};
+
+const toRenderableAttachmentUrl = (
+    rawSource: string | undefined,
+    resolvedSource: string | null
+): string | undefined => {
+    if (resolvedSource) {
+        return resolvedSource;
+    }
+    if (rawSource && isRenderableUrl(rawSource)) {
+        return rawSource;
+    }
+    return undefined;
+};
 
 export const VideoLeftGeneratorPanel: React.FC = () => {
     const { config, setConfig, setMode, generate, isGenerating } = useVideoStore();
-    const { t } = useTranslation();
     const [showAdvanced, setShowAdvanced] = useState(false);
     
     const [showStyleMenu, setShowStyleMenu] = useState(false);
     
     const [showAssetModal, setShowAssetModal] = useState(false);
     const [activeUploadField, setActiveUploadField] = useState<keyof typeof config | null>(null);
+    const [resolvedReferenceImages, setResolvedReferenceImages] = useState<string[]>([]);
 
-    const clearField = (field: keyof typeof config) => {
-        setConfig({ [field]: undefined });
-    };
+    const { url: startFrameUrl } = useAssetUrl(config.image || null, {
+        resolver: resolveAssetUrlByAssetIdFirst
+    });
+    const { url: endFrameUrl } = useAssetUrl(config.lastFrame || null, {
+        resolver: resolveAssetUrlByAssetIdFirst
+    });
 
     const handleAssetSelect = (field: keyof typeof config) => (asset: Asset | null) => {
         if (asset) {
@@ -40,21 +79,69 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
     const activeModel = VIDEO_MODELS.find(m => m.id === config.model) || VIDEO_MODELS[0];
     const maxAssets = activeModel.maxAssetsCount || 5;
 
+    useEffect(() => {
+        const sources = config.referenceImages || [];
+        if (sources.length === 0) {
+            setResolvedReferenceImages([]);
+            return;
+        }
+
+        let cancelled = false;
+        const resolveSources = async () => {
+            const resolved = await Promise.all(
+                sources.map(async (source) => {
+                    const url = await resolveAssetUrlByAssetIdFirst(source);
+                    if (url) {
+                        return url;
+                    }
+                    return isRenderableUrl(source) ? source : '';
+                })
+            );
+            if (!cancelled) {
+                setResolvedReferenceImages(resolved);
+            }
+        };
+
+        void resolveSources();
+        return () => {
+            cancelled = true;
+        };
+    }, [config.referenceImages]);
+
     const attachments: InputAttachment[] = useMemo(() => {
         const list: InputAttachment[] = [];
+
         if (config.image) {
-            list.push({ id: 'start_frame', name: 'Start Frame', type: 'image', url: config.image });
-        }
-        if (config.lastFrame) {
-            list.push({ id: 'end_frame', name: 'End Frame', type: 'image', url: config.lastFrame });
-        }
-        if (config.referenceImages && config.referenceImages.length > 0) {
-            config.referenceImages.forEach((img, i) => {
-                 list.push({ id: `ref_${i}`, name: `Ref ${i+1}`, type: 'image', url: img });
+            list.push({
+                id: 'start_frame',
+                name: 'Start Frame',
+                type: 'image',
+                url: toRenderableAttachmentUrl(config.image, startFrameUrl)
             });
         }
+
+        if (config.lastFrame) {
+            list.push({
+                id: 'end_frame',
+                name: 'End Frame',
+                type: 'image',
+                url: toRenderableAttachmentUrl(config.lastFrame, endFrameUrl)
+            });
+        }
+
+        if (config.referenceImages && config.referenceImages.length > 0) {
+            config.referenceImages.forEach((img, i) => {
+                list.push({
+                    id: `ref_${i}`,
+                    name: `Ref ${i + 1}`,
+                    type: 'image',
+                    url: toRenderableAttachmentUrl(img, resolvedReferenceImages[i] || null)
+                });
+            });
+        }
+
         return list;
-    }, [config.image, config.lastFrame, config.referenceImages]);
+    }, [config.image, config.lastFrame, config.referenceImages, endFrameUrl, resolvedReferenceImages, startFrameUrl]);
 
     const handleEnhance = async (text: string) => {
         return await genAIService.enhancePrompt(text);
@@ -120,6 +207,7 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                                     value={config.image || null}
                                     onChange={handleAssetSelect('image')}
                                     accepts={['image']}
+                                    domain="video-studio"
                                     aspectRatio="aspect-video"
                                     className="bg-[#121214] border-[#27272a] hover:border-pink-500/30 h-36"
                                     label="Start Image"
@@ -131,6 +219,7 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                                     value={config.lastFrame || null}
                                     onChange={handleAssetSelect('lastFrame')}
                                     accepts={['image']}
+                                    domain="video-studio"
                                     aspectRatio="aspect-video"
                                     className="bg-[#121214] border-[#27272a] hover:border-pink-500/30 h-36"
                                     label="End Image"
@@ -146,6 +235,7 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                                 value={config.image || null}
                                 onChange={handleAssetSelect('image')}
                                 accepts={['image']}
+                                domain="video-studio"
                                 aspectRatio="aspect-video"
                                 className="bg-[#121214] border-[#27272a] hover:border-pink-500/30 h-48"
                                 label="Upload Subject"
@@ -170,9 +260,15 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
-                                {(config.referenceImages || []).map((img, i) => (
+                                {(config.referenceImages || []).map((_, i) => (
                                     <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[#27272a] group bg-[#121214]">
-                                        <img src={img} className="w-full h-full object-cover" />
+                                        {resolvedReferenceImages[i] ? (
+                                            <img src={resolvedReferenceImages[i]} className="w-full h-full object-cover" alt={`Reference ${i + 1}`} />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">
+                                                Resolving...
+                                            </div>
+                                        )}
                                         <button 
                                             onClick={() => {
                                                 const newRefs = config.referenceImages?.filter((_, idx) => idx !== i);
@@ -205,8 +301,17 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                                                     try {
                                                         const newRefs: string[] = [];
                                                         for (const f of files) {
-                                                            const asset = await assetService.importAsset(f.data, f.name, 'image', 'upload');
-                                                            newRefs.push(asset.path);
+                                                            const result = await assetBusinessFacade.importVideoStudioAsset({
+                                                                scope: resolveVideoScope(),
+                                                                type: 'image',
+                                                                name: f.name,
+                                                                data: f.data,
+                                                                metadata: {
+                                                                    origin: 'upload',
+                                                                    source: 'video-reference-upload'
+                                                                }
+                                                            });
+                                                            newRefs.push(result.primaryLocator.uri);
                                                         }
                                                         const existing = config.referenceImages || [];
                                                         const combined = [...existing, ...newRefs];
@@ -358,7 +463,9 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                 isOpen={showAssetModal}
                 onClose={() => setShowAssetModal(false)}
                 onConfirm={(assets) => {
-                    const paths = assets.map(a => a.path);
+                    const paths = assets
+                        .map((item) => item.path || item.id)
+                        .filter((value): value is string => !!value);
                     if (activeUploadField === 'referenceImages') {
                         const existing = config.referenceImages || [];
                         const combined = [...existing, ...paths];
@@ -368,6 +475,7 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
                     setActiveUploadField(null);
                 }}
                 accepts={['image']}
+                domain="video-studio"
                 title="Select Reference Images"
                 multiple
             />

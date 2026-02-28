@@ -1,16 +1,30 @@
 
 import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState, useRef, useEffect } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
-    ChevronDown, Bell, User, LogOut, Plus, Check, Box,
+    Bell, User, LogOut, Plus,
     CreditCard, Settings, LayoutGrid, Home, Users, Tv, Wrench, Puzzle, Briefcase, ClipboardList
 } from 'lucide-react';
 import { useAuthStore } from '@sdkwork/react-auth';
-import { useWorkspaceStore, WorkspaceProjectSelector } from '@sdkwork/react-workspace';
+import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 import { useNotificationStore, NotificationCenter } from '@sdkwork/react-notifications';
 import { PricingModal } from '@sdkwork/react-vip';
 
-const NAV_ITEMS = [
+interface NavItem {
+    id: string;
+    label: string;
+    icon: LucideIcon;
+    route: string;
+}
+
+interface MenuLinkProps {
+    icon: LucideIcon;
+    label: string;
+    onClick: () => void;
+}
+
+const NAV_ITEMS: NavItem[] = [
     { id: 'home', label: '首页', icon: Home, route: ROUTES.PORTAL_VIDEO },
     { id: 'community', label: '社区', icon: Users, route: ROUTES.PORTAL_COMMUNITY },
     { id: 'theater', label: '剧场', icon: Tv, route: ROUTES.PORTAL_THEATER },
@@ -43,6 +57,17 @@ export const PortalHeader: React.FC = () => {
         const item = NAV_ITEMS.find(i => i.route === currentPath);
         return item ? item.id : 'home';
     }, [currentPath]);
+
+    const userProfile = React.useMemo(() => {
+        if (!user) {
+            return null;
+        }
+        return {
+            displayName: user.username || user.name || 'User',
+            email: user.email || '',
+            avatar: user.avatarUrl || user.avatar
+        };
+    }, [user]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -135,18 +160,18 @@ export const PortalHeader: React.FC = () => {
                             onClick={() => setShowUserMenu(!showUserMenu)}
                             className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg ring-2 ring-white/10 hover:ring-white/30 transition-all overflow-hidden"
                         >
-                            {user.avatarUrl ? (
-                                <img src={user.avatarUrl} className="w-full h-full object-cover" alt={user.username} />
+                            {userProfile?.avatar ? (
+                                <img src={userProfile.avatar} className="w-full h-full object-cover" alt={userProfile.displayName} />
                             ) : (
-                                user.username[0].toUpperCase()
+                                (userProfile?.displayName || 'U')[0].toUpperCase()
                             )}
                         </button>
 
                         {showUserMenu && (
                             <div className="absolute top-full right-0 mt-3 w-60 bg-[#1e1e20] border border-white/10 rounded-2xl shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/50">
                                 <div className="px-4 py-4 border-b border-white/5 bg-[#222225]">
-                                    <div className="text-sm font-bold text-white">{user.username}</div>
-                                    <div className="text-[10px] text-gray-500 truncate mt-0.5">{user.email}</div>
+                                    <div className="text-sm font-bold text-white">{userProfile?.displayName}</div>
+                                    <div className="text-[10px] text-gray-500 truncate mt-0.5">{userProfile?.email}</div>
                                 </div>
                                 <div className="p-1.5 space-y-0.5">
                                     <MenuLink icon={User} label="My Profile" onClick={() => navigate(ROUTES.PROFILE)} />
@@ -183,7 +208,7 @@ export const PortalHeader: React.FC = () => {
     );
 };
 
-const MenuLink = ({ icon: Icon, label, onClick }: any) => (
+const MenuLink: React.FC<MenuLinkProps> = ({ icon: Icon, label, onClick }) => (
     <button 
         onClick={onClick}
         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-gray-300 hover:bg-[#2a2a2d] hover:text-white rounded-lg transition-colors"

@@ -3,10 +3,10 @@ import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState } from 'react';
 import { 
     Home, Compass, FolderOpen, Video, Image as ImageIcon, 
-    Bot, Music, Clapperboard, 
+    Music, 
     Sparkles, Crown, Volume2, Mic, ChevronRight,
     Layout, BookOpen, Scissors, Settings, LogOut,
-    CreditCard, Zap, Smile, Wand2, Download
+    Zap, Smile, Wand2, Download
 } from 'lucide-react';
 
 import { useTranslation } from '@sdkwork/react-i18n';
@@ -20,7 +20,21 @@ export const PortalSidebar: React.FC = () => {
     const { t } = useTranslation();
     const [showPricing, setShowPricing] = useState(false);
 
-    const NAV_GROUPS = [
+    interface NavItem {
+        id: string;
+        label: string;
+        icon: typeof Home;
+        route: string;
+        badge?: string;
+        accent?: string;
+    }
+
+    interface NavGroup {
+        title: string | null;
+        items: NavItem[];
+    }
+
+    const NAV_GROUPS: NavGroup[] = [
         {
             title: null,
             items: [

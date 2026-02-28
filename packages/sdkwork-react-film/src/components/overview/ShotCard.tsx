@@ -2,6 +2,11 @@
 import { FilmShot, useAssetUrl } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { Clapperboard, Video, Image as ImageIcon, Sparkles, Play, Mic, AlertCircle, Trash2 } from 'lucide-react';
+import {
+    hasFilmAssetReference,
+    resolveFilmAssetUrlByAssetIdFirst,
+    toFilmUseAssetSource
+} from '../../utils/filmAssetUrlResolver';
 
 export interface ShotCardProps {
     shot: FilmShot;
@@ -12,15 +17,21 @@ export interface ShotCardProps {
 
 export const ShotCard: React.FC<ShotCardProps> = ({ shot, onClick, onGenerate, onDelete }) => {
     const [showDelete, setShowDelete] = useState(false);
-    const hasVideo = !!shot.generation?.video?.url;
-    const hasImage = !!(shot.assets && shot.assets.length > 0);
+    const hasVideo = hasFilmAssetReference(shot.generation?.video || null);
+    const primaryImageAsset =
+        shot.assets?.find((asset) => hasFilmAssetReference(asset)) ?? null;
+    const hasImage = !!primaryImageAsset;
     const hasAudio = !!(shot.dialogue?.items && shot.dialogue.items.length > 0); 
     const isGenerating = shot.generation?.status === 'GENERATING';
     const isError = shot.generation?.status === 'FAILED';
     
-    const rawSource = hasVideo ? shot.generation.video?.url : (hasImage ? shot.assets?.[0]?.url : null);
-    
-    const { url: displayUrl } = useAssetUrl(rawSource);
+    const previewSource = hasVideo
+        ? shot.generation?.video || null
+        : primaryImageAsset;
+
+    const { url: displayUrl } = useAssetUrl(toFilmUseAssetSource(previewSource), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();

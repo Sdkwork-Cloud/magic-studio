@@ -10,7 +10,7 @@ import { ImageStoreProvider, useImageStore } from '../store/imageStore';
 import { GenerationConfig } from '../services/imageService';
 import { ImageGridEditorModal } from './ImageGridEditorModal';
 import { ImageCanvasEditorModal } from './ImageCanvasEditorModal';
-import { assetService } from '@sdkwork/react-assets';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 import { MediaType } from '@sdkwork/react-commons';
 
 export interface AIImageGeneratorModalProps {
@@ -24,6 +24,38 @@ export interface AIImageGeneratorModalProps {
 const editors: EditorComponents = {
     GridEditor: ImageGridEditorModal,
     CanvasEditor: ImageCanvasEditorModal
+};
+
+const resolveScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+    return undefined;
 };
 
 const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPrompt: string }> = ({ 
@@ -52,8 +84,69 @@ const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPr
     };
 
     const handleSaveToAssets = async (url: string, type: MediaType) => {
-        const assetType = type === 'video' ? 'video' : type === 'audio' || type === 'music' ? 'audio' : 'image';
-        await assetService.saveGeneratedAsset(url, assetType, {}, `gen_${Date.now()}`, 'ai');
+        if (!url || url.startsWith('assets://')) {
+            return;
+        }
+        const inlineData = await tryExtractInlineData(url);
+        const scope = resolveScope();
+        const ts = Date.now();
+
+        if (type === 'video') {
+            await assetBusinessFacade.importVideoStudioAsset({
+                scope,
+                type: 'video',
+                name: `gen_video_${ts}.mp4`,
+                data: inlineData,
+                remoteUrl: inlineData ? undefined : url,
+                metadata: { origin: 'ai', source: 'image-modal-save' }
+            });
+            return;
+        }
+
+        if (type === 'audio') {
+            await assetBusinessFacade.importAudioStudioAsset({
+                scope,
+                type: 'audio',
+                name: `gen_audio_${ts}.wav`,
+                data: inlineData,
+                remoteUrl: inlineData ? undefined : url,
+                metadata: { origin: 'ai', source: 'image-modal-save' }
+            });
+            return;
+        }
+
+        if (type === 'music') {
+            await assetBusinessFacade.importMusicAsset({
+                scope,
+                type: 'music',
+                name: `gen_music_${ts}.mp3`,
+                data: inlineData,
+                remoteUrl: inlineData ? undefined : url,
+                metadata: { origin: 'ai', source: 'image-modal-save' }
+            });
+            return;
+        }
+
+        if (type === 'voice') {
+            await assetBusinessFacade.importVoiceSpeakerAsset({
+                scope,
+                type: 'voice',
+                name: `gen_voice_${ts}.wav`,
+                data: inlineData,
+                remoteUrl: inlineData ? undefined : url,
+                metadata: { origin: 'ai', source: 'image-modal-save' }
+            });
+            return;
+        }
+
+        await assetBusinessFacade.importImageStudioAsset({
+            scope,
+            type: 'image',
+            name: `gen_image_${ts}.png`,
+            data: inlineData,
+            remoteUrl: inlineData ? undefined : url,
+            metadata: { origin: 'ai', source: 'image-modal-save' }
+        });
     };
 
     return (

@@ -19,7 +19,9 @@ export default defineConfig({
     dts({
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts'],
-      rollupTypes: true,
+      rollupTypes: false,
+      entryRoot: 'src',
+      outDir: 'dist',
     }),
   ],
 });

@@ -1,5 +1,5 @@
 
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 import React, { useState } from 'react';
 import { 
     MoreHorizontal, Loader2

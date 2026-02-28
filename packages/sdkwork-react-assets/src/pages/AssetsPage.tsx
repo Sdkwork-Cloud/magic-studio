@@ -1,27 +1,65 @@
-
-import { Asset } from '../entities/asset.entity'
-import { AssetGrid } from '../components/AssetGrid'
+import type { Asset } from '../entities';
+import { AssetGrid } from '../components/AssetGrid';
 import React, { useState } from 'react';
 import { useAssetStore } from '../store/assetStore';
-import { Search, Upload } from 'lucide-react';
+import { Search, Upload, X, File as FileIcon, Film, Image as ImageIcon, Volume2 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { platform } from '@sdkwork/react-core';
+import { useAssetUrl } from '../hooks/useAssetUrl';
+import { resolveAssetUrlByAssetIdFirst } from '../asset-center';
 
-// Stub FilePreviewModal - to be replaced with actual sdkwork-react-drive import
-const FilePreviewModal: React.FC<{ item: any; onClose: () => void }> = ({ item, onClose }) => {
+interface AssetPreviewModalProps {
+    asset: Asset;
+    onClose: () => void;
+}
+
+const AssetPreviewModal: React.FC<AssetPreviewModalProps> = ({ asset, onClose }) => {
+    const { url, loading } = useAssetUrl(asset, { resolver: resolveAssetUrlByAssetIdFirst });
+    const previewUrl = url || asset.path;
+    const hasRenderableUrl = !!previewUrl && !previewUrl.startsWith('assets://');
+    const isImage = asset.type === 'image' || /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(asset.path);
+    const isVideo = asset.type === 'video' || /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(asset.path);
+    const isAudio = ['audio', 'music', 'voice', 'sfx'].includes(asset.type);
+
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8" onClick={onClose}>
             <div className="bg-[#1a1a1a] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6 border-b border-[#333] flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white">{item?.name || 'Preview'}</h2>
+                    <h2 className="text-xl font-bold text-white">{asset.name}</h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-white">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
+                        <X size={24} />
                     </button>
                 </div>
                 <div className="p-8 flex items-center justify-center min-h-[400px]">
-                    <p className="text-gray-400">Preview not implemented</p>
+                    {loading && (
+                        <p className="text-gray-400">Loading preview...</p>
+                    )}
+                    {!loading && isImage && hasRenderableUrl && (
+                        <img src={previewUrl} alt={asset.name} className="max-h-[70vh] max-w-full object-contain rounded-lg" />
+                    )}
+                    {!loading && isVideo && hasRenderableUrl && (
+                        <video src={previewUrl} className="max-h-[70vh] max-w-full rounded-lg" controls />
+                    )}
+                    {!loading && isAudio && hasRenderableUrl && (
+                        <div className="w-full max-w-xl flex flex-col items-center gap-6">
+                            <div className="w-20 h-20 rounded-full bg-[#252526] flex items-center justify-center border border-[#333]">
+                                <Volume2 size={30} className="text-emerald-400" />
+                            </div>
+                            <audio src={previewUrl} controls className="w-full" />
+                        </div>
+                    )}
+                    {!loading && !hasRenderableUrl && (
+                        <div className="text-gray-400 text-sm">Preview URL unavailable</div>
+                    )}
+                    {!loading && hasRenderableUrl && !isImage && !isVideo && !isAudio && (
+                        <div className="w-full max-w-xl rounded-xl border border-[#333] bg-[#111] p-6">
+                            <div className="flex items-center gap-3 text-gray-200">
+                                {asset.type === 'video' ? <Film size={20} /> : asset.type === 'image' ? <ImageIcon size={20} /> : <FileIcon size={20} />}
+                                <span className="font-medium">{asset.name}</span>
+                            </div>
+                            <div className="mt-3 text-xs text-gray-400 break-all">{previewUrl}</div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -33,22 +71,8 @@ const AssetsPage: React.FC = () => {
     const { t } = useTranslation();
     const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
 
-    // Map Asset to DriveItem format for the generic viewer (code reuse from Drive module!)
     const handlePreview = (asset: Asset) => {
-        // Adapt Asset entity to DriveItem entity required by FilePreviewModal
-        // This leverages the unified architecture by reusing the Drive Viewer components
-        const driveItem = {
-            id: asset.path || asset.id,
-            parentId: null,
-            name: asset.name,
-            type: 'file' as const,
-            size: asset.size,
-            updatedAt: asset.updatedAt,
-            createdAt: asset.createdAt,
-            mimeType: undefined // Viewer will auto-detect from extension
-        };
-        // @ts-ignore - Close enough for preview purposes
-        setPreviewAsset(driveItem);
+        setPreviewAsset(asset);
     };
 
     const handleDelete = async (asset: Asset) => {
@@ -90,10 +114,9 @@ const AssetsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Preview Modal Reuse */}
+            {/* Preview Modal */}
             {previewAsset && (
-                // @ts-ignore
-                <FilePreviewModal item={previewAsset} onClose={() => setPreviewAsset(null)} />
+                <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
             )}
         </div>
     );

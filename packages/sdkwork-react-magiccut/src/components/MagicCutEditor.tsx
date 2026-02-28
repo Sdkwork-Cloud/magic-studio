@@ -81,9 +81,9 @@ const MagicCutEditorLayout: React.FC<{
     const {
         project, saveAsTemplate, play, pause, seek,
         undo, redo,
-        splitClip, deleteSelected, trimStart, trimEnd, copyClip, pasteClip, addClip,
+        splitClip, deleteSelected, trimStart, trimEnd, copySelectedClips, pasteClips, addClip,
         toggleSnapping, toggleSkimming, addMarker,
-        selectedClipId, selectedTrackId, totalDuration, store,
+        selectedTrackId, totalDuration, store,
         useTransientState
     } = useMagicCutStore();
     const bus = useMagicCutBus();
@@ -128,14 +128,14 @@ const MagicCutEditorLayout: React.FC<{
     useMagicCutEvent(MagicCutEvents.CLIP_TRIM_END, () => trimEnd(), [trimEnd]);
 
     useMagicCutEvent(MagicCutEvents.CLIP_COPY, () => {
-        if (selectedClipId) copyClip(selectedClipId);
-    }, [selectedClipId, copyClip]);
+        copySelectedClips();
+    }, [copySelectedClips]);
 
     useMagicCutEvent(MagicCutEvents.CLIP_PASTE, () => {
         // Access fresh time from store to avoid re-binding listener on every frame
         const currentTime = store.getState().currentTime;
-        pasteClip(selectedTrackId, currentTime);
-    }, [pasteClip, selectedTrackId, store]);
+        pasteClips(selectedTrackId, currentTime);
+    }, [pasteClips, selectedTrackId, store]);
 
     useMagicCutEvent<TimelineAddClipPayload>(MagicCutEvents.TIMELINE_ADD_CLIP, ({ trackId, resource, start, duration }) => {
         addClip(trackId, resource, start, duration);
@@ -182,7 +182,11 @@ const MagicCutEditorLayout: React.FC<{
         // Delete
         if (e.key === 'Delete' || e.key === 'Backspace') {
             e.preventDefault();
-            bus.emit(MagicCutEvents.CLIP_DELETE);
+            if (e.shiftKey) {
+                deleteSelected('ripple');
+            } else {
+                bus.emit(MagicCutEvents.CLIP_DELETE);
+            }
             return;
         }
 
@@ -203,7 +207,12 @@ const MagicCutEditorLayout: React.FC<{
         // Paste (Ctrl+V)
         if (isCtrlOrCmd && e.key.toLowerCase() === 'v') {
             e.preventDefault();
-            bus.emit(MagicCutEvents.CLIP_PASTE);
+            if (e.shiftKey) {
+                const currentTime = store.getState().currentTime;
+                pasteClips(selectedTrackId, currentTime, 'insert');
+            } else {
+                bus.emit(MagicCutEvents.CLIP_PASTE);
+            }
             return;
         }
 
@@ -289,7 +298,9 @@ const MagicCutEditorLayout: React.FC<{
 
     const handleExportRequest = () => {
         setShowExportModal(true);
-        if (onExport) { }
+        if (onExport) {
+            onExport(project);
+        }
     };
 
     const handleSaveTemplateConfirm = async (metadata: TemplateMetadata) => {

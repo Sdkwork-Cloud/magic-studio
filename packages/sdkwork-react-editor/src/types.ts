@@ -8,10 +8,22 @@ export interface EditorFile {
   isPreview: boolean;
 }
 
+export interface EditorSession {
+  id: string;
+  uuid: string;
+  rootPath: string | null;
+  openFiles: any[];
+  activeFilePath: string | null;
+  expandedPaths: string[];
+  createdAt: string | number;
+  updatedAt: string | number;
+}
+
 export interface GitSyncOptions {
   repository: string;
   branch: string;
   token: string;
+  message?: string;
 }
 
 export interface PublishOptions {

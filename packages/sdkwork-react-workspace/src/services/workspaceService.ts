@@ -26,41 +26,37 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
           const workspacesRoot = pathUtils.join(docRoot, APP_ROOT_DIR, DIR_NAMES.WORKSPACES);
           try { await vfs.createDir(workspacesRoot); } catch {}
 
-          const entries = await vfs.readDir(workspacesRoot);
+          const entries = await vfs.readdir(workspacesRoot);
           let workspaces: StudioWorkspace[] = [];
 
-          for (const entry of entries) {
-              if (entry.isDirectory) {
-                  const configPath = pathUtils.join(entry.path, 'workspace.json');
+          for (const entryPath of entries) {
+              const configPath = pathUtils.join(entryPath, 'workspace.json');
+              try {
+                  const content = await vfs.readFile(configPath);
+                  const wsData = JSON.parse(content);
+                  
+                  // Load Projects Metadata
+                  const projectsDir = pathUtils.join(entryPath, 'projects');
+                  const projects: StudioProject[] = [];
                   try {
-                      const content = await vfs.readFile(configPath);
-                      const wsData = JSON.parse(content);
-                      
-                      // Load Projects Metadata
-                      const projectsDir = pathUtils.join(entry.path, 'projects');
-                      const projects: StudioProject[] = [];
-                      try {
-                          const projEntries = await vfs.readDir(projectsDir);
-                          for (const projEntry of projEntries) {
-                              if (projEntry.isDirectory) {
-                                  const projConfigPath = pathUtils.join(projEntry.path, 'project.json');
-                                  try {
-                                      const projContent = await vfs.readFile(projConfigPath);
-                                      const projData = JSON.parse(projContent);
-                                      projects.push({ ...projData, path: projEntry.path });
-                                  } catch (e) {
-                                      logger.warn('[WorkspaceService] Failed to load project config', projConfigPath, e);
-                                  }
-                              }
+                      const projEntries = await vfs.readdir(projectsDir);
+                      for (const projEntryPath of projEntries) {
+                          const projConfigPath = pathUtils.join(projEntryPath, 'project.json');
+                          try {
+                              const projContent = await vfs.readFile(projConfigPath);
+                              const projData = JSON.parse(projContent);
+                              projects.push({ ...projData, path: projEntryPath });
+                          } catch (e) {
+                              logger.warn('[WorkspaceService] Failed to load project config', projConfigPath, e);
                           }
-                      } catch (e) {
-                          logger.warn('[WorkspaceService] Failed to read projects directory', projectsDir, e);
                       }
-
-                      workspaces.push({ ...wsData, projects, path: entry.path });
                   } catch (e) {
-                      logger.warn('[WorkspaceService] Failed to load workspace', entry.path, e);
+                      logger.warn('[WorkspaceService] Failed to read projects directory', projectsDir, e);
                   }
+
+                  workspaces.push({ ...wsData, projects, path: entryPath });
+              } catch (e) {
+                  logger.warn('[WorkspaceService] Failed to load workspace', entryPath, e);
               }
           }
 
@@ -71,7 +67,11 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
           }
 
           // Sort (Default: CreatedAt Desc)
-          workspaces.sort((a, b) => b.createdAt - a.createdAt);
+          workspaces.sort((a, b) => {
+              const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+              const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+              return bTime - aTime;
+          });
 
           // Pagination
           const totalElements = workspaces.length;

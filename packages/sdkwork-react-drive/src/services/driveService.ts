@@ -2,7 +2,7 @@
 import { IDriveProvider } from './providers/types';
 import { LocalDriveProvider } from './providers/localProvider';
 import { driveMetadataService } from './driveMetadataService';
-import { DriveItem } from '../entities/drive.entity';
+import { DriveItem } from '../entities';
 import { platform } from '@sdkwork/react-core';
 
 class DriveService {

@@ -2,17 +2,30 @@ import { IAssetService } from './IAssetService';
 
 class AssetServiceRegistry {
     private services: Map<string, IAssetService> = new Map();
+    private aliases: Record<string, string> = {
+        effect: 'effects',
+        effects: 'effects',
+        transition: 'transitions',
+        transitions: 'transitions',
+        voice: 'audio',
+        voices: 'audio',
+        speech: 'audio',
+        'digital-humans': 'digital-human',
+        'digital-human': 'digital-human'
+    };
 
     constructor() {
         // Services will be registered externally
     }
 
     register(service: IAssetService) {
-        this.services.set(service.getCategory(), service);
+        const category = this.normalizeCategory(service.getCategory());
+        this.services.set(category, service);
     }
 
     get(category: string): IAssetService {
-        const service = this.services.get(category);
+        const normalized = this.normalizeCategory(category);
+        const service = this.services.get(normalized);
         if (!service) {
             console.warn(`No service found for category: ${category}`);
             throw new Error(`No asset service registered for category: ${category}`);
@@ -25,7 +38,12 @@ class AssetServiceRegistry {
     }
 
     has(category: string): boolean {
-        return this.services.has(category);
+        return this.services.has(this.normalizeCategory(category));
+    }
+
+    private normalizeCategory(category: string): string {
+        const key = (category || '').trim().toLowerCase();
+        return this.aliases[key] || key;
     }
 }
 

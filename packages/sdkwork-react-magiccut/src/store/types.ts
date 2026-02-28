@@ -1,5 +1,5 @@
 
-import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities/magicCut.entity';
+import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 ;
 

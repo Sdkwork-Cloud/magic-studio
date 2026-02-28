@@ -29,6 +29,11 @@ interface NoteStoreContextType {
 
 const NoteStoreContext = createContext<NoteStoreContextType | undefined>(undefined);
 
+const toNoteSummary = (note: Note): NoteSummary => {
+  const { content: _content, ...summary } = note;
+  return summary;
+};
+
 export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Lists only store summaries to save memory
   const [notes, setNotes] = useState<NoteSummary[]>([]);
@@ -97,8 +102,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
     
     // Add summary to list immediately
-    const summary: NoteSummary = { ...newNote };
-    delete (summary as any).content;
+    const summary = toNoteSummary(newNote);
     setNotes(prev => [summary, ...prev]);
     
     // Set Active
@@ -125,13 +129,15 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const updateNote = async (id: string, updates: Partial<Note>) => {
+    const { content: _ignoredContent, ...summaryUpdates } = updates;
+
     // 1. Update Active Content if matching
     if (activeNoteId === id) {
         setActiveNote(prev => prev ? { ...prev, ...updates, updatedAt: Date.now() } : null);
     }
 
     // 2. Update Summary List (if metadata changed)
-    setNotes(prev => prev.map(n => n.id === id ? { ...n, ...updates, updatedAt: Date.now() } : n));
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, ...summaryUpdates, updatedAt: Date.now() } : n));
     
     // 3. Persist
     await noteService.save({ id, ...updates });
@@ -233,7 +239,11 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const recentNotes = useMemo(() => {
       return [...notes]
-          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .sort((a, b) => {
+              const aTime = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
+              const bTime = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
+              return bTime - aTime;
+          })
           .slice(0, 5);
   }, [notes]);
 

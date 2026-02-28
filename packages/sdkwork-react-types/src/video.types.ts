@@ -18,12 +18,19 @@ export type VideoDuration = '5s' | '10s' | '60s';
 // ============================================================================
 
 export type VideoGenerationMode =
-  | 'smart_reference'  // 全能参�?  | 'start_end'        // 首尾�?  | 'smart_multi'      // 智能多帧
-  | 'subject_ref'      // 主体参�?  | 'text'             // Text to Video
-  | 'image'            // Image to Video (Legacy/Basic)
-  | 'avatar'           // Digital Human
-  | 'lip-sync'         // Lip Sync
-  | 'multi-image';     // Multi Image (Legacy)
+  | 'smart_reference'
+  | 'start_end'
+  | 'smart_multi'
+  | 'subject_ref'
+  | 'text'
+  | 'image'
+  | 'avatar'
+  | 'lip-sync'
+  | 'multi-image'
+  | 'face-swap'
+  | 'text-to-video'
+  | 'image-to-video'
+  | 'video-to-video';
 
 // ============================================================================
 // Video Model
@@ -55,11 +62,11 @@ export interface VideoConfig {
 
   // Core Parameters
   model: string;
-  styleId: string; // Added for Style Selector
+  styleId: string;
 
   // Multi-Model Mode
   useMultiModel?: boolean;
-  models?: string[]; // Array of model IDs
+  models?: string[];
 
   aspectRatio: VideoAspectRatio;
   resolution: VideoResolution;
@@ -95,10 +102,10 @@ export interface VideoConfig {
 
 export interface GeneratedVideoResult {
   id: string;
-  url: string; // Blob URL
-  mp4Url?: string; // Original Remote URL
-  posterUrl?: string; // Thumbnail
-  modelId?: string; // Track which model generated this result
+  url: string;
+  mp4Url?: string;
+  posterUrl?: string;
+  modelId?: string;
 }
 
 // ============================================================================
@@ -146,12 +153,6 @@ export type VideoGenerationStatus =
   | 'completed'
   | 'failed'
   | 'cancelled';
-
-// ============================================================================
-// Video Asset
-// ============================================================================
-
-// Note: VideoAsset is defined in assets.types.ts as a type alias for VideoMediaResource
 
 // ============================================================================
 // Video Style

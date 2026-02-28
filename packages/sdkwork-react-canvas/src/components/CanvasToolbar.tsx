@@ -1,5 +1,5 @@
 
-import { CanvasElementType } from '../entities/canvas.entity';
+import { CanvasElementType } from '../entities';
 import { NodeFactory } from '../services/nodeFactory';
 import React from 'react';
 import { 

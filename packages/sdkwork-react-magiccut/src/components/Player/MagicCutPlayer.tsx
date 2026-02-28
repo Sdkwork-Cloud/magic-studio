@@ -63,7 +63,6 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
     const previewEffect = usePreviewEffect();
 
     // Subscribe to high-frequency state
-    const isInteracting = useTransientState(s => s.interaction.type !== 'idle');
     const isDraggingResource = useTransientState(s => !!s.dragOperation);
     const isPlaying = useTransientState(s => s.isPlaying);
     // Optimization: Only subscribe to currentTime updates when PAUSED.
@@ -72,7 +71,7 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
     const currentTime = useTransientState(s => s.isPlaying ? -1 : s.currentTime);
 
     const rootRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<UniversalPlayerHandle>(null);
+    const playerRef = useRef<UniversalPlayerHandle | null>(null);
     const [viewScale, setViewScale] = useState(1.0);
 
     // Text Editing State
@@ -118,7 +117,7 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
             const currTime = playerController.getCurrentTime();
             const sortedTracks = activeTimeline.tracks
                 .map(ref => state.tracks[ref.id])
-                .filter(t => t && t.visible !== false && (t.type === 'video'))
+                .filter(t => t && t.visible !== false && t.trackType === 'video')
                 .sort((a, b) => a.order - b.order);
 
             let targetClip: CutClip | null = null;
@@ -140,7 +139,8 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
                     id: tempLayerId,
                     uuid: generateUUID(),
                     clip: { id: targetClip.id, uuid: targetClip.uuid, type: 'CutClip' },
-                    type: 'filter',
+                    type: 'CutLayer',
+                    layerType: 'filter',
                     enabled: true,
                     order: targetClip.layers.length,
                     params: { definitionId: previewEffect.id },
@@ -226,7 +226,7 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
         }
     };
 
-    const handleStageDoubleClick = (e: React.MouseEvent) => {
+    const handleStageDoubleClick = () => {
         if (selectedClipId) {
             const clip = getClip(selectedClipId);
             const res = getClipResource(selectedClipId);

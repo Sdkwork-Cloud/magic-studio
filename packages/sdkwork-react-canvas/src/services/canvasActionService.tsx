@@ -1,5 +1,5 @@
 
-import { CanvasElement } from '../entities/canvas.entity'
+import { CanvasElement } from '../entities'
 import React from 'react';
 import { 
     Maximize2, Eraser, Scissors, Layers, Wand2, 

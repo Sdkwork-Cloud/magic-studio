@@ -49,6 +49,18 @@ interface MenuStyle {
     zIndex?: number;
 }
 
+interface MenuButtonProps {
+    onClick: () => void;
+    active: boolean;
+    icon: React.ReactNode;
+    tooltip: string;
+}
+
+interface ColorOption {
+    color: string;
+    label: string;
+}
+
 export const TextBubbleMenu: React.FC<TextBubbleMenuProps> = ({ editor, onAI }) => {
     const [style, setStyle] = useState<MenuStyle>({ display: 'none' });
     const { t } = useTranslation();
@@ -167,25 +179,25 @@ export const TextBubbleMenu: React.FC<TextBubbleMenuProps> = ({ editor, onAI }) 
             <div className="w-[1px] h-4 bg-[#333] mx-0.5" />
 
             <MenuBtn 
-                onClick={() => (editor.chain().focus() as any).toggleBold().run()} 
+                onClick={() => editor.chain().focus().toggleBold().run()} 
                 active={editor.isActive('bold')}
                 icon={<Bold size={14} />} 
                 tooltip="Bold (Cmd+B)"
             />
             <MenuBtn 
-                onClick={() => (editor.chain().focus() as any).toggleItalic().run()} 
+                onClick={() => editor.chain().focus().toggleItalic().run()} 
                 active={editor.isActive('italic')}
                 icon={<Italic size={14} />} 
                 tooltip="Italic (Cmd+I)"
             />
             <MenuBtn 
-                onClick={() => (editor.chain().focus() as any).toggleStrike().run()} 
+                onClick={() => editor.chain().focus().toggleStrike().run()} 
                 active={editor.isActive('strike')}
                 icon={<Strikethrough size={14} />} 
                 tooltip="Strikethrough"
             />
             <MenuBtn 
-                onClick={() => (editor.chain().focus() as any).toggleCode().run()} 
+                onClick={() => editor.chain().focus().toggleCode().run()} 
                 active={editor.isActive('code')}
                 icon={<Code size={14} />} 
                 tooltip="Inline Code"
@@ -198,11 +210,12 @@ export const TextBubbleMenu: React.FC<TextBubbleMenuProps> = ({ editor, onAI }) 
                     const previousUrl = editor.getAttributes('link').href;
                     const url = window.prompt('URL', previousUrl);
                     if (url === null) return;
+                    const linkChain = editor.chain().focus().extendMarkRange('link');
                     if (url === '') {
-                        (editor.chain().focus() as any).extendMarkRange('link').unsetLink().run();
+                        linkChain.unsetLink().run();
                         return;
                     }
-                    (editor.chain().focus() as any).extendMarkRange('link').setLink({ href: url }).run();
+                    linkChain.setLink({ href: url }).run();
                 }} 
                 active={editor.isActive('link')}
                 icon={<Link2 size={14} />} 
@@ -214,8 +227,8 @@ export const TextBubbleMenu: React.FC<TextBubbleMenuProps> = ({ editor, onAI }) 
                 icon={<Baseline size={14} />}
                 colors={TEXT_COLORS}
                 activeColor={editor.getAttributes('textStyle').color}
-                onSelect={(color) => (editor.chain().focus() as any).setColor(color).run()}
-                onClear={() => (editor.chain().focus() as any).unsetColor().run()}
+                onSelect={(color) => editor.chain().focus().setMark('textColor', { color }).run()}
+                onClear={() => editor.chain().focus().unsetMark('textColor').run()}
                 title="Text Color"
             />
 
@@ -224,15 +237,15 @@ export const TextBubbleMenu: React.FC<TextBubbleMenuProps> = ({ editor, onAI }) 
                 icon={<Highlighter size={14} />}
                 colors={HIGHLIGHT_COLORS}
                 activeColor={editor.getAttributes('highlight').color}
-                onSelect={(color) => (editor.chain().focus() as any).setHighlight({ color }).run()}
-                onClear={() => (editor.chain().focus() as any).unsetHighlight().run()}
+                onSelect={(color) => editor.chain().focus().setMark('highlight', { color }).run()}
+                onClear={() => editor.chain().focus().unsetMark('highlight').run()}
                 title="Highlight"
             />
         </div>
     );
 };
 
-const MenuBtn = ({ onClick, active, icon, tooltip }: any) => (
+const MenuBtn: React.FC<MenuButtonProps> = ({ onClick, active, icon, tooltip }) => (
     <button
         onClick={onClick}
         onMouseDown={(e) => e.preventDefault()}
@@ -248,7 +261,7 @@ const MenuBtn = ({ onClick, active, icon, tooltip }: any) => (
 
 const ColorSelector: React.FC<{ 
     icon: React.ReactNode, 
-    colors: { color: string, label: string }[], 
+    colors: ColorOption[], 
     activeColor?: string, 
     onSelect: (color: string) => void, 
     onClear: () => void,

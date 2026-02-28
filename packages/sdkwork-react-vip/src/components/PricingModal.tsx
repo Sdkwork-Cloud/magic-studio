@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Crown, Check, Sparkles } from 'lucide-react';
-import { VipPlan } from '../entities/vip.entity';
+import { X, Check, Sparkles } from 'lucide-react';
+import { VipPlan } from '../entities';
 import { VIP_PLANS } from '../constants';
 import { PaymentModal } from './PaymentModal';
 

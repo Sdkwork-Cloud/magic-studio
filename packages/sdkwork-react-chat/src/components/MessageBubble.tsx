@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChatMessage } from '../entities/chat.entity';
+import { ChatMessage } from '../entities';
 import { User, Sparkles, Copy, ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react';
 
 interface MessageBubbleProps {

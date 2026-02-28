@@ -2,8 +2,8 @@
 import React from 'react';
 import { useNotificationStore } from '../store/notificationStore';
 import { Bell, Check, Trash2, Info, AlertTriangle, CheckCircle2, AlertOctagon, ExternalLink } from 'lucide-react';
-import { NotificationType } from '../entities/notification.entity';
-import type { AppNotification } from '../entities/notification.entity';
+import { NotificationType } from '../entities';
+import type { AppNotification } from '../entities';
 
 const getIcon = (type: NotificationType) => {
     switch (type) {
@@ -110,10 +110,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
     );
 };
 
-const formatTime = (ts: number) => {
-    const date = new Date(ts);
+const formatTime = (ts: string | number) => {
+    const timestamp = typeof ts === 'number' ? ts : new Date(ts).getTime();
+    const date = new Date(timestamp);
     const now = Date.now();
-    const diff = (now - ts) / 1000; // seconds
+    const diff = (now - timestamp) / 1000; // seconds
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;

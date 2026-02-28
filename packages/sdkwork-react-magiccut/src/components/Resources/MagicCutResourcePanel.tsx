@@ -3,16 +3,15 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { Search, Grid, List, UploadCloud, Heart, Sparkles, FolderUp, LayoutGrid, Save, Box } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { DEFAULT_PAGE_SIZE, AssetType } from '@sdkwork/react-commons';
-import { AnyAsset } from '@sdkwork/react-assets';
+import { AnyAsset, assetCenterService, mapUnifiedAssetToAnyAsset, readWorkspaceScope } from '@sdkwork/react-assets';
 import { CutTemplate, TemplateMetadata } from '../../entities/magicCut.entity';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../../constants';
-import { assetService, assetServiceRegistry } from '@sdkwork/react-assets';
+import { assetService } from '@sdkwork/react-assets';
 import { useMagicCutEvent, useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
 import { LoadTemplateConfirmModal } from '../LoadTemplateConfirmModal';
-;
-import { platform } from '@sdkwork/react-core';
+import { templateService } from '../../services/templateService';
 import { TemplateResourceGrid } from './grid/TemplateResourceGrid';
 import { TextResourcePanel } from './panels/TextResourcePanel';
 import { TransitionResourcePanel } from './panels/TransitionResourcePanel';
@@ -22,6 +21,7 @@ import { AudioResourcePanel } from './panels/AudioResourcePanel';
 import { VideoResourcePanel } from './panels/VideoResourcePanel';
 import { ImageResourcePanel } from './panels/ImageResourcePanel';
 import { FilterTab, LoadingSpinner, EmptyState } from '../common/UIComponents';
+import { platform } from '@sdkwork/react-core';
 
 interface MagicCutResourcePanelProps {
     activeTab: string;
@@ -45,6 +45,31 @@ const DEFAULT_FILTERS: SearchFilters = {
     durationMax: null,
     sortBy: 'date',
     sortOrder: 'desc'
+};
+
+const resolveMagiccutTypes = (category: string): Array<'video' | 'image' | 'audio' | 'music' | 'voice' | 'text' | 'effect' | 'transition' | 'sfx' | 'file'> | undefined => {
+    switch (category) {
+        case 'video':
+            return ['video'];
+        case 'image':
+            return ['image'];
+        case 'music':
+            return ['music'];
+        case 'audio':
+            return ['audio'];
+        case 'voice':
+            return ['voice'];
+        case 'text':
+            return ['text'];
+        case 'effects':
+            return ['effect'];
+        case 'transitions':
+            return ['transition'];
+        case 'sfx':
+            return ['sfx'];
+        default:
+            return undefined;
+    }
 };
 
 export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ activeTab }) => {
@@ -192,28 +217,35 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
-    const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+    const [_showFilters, _setShowFilters] = useState(false);
+    const [_filters, _setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const loadRequestIdRef = useRef(0);
 
     const isEffectTab = category === 'effects' || category === 'transitions';
     const isTextTab = category === 'text';
 
     const loadAssets = useCallback(async (pageNum: number, reset: boolean = false) => {
+        const requestId = ++loadRequestIdRef.current;
         if (reset) setLoading(true);
         try {
-            const service = assetServiceRegistry.get(category);
-            const result = await service.findAll({ 
+            const scope = readWorkspaceScope();
+            const result = await assetCenterService.query({
                 page: pageNum, 
-                size: DEFAULT_PAGE_SIZE 
-            }, filters.query);
+                size: DEFAULT_PAGE_SIZE,
+                keyword: _filters.query,
+                sort: ['updatedAt,desc'],
+                scope: {
+                    workspaceId: scope.workspaceId,
+                    projectId: scope.projectId,
+                    domain: 'magiccut'
+                },
+                types: resolveMagiccutTypes(category)
+            });
 
-            const fetchedContent: AnyAsset[] = result.content.map((a: any) => ({
-                ...a,
-                origin: a.origin || 'stock',
-                isFavorite: a.isFavorite || false
-            }));
+            const fetchedContent: AnyAsset[] = (Array.isArray(result?.content) ? result.content : [])
+                .map((item) => mapUnifiedAssetToAnyAsset(item))
+                .filter((asset: AnyAsset | null): asset is AnyAsset => asset !== null);
             
             let localContent: AnyAsset[] = [];
             if (pageNum === 0 && !isEffectTab && !isTextTab) {
@@ -226,7 +258,11 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                      if (category === 'voice' && type === MediaResourceType.VOICE) return true;
                      return false;
                  });
-                 localContent = storeResources.reverse();
+                 localContent = [...storeResources].reverse();
+            }
+
+            if (requestId !== loadRequestIdRef.current) {
+                return;
             }
 
             if (reset) {
@@ -241,14 +277,14 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                 });
             }
             
-            setHasMore(!result.last);
+            setHasMore(!(result?.last ?? true));
             setPage(pageNum);
         } catch (e) {
             console.error("Failed to load assets", e);
         } finally {
-            if (reset) setLoading(false);
+            if (reset && requestId === loadRequestIdRef.current) setLoading(false);
         }
-    }, [category, filters.query, state.resources, isEffectTab, isTextTab]);
+    }, [category, _filters.query, state.resources, isEffectTab, isTextTab]);
 
     useEffect(() => {
         loadAssets(0, true);
@@ -259,27 +295,28 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         
         if (filterCategory !== 'all') {
             result = result.filter(asset => {
+                const assetOrigin = asset.origin || (asset.metadata as any)?.origin;
                 if (filterCategory === 'favorite') return asset.isFavorite;
-                if (filterCategory === 'upload') return asset.origin === 'upload';
-                if (filterCategory === 'ai') return asset.origin === 'ai';
+                if (filterCategory === 'upload') return assetOrigin === 'upload';
+                if (filterCategory === 'ai') return assetOrigin === 'ai';
                 return true;
             });
         }
         
-        if (filters.tags.length > 0) {
+        if (_filters.tags.length > 0) {
             result = result.filter(asset => {
                 const assetTags = Array.isArray(asset.tags) 
                     ? asset.tags 
                     : (typeof asset.tags === 'string' ? [asset.tags] : []);
-                return filters.tags.some(tag => assetTags.includes(tag));
+                return _filters.tags.some((tag: string) => assetTags.includes(tag));
             });
         }
         
-        if (filters.durationMin !== null || filters.durationMax !== null) {
+        if (_filters.durationMin !== null || _filters.durationMax !== null) {
             result = result.filter(asset => {
-                const duration = (asset as any).duration || asset.metadata?.duration || 0;
-                if (filters.durationMin !== null && duration < filters.durationMin) return false;
-                if (filters.durationMax !== null && duration > filters.durationMax) return false;
+                const duration = (asset as any).duration || (asset.metadata as any)?.duration || 0;
+                if (_filters.durationMin !== null && duration < _filters.durationMin) return false;
+                if (_filters.durationMax !== null && duration > _filters.durationMax) return false;
                 return true;
             });
         }
@@ -287,7 +324,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         result = [...result].sort((a, b) => {
             let comparison = 0;
             
-            switch (filters.sortBy) {
+            switch (_filters.sortBy) {
                 case 'name':
                     comparison = a.name.localeCompare(b.name);
                     break;
@@ -295,17 +332,17 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                     comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                     break;
                 case 'duration':
-                    const durA = (a as any).duration || a.metadata?.duration || 0;
-                    const durB = (b as any).duration || b.metadata?.duration || 0;
+                    const durA = (a as any).duration || (a.metadata as any)?.duration || 0;
+                    const durB = (b as any).duration || (b.metadata as any)?.duration || 0;
                     comparison = durA - durB;
                     break;
             }
             
-            return filters.sortOrder === 'asc' ? comparison : -comparison;
+            return _filters.sortOrder === 'asc' ? comparison : -comparison;
         });
         
         return result;
-    }, [assets, filterCategory, filters]);
+    }, [assets, filterCategory, _filters]);
 
     const handleToggleFavorite = useCallback((id: string, isFavorite: boolean) => {
         setAssets(prev => prev.map(a => a.id === id ? { ...a, isFavorite } : a));
@@ -325,7 +362,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     }, []);
 
     const handleDragStart = useCallback((e: React.DragEvent, item: AnyAsset) => {
-        let duration = (item as any).duration || (item.metadata?.duration) || 5; 
+        let duration = (item as any).duration || ((item.metadata as any)?.duration) || 5; 
         
         if (item.type === MediaResourceType.TRANSITION) duration = 1;
         if (item.type === MediaResourceType.EFFECT) duration = 5; 
@@ -383,13 +420,44 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
             if (category === 'music') type = 'music';
             else if (category === 'video') type = 'video';
             else if (category === 'image') type = 'image';
+            else if (category === 'audio') type = 'audio';
+            else if (category === 'voice') type = 'voice';
+            else if (category === 'sfx') type = 'sfx';
             
-            await importAssets(getAcceptTypes(category), type);
-            setFilterCategory('upload'); 
+            const importedResources = await importAssets(getAcceptTypes(category), type);
+            const normalizedImported = importedResources
+                .map((resource) => ({
+                    ...(resource as AnyAsset),
+                    origin:
+                        (resource as AnyAsset).origin ||
+                        ((resource.metadata as any)?.origin as AnyAsset['origin']) ||
+                        'upload'
+                }))
+                .filter((resource) => {
+                    const resourceType = resource.type as MediaResourceType;
+                    if (category === 'video' && resourceType === MediaResourceType.VIDEO) return true;
+                    if (category === 'image' && resourceType === MediaResourceType.IMAGE) return true;
+                    if (category === 'music' && resourceType === MediaResourceType.MUSIC) return true;
+                    if ((category === 'audio' || category === 'sfx') && (resourceType === MediaResourceType.AUDIO || resourceType === MediaResourceType.VOICE || resourceType === MediaResourceType.SPEECH)) return true;
+                    if (category === 'voice' && resourceType === MediaResourceType.VOICE) return true;
+                    if (category === 'text' && (resourceType === MediaResourceType.TEXT || resourceType === MediaResourceType.SUBTITLE)) return true;
+                    return !isEffectTab && !isTextTab;
+                });
+
+            if (normalizedImported.length > 0) {
+                setAssets(prev => {
+                    const existingIds = new Set(prev.map(item => item.id));
+                    const uniqueImported = normalizedImported.filter(item => !existingIds.has(item.id));
+                    return uniqueImported.length > 0 ? [...uniqueImported, ...prev] : prev;
+                });
+            }
+
+            setFilterCategory('upload');
+            await loadAssets(0, true);
         } finally {
             setLoading(false);
         }
-    }, [importAssets, category]);
+    }, [importAssets, category, isEffectTab, isTextTab, loadAssets]);
 
     const renderPanelContent = () => {
         switch (category) {
@@ -436,8 +504,13 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-blue-500 transition-colors" />
                         <input 
                             type="text" 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            value={_filters.query}
+                            onChange={(e) =>
+                                _setFilters((prev) => ({
+                                    ...prev,
+                                    query: e.target.value
+                                }))
+                            }
                             placeholder="Search assets..."
                             className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
                         />
@@ -508,4 +581,3 @@ const ResourceEmptyState: React.FC<{ filterCategory: string, isEffectTab: boolea
 
     return <EmptyState icon={icon} title={title} action={action} />;
 };
-

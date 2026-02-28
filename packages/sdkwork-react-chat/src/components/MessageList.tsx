@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { ChatMessage } from '../entities/chat.entity';
+import { ChatMessage } from '../entities';
 import { ChatBubble } from './ChatBubble';
 
 interface MessageListProps {

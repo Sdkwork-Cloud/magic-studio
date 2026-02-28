@@ -48,7 +48,7 @@ class I18nService {
     };
   }
 
-  public t(key: string, params?: Record<string, string>): string {
+  public t(key: string, paramsOrDefault?: Record<string, string> | string): string {
     const keys = key.split('.');
     let current: any = this._getMergedResources();
 
@@ -90,11 +90,17 @@ class I18nService {
         current = fallback;
     }
 
-    if (current === undefined) return key;
+    // If still not found and paramsOrDefault is a string, use it as default
+    if (current === undefined) {
+      if (typeof paramsOrDefault === 'string') {
+        return paramsOrDefault;
+      }
+      return key;
+    }
 
     let result = String(current);
-    if (params) {
-      Object.entries(params).forEach(([k, v]) => {
+    if (paramsOrDefault && typeof paramsOrDefault === 'object') {
+      Object.entries(paramsOrDefault).forEach(([k, v]) => {
         result = result.replace(`{${k}}`, v);
       });
     }
@@ -116,7 +122,7 @@ export const useTranslation = () => {
   }, []);
 
   return {
-    t: (key: string, params?: Record<string, string>) => i18nService.t(key, params),
+    t: (key: string, paramsOrDefault?: Record<string, string> | string) => i18nService.t(key, paramsOrDefault),
     locale,
     setLocale: (l: Locale) => i18nService.setLocale(l)
   };

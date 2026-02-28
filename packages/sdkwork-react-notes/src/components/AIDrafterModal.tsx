@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, FileText, AlignLeft, Globe, Zap, Loader2, ArrowRight, Eye, RefreshCw, Layers } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
+import { genAIService } from '@sdkwork/react-core';
 
-import { Button, genAIService, markdownUtils } from '@sdkwork/react-commons';
+import { Button, markdownUtils } from '@sdkwork/react-commons';
 
 interface AIDrafterModalProps {
     initialTopic?: string;
@@ -67,7 +68,7 @@ export const AIDrafterModal: React.FC<AIDrafterModalProps> = ({ initialTopic, on
         try {
             await genAIService.streamArticle(
                 { topic, type, tone, language, context },
-                (chunk) => {
+                (chunk: string) => {
                     setGeneratedMarkdown(prev => prev + chunk);
                 }
             );

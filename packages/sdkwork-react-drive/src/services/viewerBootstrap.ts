@@ -35,7 +35,7 @@ export const initViewers = () => {
         priority: 10,
         supports: (item) => {
             const ext = pathUtils.extname(item.name).toLowerCase();
-            return ['.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp', '.bmp', '.ico', '.tiff'].includes(ext) || item.mimeType?.startsWith('image/');
+            return ['.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp', '.bmp', '.ico', '.tiff'].includes(ext) || !!(item.mimeType?.startsWith('image/'));
         }
     });
 

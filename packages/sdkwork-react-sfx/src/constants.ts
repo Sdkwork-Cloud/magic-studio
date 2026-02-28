@@ -1,7 +1,7 @@
 import { SfxModelType } from './entities';
 import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
-import { Waves, Volume2, Music } from 'lucide-react';
+import { Waves, Volume2 } from 'lucide-react';
 
 export const STORAGE_KEY_SFX_HISTORY = 'open_studio_sfx_history_v1';
 

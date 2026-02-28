@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Character, CharacterConfig, CharacterTask } from '../entities/character.entity';
+import { Character, CharacterConfig, CharacterTask } from '../entities';
 import { CHARACTER_MODELS as _CHARACTER_MODELS } from '../constants'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 interface CharacterStoreContextType {

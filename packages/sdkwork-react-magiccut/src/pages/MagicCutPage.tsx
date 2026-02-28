@@ -16,20 +16,22 @@ const MagicCutPageContent: React.FC = () => {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reloadToken, setReloadToken] = useState(0);
 
     // CRITICAL FIX: Track the ID of the last loaded project.
     // If the URL changes (e.g. export new project), this mismatch triggers a reload.
     // Initialized to a special token '__INIT__' to ensure first load always runs.
-    const lastLoadedIdRef = useRef<string | null | undefined>('__INIT__');
+    const lastLoadedIdRef = useRef<string>('__INIT__');
 
     useEffect(() => {
+        const loadKey = `${projectId ?? '__LAST__'}::${reloadToken}`;
         // 1. Prevent double-firing in StrictMode if ID hasn't changed
-        if (lastLoadedIdRef.current === projectId) {
+        if (lastLoadedIdRef.current === loadKey) {
             return;
         }
 
         // 2. Update Ref immediately to lock this load cycle
-        lastLoadedIdRef.current = projectId;
+        lastLoadedIdRef.current = loadKey;
 
         const load = async () => {
             setLoading(true);
@@ -56,7 +58,7 @@ const MagicCutPageContent: React.FC = () => {
         };
 
         load();
-    }, [projectId, switchProject, loadLastProject]);
+    }, [projectId, reloadToken, switchProject, loadLastProject]);
 
     if (loading) {
         return (
@@ -76,7 +78,14 @@ const MagicCutPageContent: React.FC = () => {
                      <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#222] hover:bg-[#333] rounded text-white text-xs">
                          Reload Page
                      </button>
-                     <button onClick={() => { lastLoadedIdRef.current = '__RETRY__'; setLoading(true); }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white text-xs">
+                     <button
+                        onClick={() => {
+                            setError(null);
+                            setLoading(true);
+                            setReloadToken((prev) => prev + 1);
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white text-xs"
+                     >
                          Retry Load
                      </button>
                  </div>

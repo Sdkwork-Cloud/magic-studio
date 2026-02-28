@@ -5,8 +5,14 @@ import { Box, ArrowRight, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { PropCard } from './PropCard';
 
 import { useFilmStore } from '../../store/filmStore';
-import { FilmProp, MediaScene, AssetMediaResource, MediaResourceType, generateUUID } from '@sdkwork/react-commons';
+import { FilmProp, MediaScene } from '@sdkwork/react-commons';
 import { filmService } from '../../services/filmService';
+import { hasFilmAssetReference } from '../../utils/filmAssetUrlResolver';
+import { importFilmAssetFromUrl } from '../../utils/filmModalAssetImport';
+import {
+    createFilmAssetMediaResource,
+    upsertFilmRefAssetByScene
+} from '../../utils/filmAssetFactories';
 
 interface PropListPanelProps {
     props: FilmProp[];
@@ -25,25 +31,30 @@ export const PropListPanel: React.FC<PropListPanelProps> = ({ props, onEdit, onA
         
         for (const prop of props) {
             const visualAsset = prop.refAssets?.find(a => a.scene === MediaScene.PROP_VISUAL);
-            if (visualAsset?.url || visualAsset?.image?.url) continue;
+            if (hasFilmAssetReference(visualAsset || prop.faceImage || null)) continue;
             
             const prompt = `Prop design, ${prop.name}, ${prop.description || ''}, isolated on black background, high quality, 8k`;
             try {
                 const url = await filmService.generateImage(prompt, '1:1');
-                const now = Date.now();
-                const newAsset: AssetMediaResource = {
-                    id: generateUUID(),
-                    uuid: generateUUID(),
-                    type: 'IMAGE',
-                    name: `${prop.name}_visual`,
-                    scene: MediaScene.PROP_VISUAL,
+                const imported = await importFilmAssetFromUrl(
                     url,
-                    createdAt: now,
-                    updatedAt: now
-                } as AssetMediaResource;
+                    `${prop.name}_visual`,
+                    'image',
+                    {
+                        origin: 'film-prop-auto-gen',
+                        propUuid: prop.uuid
+                    }
+                );
+                const newAsset = createFilmAssetMediaResource({
+                    assetId: imported.assetId,
+                    type: 'image',
+                    scene: MediaScene.PROP_VISUAL,
+                    url: imported.url,
+                    fileName: `${prop.name}_visual`
+                });
                 
                 updateProp(prop.uuid, { 
-                    refAssets: [...(prop.refAssets || []), newAsset]
+                    refAssets: upsertFilmRefAssetByScene(prop.refAssets, newAsset)
                 });
             } catch (e) {
                 console.error(`Failed to generate prop ${prop.name}`, e);

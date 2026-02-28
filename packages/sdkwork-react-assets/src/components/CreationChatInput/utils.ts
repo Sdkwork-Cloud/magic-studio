@@ -1,6 +1,3 @@
-
-import type { InputAttachment as InputAttachmentType } from './types'; // eslint-disable-line @typescript-eslint/no-unused-vars
-
 export const getAssetLabel = (index: number, type: string) => {
     const idx = index + 1;
     switch (type) {

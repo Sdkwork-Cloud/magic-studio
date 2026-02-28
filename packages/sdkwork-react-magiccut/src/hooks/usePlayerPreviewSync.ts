@@ -3,14 +3,13 @@ import { UniversalPlayerHandle } from '../components/Player/UniversalPlayer'
 import { useEffect, useCallback } from 'react';
 import { useMagicCutBus } from '../providers/MagicCutEventProvider';
 import { MagicCutEvents, SkimPayload } from '../events';
-;
 import { PlayerController } from '../controllers/PlayerController';
 import { useMagicCutStore } from '../store/magicCutStore';
 import { TimelineStore } from '../store/transientStore';
 import { useRafCallback } from './usePerformance';
 
 export const usePlayerPreviewSync = (
-    playerRef: React.RefObject<UniversalPlayerHandle>,
+    playerRef: React.RefObject<UniversalPlayerHandle | null>,
     playerController: PlayerController,
     store: TimelineStore
 ) => {
@@ -46,4 +45,3 @@ export const usePlayerPreviewSync = (
         return () => bus.off(MagicCutEvents.TIMELINE_SKIM, handleTimelineSkim);
     }, [bus, handleTimelineSkim]);
 };
-

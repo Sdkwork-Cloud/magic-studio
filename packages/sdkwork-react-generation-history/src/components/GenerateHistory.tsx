@@ -78,7 +78,7 @@ export const GenerateHistory: React.FC<GenerateHistoryProps> = ({
                         onDelete={onDelete}
                         onReuse={onReuse || (() => {})}
                         onDownload={handleDownload}
-                        onPreview={(url, type) => {
+                        onPreview={(_url, _type) => {
                             if (onPreview) {
                                 onPreview(task);
                             } else {

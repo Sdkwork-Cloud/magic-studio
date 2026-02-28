@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useNoteStore } from '../store/noteStore';
-import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer, type Editor as TiptapEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import ImageExtension from '@tiptap/extension-image';
@@ -25,36 +25,35 @@ import {
     Image as ImageIcon, Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare, 
     Quote, Bold, Italic, Strikethrough, Undo, Redo,
     Video, Mic, ImagePlus, Plus, Music, File, Sparkles, Wand2, Loader2, PanelRight,
-    Send, FilePlus, FolderPlus, Keyboard, AppWindow, FileCode
+    Send, AppWindow, FileCode
 } from 'lucide-react';
 import { EditorContextMenu } from './EditorContextMenu';
 
 import { useTranslation } from '@sdkwork/react-i18n';
 import { filePicker } from '@sdkwork/react-editor';
 
-import { platform, genAIService } from '@sdkwork/react-core';
+import { genAIService } from '@sdkwork/react-core';
 import { NoteType, markdownUtils } from '@sdkwork/react-commons'; 
 
 // Custom Menus & Modals
 import { TextBubbleMenu } from './menus/TextBubbleMenu';
 import { BlockFloatingMenu } from './menus/BlockFloatingMenu';
 import { AIPanel } from './menus/AIPanel';
-import { AIWriterFloat } from './menus/AIWriterFloat';
+import { AIWriterFloat, type AIWriterGenerateOptions } from './menus/AIWriterFloat';
 import { NoteChatPane } from './NoteChatPane';
 import { ImageNode } from './editor/ImageNode';
-import { MediaType } from './AIGenerateModal'; 
+import { AIGenerateModal, MediaType } from './AIGenerateModal'; 
 import { PublishModal } from './PublishModal';
-import { MiniProgramModal } from './MiniProgramModal'; 
+import { MiniProgramModal, type MiniProgramInsertPayload } from './MiniProgramModal'; 
 import { HtmlSourceModal } from './HtmlSourceModal'; 
 import { NoteEditorEmpty } from './NoteEditorEmpty'; 
 
 // Specialized Generator Modals
 import { ImageGeneratorModal } from '@sdkwork/react-image';
 import { VideoGeneratorModal } from '@sdkwork/react-video';
-import { AudioGeneratorModal } from '@sdkwork/react-audio';
 
-import { assetService } from '@sdkwork/react-assets';
-import { AssetType } from '../../assets/entities/asset.entity';
+import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { AssetType } from '@sdkwork/react-commons';
 
 // --- Helper: Advanced Word Count (CJK support) ---
 const countWords = (text: string): number => {
@@ -68,6 +67,18 @@ const countWords = (text: string): number => {
 const sanitizeStreamingHtml = (html: string): string => {
     let clean = html.replace(/<li>\s*<\/li>/g, '<li><p></p></li>');
     return clean;
+};
+
+const resolveNotesScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return { workspaceId: scope.workspaceId, projectId: scope.projectId };
+};
+
+const toAssetContentType = (type: AssetType): 'image' | 'video' | 'audio' | 'file' => {
+    if (type === 'image' || type === 'video' || type === 'audio' || type === 'file') {
+        return type;
+    }
+    return 'file';
 };
 
 // --- Resizer Component ---
@@ -88,7 +99,7 @@ interface ToolbarButtonProps {
     onClick: () => void;
     isActive?: boolean;
     disabled?: boolean;
-    icon: any;
+    icon: React.ElementType;
     title: string;
     className?: string;
 }
@@ -226,7 +237,7 @@ const AIDropdown: React.FC<{ onAction: (type: MediaType) => void }> = ({ onActio
 
 // --- Main Toolbar ---
 interface EditorToolbarProps {
-    editor: any;
+    editor: TiptapEditor | null;
     onUpload: (type: 'image' | 'video' | 'audio' | 'file') => void;
     onOpenGenModal: (type: MediaType) => void;
     onOpenMiniProgram: () => void;
@@ -320,7 +331,7 @@ export interface UniversalNoteEditorProps {
     initialContent?: string;
     initialTitle?: string;
     noteType?: NoteType;
-    lastUpdated?: number;
+    lastUpdated?: string | number;
     tags?: string[];
     className?: string; // Allow custom styling
     
@@ -397,7 +408,6 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
     // Chat State
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatWidth, setChatWidth] = useState(360);
-    const [isResizingChat, setIsResizingChat] = useState(false);
     const isResizingChatRef = useRef(false);
     const typeMenuRef = useRef<HTMLDivElement>(null);
     const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -422,7 +432,6 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 
     const startResizingChat = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        setIsResizingChat(true);
         isResizingChatRef.current = true;
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
@@ -440,7 +449,6 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
         const handleMouseUp = () => {
             if (isResizingChatRef.current) {
                 isResizingChatRef.current = false;
-                setIsResizingChat(false);
                 document.body.style.cursor = 'default';
                 document.body.style.userSelect = 'auto';
             }
@@ -526,23 +534,34 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                      if (type === 'video') assetType = 'video';
                      if (type === 'audio') assetType = 'audio';
 
-                     const asset = await assetService.importAsset(
-                        file.data, 
-                        file.name, 
-                        assetType, 
-                        'upload',
-                        file.path 
-                     );
+                     const result = await assetBusinessFacade.importNotesAsset({
+                        scope: resolveNotesScope(),
+                        type: toAssetContentType(assetType),
+                        name: file.name,
+                        data: file.data,
+                        sourcePath: file.path,
+                        metadata: { source: 'note-upload', origin: 'upload' }
+                     });
+                     const payload = result.asset.payload;
+                     const primaryCandidate =
+                        typeof result.asset.primaryType === 'string'
+                            ? payload[result.asset.primaryType]
+                            : undefined;
+                     const payloadAssets = payload.assets;
+                     const fallbackAsset = Array.isArray(payloadAssets) ? payloadAssets[0] : undefined;
+                     const primaryResource = primaryCandidate ?? fallbackAsset;
+                     const src = result.primaryLocator.uri;
+                     const size = typeof primaryResource?.size === 'number' ? primaryResource.size : 0;
                      
-                     const src = asset.path;
-                     
-                     if (type === 'image') (editor.chain().focus() as any).setImage({ src }).run();
+                     if (type === 'image') {
+                        editor.chain().focus().insertContent({ type: 'image', attrs: { src } }).run();
+                     }
                      else if (type === 'video') editor.chain().focus().insertContent(`<video src="${src}" controls class="w-full rounded-lg my-4"></video>`).run();
                      else if (type === 'audio') editor.chain().focus().insertContent(`<audio src="${src}" controls class="w-full my-4"></audio>`).run();
                      else if (type === 'file') {
                          editor.chain().focus().insertContent({
                              type: 'fileAttachment',
-                             attrs: { src, name: asset.name, size: asset.size }
+                             attrs: { src, name: file.name, size }
                          }).run();
                      }
                 }
@@ -550,7 +569,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
         }
     };
 
-    const triggerAI = useCallback((mode: 'insert' | 'replace', context: string) => {
+    const triggerAI = useCallback((_mode: 'insert' | 'replace', _context: string) => {
         if (!editor || editor.isDestroyed) return;
         
         try {
@@ -591,7 +610,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
         }
     };
 
-    const handleAIStreamingGenerate = async (prompt: string, options: any) => {
+    const handleAIStreamingGenerate = async (prompt: string, options: AIWriterGenerateOptions) => {
         if (!editor) return;
         setIsGenerating(true);
         stopGenerationRef.current = false;
@@ -675,29 +694,31 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 
     const handleImageSuccess = async (url: string) => {
         try {
-            const asset = await assetService.saveGeneratedAsset(
-                url, 
-                'image', 
-                { source: 'note-gen' }, 
-                `gen_img_${Date.now()}.png`
-            );
-            if (editor) (editor.chain().focus() as any).setImage({ src: asset.path }).run();
+            const result = await assetBusinessFacade.importNotesAsset({
+                scope: resolveNotesScope(),
+                type: 'image',
+                name: `gen_img_${Date.now()}.png`,
+                remoteUrl: url,
+                metadata: { source: 'note-gen', origin: 'ai' }
+            });
+            if (editor) editor.chain().focus().insertContent({ type: 'image', attrs: { src: result.primaryLocator.uri } }).run();
         } catch (e) {
             console.error("Failed to save asset", e);
-            if (editor) (editor.chain().focus() as any).setImage({ src: url }).run();
+            if (editor) editor.chain().focus().insertContent({ type: 'image', attrs: { src: url } }).run();
         }
         setGenModalType(null);
     };
     
     const handleVideoSuccess = async (url: string) => {
          try {
-             const asset = await assetService.saveGeneratedAsset(
-                 url, 
-                 'video', 
-                 { source: 'note-gen' }, 
-                 `gen_vid_${Date.now()}.mp4`
-             );
-             if (editor) editor.chain().focus().insertContent(`<video src="${asset.path}" controls class="w-full rounded-lg my-4"></video>`).run();
+             const result = await assetBusinessFacade.importNotesAsset({
+                 scope: resolveNotesScope(),
+                 type: 'video',
+                 name: `gen_vid_${Date.now()}.mp4`,
+                 remoteUrl: url,
+                 metadata: { source: 'note-gen', origin: 'ai' }
+             });
+             if (editor) editor.chain().focus().insertContent(`<video src="${result.primaryLocator.uri}" controls class="w-full rounded-lg my-4"></video>`).run();
          } catch (e) {
              console.error("Failed to save video asset", e);
              if (editor) editor.chain().focus().insertContent(`<video src="${url}" controls class="w-full rounded-lg my-4"></video>`).run();
@@ -707,13 +728,14 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 
     const handleAudioSuccess = async (url: string) => {
          try {
-             const asset = await assetService.saveGeneratedAsset(
-                 url, 
-                 'audio', 
-                 { source: 'note-gen' }, 
-                 `gen_aud_${Date.now()}.wav`
-             );
-             if (editor) editor.chain().focus().insertContent(`<audio src="${asset.path}" controls class="w-full my-4"></audio>`).run();
+             const result = await assetBusinessFacade.importNotesAsset({
+                 scope: resolveNotesScope(),
+                 type: 'audio',
+                 name: `gen_aud_${Date.now()}.wav`,
+                 remoteUrl: url,
+                 metadata: { source: 'note-gen', origin: 'ai' }
+             });
+             if (editor) editor.chain().focus().insertContent(`<audio src="${result.primaryLocator.uri}" controls class="w-full my-4"></audio>`).run();
          } catch (e) {
              console.error("Failed to save audio asset", e);
              if (editor) editor.chain().focus().insertContent(`<audio src="${url}" controls class="w-full my-4"></audio>`).run();
@@ -721,7 +743,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
          setGenModalType(null);
     };
     
-    const handleInsertMiniProgram = (data: any) => {
+    const handleInsertMiniProgram = (data: MiniProgramInsertPayload) => {
         if (editor) {
             editor.chain().focus().insertContent({
                 type: 'miniProgram',
@@ -949,10 +971,12 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
             )}
             
             {genModalType === 'audio' && (
-                <AudioGeneratorModal 
+                <AIGenerateModal
+                    initialType="audio"
                     onClose={() => setGenModalType(null)}
-                    onSuccess={handleAudioSuccess} 
-                    actionLabel="Insert to Note"
+                    onInsert={(_type, src) => {
+                        handleAudioSuccess(src);
+                    }}
                 />
             )}
             
@@ -975,7 +999,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 };
 
 export const NoteEditor: React.FC = () => {
-    const { activeNote, updateNote, createNote } = useNoteStore();
+    const { activeNote, updateNote } = useNoteStore();
     const [showPublishModal, setShowPublishModal] = useState(false);
 
     if (!activeNote) {

@@ -3,14 +3,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, MapPin, Image as ImageIcon, Wand2, Upload, Trash2, Sparkles, Grid3X3, Layers, FolderOpen } from 'lucide-react';
 
-import { ChooseAssetModal, PromptTextInput } from '@sdkwork/react-assets';
+import { ChooseAssetModal, PromptTextInput, Asset } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 
-import { Asset } from '../../assets/entities/asset.entity';
-
 import { genAIService } from '@sdkwork/react-core';
-import { FilmLocation, ImageMediaResource } from '@sdkwork/react-commons';
-import { generateUUID } from '@sdkwork/react-commons';
+import { FilmLocation, FilmImageMediaResource } from '../entities/film.entity';
+import {
+    importFilmAssetFromFile,
+    importFilmAssetFromUrl,
+    resolveChosenAsset
+} from '../utils/filmModalAssetImport';
+import { createFilmImageMediaResource } from '../utils/filmAssetFactories';
 
 interface LocationModalProps {
     isOpen: boolean;
@@ -47,9 +50,9 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
     const [tags, setTags] = useState('');
     const [description, setDescription] = useState('');
     
-    const [faceImage, setFaceImage] = useState<ImageMediaResource | undefined>();
-    const [threeViewImage, setThreeViewImage] = useState<ImageMediaResource | undefined>();
-    const [gridViewImage, setGridViewImage] = useState<ImageMediaResource | undefined>();
+    const [faceImage, setFaceImage] = useState<FilmImageMediaResource | undefined>();
+    const [threeViewImage, setThreeViewImage] = useState<FilmImageMediaResource | undefined>();
+    const [gridViewImage, setGridViewImage] = useState<FilmImageMediaResource | undefined>();
     
     const [facePrompt, setFacePrompt] = useState('');
     const [threeViewPrompt, setThreeViewPrompt] = useState('');
@@ -60,7 +63,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
     const [activeAssetModal, setActiveAssetModal] = useState<ImageType | null>(null);
     const [isEnhancing, setIsEnhancing] = useState(false);
 
-    const getDisplayUrl = (img: ImageMediaResource | undefined) => {
+    const getDisplayUrl = (img: FilmImageMediaResource | undefined) => {
         if (!img) return null;
         return img.url || null;
     };
@@ -79,20 +82,15 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
         return type === 'face' ? faceImage : type === 'threeView' ? threeViewImage : gridViewImage;
     };
 
-    const setImage = (type: ImageType, url: string | null) => {
-        const now = Date.now();
+    const setImage = (type: ImageType, url: string | null, assetId?: string) => {
         const setter = type === 'face' ? setFaceImage : type === 'threeView' ? setThreeViewImage : setGridViewImage;
-        
+
         if (url) {
-            const newImage: ImageMediaResource = {
-                id: generateUUID(),
-                uuid: generateUUID(),
-                type: 'IMAGE',
-                name: `${name}_${type}`,
+            const newImage: FilmImageMediaResource = createFilmImageMediaResource({
+                assetId,
                 url,
-                createdAt: now,
-                updatedAt: now
-            } as ImageMediaResource;
+                fileName: `${name}_${type}`
+            });
             setter(newImage);
         } else {
             setter(undefined);
@@ -104,7 +102,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
             setName(initialData?.name || '');
             setTags(initialData?.tags?.join(', ') || '');
             setDescription(initialData?.visualDescription || initialData?.description || '');
-            setFaceImage(initialData?.faceImage || initialData?.image as any);
+            setFaceImage(initialData?.faceImage || initialData?.image || undefined);
             setThreeViewImage(initialData?.threeViewImage);
             setGridViewImage(initialData?.gridViewImage);
             setFacePrompt(IMAGE_CONFIGS.face.defaultPrompt);
@@ -179,12 +177,13 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
         input.onchange = async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
-            const formData = new FormData();
-            formData.append('file', file);
             try {
-                const response = await fetch('/api/assets/upload', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.url) setImage(type, data.url);
+                const imported = await importFilmAssetFromFile(file, 'image', {
+                    origin: 'upload',
+                    source: 'film-location-modal-upload',
+                    slot: type
+                });
+                setImage(type, imported.url, imported.assetId);
             } catch (err) {
                 console.error('Upload failed:', err);
             }
@@ -196,11 +195,12 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
         setActiveAssetModal(type);
     };
 
-    const handleAssetSelected = (assets: Asset[]) => {
+    const handleAssetSelected = async (assets: Asset[]) => {
         if (assets.length > 0 && activeAssetModal) {
-            const asset = assets[0];
-            const url = asset.remoteUrl || asset.path;
-            if (url) setImage(activeAssetModal, url);
+            const selected = await resolveChosenAsset(assets[0]);
+            if (selected?.url) {
+                setImage(activeAssetModal, selected.url, selected.assetId);
+            }
         }
         setActiveAssetModal(null);
     };
@@ -457,9 +457,19 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
                         prompt: buildFullPrompt(activeAIModal)
                     }}
                     onClose={() => setActiveAIModal(null)}
-                    onSuccess={(url) => {
+                    onSuccess={async (url: string | string[]) => {
                         const finalUrl = Array.isArray(url) ? url[0] : url;
-                        setImage(activeAIModal, finalUrl);
+                        const imported = await importFilmAssetFromUrl(
+                            finalUrl,
+                            `film_location_${activeAIModal}_${Date.now()}.png`,
+                            'image',
+                            {
+                                origin: 'ai',
+                                source: 'film-location-modal-ai',
+                                slot: activeAIModal
+                            }
+                        );
+                        setImage(activeAIModal, imported.url, imported.assetId);
                         setActiveAIModal(null);
                     }}
                 />
@@ -472,6 +482,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
                     onClose={() => setActiveAssetModal(null)}
                     onConfirm={handleAssetSelected}
                     accepts={['image']}
+                    domain="film"
                     title="Choose Image from Assets"
                 />
             )}

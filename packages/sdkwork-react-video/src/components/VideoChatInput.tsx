@@ -1,5 +1,6 @@
 
-import { VideoConfig, CreationChatInput } from '@sdkwork/react-commons'
+import { VideoConfig } from '@sdkwork/react-commons'
+import { CreationChatInput } from '@sdkwork/react-assets'
 import React from 'react';
 ;
 ;
@@ -41,7 +42,7 @@ export const VideoChatInput: React.FC<VideoChatInputProps> = ({
     return (
         <CreationChatInput 
             value={config.prompt}
-            onChange={(val) => onConfigChange({ prompt: val })}
+            onChange={(val: string) => onConfigChange({ prompt: val })}
             onGenerate={onGenerate}
             isGenerating={isGenerating}
             placeholder="Describe the video scene you want to generate..."

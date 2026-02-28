@@ -3,17 +3,16 @@ import React, { lazy, Suspense } from 'react';
 import { ROUTES, RoutePath } from './routes';
 import { Loader2 } from 'lucide-react';
 
-import HomePage from '../pages/HomePage';
-import SettingsPage from '../pages/SettingsPage';
-import LoginPage from '../pages/LoginPage';
-import ProfilePage from '../pages/ProfilePage';
-import { PricingPage } from '@sdkwork/react-vip';
-import { ChatPage } from '@sdkwork/react-chat';
-import { DrivePage } from '@sdkwork/react-drive';
-import { BrowserPage } from '@sdkwork/react-browser';
-import { NotesPage } from '@sdkwork/react-notes';
-
 // Heavy modules: Lazy load to fix circular dependencies and improve startup
+const HomePage = lazy(() => import('../pages/HomePage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const PricingPage = lazy(() => import('@sdkwork/react-vip').then(m => ({ default: m.PricingPage })));
+const ChatPage = lazy(() => import('@sdkwork/react-chat').then(m => ({ default: m.ChatPage })));
+const DrivePage = lazy(() => import('@sdkwork/react-drive').then(m => ({ default: m.DrivePage })));
+const BrowserPage = lazy(() => import('@sdkwork/react-browser').then(m => ({ default: m.BrowserPage })));
+const NotesPage = lazy(() => import('@sdkwork/react-notes').then(m => ({ default: m.NotesPage })));
 const EditorPage = lazy(() => import('@sdkwork/react-editor').then(m => ({ default: m.EditorPage })));
 const AssetsPage = lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetsPage })));
 const ImagePage = lazy(() => import('@sdkwork/react-image').then(m => ({ default: m.ImagePage })));
@@ -67,16 +66,18 @@ const MyTasksWithLayout = () => (
 );
 
 // Providers & Sidebars
-import { AssetSidebar, AssetStoreProvider } from '@sdkwork/react-assets';
-import { ImageStoreProvider } from '@sdkwork/react-image';
-import { VideoStoreProvider } from '@sdkwork/react-video';
-import { MusicStoreProvider } from '@sdkwork/react-music';
-import { SfxStoreProvider } from '@sdkwork/react-sfx';
-import { VoiceStoreProvider } from '@sdkwork/react-voicespeaker';
-import { AudioStoreProvider } from '@sdkwork/react-audio';
-import { CharacterStoreProvider } from '@sdkwork/react-character';
-import { MagicCutStoreProvider } from '@sdkwork/react-magiccut';
-import { ChatPPTStoreProvider, PPTExplorer } from '@sdkwork/react-chatppt';
+const AssetSidebar = lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetSidebar })));
+const AssetStoreProvider = lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetStoreProvider })));
+const ImageStoreProvider = lazy(() => import('@sdkwork/react-image').then(m => ({ default: m.ImageStoreProvider })));
+const VideoStoreProvider = lazy(() => import('@sdkwork/react-video').then(m => ({ default: m.VideoStoreProvider })));
+const MusicStoreProvider = lazy(() => import('@sdkwork/react-music').then(m => ({ default: m.MusicStoreProvider })));
+const SfxStoreProvider = lazy(() => import('@sdkwork/react-sfx').then(m => ({ default: m.SfxStoreProvider })));
+const VoiceStoreProvider = lazy(() => import('@sdkwork/react-voicespeaker').then(m => ({ default: m.VoiceStoreProvider })));
+const AudioStoreProvider = lazy(() => import('@sdkwork/react-audio').then(m => ({ default: m.AudioStoreProvider })));
+const CharacterStoreProvider = lazy(() => import('@sdkwork/react-character').then(m => ({ default: m.CharacterStoreProvider })));
+const MagicCutStoreProvider = lazy(() => import('@sdkwork/react-magiccut').then(m => ({ default: m.MagicCutStoreProvider })));
+const ChatPPTStoreProvider = lazy(() => import('@sdkwork/react-chatppt').then(m => ({ default: m.ChatPPTStoreProvider })));
+const PPTExplorer = lazy(() => import('@sdkwork/react-chatppt').then(m => ({ default: m.PPTExplorer })));
 
 // Panels (Left Panes) - Lazy load to fix circular dependency issues
 const ImageLeftGeneratorPanel = lazy(() => import('@sdkwork/react-image').then(m => ({ default: m.ImageLeftGeneratorPanel })));

@@ -4,39 +4,35 @@ import { TIMELINE_CONSTANTS } from '../../../constants';
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useMagicCutStore } from '../../../store/magicCutStore';
 import { InteractionState } from '../../../store/types';
-;
-;
 import { useSnapPoints } from '../canvas/hooks/useSnapPoints';
 import { ResourceDropStrategy } from '../dnd/strategies/ResourceDropStrategy';
 import { DragInput, DragContext } from '../dnd/types';
-import { TrackFactory } from '../../../services/TrackFactory';
 
 const RENDER_BUFFER_PX = 1000;
 const ZOOM_MAX_FPS = 60;
 
 const getTrackHeight = (track: CutTrack) => {
     if (track.height) return track.height;
-    if (track.type === 'video') return TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
-    if (track.type === 'audio') return TIMELINE_CONSTANTS.TRACK_HEIGHT_AUDIO;
-    if (track.type === 'text') return TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
-    if (track.type === 'effect') return TIMELINE_CONSTANTS.TRACK_HEIGHT_EFFECT;
+    if (track.trackType === 'video') return TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
+    if (track.trackType === 'audio') return TIMELINE_CONSTANTS.TRACK_HEIGHT_AUDIO;
+    if (track.trackType === 'text') return TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
+    if (track.trackType === 'effect') return TIMELINE_CONSTANTS.TRACK_HEIGHT_EFFECT;
     return TIMELINE_CONSTANTS.TRACK_HEIGHT_DEFAULT;
 };
 
 export const useTimeline = (
     containerWidth: number, 
     containerHeight: number, 
-    tracksContainerRef: React.RefObject<HTMLDivElement> 
+    tracksContainerRef: React.RefObject<HTMLDivElement | null> 
 ) => {
     const { 
         activeTimeline, state, 
-        selectClip, isSkimmingEnabled,
+        selectClip,
         addClip, canSeek, totalDuration,
         validateTrackDrop, checkCollision,
         playerController, setSkimmingResource, setPreviewEffect,
         insertTrackAndAddClip, isSnappingEnabled,
         useTransientState, store, seek,
-        getGlobalSnapPoints,
         getResource,
         importFileObjects
     } = useMagicCutStore();

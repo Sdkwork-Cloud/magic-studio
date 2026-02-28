@@ -1,26 +1,19 @@
 
-import { CutClip } from '../../../../entities/magicCut.entity'
-import { TimelineEditService } from '../../../../services/TimelineEditService'
 import React, { useRef, useCallback } from 'react';
-import { InteractionState, DragOperation, EditTool } from '../../../../store/types';
+import { InteractionState, DragOperation } from '../../../../store/types';
 import { PlayerController } from '../../../../controllers/PlayerController';
 import { MagicCutEventBus } from '../../../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../../../events';
-;
-;
 
 interface UseTimelineInteractionsOptions {
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
     pixelsPerSecond: number;
     playerController: PlayerController;
     bus: MagicCutEventBus;
     interaction: InteractionState;
     dragOperation: DragOperation | null;
     trackLayouts: { id: string; top: number; height: number }[];
-    selectRegion: (startTime: number, endTime: number, trackIds: string[]) => void;
     selectClip: (id: string | null, multi?: boolean) => void;
-    state: any;
-    applyEditResult: (result: any) => void;
 }
 
 interface UseTimelineInteractionsReturn {
@@ -30,8 +23,6 @@ interface UseTimelineInteractionsReturn {
     isScrubbing: React.MutableRefObject<boolean>;
 }
 
-const TRIM_THRESHOLD = 0.15;
-
 export const useTimelineInteractions = ({
     containerRef,
     pixelsPerSecond,
@@ -40,14 +31,10 @@ export const useTimelineInteractions = ({
     interaction,
     dragOperation,
     trackLayouts,
-    selectRegion,
-    selectClip,
-    state,
-    applyEditResult
+    selectClip
 }: UseTimelineInteractionsOptions): UseTimelineInteractionsReturn => {
     const isScrubbing = useRef(false);
     const mouseMoveRaf = useRef<number | null>(null);
-    const editTool = useRef<EditTool>('select');
 
     const getTimeFromEvent = useCallback((clientX: number, cachedRect?: DOMRect) => {
         const container = containerRef.current;
@@ -74,18 +61,6 @@ export const useTimelineInteractions = ({
         return null;
     }, [containerRef, trackLayouts]);
 
-    const detectTrimType = useCallback((clip: CutClip, time: number): 'start' | 'end' | null => {
-        const threshold = TRIM_THRESHOLD;
-        
-        if (Math.abs(time - clip.start) < threshold) {
-            return 'start';
-        }
-        if (Math.abs(time - (clip.start + clip.duration)) < threshold) {
-            return 'end';
-        }
-        return null;
-    }, []);
-
     const handleBackgroundMouseDown = useCallback((e: React.MouseEvent) => {
         if (e.button !== 0) return;
         
@@ -104,8 +79,6 @@ export const useTimelineInteractions = ({
         const startY = e.clientY;
         
         const cachedRect = containerRef.current?.getBoundingClientRect();
-        const startTime = getTimeFromEvent(e.clientX, cachedRect);
-        const startTrackId = getTrackFromY(e.clientY);
 
         const handleWinMove = (ev: MouseEvent) => {
             if (!isDrag) {

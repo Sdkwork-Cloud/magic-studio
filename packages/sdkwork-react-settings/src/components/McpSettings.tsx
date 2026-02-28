@@ -1,5 +1,5 @@
 
-import { McpConfig } from '../entities/settings.entity'
+import { McpConfig } from '../entities'
 import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 

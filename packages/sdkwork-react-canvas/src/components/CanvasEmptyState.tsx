@@ -1,5 +1,5 @@
 
-import { CanvasElementType } from '../entities/canvas.entity'
+import { CanvasElementType } from '../entities'
 import React from 'react';
 import { 
     Image as ImageIcon, Film, Type, StickyNote, LayoutGrid

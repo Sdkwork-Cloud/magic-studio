@@ -8,9 +8,17 @@ import {
 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 import { genAIService, uploadHelper } from '@sdkwork/react-core';
-import { CanvasElement } from '../entities/canvas.entity';
+import { CanvasElement, CanvasMediaResource } from '../entities';
 import { Popover, AspectRatioSelector } from '@sdkwork/react-commons';
-import { assetService, CreationChatInput, InputFooterButton, InputAttachment } from '@sdkwork/react-assets';
+import {
+    assetBusinessFacade,
+    assetService,
+    CreationChatInput,
+    InputFooterButton,
+    InputAttachment,
+    type AssetMutationResult,
+    readWorkspaceScope
+} from '@sdkwork/react-assets';
 import { ImageModelSelector } from '@sdkwork/react-image';
 import { VideoModelSelector } from '@sdkwork/react-video';
 import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
@@ -38,6 +46,79 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+};
+
+const toPositiveNumber = (value: unknown): number | undefined => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return undefined;
+    }
+    return parsed;
+};
+
+const resolveCanvasScope = (): { workspaceId: string; projectId?: string } => {
+    const scope = readWorkspaceScope();
+    return {
+        workspaceId: scope.workspaceId,
+        projectId: scope.projectId
+    };
+};
+
+const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
+    if (!source) {
+        return undefined;
+    }
+    if (source.startsWith('data:')) {
+        const comma = source.indexOf(',');
+        if (comma < 0) {
+            return undefined;
+        }
+        const base64 = source.slice(comma + 1);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+    if (source.startsWith('blob:')) {
+        const response = await fetch(source);
+        return new Uint8Array(await response.arrayBuffer());
+    }
+    return undefined;
+};
+
+const toCanvasResource = (
+    result: AssetMutationResult,
+    fallbackType: 'image' | 'video'
+): CanvasMediaResource => {
+    const primary = result.asset.payload[result.asset.primaryType] || result.asset.payload.assets[0];
+    const primaryMeta = (primary || {}) as {
+        size?: unknown;
+        duration?: unknown;
+        width?: unknown;
+        height?: unknown;
+        metadata?: Record<string, unknown>;
+    };
+    const metadata = {
+        ...(primaryMeta.metadata || {}),
+        ...(result.asset.metadata || {})
+    };
+    const isVideo = result.asset.primaryType === 'video';
+    return {
+        id: result.asset.assetId,
+        uuid: result.asset.uuid,
+        name: result.asset.title,
+        type: isVideo ? 'video' : (result.asset.primaryType === 'image' ? 'image' : fallbackType),
+        url: result.primaryLocator.uri,
+        path: result.primaryLocator.uri,
+        size: toPositiveNumber(primaryMeta.size),
+        duration: toPositiveNumber(primaryMeta.duration ?? metadata.duration),
+        width: toPositiveNumber(primaryMeta.width ?? metadata.width),
+        height: toPositiveNumber(primaryMeta.height ?? metadata.height),
+        thumbnailUrl: (metadata.thumbnailUrl as string) || (metadata.thumbnailPath as string) || undefined,
+        metadata
+    };
 };
 
 const VideoModeDropdown: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
@@ -225,15 +306,25 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
 
              if (!resultUrl) throw new Error("Generation returned empty URL");
 
-             const newAsset = await assetService.saveGeneratedAsset(
-                 resultUrl, assetType, { prompt }, `canvas_gen_${type}_${Date.now()}`
-             );
-             const newResource = assetService.toMediaResource(newAsset);
+             const inlineData = await tryExtractInlineData(resultUrl);
+             const imported = await assetBusinessFacade.importCanvasAsset({
+                 scope: resolveCanvasScope(),
+                 type: assetType,
+                 name: `canvas_gen_${type}_${Date.now()}${assetType === 'video' ? '.mp4' : '.png'}`,
+                 data: inlineData,
+                 remoteUrl: inlineData ? undefined : resultUrl,
+                 metadata: {
+                     prompt,
+                     origin: 'ai',
+                     source: 'canvas-generate'
+                 }
+             });
+             const newResource = toCanvasResource(imported, assetType);
              
              let newWidth = width;
              let newHeight = height;
-             if (newAsset.metadata.width && newAsset.metadata.height) {
-                 const ratio = newAsset.metadata.width / newAsset.metadata.height;
+             if (newResource.width && newResource.height) {
+                 const ratio = newResource.width / newResource.height;
                  newHeight = width / ratio;
              }
 
@@ -241,7 +332,7 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                  resource: newResource,
                  width: newWidth,
                  height: newHeight,
-                 data: { ...data, status: 'completed', resultUrl: newAsset.path }
+                 data: { ...data, status: 'completed', resultUrl: newResource.path || newResource.url }
              });
 
         } catch (e: any) {
@@ -282,13 +373,23 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
             const files = await uploadHelper.pickFiles(true, accept);
             if (files.length > 0) {
                 const file = files[0];
-                const savedAsset = await assetService.importAsset(file.data, file.name, type as 'image' | 'video');
-                const newResource = assetService.toMediaResource(savedAsset);
+                const saved = await assetBusinessFacade.importCanvasAsset({
+                    scope: resolveCanvasScope(),
+                    type: type as 'image' | 'video',
+                    name: file.name,
+                    data: file.data,
+                    sourcePath: file.path,
+                    metadata: {
+                        origin: 'upload',
+                        source: 'canvas-upload'
+                    }
+                });
+                const newResource = toCanvasResource(saved, type as 'image' | 'video');
                 
                 let newWidth = element.width;
                 let newHeight = element.height;
-                const metaWidth = savedAsset.metadata?.width || 0;
-                const metaHeight = savedAsset.metadata?.height || 0;
+                const metaWidth = newResource.width || 0;
+                const metaHeight = newResource.height || 0;
 
                 if (metaWidth > 0 && metaHeight > 0) {
                     const ratio = metaWidth / metaHeight;
@@ -301,7 +402,7 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                 }
                 updateElement(id, { 
                     resource: newResource, width: newWidth, height: newHeight,
-                    data: { ...data, duration: savedAsset.metadata?.duration ? String(savedAsset.metadata.duration) : undefined }
+                    data: { ...data, duration: newResource.duration ? String(newResource.duration) : undefined }
                 }, true);
             }
         } catch (err) { console.error("Upload failed", err); }

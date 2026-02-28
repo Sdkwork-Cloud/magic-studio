@@ -38,6 +38,27 @@ export class OfflineRenderer {
         return maxDuration;
     }
 
+    private sliceAudioBuffer(buffer: AudioBuffer, startTime: number, endTime: number): AudioBuffer {
+        const sampleRate = buffer.sampleRate;
+        const startSample = Math.max(0, Math.floor(startTime * sampleRate));
+        const endSample = Math.min(buffer.length, Math.ceil(endTime * sampleRate));
+        const outLength = Math.max(1, endSample - startSample);
+
+        const trimmed = new AudioBuffer({
+            length: outLength,
+            sampleRate,
+            numberOfChannels: buffer.numberOfChannels
+        });
+
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+            const input = buffer.getChannelData(ch);
+            const output = trimmed.getChannelData(ch);
+            output.set(input.subarray(startSample, endSample));
+        }
+
+        return trimmed;
+    }
+
     public async render(
         timeline: CutTimeline, 
         state: NormalizedState, 
@@ -54,9 +75,19 @@ export class OfflineRenderer {
         if (signal?.aborted) throw new Error("Export cancelled");
 
         const contentDuration = this.getContentDuration(timeline, state);
-        const duration = contentDuration > 0 ? contentDuration : (timeline.duration || 10);
+        const fullDuration = contentDuration > 0 ? contentDuration : (timeline.duration || 10);
         const fps = config.frameRate || 30;
-        const totalFrames = Math.ceil(duration * fps);
+
+        const rangeStartTime = Math.max(0, Math.min(config.startTime ?? 0, fullDuration));
+        const requestedEndTime = config.endTime ?? fullDuration;
+        const rangeEndTime = Math.max(rangeStartTime, Math.min(requestedEndTime, fullDuration));
+        const duration = Math.max(0, rangeEndTime - rangeStartTime);
+
+        if (duration <= 0) {
+            throw new Error('Invalid export range. Please check In/Out points.');
+        }
+
+        const totalFrames = Math.max(1, Math.ceil(duration * fps));
         const frameDuration = 1 / fps;
 
         let audioBuffer: AudioBuffer | null = null;
@@ -67,6 +98,10 @@ export class OfflineRenderer {
                 state.tracks, 
                 state.clips
             );
+
+            if (audioBuffer && (rangeStartTime > 0 || rangeEndTime < fullDuration)) {
+                audioBuffer = this.sliceAudioBuffer(audioBuffer, rangeStartTime, rangeEndTime);
+            }
         }
 
         if (signal?.aborted) throw new Error("Export cancelled");
@@ -74,21 +109,21 @@ export class OfflineRenderer {
         await encoder.initialize(this.canvas, audioBuffer, config);
 
         // Seek Frame 0 to stabilize
-        await this.engine.seekAndRenderAsync(0, timeline, state.resources, state.tracks, state.clips, state.layers);
+        await this.engine.seekAndRenderAsync(rangeStartTime, timeline, state.resources, state.tracks, state.clips, state.layers);
 
         encoder.start();
 
-        const startTime = performance.now();
+        const renderStartWallTime = performance.now();
 
         try {
             for (let i = 0; i <= totalFrames; i++) {
                 if (signal?.aborted) throw new Error("Export cancelled");
 
-                const time = i * frameDuration;
+                const time = Math.min(rangeEndTime, rangeStartTime + (i * frameDuration));
                 
                 // Real-time throttling if needed (e.g. MediaRecorder)
                 if (encoder.requiresRealtime) {
-                    const targetWallTime = startTime + (time * 1000);
+                    const targetWallTime = renderStartWallTime + ((time - rangeStartTime) * 1000);
                     const currentWallTime = performance.now();
                     const waitTime = targetWallTime - currentWallTime;
                     if (waitTime > 0) await new Promise(r => setTimeout(r, waitTime));

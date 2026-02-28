@@ -84,6 +84,75 @@ export interface MusicMediaResource extends AudioMediaResource {
 }
 
 // ============================================================================
+// Voice Media Resource
+// ============================================================================
+
+export interface VoiceMediaResource extends AudioMediaResource {
+    speakerId?: string;
+    language?: string;
+    gender?: string;
+    emotion?: string;
+}
+
+// ============================================================================
+// Text Media Resource
+// ============================================================================
+
+export interface TextMediaResource extends FileMediaResource {
+    text?: string;
+    language?: string;
+    fontFamily?: string;
+    fontSize?: number;
+}
+
+// ============================================================================
+// Subtitle Media Resource
+// ============================================================================
+
+export interface SubtitleMediaResource extends FileMediaResource {
+    language?: string;
+    cueCount?: number;
+    format?: 'srt' | 'ass' | 'vtt';
+}
+
+// ============================================================================
+// Effect Media Resource
+// ============================================================================
+
+export interface EffectMediaResource extends FileMediaResource {
+    effectType?: string;
+    intensity?: number;
+}
+
+// ============================================================================
+// Transition Media Resource
+// ============================================================================
+
+export interface TransitionMediaResource extends FileMediaResource {
+    transitionType?: string;
+    duration?: number;
+}
+
+// ============================================================================
+// Lottie Media Resource
+// ============================================================================
+
+export interface LottieMediaResource extends FileMediaResource {
+    frameRate?: number;
+    loop?: boolean;
+}
+
+// ============================================================================
+// Model3D Media Resource
+// ============================================================================
+
+export interface Model3DMediaResource extends FileMediaResource {
+    polygonCount?: number;
+    hasRig?: boolean;
+    hasAnimation?: boolean;
+}
+
+// ============================================================================
 // Character Media Resource
 // ============================================================================
 
@@ -100,18 +169,99 @@ export interface CharacterMediaResource extends MediaResource {
 }
 
 // ============================================================================
+// Digital Human Media Resource
+// ============================================================================
+
+export interface DigitalHumanMediaResource extends CharacterMediaResource {
+    rigType?: 'face' | 'body' | 'full';
+    style?: 'realistic' | 'anime' | 'cartoon' | 'stylized';
+    voiceProfileId?: string;
+}
+
+// ============================================================================
+// SFX Media Resource
+// ============================================================================
+
+export interface SfxMediaResource extends AudioMediaResource {
+    category?: 'ambient' | 'ui' | 'foley' | 'weapons' | 'vehicles' | 'nature' | 'sci-fi' | 'fantasy';
+    intensity?: 'soft' | 'medium' | 'loud';
+    loopable?: boolean;
+}
+
+// ============================================================================
+// Asset Content Key
+// ============================================================================
+
+export type AssetContentKey =
+    | 'video'
+    | 'image'
+    | 'audio'
+    | 'music'
+    | 'voice'
+    | 'text'
+    | 'character'
+    | 'digitalHuman'
+    | 'model3d'
+    | 'lottie'
+    | 'file'
+    | 'effect'
+    | 'transition'
+    | 'subtitle'
+    | 'sfx';
+
+// ============================================================================
 // Asset Media Resource
 // ============================================================================
 
 export interface AssetMediaResource extends MediaResource {
+    // Single-content slots use explicit keys.
     image?: ImageMediaResource;
     video?: VideoMediaResource;
     audio?: AudioMediaResource;
     music?: MusicMediaResource;
+    voice?: VoiceMediaResource;
+    text?: TextMediaResource;
     character?: CharacterMediaResource;
+    digitalHuman?: DigitalHumanMediaResource;
+    model3d?: Model3DMediaResource;
+    lottie?: LottieMediaResource;
     file?: FileMediaResource;
+    effect?: EffectMediaResource;
+    transition?: TransitionMediaResource;
+    subtitle?: SubtitleMediaResource;
+    sfx?: SfxMediaResource;
+    // Multi-content assets must be placed in this array.
+    assets?: AssetMediaResource[];
+    // Primary slot marker for render/query optimization.
+    primary?: AssetContentKey;
     extraProps?: Record<string, any>;
 }
+
+// ========================================================================
+// Asset Atomic Media Resource
+// ========================================================================
+
+// Asset-center payload and repository layers should use this pure resource type.
+// It intentionally excludes composite slot/container fields from AssetMediaResource.
+export type AssetAtomicMediaResource = Omit<
+    AssetMediaResource,
+    | 'image'
+    | 'video'
+    | 'audio'
+    | 'music'
+    | 'voice'
+    | 'text'
+    | 'character'
+    | 'digitalHuman'
+    | 'model3d'
+    | 'lottie'
+    | 'file'
+    | 'effect'
+    | 'transition'
+    | 'subtitle'
+    | 'sfx'
+    | 'assets'
+>;
 
 // ============================================================================
 // Any Media Resource Union Type
@@ -123,7 +273,16 @@ export type AnyMediaResource =
     | ImageMediaResource
     | AudioMediaResource
     | MusicMediaResource
+    | VoiceMediaResource
+    | TextMediaResource
+    | SubtitleMediaResource
+    | EffectMediaResource
+    | TransitionMediaResource
+    | LottieMediaResource
+    | Model3DMediaResource
     | CharacterMediaResource
+    | DigitalHumanMediaResource
+    | SfxMediaResource
     | AssetMediaResource;
 
 // ============================================================================
