@@ -11,6 +11,7 @@ export * from './PageContainer';
 export * from './Popover';
 export * from './PromptText';
 export * from './Tabs';
+export * from './framework';
 
 // Upload Components - Generic file upload primitives
 export * from './upload';
