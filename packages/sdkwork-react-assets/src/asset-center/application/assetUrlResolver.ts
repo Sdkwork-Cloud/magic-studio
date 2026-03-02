@@ -16,7 +16,6 @@ type SourceObject = {
   voice?: unknown;
   text?: unknown;
   character?: unknown;
-  digitalHuman?: unknown;
   model3d?: unknown;
   lottie?: unknown;
   file?: unknown;
@@ -35,7 +34,6 @@ const SLOT_KEYS: Array<keyof SourceObject> = [
   'voice',
   'text',
   'character',
-  'digitalHuman',
   'model3d',
   'lottie',
   'file',

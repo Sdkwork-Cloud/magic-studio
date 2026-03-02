@@ -65,9 +65,9 @@ const MyTasksWithLayout = () => (
   </React.Suspense>
 );
 
-// Providers & Sidebars
-const AssetSidebar = lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetSidebar })));
+// Providers
 const AssetStoreProvider = lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetStoreProvider })));
+const EditorStoreProvider = lazy(() => import('@sdkwork/react-editor').then(m => ({ default: m.EditorStoreProvider })));
 const ImageStoreProvider = lazy(() => import('@sdkwork/react-image').then(m => ({ default: m.ImageStoreProvider })));
 const VideoStoreProvider = lazy(() => import('@sdkwork/react-video').then(m => ({ default: m.VideoStoreProvider })));
 const MusicStoreProvider = lazy(() => import('@sdkwork/react-music').then(m => ({ default: m.MusicStoreProvider })));
@@ -130,7 +130,7 @@ export interface RouteDefinition {
 export const APP_ROUTES: RouteDefinition[] = [
     // --- Main Layout Routes ---
     { path: ROUTES.HOME, component: HomePage, layout: 'none' }, 
-    { path: ROUTES.EDITOR, component: EditorPage, layout: 'main' },
+    { path: ROUTES.EDITOR, component: EditorPage, layout: 'main', provider: EditorStoreProvider },
     { path: ROUTES.CHAT, component: ChatPage, layout: 'none' },
     { path: ROUTES.BROWSER, component: BrowserPage, layout: 'main' },
     { path: ROUTES.DRIVE, component: DrivePage, layout: 'main' },
@@ -138,7 +138,6 @@ export const APP_ROUTES: RouteDefinition[] = [
         path: ROUTES.ASSETS, 
         component: AssetsPage, 
         layout: 'creation',
-        leftPane: AssetSidebar,
         provider: AssetStoreProvider
     },
     { path: ROUTES.SETTINGS, component: SettingsPage, layout: 'none' },

@@ -6,7 +6,7 @@ export const PORTAL_MODES = [
     { id: 'short_drama', label: 'AI 短剧', icon: Clapperboard, color: 'text-orange-500', desc: '一键生成连贯故事短片' },
     { id: 'video', label: 'AI 视频', icon: Video, color: 'text-pink-400', desc: '生成高品质视频片段' },
     { id: 'image', label: 'AI 图片', icon: ImageIcon, color: 'text-blue-400', desc: '生成艺术图像与素材' },
-    { id: 'human', label: '数字人', icon: Bot, color: 'text-green-400', desc: 'AI 数字人播报' },
+    { id: 'human', label: '角色', icon: Bot, color: 'text-green-400', desc: 'AI 角色创作与播报' },
     { id: 'music', label: 'AI 音乐', icon: Music, color: 'text-indigo-400', desc: '生成背景音乐与音效' },
 ];
 

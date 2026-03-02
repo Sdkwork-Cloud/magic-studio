@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Box, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 
 import { FilmProp, useAssetUrl, MediaScene } from '@sdkwork/react-commons';
 import { resolveFilmAssetUrlByAssetIdFirst, toFilmUseAssetSource } from '../../utils/filmAssetUrlResolver';

@@ -61,7 +61,7 @@ const MyTasksWithLayout = () => (
 );
 
 // Import providers and components from packages
-import { AssetSidebar, AssetStoreProvider } from '@sdkwork/react-assets';
+import { AssetStoreProvider } from '@sdkwork/react-assets';
 import { ImageStoreProvider } from '@sdkwork/react-image';
 import { VideoStoreProvider } from '@sdkwork/react-video';
 import { MusicStoreProvider } from '@sdkwork/react-music';
@@ -133,7 +133,6 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
         path: ROUTES.ASSETS, 
         component: LazyPageWrapper(AssetsPage), 
         layout: 'creation',
-        leftPane: AssetSidebar,
         provider: AssetStoreProvider
     },
     { path: ROUTES.SETTINGS, component: LazyPageWrapper(SettingsPage), layout: 'none' },

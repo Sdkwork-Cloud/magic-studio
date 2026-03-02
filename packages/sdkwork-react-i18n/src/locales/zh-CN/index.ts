@@ -14,6 +14,7 @@ import { film } from './film';
 import { video } from './video';
 import { image } from './image';
 import { portalVideo } from './portalVideo';
+import { assetCenter } from './assetCenter';
 
 export const zhCN = {
     common,
@@ -35,5 +36,6 @@ export const zhCN = {
     film,
     video,
     image,
-    portalVideo
+    portalVideo,
+    assetCenter
 };

@@ -169,16 +169,6 @@ export interface CharacterMediaResource extends MediaResource {
 }
 
 // ============================================================================
-// Digital Human Media Resource
-// ============================================================================
-
-export interface DigitalHumanMediaResource extends CharacterMediaResource {
-    rigType?: 'face' | 'body' | 'full';
-    style?: 'realistic' | 'anime' | 'cartoon' | 'stylized';
-    voiceProfileId?: string;
-}
-
-// ============================================================================
 // SFX Media Resource
 // ============================================================================
 
@@ -200,7 +190,6 @@ export type AssetContentKey =
     | 'voice'
     | 'text'
     | 'character'
-    | 'digitalHuman'
     | 'model3d'
     | 'lottie'
     | 'file'
@@ -222,7 +211,6 @@ export interface AssetMediaResource extends MediaResource {
     voice?: VoiceMediaResource;
     text?: TextMediaResource;
     character?: CharacterMediaResource;
-    digitalHuman?: DigitalHumanMediaResource;
     model3d?: Model3DMediaResource;
     lottie?: LottieMediaResource;
     file?: FileMediaResource;
@@ -252,7 +240,6 @@ export type AssetAtomicMediaResource = Omit<
     | 'voice'
     | 'text'
     | 'character'
-    | 'digitalHuman'
     | 'model3d'
     | 'lottie'
     | 'file'
@@ -281,7 +268,6 @@ export type AnyMediaResource =
     | LottieMediaResource
     | Model3DMediaResource
     | CharacterMediaResource
-    | DigitalHumanMediaResource
     | SfxMediaResource
     | AssetMediaResource;
 

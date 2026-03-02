@@ -46,7 +46,7 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     { id: 'image', label: '图片', icon: ImageIcon, description: '图片生成、编辑、风格转换' },
     { id: 'music', label: '音乐', icon: Music, description: '音乐生成、音频处理' },
     { id: 'audio', label: '音频', icon: Mic, description: '语音合成、配音、音效' },
-    { id: 'character', label: '数字人', icon: Users, description: '数字人、虚拟角色' },
+    { id: 'character', label: '角色', icon: Users, description: 'AI 角色、虚拟角色' },
     { id: 'productivity', label: '生产力', icon: FileText, description: '文档、翻译、办公' },
     { id: 'development', label: '开发', icon: Code, description: '代码生成、调试、测试' },
     { id: 'automation', label: '自动化', icon: Workflow, description: '工作流、任务自动化' },

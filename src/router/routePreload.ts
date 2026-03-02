@@ -110,7 +110,7 @@ const resolvePreloadKeys = (currentPath: string): RoutePreloadKey[] => {
     return ['portal-video', 'film', 'assets'];
   }
   if (isRoute(currentPath, ROUTES.HOME)) {
-    return ['editor', 'assets', 'portal-video'];
+    return [];
   }
   return [];
 };
@@ -171,4 +171,3 @@ export const scheduleRoutePreload = (currentPath: string): CancelFn => {
     window.clearTimeout(timerId);
   };
 };
-

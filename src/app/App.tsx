@@ -60,10 +60,6 @@ const matchRoute = (routePath: string, currentPath: string): { matched: boolean;
 
 const AppContent: React.FC = () => {
   const { currentPath } = useRouter();
-
-  React.useEffect(() => {
-      console.log('[AppContent] currentPath changed:', currentPath);
-  }, [currentPath]);
   useEffect(() => {
       return scheduleRoutePreload(currentPath);
   }, [currentPath]);
@@ -72,11 +68,9 @@ const AppContent: React.FC = () => {
       for (const r of APP_ROUTES) {
           const result = matchRoute(r.path, currentPath);
           if (result.matched) {
-              console.log('[AppContent] route found for', currentPath, ':', r.component?.name || 'not found', 'params:', result.params);
               return { route: r, params: result.params };
           }
       }
-      console.warn('[AppContent] No route found for path:', currentPath);
       return { route: undefined, params: {} };
   }, [currentPath]);
 
@@ -89,8 +83,6 @@ const AppContent: React.FC = () => {
   }
 
   const { component: Component, layout, leftPane: LeftPaneComponent, provider: RouteProvider } = route;
-
-  console.log('[AppContent] Rendering route:', currentPath, 'with layout:', layout, 'component:', Component?.name);
 
   const LayoutComponent = LAYOUT_COMPONENTS[layout] || BlankLayout;
 

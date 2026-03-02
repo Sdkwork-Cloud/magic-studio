@@ -7,6 +7,7 @@ import {
     StickyNote, Square, Undo, Redo
 } from 'lucide-react';
 import { useCanvasStore } from '../store'; 
+import { getCanvasViewportSize } from '../utils/canvasContainer';
 
 export const CanvasToolbar: React.FC = () => {
     // Zustand Hooks
@@ -18,8 +19,9 @@ export const CanvasToolbar: React.FC = () => {
     const canRedo = useCanvasStore(s => s.future.length > 0);
 
     const handleAdd = (type: CanvasElementType) => {
-        const containerWidth = window.innerWidth;
-        const containerHeight = window.innerHeight;
+        const viewportSize = getCanvasViewportSize();
+        const containerWidth = viewportSize.width;
+        const containerHeight = viewportSize.height;
         
         // Calculate World Center
         const centerX = (containerWidth / 2 - viewport.x) / viewport.zoom;

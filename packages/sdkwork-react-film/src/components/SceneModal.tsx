@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, MapPin, Image as ImageIcon, Users, Box, Check, Plus, Sparkles, Sun, Moon, Sunrise, Sunset, Home, TreePine, Wand2, ChevronDown } from 'lucide-react';
 
-import { Button, FilmScene, FilmLocation, FilmCharacter, FilmProp, MediaScene, useAssetUrl } from '@sdkwork/react-commons';
+import { FilmScene, FilmCharacter, FilmProp, MediaScene, useAssetUrl } from '@sdkwork/react-commons';
 import { useFilmStore } from '../store/filmStore';
 import { CharacterModal } from './CharacterModal';
 import { PropModal } from './PropModal';

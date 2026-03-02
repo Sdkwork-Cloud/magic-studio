@@ -243,6 +243,9 @@ export class TaskService implements ITaskService {
           t.description.toLowerCase().includes(keyword)
       );
     }
+    if (params.difficulty) {
+      filtered = filtered.filter((t) => t.difficulty === params.difficulty);
+    }
 
     // 按难度和预算排序
     const difficultyOrder = { EASY: 0, MEDIUM: 1, HARD: 2, EXPERT: 3 };

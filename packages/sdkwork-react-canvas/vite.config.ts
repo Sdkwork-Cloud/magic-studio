@@ -24,8 +24,8 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        '@sdkwork/react-commons',
-        '@sdkwork/react-core'
+        // Treat all SDKWork workspace packages as externals for library build.
+        /^@sdkwork\//
       ],
       output: {
         globals: {

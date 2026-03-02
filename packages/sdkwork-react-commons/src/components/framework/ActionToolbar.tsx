@@ -5,6 +5,8 @@ import type { FrameworkComponentProps, ToolbarAction } from './types';
 export interface ActionToolbarProps extends FrameworkComponentProps {
   actions: ToolbarAction[];
   compact?: boolean;
+  direction?: 'horizontal' | 'vertical';
+  stretch?: boolean;
   align?: 'start' | 'center' | 'end' | 'between';
   onAction?: (actionId: string, action: ToolbarAction) => void;
 }
@@ -29,17 +31,31 @@ export const ActionToolbar: FC<ActionToolbarProps> = ({
   testId,
   actions,
   compact = false,
+  direction = 'horizontal',
+  stretch = false,
   align = 'start',
   onAction
 }) => {
   const visibleActions = actions.filter((action) => action.visible !== false);
   const buttonSizeClass = compact ? 'h-7 px-2 text-xs' : 'h-8 px-3 text-sm';
+  const layoutClass =
+    direction === 'vertical'
+      ? 'flex-col'
+      : 'flex-row flex-wrap';
+  const alignClass =
+    direction === 'vertical'
+      ? align === 'center'
+        ? 'items-center'
+        : align === 'end'
+          ? 'items-end'
+          : 'items-stretch'
+      : alignClassMap[align];
 
   return (
     <div
       id={id}
       data-testid={testId}
-      className={cn('flex flex-wrap items-center gap-2', alignClassMap[align], className)}
+      className={cn('flex gap-2', layoutClass, alignClass, className)}
       style={style}
     >
       {visibleActions.map((action) => {
@@ -57,6 +73,7 @@ export const ActionToolbar: FC<ActionToolbarProps> = ({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-[var(--sdk-radius-sm)] border border-[var(--sdk-border)] transition-colors duration-150',
               'disabled:cursor-not-allowed disabled:opacity-50',
+              stretch ? 'w-full justify-start' : 'justify-center',
               buttonSizeClass,
               toneClassMap[tone]
             )}
@@ -69,4 +86,3 @@ export const ActionToolbar: FC<ActionToolbarProps> = ({
     </div>
   );
 };
-

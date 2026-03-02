@@ -27,13 +27,17 @@ import {
 
 interface AssetStoreContextType {
   assets: Asset[];
+  loadedAssets: Asset[];
   pageData: Page<Asset> | null;
   isLoading: boolean;
+  originCounts: Record<AssetOrigin | 'all', number>;
+  typeCounts: Partial<Record<AssetType | 'all', number>>;
   
   // Filters
   filterType: AssetType | 'all';
   filterOrigin: AssetOrigin | 'all'; // New: Source Filter
   searchQuery: string;
+  domain: AssetBusinessDomain;
   
   // Selection
   selectedAsset: Asset | null;
@@ -44,6 +48,7 @@ interface AssetStoreContextType {
   setFilterOrigin: (origin: AssetOrigin | 'all') => void;
   setSearchQuery: (query: string) => void;
   setSelectedAsset: (asset: Asset | null) => void;
+  clearFilters: () => void;
   
   refresh: () => Promise<void>;
   loadPage: (page: number) => Promise<void>;
@@ -67,6 +72,17 @@ const createEmptyPage = (
 ): Page<Asset> => createSpringPage([], { page, size, sort });
 
 const ASSET_PAGE_SIZE = 60;
+const FILTER_STORAGE_PREFIX = 'sdkwork.asset-center.filters.v1';
+const FILTER_ORIGIN_CANDIDATES: Array<AssetOrigin | 'all'> = [
+  'all',
+  'upload',
+  'ai',
+  'stock',
+  'system'
+];
+
+const buildFilterStorageKey = (domain: AssetBusinessDomain): string =>
+  `${FILTER_STORAGE_PREFIX}:${domain}`;
 
 const resolveQueryContentKeys = (
   filterType: AssetType | 'all',
@@ -107,6 +123,54 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
     return initialAllowedTypes.filter((item) => allowed.has(item));
   }, [domain, initialAllowedTypes]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(buildFilterStorageKey(domain));
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw) as {
+        type?: AssetType | 'all';
+        origin?: AssetOrigin | 'all';
+      };
+      if (parsed.origin && FILTER_ORIGIN_CANDIDATES.includes(parsed.origin)) {
+        setFilterOrigin(parsed.origin);
+      }
+      if (!parsed.type) {
+        return;
+      }
+      if (parsed.type === 'all') {
+        setFilterType('all');
+        return;
+      }
+      if (!allowedTypes || allowedTypes.length === 0 || allowedTypes.includes(parsed.type)) {
+        setFilterType(parsed.type);
+      }
+    } catch (error) {
+      console.warn('Failed to restore asset filters from local storage', error);
+    }
+  }, [allowedTypes, domain]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(
+        buildFilterStorageKey(domain),
+        JSON.stringify({
+          type: filterType,
+          origin: filterOrigin
+        })
+      );
+    } catch (error) {
+      console.warn('Failed to persist asset filters to local storage', error);
+    }
+  }, [domain, filterOrigin, filterType]);
+
   const load = useCallback(async (page = 0) => {
     const requestId = ++requestSequenceRef.current;
     setIsLoading(true);
@@ -137,8 +201,9 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         keyword: normalized.keyword,
         sort: normalized.sort,
         scope,
-        types: resolveQueryContentKeys(filterType, allowedTypes),
-        origins: filterOrigin === 'all' ? undefined : [filterOrigin],
+        // Keep server query broad inside current domain; apply UI filters client-side.
+        types: resolveQueryContentKeys('all', allowedTypes),
+        origins: undefined,
         includeDeleted: false
       });
 
@@ -161,7 +226,7 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         setIsLoading(false);
       }
     }
-  }, [allowedTypes, domain, filterOrigin, filterType, initialAllowedTypes, searchQuery]);
+  }, [allowedTypes, domain, initialAllowedTypes, searchQuery]);
 
   useEffect(() => {
     // Debounce search
@@ -187,6 +252,11 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
   const refresh = async () => {
     await load(0);
   };
+
+  const clearFilters = useCallback(() => {
+    setFilterType('all');
+    setFilterOrigin('all');
+  }, []);
 
   const importAssets = async () => {
     try {
@@ -284,20 +354,70 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
     });
   }, [assets, filterType, filterOrigin, allowedTypes]);
 
+  const originCounts = useMemo<Record<AssetOrigin | 'all', number>>(() => {
+    const counts: Record<AssetOrigin | 'all', number> = {
+      all: 0,
+      upload: 0,
+      ai: 0,
+      stock: 0,
+      system: 0
+    };
+    assets.forEach((asset) => {
+      if (allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(asset.type)) {
+        return;
+      }
+      // Source facets should respect current type filter.
+      if (filterType !== 'all' && asset.type !== filterType) {
+        return;
+      }
+      counts.all += 1;
+      if (asset.origin in counts) {
+        counts[asset.origin as AssetOrigin] += 1;
+      }
+    });
+    return counts;
+  }, [allowedTypes, assets, filterType]);
+
+  const typeCounts = useMemo<Partial<Record<AssetType | 'all', number>>>(() => {
+    const counts: Partial<Record<AssetType | 'all', number>> = {
+      all: 0
+    };
+    (allowedTypes || []).forEach((type) => {
+      counts[type] = 0;
+    });
+    assets.forEach((asset) => {
+      if (allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(asset.type)) {
+        return;
+      }
+      // Type facets should respect current source filter.
+      if (filterOrigin !== 'all' && asset.origin !== filterOrigin) {
+        return;
+      }
+      counts.all = (counts.all || 0) + 1;
+      counts[asset.type] = (counts[asset.type] || 0) + 1;
+    });
+    return counts;
+  }, [allowedTypes, assets, filterOrigin]);
+
   return (
     <AssetStoreContext.Provider value={{
       assets: displayedAssets,
+      loadedAssets: assets,
       pageData,
       isLoading,
+      originCounts,
+      typeCounts,
       filterType,
       filterOrigin,
       searchQuery,
+      domain,
       selectedAsset,
       allowedTypes,
       setFilterType,
       setFilterOrigin,
       setSearchQuery,
       setSelectedAsset,
+      clearFilters,
       refresh,
       loadPage: load,
       importAssets,

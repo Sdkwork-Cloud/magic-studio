@@ -85,7 +85,7 @@ export const sidebar = {
     quick_short: "AI Short Drama",
     video: "AI Video",
     image: "AI Image",
-    human: "Digital Human",
+    human: "Character",
     music: "AI Music",
     speech: "AI Speech",
     voice: "AI Voice",

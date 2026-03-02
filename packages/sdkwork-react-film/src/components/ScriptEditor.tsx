@@ -1,8 +1,8 @@
 
 import { Button } from '@sdkwork/react-commons'
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useFilmStore } from '../store/filmStore';
-import { Sparkles, Loader2, FileText, List, ChevronRight, Hash, Type } from 'lucide-react';
+import { Sparkles, Loader2, FileText, List, ChevronRight, Type } from 'lucide-react';
 
 const SCENE_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|EST\.)\s/i;
 
@@ -67,16 +67,6 @@ export const ScriptEditor: React.FC = () => {
         const textBeforeCursor = content.substring(0, cursorPos);
         const lineCount = textBeforeCursor.split('\n').length - 1;
         setActiveLine(lineCount);
-    };
-
-    // Realistic Paper Texture CSS
-    const paperStyle = {
-        backgroundImage: `
-            linear-gradient(90deg, transparent 95%, rgba(0,0,0,0.02) 95%),
-            linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px)
-        `,
-        backgroundSize: '20px 100%, 100% 28px',
-        backgroundColor: '#e6e4dc' // Slight off-white paper color
     };
 
     return (

@@ -7,9 +7,13 @@ import { getSmartPath } from '../../utils/smartPath';
 
 interface CanvasConnectionsProps {
     connectionRefs: React.MutableRefObject<Map<string, SVGPathElement>>;
+    viewportSize: {
+        width: number;
+        height: number;
+    };
 }
 
-export const CanvasConnections: React.FC<CanvasConnectionsProps> = React.memo(({ connectionRefs }) => {
+export const CanvasConnections: React.FC<CanvasConnectionsProps> = React.memo(({ connectionRefs, viewportSize }) => {
     const elements = useCanvasStore(s => s.elements);
     const selectedIds = useCanvasStore(s => s.selectedIds);
     const selectElement = useCanvasStore(s => s.selectElement);
@@ -19,8 +23,8 @@ export const CanvasConnections: React.FC<CanvasConnectionsProps> = React.memo(({
     const connections = useMemo(() => {
         const visibleX = -viewport.x / viewport.zoom;
         const visibleY = -viewport.y / viewport.zoom;
-        const visibleW = window.innerWidth / viewport.zoom;
-        const visibleH = window.innerHeight / viewport.zoom;
+        const visibleW = viewportSize.width / viewport.zoom;
+        const visibleH = viewportSize.height / viewport.zoom;
         
         const BUFFER = 1000;
         const vMinX = visibleX - BUFFER;
@@ -72,7 +76,7 @@ export const CanvasConnections: React.FC<CanvasConnectionsProps> = React.memo(({
             }
         }
         return results;
-    }, [elements, selectedIds, viewport]);
+    }, [elements, selectedIds, viewport, viewportSize.height, viewportSize.width]);
 
     const handleSelect = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();

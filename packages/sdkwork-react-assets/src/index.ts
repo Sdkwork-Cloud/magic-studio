@@ -3,6 +3,10 @@ export { AssetSidebar } from './components/AssetSidebar';
 export { ChooseAsset } from './components/ChooseAsset';
 export { ChooseAssetModal } from './components/ChooseAssetModal';
 export { AssetGrid } from './components/AssetGrid';
+export { AssetCenterHeader } from './components/AssetCenterHeader';
+export { AssetTypeTabs } from './components/AssetTypeTabs';
+export { AssetFilterDrawer } from './components/AssetFilterDrawer';
+export { AssetPreviewModal } from './components/AssetPreviewModal';
 export { AIGenerateCoverModal } from './components/AIGenerateCoverModal';
 
 export * from './i18n';
@@ -22,6 +26,7 @@ export { GenerationHistoryListPane, GENERATION_TABS } from './components/generat
 export { PromptTextInput } from './components/generate/PromptTextInput';
 
 export { useAssetUrl } from './hooks/useAssetUrl';
+export { useAssetCenterShortcuts } from './hooks/useAssetCenterShortcuts';
 
 export { useAssetStore, AssetStoreProvider } from './store/assetStore';
 
@@ -40,7 +45,7 @@ export {
     EffectAssetService,
     TransitionAssetService,
     MusicAssetService,
-    DigitalHumanAssetService,
+    CharacterAssetService,
     SfxAssetService
 } from './services/impl';
 
@@ -51,7 +56,7 @@ export type {
     VideoAsset,
     ImageAsset,
     AudioAsset,
-    DigitalHumanAsset,
+    CharacterAsset,
     SfxAsset,
     TextAsset,
     EffectAsset,

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useCanvasStore } from '../store';
 import { NodeFactory } from '../services/nodeFactory';
+import { getCanvasViewportSize } from '../utils/canvasContainer';
 ;
 ;
 
@@ -14,8 +15,9 @@ export const CanvasEmptyState: React.FC = () => {
     const viewport = useCanvasStore(s => s.viewport);
 
     const handleAdd = (type: CanvasElementType) => {
-        const containerWidth = window.innerWidth;
-        const containerHeight = window.innerHeight;
+        const viewportSize = getCanvasViewportSize();
+        const containerWidth = viewportSize.width;
+        const containerHeight = viewportSize.height;
         
         const centerX = (containerWidth / 2 - viewport.x) / viewport.zoom;
         const centerY = (containerHeight / 2 - viewport.y) / viewport.zoom;
@@ -73,7 +75,7 @@ export const CanvasEmptyState: React.FC = () => {
             </div>
             
             <p className="mt-12 text-[10px] text-gray-700 font-mono tracking-widest opacity-60">
-                SPACE TO PAN · SCROLL TO ZOOM · ALT+CLICK TO EDIT
+                SPACE TO PAN | SCROLL TO ZOOM | ALT+CLICK TO EDIT
             </p>
         </div>
     );

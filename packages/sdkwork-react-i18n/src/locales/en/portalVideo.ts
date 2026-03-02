@@ -13,8 +13,8 @@ export const portalVideo = {
       desc: "Generate artistic images and assets"
     },
     human: {
-      label: "Digital Human",
-      desc: "AI digital human broadcasting"
+      label: "Character",
+      desc: "AI character creation and performance"
     },
     music: {
       label: "AI Music",

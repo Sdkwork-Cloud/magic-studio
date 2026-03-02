@@ -13,13 +13,22 @@ import { CanvasConnections } from './layers/CanvasConnections';
 import { CanvasElement, CanvasElementType, ConnectionDraft, DropMenuState, MarqueeState, ContextMenuState } from '../entities';
 import { QuadTree, Rect } from '@sdkwork/react-commons';
 import { getSmartPath } from '../utils/smartPath';
-import { calculateSnap } from '../utils/snapping';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { CanvasAlignmentToolbar } from './CanvasAlignmentToolbar';
 import { CanvasMinimap } from './CanvasMinimap';
 import { CanvasZoomControls } from './CanvasZoomControls';
 import { SelectionOverlay } from './SelectionOverlay';
 import { NodeFactory } from '../services/nodeFactory';
+import {
+    AffectedConnection,
+    MoveElementStartPosition,
+    buildMoveCommitUpdates,
+    computeConnectionPreviewPaths,
+    computeGroupPreviewBounds,
+    computeMoveDeltaWithSnap,
+    hasMoveCommitChanges,
+    initializeMoveSession
+} from '../services/canvasInteractionService';
 
 export const Z_LAYERS = {
     BACKGROUND: 0,
@@ -40,12 +49,14 @@ export const CanvasBoard: React.FC = () => {
         setSnapLines, bringToFront, sendToBack, duplicateSelected,
         undo, redo, selectAll, copySelection, pasteSelection, 
         nudgeSelection, groupSelected, ungroupSelected,
-        setHighlightedGroup, fitGroupToChildren
+        setHighlightedGroup
     } = useCanvasStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [isSpacePressed, setIsSpacePressed] = useState(false);
+    const viewportWidth = containerSize.width > 0 ? containerSize.width : window.innerWidth;
+    const viewportHeight = containerSize.height > 0 ? containerSize.height : window.innerHeight;
     
     // --- Direct DOM Refs for Transient Updates ---
     const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -159,23 +170,71 @@ export const CanvasBoard: React.FC = () => {
         currentX: number; 
         currentY: number;
         mode: 'pan' | 'move-node' | 'select' | 'rubber-band' | null;
-        initialPositions: Map<string, {x: number, y: number, width: number, height: number, groupId?: string}>;
+        initialPositions: Map<string, MoveElementStartPosition>;
         pendingSelectionId?: string | null;
-        affectedConnections?: any[];
+        affectedConnections: AffectedConnection[];
         parentGroups: Set<string>; 
     }>({ 
         isDragging: false, startX: 0, startY: 0, currentX: 0, currentY: 0, 
-        mode: null, initialPositions: new Map(), pendingSelectionId: null, parentGroups: new Set()
+        mode: null, initialPositions: new Map(), pendingSelectionId: null, parentGroups: new Set(), affectedConnections: []
     });
+
+    const viewportRef = useRef(viewport);
+    viewportRef.current = viewport;
+    const selectedIdsRef = useRef(selectedIds);
+    selectedIdsRef.current = selectedIds;
+    const spatialIndexRef = useRef(spatialIndex);
+    spatialIndexRef.current = spatialIndex;
+    const connectionDraftRef = useRef<ConnectionDraft | null>(connectionDraft);
+    connectionDraftRef.current = connectionDraft;
+    const marqueeRef = useRef<MarqueeState | null>(marquee);
+    marqueeRef.current = marquee;
 
     const screenToWorld = useCallback((clientX: number, clientY: number) => {
         if (!containerRef.current) return { x: 0, y: 0 };
         const rect = containerRef.current.getBoundingClientRect();
+        const currentViewport = viewportRef.current;
         return {
-            x: (clientX - rect.left - viewport.x) / viewport.zoom,
-            y: (clientY - rect.top - viewport.y) / viewport.zoom
+            x: (clientX - rect.left - currentViewport.x) / currentViewport.zoom,
+            y: (clientY - rect.top - currentViewport.y) / currentViewport.zoom
         };
-    }, [viewport]);
+    }, []);
+
+    const resetMovePreviewStyles = useCallback((elementsSnapshot: CanvasElement[]) => {
+        const elementById = new Map<string, CanvasElement>();
+        elementsSnapshot.forEach((element) => {
+            elementById.set(element.id, element);
+        });
+
+        dragRef.current.initialPositions.forEach((_position, id) => {
+            const domNode = nodeRefs.current.get(id);
+            if (domNode) {
+                domNode.style.transform = 'translate3d(0,0,0) scale(1)';
+            }
+            const groupNode = groupRefs.current.get(id);
+            if (groupNode) {
+                groupNode.style.transform = 'translate3d(0,0,0)';
+            }
+        });
+
+        dragRef.current.parentGroups.forEach((groupId) => {
+            const groupDom = groupRefs.current.get(groupId);
+            const groupElement = elementById.get(groupId);
+            if (!groupDom || !groupElement) return;
+            groupDom.style.transform = 'translate3d(0,0,0)';
+            groupDom.style.left = `${groupElement.x}px`;
+            groupDom.style.top = `${groupElement.y}px`;
+            groupDom.style.width = `${groupElement.width}px`;
+            groupDom.style.height = `${groupElement.height}px`;
+        });
+
+        const baseConnectionPaths = computeConnectionPreviewPaths(dragRef.current.affectedConnections, 0, 0);
+        baseConnectionPaths.forEach((preview) => {
+            const pathEl = connectionRefs.current.get(preview.id);
+            if (!pathEl) return;
+            pathEl.setAttribute('d', preview.path);
+        });
+    }, []);
 
     useLayoutEffect(() => {
         if (worldLayerRef.current) {
@@ -283,7 +342,8 @@ export const CanvasBoard: React.FC = () => {
                 currentX: e.clientX, currentY: e.clientY, 
                 mode: 'pan', 
                 initialPositions: new Map(),
-                parentGroups: new Set()
+                parentGroups: new Set(),
+                affectedConnections: []
             };
             lastMoveTimeRef.current = performance.now();
             lastPosRef.current = { x: e.clientX, y: e.clientY };
@@ -303,7 +363,8 @@ export const CanvasBoard: React.FC = () => {
                 currentX: e.clientX, currentY: e.clientY, 
                 mode: 'rubber-band', 
                 initialPositions: new Map(),
-                parentGroups: new Set()
+                parentGroups: new Set(),
+                affectedConnections: []
             };
         }
     };
@@ -338,7 +399,8 @@ export const CanvasBoard: React.FC = () => {
                 mode: 'move-node', 
                 initialPositions: new Map(), 
                 pendingSelectionId: !isMultiSelect && isAlreadySelected ? id : null,
-                parentGroups: new Set()
+                parentGroups: new Set(),
+                affectedConnections: []
             };
         }
     };
@@ -382,9 +444,9 @@ export const CanvasBoard: React.FC = () => {
             dragRef.current.currentX = e.clientX;
             dragRef.current.currentY = e.clientY;
             
-            if (connectionDraft) {
+            if (connectionDraftRef.current) {
                 const worldPos = screenToWorld(e.clientX, e.clientY);
-                setConnectionDraft(prev => ({ ...prev!, currentX: worldPos.x, currentY: worldPos.y }));
+                setConnectionDraft(prev => (prev ? { ...prev, currentX: worldPos.x, currentY: worldPos.y } : prev));
                 return;
             }
 
@@ -424,76 +486,24 @@ export const CanvasBoard: React.FC = () => {
             }
             else if (dragRef.current.mode === 'move-node') {
                 if (dragRef.current.initialPositions.size === 0) {
-                     const state = useCanvasStore.getState();
-                     const nodesToMove = new Set<string>();
-                     const parentGroups = new Set<string>();
-
-                     const collectNodes = (ids: Set<string>) => {
-                         ids.forEach(id => {
-                             if (nodesToMove.has(id)) return;
-                             nodesToMove.add(id);
-                             const el = state.elements.find(e => e.id === id);
-                             if (el) {
-                                 if (el.groupId) parentGroups.add(el.groupId);
-                                 if (el.type === 'group' && el.groupChildren) {
-                                     collectNodes(new Set(el.groupChildren));
-                                 }
-                             }
-                         });
-                     };
-                     collectNodes(state.selectedIds);
-                     
-                     nodesToMove.forEach(id => {
-                         if (parentGroups.has(id)) parentGroups.delete(id);
-                     });
-                     
-                     dragRef.current.parentGroups = parentGroups;
-
-                     state.elements.forEach(el => {
-                         if (nodesToMove.has(el.id)) {
-                             dragRef.current.initialPositions.set(el.id, { 
-                                 x: el.x, y: el.y, width: el.width, height: el.height, groupId: el.groupId 
-                             });
-                         }
-                     });
-
-                     const affectedConnections = [];
-                     const elementMap = new Map(state.elements.map(e => [e.id, e]));
-                     for (const el of state.elements) {
-                         if (el.type === 'connector') {
-                             const from = el.data?.connection?.from;
-                             const to = el.data?.connection?.to;
-                             if (from && to && (nodesToMove.has(from) || nodesToMove.has(to))) {
-                                 affectedConnections.push({ id: el.id, source: elementMap.get(from), target: elementMap.get(to), sourceMoving: nodesToMove.has(from), targetMoving: nodesToMove.has(to) });
-                             }
-                         }
-                     }
-                     dragRef.current.affectedConnections = affectedConnections;
+                    const state = useCanvasStore.getState();
+                    const initialized = initializeMoveSession(state.elements, state.selectedIds);
+                    dragRef.current.initialPositions = initialized.initialPositions;
+                    dragRef.current.parentGroups = initialized.parentGroups;
+                    dragRef.current.affectedConnections = initialized.affectedConnections;
                 }
 
-                let worldDx = dx / viewport.zoom;
-                let worldDy = dy / viewport.zoom;
-                
-                if (useCanvasStore.getState().selectedIds.size === 1) {
-                     const leadId = dragRef.current.initialPositions.keys().next().value;
-                     const startPos = leadId ? dragRef.current.initialPositions.get(leadId) : undefined;
-                     if (leadId && startPos) {
-                         const proposedX = startPos.x + worldDx;
-                         const proposedY = startPos.y + worldDy;
-                         const visibleRect = { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom, width: window.innerWidth / viewport.zoom, height: window.innerHeight / viewport.zoom };
-                         const movingIds = new Set(dragRef.current.initialPositions.keys());
-                         const rawCandidates2 = spatialIndex.query(visibleRect);
-                         const snapCandidates = rawCandidates2.filter(function(el) { 
-                           return !movingIds.has(el.id) && (el as any).type !== 'connector'; 
-                         }) as CanvasElement[];
-                         const snapResult = calculateSnap({ x: proposedX, y: proposedY, width: startPos.width, height: startPos.height, id: leadId }, snapCandidates);
-                         worldDx = snapResult.x - startPos.x;
-                         worldDy = snapResult.y - startPos.y;
-                         setSnapLines(snapResult.lines as any);
-                     }
-                } else { 
-                    setSnapLines([]); 
-                }
+                const state = useCanvasStore.getState();
+                const moveDelta = computeMoveDeltaWithSnap({
+                    pointerDelta: { x: dx, y: dy },
+                    viewport: viewportRef.current,
+                    viewportSize: { width: viewportWidth, height: viewportHeight },
+                    selectedCount: state.selectedIds.size,
+                    initialPositions: dragRef.current.initialPositions,
+                    queryElementsInRect: (rect) => spatialIndexRef.current.query(rect) as CanvasElement[]
+                });
+                const { worldDx, worldDy, snapLines: nextSnapLines } = moveDelta;
+                setSnapLines(nextSnapLines);
                 
                 dragRef.current.initialPositions.forEach((startPos, id) => {
                     const domNode = nodeRefs.current.get(id);
@@ -502,70 +512,33 @@ export const CanvasBoard: React.FC = () => {
                     if (groupNode) groupNode.style.transform = `translate3d(${worldDx}px, ${worldDy}px, 0)`;
                 });
                 
-                const state = useCanvasStore.getState();
-                const PADDING = 20;
-
-                dragRef.current.parentGroups.forEach(groupId => {
-                    const groupEl = state.elements.find(e => e.id === groupId);
-                    if (!groupEl || !groupEl.groupChildren) return;
-                    
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                    
-                    groupEl.groupChildren.forEach(childId => {
-                         const childStartPos = dragRef.current.initialPositions.get(childId);
-                         let cX, cY, cW, cH;
-                         
-                         if (childStartPos) {
-                             cX = childStartPos.x + worldDx;
-                             cY = childStartPos.y + worldDy;
-                             cW = childStartPos.width;
-                             cH = childStartPos.height;
-                         } else {
-                             const staticChild = state.elements.find(e => e.id === childId);
-                             if (staticChild) {
-                                 cX = staticChild.x;
-                                 cY = staticChild.y;
-                                 cW = staticChild.width;
-                                 cH = staticChild.height;
-                             } else return;
-                         }
-                         
-                         minX = Math.min(minX, cX);
-                         minY = Math.min(minY, cY);
-                         maxX = Math.max(maxX, cX + cW);
-                         maxY = Math.max(maxY, cY + cH);
-                    });
-
-                    if (isFinite(minX)) {
-                        const newX = minX - PADDING;
-                        const newY = minY - PADDING;
-                        const newW = (maxX - minX) + (PADDING * 2);
-                        const newH = (maxY - minY) + (PADDING * 2);
-                        
-                        const groupDom = groupRefs.current.get(groupId);
-                        if (groupDom) {
-                             groupDom.style.transform = 'translate3d(0,0,0)'; 
-                             groupDom.style.left = `${newX}px`;
-                             groupDom.style.top = `${newY}px`;
-                             groupDom.style.width = `${newW}px`;
-                             groupDom.style.height = `${newH}px`;
-                        }
-                    }
+                const groupPreviewBounds = computeGroupPreviewBounds(
+                    state.elements,
+                    dragRef.current.parentGroups,
+                    dragRef.current.initialPositions,
+                    worldDx,
+                    worldDy
+                );
+                groupPreviewBounds.forEach((bounds, groupId) => {
+                    const groupDom = groupRefs.current.get(groupId);
+                    if (!groupDom) return;
+                    groupDom.style.transform = 'translate3d(0,0,0)';
+                    groupDom.style.left = `${bounds.x}px`;
+                    groupDom.style.top = `${bounds.y}px`;
+                    groupDom.style.width = `${bounds.width}px`;
+                    groupDom.style.height = `${bounds.height}px`;
                 });
 
-                if (dragRef.current.affectedConnections) {
-                    dragRef.current.affectedConnections.forEach(conn => {
-                        const pathEl = connectionRefs.current.get(conn.id);
-                        if (pathEl && conn.source && conn.target) {
-                            const sX = conn.source.x + (conn.sourceMoving ? worldDx : 0);
-                            const sY = conn.source.y + (conn.sourceMoving ? worldDy : 0);
-                            const tX = conn.target.x + (conn.targetMoving ? worldDx : 0);
-                            const tY = conn.target.y + (conn.targetMoving ? worldDy : 0);
-                            const newPath = getSmartPath(sX, sY, conn.source.width, conn.source.height, tX, tY, conn.target.width, conn.target.height);
-                            pathEl.setAttribute('d', newPath);
-                        }
-                    });
-                }
+                const connectionPreviewPaths = computeConnectionPreviewPaths(
+                    dragRef.current.affectedConnections,
+                    worldDx,
+                    worldDy
+                );
+                connectionPreviewPaths.forEach((preview) => {
+                    const pathEl = connectionRefs.current.get(preview.id);
+                    if (!pathEl) return;
+                    pathEl.setAttribute('d', preview.path);
+                });
             }
         };
 
@@ -573,21 +546,22 @@ export const CanvasBoard: React.FC = () => {
             setSnapLines([]); 
             setHighlightedGroup(null); 
             
-            if (connectionDraft) {
+            const currentDraft = connectionDraftRef.current;
+            if (currentDraft) {
                 const target = document.elementFromPoint(e.clientX, e.clientY);
                 const nodeEl = target?.closest('[data-node-id]');
                 if (nodeEl) {
                     const targetNodeId = nodeEl.getAttribute('data-node-id');
-                    if (targetNodeId && targetNodeId !== connectionDraft.sourceId) {
-                        const fromId = connectionDraft.portType === 'out' ? connectionDraft.sourceId : targetNodeId;
-                        const toId = connectionDraft.portType === 'in' ? connectionDraft.sourceId : targetNodeId;
+                    if (targetNodeId && targetNodeId !== currentDraft.sourceId) {
+                        const fromId = currentDraft.portType === 'out' ? currentDraft.sourceId : targetNodeId;
+                        const toId = currentDraft.portType === 'in' ? currentDraft.sourceId : targetNodeId;
                         addConnection(fromId, toId);
                     }
                 } else {
                     const worldPos = screenToWorld(e.clientX, e.clientY);
                     const mouseRect = { x: worldPos.x - 10, y: worldPos.y - 10, w: 20, h: 20 };
-                    const draftLine = { x1: connectionDraft.sourceRect.x, y1: connectionDraft.sourceRect.y, w1: connectionDraft.sourceRect.w, h1: connectionDraft.sourceRect.h, x2: mouseRect.x, y2: mouseRect.y };
-                    setDropMenu({ x: e.clientX, y: e.clientY, sourceId: connectionDraft.sourceId, portType: connectionDraft.portType, worldX: worldPos.x, worldY: worldPos.y, draftLine });
+                    const draftLine = { x1: currentDraft.sourceRect.x, y1: currentDraft.sourceRect.y, w1: currentDraft.sourceRect.w, h1: currentDraft.sourceRect.h, x2: mouseRect.x, y2: mouseRect.y };
+                    setDropMenu({ x: e.clientX, y: e.clientY, sourceId: currentDraft.sourceId, portType: currentDraft.portType, worldX: worldPos.x, worldY: worldPos.y, draftLine });
                 }
                 setConnectionDraft(null);
             }
@@ -602,55 +576,47 @@ export const CanvasBoard: React.FC = () => {
                      if (dragRef.current.pendingSelectionId) {
                          selectElement(dragRef.current.pendingSelectionId, false);
                      } else {
-                         const dx = (e.clientX - dragRef.current.startX);
-                         const dy = (e.clientY - dragRef.current.startY);
-                         let worldDx = dx / viewport.zoom;
-                         let worldDy = dy / viewport.zoom;
-                         
-                         if (useCanvasStore.getState().selectedIds.size === 1) {
-                            const leadId = dragRef.current.initialPositions.keys().next().value;
-                            const startPos = leadId ? dragRef.current.initialPositions.get(leadId) : undefined;
-                            if (leadId && startPos) {
-                                 const proposedX = startPos.x + worldDx;
-                                 const proposedY = startPos.y + worldDy;
-                                 const visibleRect = { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom, width: window.innerWidth / viewport.zoom, height: window.innerHeight / viewport.zoom };
-                                 const movingIds = new Set(dragRef.current.initialPositions.keys());
-                                 const rawCandidates = spatialIndex.query(visibleRect);
-                                 const snapCandidates = rawCandidates.filter(function(el) { 
-                                   return !movingIds.has(el.id) && (el as any).type !== 'connector'; 
-                                 }) as CanvasElement[];
-                                 const snapResult = calculateSnap({ x: proposedX, y: proposedY, width: startPos.width, height: startPos.height, id: leadId }, snapCandidates);
-                                 worldDx = snapResult.x - startPos.x;
-                                 worldDy = snapResult.y - startPos.y;
-                             }
-                         }
-
-                         const updates: {id: string, x: number, y: number}[] = [];
-                         dragRef.current.initialPositions.forEach((startPos, id) => {
-                             updates.push({ id, x: Math.round(startPos.x + worldDx), y: Math.round(startPos.y + worldDy) });
-                             const domNode = nodeRefs.current.get(id);
-                             if (domNode) domNode.style.transform = `translate3d(0,0,0) scale(1)`;
-                             const groupNode = groupRefs.current.get(id);
-                             if (groupNode) groupNode.style.transform = `translate3d(0,0,0)`;
+                         const dx = e.clientX - dragRef.current.startX;
+                         const dy = e.clientY - dragRef.current.startY;
+                         const state = useCanvasStore.getState();
+                         const moveDelta = computeMoveDeltaWithSnap({
+                             pointerDelta: { x: dx, y: dy },
+                             viewport: viewportRef.current,
+                             viewportSize: { width: viewportWidth, height: viewportHeight },
+                             selectedCount: state.selectedIds.size,
+                             initialPositions: dragRef.current.initialPositions,
+                             queryElementsInRect: (rect) => spatialIndexRef.current.query(rect) as CanvasElement[]
                          });
-                         
-                         if (updates.length > 0) {
-                             updateElementsPosition(updates, true);
-                             
-                             dragRef.current.parentGroups.forEach(groupId => {
-                                 fitGroupToChildren(groupId);
+
+                         const updates = buildMoveCommitUpdates(
+                             dragRef.current.initialPositions,
+                             moveDelta.worldDx,
+                             moveDelta.worldDy
+                         );
+                         const hasChanges = hasMoveCommitChanges(dragRef.current.initialPositions, updates);
+                         if (hasChanges) {
+                             dragRef.current.initialPositions.forEach((_startPos, id) => {
+                                 const domNode = nodeRefs.current.get(id);
+                                 if (domNode) domNode.style.transform = 'translate3d(0,0,0) scale(1)';
+                                 const groupNode = groupRefs.current.get(id);
+                                 if (groupNode) groupNode.style.transform = 'translate3d(0,0,0)';
                              });
+                             const parentGroupIds = Array.from(dragRef.current.parentGroups);
+                             updateElementsPosition(updates, true, parentGroupIds);
+                         } else {
+                             resetMovePreviewStyles(state.elements);
                          }
                      }
                 }
                 
-                if (dragRef.current.mode === 'rubber-band' && marquee) {
-                    const x = Math.min(marquee.startX, marquee.currentX);
-                    const y = Math.min(marquee.startY, marquee.currentY);
-                    const width = Math.abs(marquee.currentX - marquee.startX);
-                    const height = Math.abs(marquee.currentY - marquee.startY);
+                const currentMarquee = marqueeRef.current;
+                if (dragRef.current.mode === 'rubber-band' && currentMarquee) {
+                    const x = Math.min(currentMarquee.startX, currentMarquee.currentX);
+                    const y = Math.min(currentMarquee.startY, currentMarquee.currentY);
+                    const width = Math.abs(currentMarquee.currentX - currentMarquee.startX);
+                    const height = Math.abs(currentMarquee.currentY - currentMarquee.startY);
                     
-                    const hitElements = spatialIndex.query({ x, y, width, height });
+                    const hitElements = spatialIndexRef.current.query({ x, y, width, height });
                     const hitIds: string[] = [];
                     hitElements.forEach(el => {
                         if (el.x < x + width && el.x + el.width > x && el.y < y + height && el.y + el.height > y && el.type !== 'connector') {
@@ -659,7 +625,7 @@ export const CanvasBoard: React.FC = () => {
                     });
                     
                     if (hitIds.length > 0) {
-                        if (e.shiftKey) { setSelectedIds(Array.from(new Set([...Array.from(selectedIds), ...hitIds]))); } 
+                        if (e.shiftKey) { setSelectedIds(Array.from(new Set([...Array.from(selectedIdsRef.current), ...hitIds]))); } 
                         else { setSelectedIds(hitIds); }
                     } else if (!e.shiftKey) { clearSelection(); }
                     setMarquee(null);
@@ -670,6 +636,7 @@ export const CanvasBoard: React.FC = () => {
                 dragRef.current.initialPositions.clear();
                 dragRef.current.pendingSelectionId = null;
                 dragRef.current.parentGroups.clear();
+                dragRef.current.affectedConnections = [];
                 document.body.style.cursor = 'default';
             }
         };
@@ -680,7 +647,7 @@ export const CanvasBoard: React.FC = () => {
             window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
         };
-    }, [viewport, updateElementsPosition, connectionDraft, addConnection, screenToWorld, elements, selectedIds, calculateSnap, setSnapLines, marquee, spatialIndex, setHighlightedGroup, startMomentum, selectElement, fitGroupToChildren]);
+    }, [viewportHeight, viewportWidth, updateElementsPosition, addConnection, screenToWorld, setSnapLines, setHighlightedGroup, startMomentum, selectElement, clearSelection, setSelectedIds, resetMovePreviewStyles]);
 
     const handleWheel = (e: React.WheelEvent) => {
         if (isDrawerOpen) return;
@@ -703,6 +670,7 @@ export const CanvasBoard: React.FC = () => {
             
             setViewport({ x: newX, y: newY, zoom: newZoom });
         } else {
+            e.preventDefault();
             setViewport({ x: viewport.x - e.deltaX, y: viewport.y - e.deltaY });
         }
     };
@@ -781,7 +749,7 @@ export const CanvasBoard: React.FC = () => {
                  </div>
 
                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: Z_LAYERS.CONNECTIONS }}>
-                    <CanvasConnections connectionRefs={connectionRefs} />
+                    <CanvasConnections connectionRefs={connectionRefs} viewportSize={{ width: viewportWidth, height: viewportHeight }} />
                  </div>
                  
                  {connectionDraft && (
@@ -832,7 +800,7 @@ export const CanvasBoard: React.FC = () => {
             {contextMenu && <CanvasContextMenu x={contextMenu.x} y={contextMenu.y} targetId={contextMenu.targetId} onClose={() => setContextMenu(null)} onAction={handleContextMenuAction} />}
             {selectedIds.size > 1 && !selectionBounds && <div style={{ zIndex: Z_LAYERS.UI }}><CanvasAlignmentToolbar /></div>}
             
-            <CanvasMinimap />
+            <CanvasMinimap viewportSize={{ width: viewportWidth, height: viewportHeight }} />
 
             <CanvasZoomControls />
 

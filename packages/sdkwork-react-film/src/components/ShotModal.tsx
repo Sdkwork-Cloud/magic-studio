@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, Clapperboard, Video, Image as ImageIcon, Wand2, Clock, FileText, MessageSquare, Play, Layers, Grid3x3, ArrowRightLeft, FileImage, Type, Upload, Plus, Trash2, User, Music, Zap, Sparkles, Cpu, Cloud, Brain, Star, Activity, LayoutGrid, ChevronDown } from 'lucide-react';
-import { SettingInput, SettingSelect, SettingTextArea, SettingSlider } from '@sdkwork/react-settings';
+import { X, Save, Clapperboard, Video, Image as ImageIcon, Wand2, MessageSquare, Play, Layers, Grid3x3, ArrowRightLeft, FileImage, Type, Upload, Plus, Trash2, User, Music, Zap, Sparkles, Cpu, Cloud, Brain, Star, Activity, LayoutGrid, ChevronDown } from 'lucide-react';
+import { SettingTextArea, SettingSlider } from '@sdkwork/react-settings';
 import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, MediaScene, GenerationProduct, AssetAtomicMediaResource, MediaResourceType, Asset } from '@sdkwork/react-commons';
 import { PromptTextInput, ChooseAssetModal, type InputAttachment } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
@@ -837,7 +837,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                             </div>
                             
                             <div className="space-y-2">
-                                {dialogueItems.map((item, idx) => {
+                                {dialogueItems.map((item) => {
                                     const char = characters.find(c => c.uuid === item.characterId);
                                     return (
                                         <div key={item.id} className="flex items-start gap-2 bg-[#121214] p-2 rounded-lg border border-[#27272a]">

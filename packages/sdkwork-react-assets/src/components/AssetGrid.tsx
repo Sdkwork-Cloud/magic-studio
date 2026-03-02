@@ -5,6 +5,7 @@ import { useAssetStore } from '../store/assetStore';
 import { resolveAssetUrlByAssetIdFirst } from '../asset-center';
 import { useAssetUrl } from '../hooks/useAssetUrl';
 import { FileImage, Film, Music, Volume2, Smile, Sparkles, Upload, Trash2, Database, Shield } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AssetGridProps {
     onPreview: (asset: Asset) => void;
@@ -17,12 +18,25 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
     onDelete,
     selectedAssetIds = []
 }) => {
-    const { assets, isLoading, pageData, loadPage } = useAssetStore();
+    const {
+        assets,
+        isLoading,
+        pageData,
+        loadPage,
+        filterType,
+        filterOrigin,
+        searchQuery,
+        clearFilters,
+        setSearchQuery,
+        importAssets
+    } = useAssetStore();
+    const { t } = useTranslation();
     const hasNextPage = !!pageData && !pageData.last;
     const isInitialLoading = isLoading && assets.length === 0;
     const autoLoadAnchorRef = useRef<HTMLDivElement | null>(null);
     const lastAutoRequestedPageRef = useRef<number | null>(null);
     const currentPage = pageData?.number || 0;
+    const hasActiveCriteria = searchQuery.trim().length > 0 || filterType !== 'all' || filterOrigin !== 'all';
 
     const requestNextPage = useCallback(() => {
         if (!hasNextPage || isLoading) {
@@ -71,19 +85,50 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
         return (
             <div className="flex items-center justify-center h-full text-gray-500 gap-3">
                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                 <span className="text-sm">Loading library...</span>
+                 <span className="text-sm">
+                    {t('assetCenter.grid.loadingLibrary', 'Loading library...')}
+                 </span>
             </div>
         );
     }
 
     if (assets.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-600 opacity-80 select-none">
+            <div className="flex flex-col items-center justify-center h-full text-gray-600 opacity-80 select-none px-6">
                 <div className="w-20 h-20 bg-[#252526] rounded-2xl flex items-center justify-center mb-4 border border-[#333]">
                     <FileImage size={32} className="opacity-20" />
                 </div>
-                <p className="text-sm font-medium">No assets found</p>
-                <p className="text-xs opacity-60 mt-1">Upload files or generate with AI</p>
+                <p className="text-sm font-medium">
+                    {hasActiveCriteria
+                        ? t('assetCenter.empty.filteredTitle', 'No assets match current filters')
+                        : t('assetCenter.empty.initialTitle', 'No assets found')}
+                </p>
+                <p className="text-xs opacity-60 mt-1 text-center">
+                    {hasActiveCriteria
+                        ? t('assetCenter.empty.filteredDesc', 'Try clearing some filters or search keywords.')
+                        : t('assetCenter.empty.initialDesc', 'Upload files or generate with AI')}
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                    {hasActiveCriteria && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                clearFilters();
+                                setSearchQuery('');
+                            }}
+                            className="rounded-md border border-[#333] bg-[#232326] px-3 py-1.5 text-xs text-gray-200 hover:bg-[#2a2a2d]"
+                        >
+                            {t('assetCenter.filters.clearAll', 'Clear All')}
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={importAssets}
+                        className="rounded-md border border-blue-500/40 bg-blue-600/20 px-3 py-1.5 text-xs text-blue-100 hover:bg-blue-600/30"
+                    >
+                        {t('studio.common.import', 'Import')}
+                    </button>
+                </div>
             </div>
         );
     }
@@ -113,7 +158,9 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
                             }
                         `}
                     >
-                        {isLoading ? 'Loading...' : 'Load More'}
+                        {isLoading
+                            ? t('common.status.loading', 'Loading...')
+                            : t('assetCenter.grid.loadMore', 'Load More')}
                     </button>
                 </div>
             )}
@@ -127,6 +174,7 @@ const AssetCard: React.FC<{
     onClick: () => void;
     onDelete: () => void;
 }> = ({ asset, selected = false, onClick, onDelete }) => {
+    const { t } = useTranslation();
     const { url: displayUrl } = useAssetUrl(asset, {
         resolver: resolveAssetUrlByAssetIdFirst
     });
@@ -185,26 +233,26 @@ const AssetCard: React.FC<{
             case 'ai':
                 return {
                     Icon: Sparkles,
-                    label: 'AI',
+                    label: t('assetCenter.badges.ai', 'AI'),
                     className: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
                 };
             case 'stock':
                 return {
                     Icon: Database,
-                    label: 'Stock',
+                    label: t('assetCenter.badges.stock', 'Stock'),
                     className: 'text-amber-400 bg-amber-500/10 border-amber-500/20'
                 };
             case 'system':
                 return {
                     Icon: Shield,
-                    label: 'System',
+                    label: t('assetCenter.badges.system', 'System'),
                     className: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
                 };
             case 'upload':
             default:
                 return {
                     Icon: Upload,
-                    label: 'Upload',
+                    label: t('assetCenter.badges.upload', 'Upload'),
                     className: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
                 };
         }
@@ -242,7 +290,7 @@ const AssetCard: React.FC<{
                     <button 
                         className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-red-500 text-white/70 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"
                         onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                        title="Delete Asset"
+                        title={t('assetCenter.actions.deleteAsset', 'Delete Asset')}
                     >
                         <Trash2 size={12} />
                     </button>

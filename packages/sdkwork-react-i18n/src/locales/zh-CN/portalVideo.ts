@@ -13,8 +13,8 @@ export const portalVideo = {
       desc: "生成艺术图像与素材"
     },
     human: {
-      label: "数字人",
-      desc: "AI 数字人播报"
+      label: "角色",
+      desc: "AI 角色创作与播报"
     },
     music: {
       label: "AI 音乐",

@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { 
     Play, Pause, SkipBack, SkipForward, Clapperboard, 
-    Image as ImageIcon, Video, Monitor, Volume2, VolumeX, 
+    Video, Monitor, Volume2, VolumeX, 
     Captions, Edit2, Trash2 
 } from 'lucide-react';
 import { ShotModal } from './ShotModal';

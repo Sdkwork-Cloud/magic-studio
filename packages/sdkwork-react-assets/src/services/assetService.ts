@@ -47,8 +47,7 @@ export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'music', label: 'Music', accepts: ['.mp3', '.wav', '.ogg', '.flac'] },
   { id: 'voice', label: 'Voices', accepts: ['.json', '.voice', '.wav', '.mp3'] },
   { id: 'text', label: 'Texts', accepts: ['.txt', '.md'] },
-  { id: 'character', label: 'Characters', accepts: ['.json', '.char', '.png'] },
-  { id: 'digital-human', label: 'Digital Humans', accepts: ['.json', '.dh', '.glb', '.gltf', '.fbx'] },
+  { id: 'character', label: 'Characters', accepts: ['.json', '.char', '.dh', '.png', '.glb', '.gltf', '.fbx'] },
   { id: 'sfx', label: 'Sound Effects', accepts: ['.wav', '.mp3', '.ogg', '.aac'] },
   { id: 'effect', label: 'Effects', accepts: ['.effect', '.cube', '.lut', '.fx'] },
   { id: 'transition', label: 'Transitions', accepts: ['.transition', '.trans'] },
@@ -119,12 +118,7 @@ class AssetService implements IBaseService<Asset> {
     }
 
     private toAssetContentKey(type: AssetType): AssetContentKey {
-        switch (type) {
-            case 'digital-human':
-                return 'digitalHuman';
-            default:
-                return type;
-        }
+        return type;
     }
 
     private resolveScopeByType(type: AssetType): AssetScope {
@@ -140,7 +134,6 @@ class AssetService implements IBaseService<Asset> {
             voice: 'voice-speaker',
             text: 'notes',
             character: 'character',
-            'digital-human': 'character',
             sfx: 'sfx',
             effect: 'magiccut',
             transition: 'magiccut',
@@ -505,7 +498,7 @@ class AssetService implements IBaseService<Asset> {
             case 'sfx':
                 return LIBRARY_SUBDIRS.AUDIO;
             case 'model3d':
-            case 'digital-human':
+            case 'character':
                 return LIBRARY_SUBDIRS.MODELS;
             case 'text':
             case 'effect':
@@ -553,7 +546,6 @@ class AssetService implements IBaseService<Asset> {
             voice: MediaResourceType.VOICE,
             text: MediaResourceType.TEXT,
             character: MediaResourceType.CHARACTER,
-            'digital-human': MediaResourceType.CHARACTER,
             model3d: MediaResourceType.MODEL_3D,
             lottie: MediaResourceType.LOTTIE,
             effect: MediaResourceType.EFFECT,

@@ -19,8 +19,7 @@ export const ASSET_CENTER_CATEGORIES: AssetCenterCategory[] = [
   { id: 'music', label: 'Music', accepts: ['.mp3', '.wav', '.ogg', '.flac'], contentType: 'music' },
   { id: 'voice', label: 'Voices', accepts: ['.json', '.voice', '.wav', '.mp3'], contentType: 'voice' },
   { id: 'text', label: 'Texts', accepts: ['.txt', '.md'], contentType: 'text' },
-  { id: 'character', label: 'Characters', accepts: ['.json', '.char', '.png'], contentType: 'character' },
-  { id: 'digital-human', label: 'Digital Humans', accepts: ['.json', '.dh', '.glb', '.gltf', '.fbx'], contentType: 'digitalHuman' },
+  { id: 'character', label: 'Characters', accepts: ['.json', '.char', '.dh', '.png', '.glb', '.gltf', '.fbx'], contentType: 'character' },
   { id: 'sfx', label: 'Sound Effects', accepts: ['.wav', '.mp3', '.ogg', '.aac'], contentType: 'sfx' },
   { id: 'effect', label: 'Effects', accepts: ['.effect', '.cube', '.lut', '.fx'], contentType: 'effect' },
   { id: 'transition', label: 'Transitions', accepts: ['.transition', '.trans'], contentType: 'transition' },
@@ -38,7 +37,6 @@ const CONTENT_KEY_TO_ASSET_TYPE: Record<AssetContentKey, AssetType> = {
   voice: 'voice',
   text: 'text',
   character: 'character',
-  digitalHuman: 'digital-human',
   model3d: 'model3d',
   lottie: 'lottie',
   file: 'file',
@@ -53,9 +51,6 @@ export const toAssetType = (contentType: AssetContentKey): AssetType => {
 };
 
 export const toContentKey = (assetType: AssetType): AssetContentKey => {
-  if (assetType === 'digital-human') {
-    return 'digitalHuman';
-  }
   return assetType;
 };
 

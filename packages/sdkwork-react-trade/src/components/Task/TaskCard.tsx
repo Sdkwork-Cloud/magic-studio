@@ -51,7 +51,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       [TaskTypeEnum.VIDEO_FRAME_INTERPOLATION]: '视频补帧',
       [TaskTypeEnum.VIDEO_COLORIZATION]: '视频着色',
       [TaskTypeEnum.VIDEO_STYLE_TRANSFER]: '风格转换',
-      [TaskTypeEnum.AVATAR_VIDEO]: '数字人视频',
+      [TaskTypeEnum.AVATAR_VIDEO]: '角色视频',
       [TaskTypeEnum.LIP_SYNC]: '口型同步',
     };
     return labels[type] || type;

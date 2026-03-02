@@ -2,10 +2,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FilmSidebar } from '../components/FilmSidebar';
 import { FilmHeader } from '../components/FilmHeader';
-import { Sparkles, Play, Heart, ChevronDown, Clock, Check, Type } from 'lucide-react';
+import { Sparkles, Clock } from 'lucide-react';
 import { useFilmStore, FilmStoreProvider } from '../store/filmStore';
-import { CreationChatInput, InputFooterButton, PortalTab, InputAttachment, StyleSelector } from '@sdkwork/react-assets';
-import { ModelSelector, AspectRatioSelector, GalleryCard, GalleryItem, StyleOption } from '@sdkwork/react-commons';
+import { CreationChatInput, PortalTab, InputAttachment, StyleSelector } from '@sdkwork/react-assets';
+import { ModelSelector, AspectRatioSelector, GalleryCard, GalleryItem } from '@sdkwork/react-commons';
 import type { Resolution } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
 import { VIDEO_PROVIDERS } from '@sdkwork/react-video';
@@ -97,7 +97,7 @@ const FilmHomePageContent: React.FC = () => {
     const { createProject, createProjectFromInput } = useFilmStore();
     
     // Hero Input State
-    const [activeTab, setActiveTab] = useState<PortalTab>('short_drama');
+    const [activeTab] = useState<PortalTab>('short_drama');
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     

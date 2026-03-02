@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Asset Center is the unified foundation for all asset management in the Magic Studio ecosystem. It provides a consistent, type-safe, and scalable way to handle all types of digital assets including images, videos, audio, digital humans, sound effects, and more.
+The Asset Center is the unified foundation for all asset management in the Magic Studio ecosystem. It provides a consistent, type-safe, and scalable way to handle all types of digital assets including images, videos, audio, Characters, sound effects, and more.
 
 ## Core Concepts
 
@@ -12,13 +12,13 @@ The asset center supports the following asset types:
 
 - **Basic Assets**: `image`, `video`, `audio`, `music`, `voice`
 - **Enhanced Assets**: `text`, `effect`, `transition`, `character`
-- **Specialized Assets**: `digital-human`, `sfx`, `model3d`, `lottie`
+- **Specialized Assets**: `character`, `sfx`, `model3d`, `lottie`
 
 ### Enhanced Asset Types
 
-#### DigitalHumanAsset
+#### CharacterAsset
 ```typescript
-type DigitalHumanAsset = FileMediaResource & { 
+type CharacterAsset = FileMediaResource & { 
     type: MediaResourceType.CHARACTER;
     category?: 'avatar' | 'character' | 'avatar-animation' | 'full-body';
     metadata?: {
@@ -69,7 +69,7 @@ initializeAssetServices();
 
 // Get service for specific category
 const videoService = assetServiceRegistry.get('video');
-const digitalHumanService = assetServiceRegistry.get('digital-human');
+const characterservice = assetServiceRegistry.get('character');
 
 // Check if service exists
 if (assetServiceRegistry.has('sfx')) {
@@ -87,7 +87,7 @@ if (assetServiceRegistry.has('sfx')) {
 - `EffectAssetService` - Visual effects handling
 - `TransitionAssetService` - Scene transition handling
 - `MusicAssetService` - Music-specific asset handling
-- `DigitalHumanAssetService` - Digital human asset handling
+- `CharacterAssetService` - Character asset handling
 - `SfxAssetService` - Sound effect asset handling
 
 ## Usage Examples
@@ -114,17 +114,17 @@ const imageAssets = await assetService.findAll({ page: 0, size: 20 }, 'image');
 
 ```typescript
 import { 
-    DigitalHumanAsset, 
+    CharacterAsset, 
     SfxAsset, 
     getAssetService 
 } from '@sdkwork/react-assets';
 
-// Get digital human assets
-const dhService = getAssetService('digital-human');
-const digitalHumans = await dhService.findAll({ page: 0, size: 10 });
+// Get Character assets
+const dhService = getAssetService('character');
+const characters = await dhService.findAll({ page: 0, size: 10 });
 
 // Work with specific asset types
-digitalHumans.content.forEach((asset: DigitalHumanAsset) => {
+characters.content.forEach((asset: CharacterAsset) => {
     console.log(`${asset.name} - Style: ${asset.metadata?.style}`);
 });
 
@@ -188,8 +188,8 @@ Use the enhanced asset types for better type safety:
 
 ```typescript
 // Good - Type-safe
-const digitalHuman: DigitalHumanAsset = assets[0] as DigitalHumanAsset;
-console.log(digitalHuman.metadata?.rigType);
+const character: CharacterAsset = assets[0] as CharacterAsset;
+console.log(character.metadata?.rigType);
 
 // Avoid - Less type-safe
 const asset: any = assets[0];
@@ -200,11 +200,11 @@ Always handle potential errors when working with assets:
 
 ```typescript
 try {
-    const service = getAssetService('digital-human');
+    const service = getAssetService('character');
     const assets = await service.findAll({ page: 0, size: 10 });
     // Process assets
 } catch (error) {
-    console.error('Failed to load digital humans:', error);
+    console.error('Failed to load Characters:', error);
     // Handle error appropriately
 }
 ```
@@ -226,7 +226,7 @@ The asset center supports the following categories with their respective file ex
 | music | .mp3, .wav, .ogg, .flac | Music tracks |
 | voice | .json, .voice, .wav, .mp3 | Voice assets |
 | character | .json, .char, .png | Character definitions |
-| digital-human | .json, .dh, .glb, .gltf, .fbx | Digital human models |
+| character | .json, .dh, .glb, .gltf, .fbx | Character models |
 | sfx | .wav, .mp3, .ogg, .aac | Sound effects |
 | model3d | .glb, .gltf, .obj, .fbx | 3D models |
 | lottie | .json, .lottie | Lottie animations |
@@ -249,7 +249,7 @@ export type NewAssetType = FileMediaResource & {
 2. Add the type to the `AnyAsset` union:
 
 ```typescript
-export type AnyAsset = AnyMediaResource | DigitalHumanAsset | SfxAsset | NewAssetType | /* other types */;
+export type AnyAsset = AnyMediaResource | CharacterAsset | SfxAsset | NewAssetType | /* other types */;
 ```
 
 3. Create a specialized service:
@@ -294,7 +294,7 @@ assetServiceRegistry.register(new NewAssetService());
 console.log('Registered categories:', getRegisteredCategories());
 
 // Check if service exists
-console.log('Has digital-human service:', hasAssetService('digital-human'));
+console.log('Has character service:', hasAssetService('character'));
 
 // Inspect asset structure
 const service = getAssetService('image');

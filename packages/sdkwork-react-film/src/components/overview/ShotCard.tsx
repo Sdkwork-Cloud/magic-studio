@@ -15,7 +15,7 @@ export interface ShotCardProps {
     onDelete?: () => void;
 }
 
-export const ShotCard: React.FC<ShotCardProps> = ({ shot, onClick, onGenerate, onDelete }) => {
+export const ShotCard: React.FC<ShotCardProps> = ({ shot, onClick, onDelete }) => {
     const [showDelete, setShowDelete] = useState(false);
     const hasVideo = hasFilmAssetReference(shot.generation?.video || null);
     const primaryImageAsset =

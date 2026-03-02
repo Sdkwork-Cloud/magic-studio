@@ -93,7 +93,7 @@ export const studio = {
         image_to_video: "图生视频",
         motion: "动作迁移",
         multi_ref: "多图参考",
-        avatar: "数字人",
+        avatar: "角色视频",
         lip_sync: "对口型",
         start_frame: "起始帧",
         end_frame: "结束帧",

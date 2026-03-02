@@ -2,7 +2,7 @@
 import { FilmLocation } from '@sdkwork/react-commons';
 import React, { useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
-import { Zap, Loader2, Plus } from 'lucide-react';
+import { Zap, Plus } from 'lucide-react';
 
 import { LocationModal } from './LocationModal';
 import { LocationCard } from './overview/LocationCard';

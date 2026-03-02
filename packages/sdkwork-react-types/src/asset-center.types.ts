@@ -13,7 +13,6 @@ import type {
   VoiceMediaResource,
   TextMediaResource,
   CharacterMediaResource,
-  DigitalHumanMediaResource,
   Model3DMediaResource,
   LottieMediaResource,
   FileMediaResource,
@@ -122,7 +121,6 @@ export interface UnifiedAssetPayload {
   voice?: VoiceMediaResource;
   text?: TextMediaResource;
   character?: CharacterMediaResource;
-  digitalHuman?: DigitalHumanMediaResource;
   model3d?: Model3DMediaResource;
   lottie?: LottieMediaResource;
   file?: FileMediaResource;

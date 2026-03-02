@@ -494,7 +494,7 @@ export const filmService = {
     }
   },
   
-  generateVideo: async (prompt: string, imageUrl?: string): Promise<string> => {
+  generateVideo: async (_prompt: string, _imageUrl?: string): Promise<string> => {
     await new Promise(resolve => setTimeout(resolve, 5000));
     return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
   },

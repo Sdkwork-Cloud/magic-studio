@@ -5,6 +5,8 @@ import { taskService } from '../../services/taskService';
 import { TaskCard } from './TaskCard';
 import { cn } from '@sdkwork/react-commons';
 
+type TaskDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
+
 interface TaskListProps {
   onTaskAccept?: (task: AvailableTask) => void;
   onTaskViewDetail?: (task: AvailableTask) => void;
@@ -29,7 +31,7 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   const [sortBy, setSortBy] = useState<'latest' | 'budget' | 'difficulty'>('latest');
   const [selectedType, setSelectedType] = useState<string>('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<TaskDifficulty | ''>('');
   const [keyword, setKeyword] = useState('');
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       page: 1,
       pageSize,
       type: selectedType || undefined,
+      difficulty: selectedDifficulty || undefined,
       status: undefined,
       keyword: keyword || undefined,
       sortBy: sortBy === 'budget' ? 'budget' : sortBy === 'difficulty' ? 'difficulty' : undefined,
@@ -78,11 +81,11 @@ export const TaskList: React.FC<TaskListProps> = ({
     { value: 'VIDEO_EXTEND', label: '视频扩展' },
     { value: 'VIDEO_RESTORE', label: '视频修复' },
     { value: 'VIDEO_SUPER_RESOLUTION', label: '视频超分' },
-    { value: 'AVATAR_VIDEO', label: '数字人视频' },
+    { value: 'AVATAR_VIDEO', label: '角色视频' },
     { value: 'LIP_SYNC', label: '唇型同步' },
   ];
 
-  const difficultyOptions: { value: string; label: string }[] = [
+  const difficultyOptions: { value: TaskDifficulty | ''; label: string }[] = [
     { value: '', label: '全部难度' },
     { value: 'EASY', label: '简单' },
     { value: 'MEDIUM', label: '中等' },
@@ -127,7 +130,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           {/* Difficulty Filter */}
           <select
             value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value)}
+            onChange={(e) => setSelectedDifficulty(e.target.value as TaskDifficulty | '')}
             className="bg-[#2a2a2d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
           >
             {difficultyOptions.map((opt) => (

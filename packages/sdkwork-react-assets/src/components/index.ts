@@ -2,6 +2,10 @@ export { ChooseAsset } from './ChooseAsset';
 export { ChooseAssetModal } from './ChooseAssetModal';
 export { AssetSidebar } from './AssetSidebar';
 export { AssetGrid } from './AssetGrid';
+export { AssetCenterHeader } from './AssetCenterHeader';
+export { AssetTypeTabs } from './AssetTypeTabs';
+export { AssetFilterDrawer } from './AssetFilterDrawer';
+export { AssetPreviewModal } from './AssetPreviewModal';
 export { AIGenerateCoverModal } from './AIGenerateCoverModal';
 export * from './CreationChatInput';
 

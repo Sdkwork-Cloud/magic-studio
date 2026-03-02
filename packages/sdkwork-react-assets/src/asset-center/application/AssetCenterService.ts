@@ -43,7 +43,6 @@ const DEFAULT_EXTENSION_BY_TYPE: Record<AssetContentKey, string> = {
   voice: '.wav',
   text: '.txt',
   character: '.json',
-  digitalHuman: '.json',
   model3d: '.glb',
   lottie: '.json',
   file: '.bin',
@@ -588,8 +587,8 @@ export class AssetCenterService {
       case 'voice':
       case 'sfx':
         return LIBRARY_SUBDIRS.AUDIO;
+      case 'character':
       case 'model3d':
-      case 'digitalHuman':
         return LIBRARY_SUBDIRS.MODELS;
       default:
         return LIBRARY_SUBDIRS.DOWNLOADS;

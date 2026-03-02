@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { ChatSession, ChatMessage, ChatTranscript } from '../entities';
+import { ChatSession, ChatMessage } from '../entities';
 import { chatService } from '../services/chatService';
 
 export interface ActiveChatSession extends ChatSession {

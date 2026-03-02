@@ -7,6 +7,6 @@ export * from './TextAssetService';
 export * from './EffectAssetService';
 export * from './TransitionAssetService';
 export * from './MusicAssetService';
-export * from './DigitalHumanAssetService';
+export * from './CharacterAssetService';
 export * from './SfxAssetService';
 export * from './springPage';

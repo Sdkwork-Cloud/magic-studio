@@ -151,7 +151,7 @@ export const SelectionOverlay: React.FC<SelectionOverlayProps> = ({ bounds, zoom
                 className="absolute -bottom-8 left-1/2 bg-blue-600/90 text-white text-[9px] font-mono px-2 py-0.5 rounded-full backdrop-blur-sm pointer-events-none origin-top"
                 style={{ transform: `translateX(-50%) scale(${toolbarScale})` }}
             >
-                {Math.round(bounds.width / zoom)} x {Math.round(bounds.height / zoom)}
+                {Math.round(bounds.width)} x {Math.round(bounds.height)}
             </div>
 
             <style>{`

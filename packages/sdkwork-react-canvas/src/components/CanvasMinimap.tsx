@@ -166,7 +166,14 @@ const drawSemanticContent = (ctx: CanvasRenderingContext2D, type: string, x: num
     }
 };
 
-export const CanvasMinimap: React.FC = () => {
+interface CanvasMinimapProps {
+    viewportSize: {
+        width: number;
+        height: number;
+    };
+}
+
+export const CanvasMinimap: React.FC<CanvasMinimapProps> = ({ viewportSize }) => {
     const { elements, viewport, setViewport } = useCanvasStore();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -180,8 +187,8 @@ export const CanvasMinimap: React.FC = () => {
     const getBounds = useCallback(() => {
         const viewX = -viewport.x / viewport.zoom;
         const viewY = -viewport.y / viewport.zoom;
-        const viewW = window.innerWidth / viewport.zoom;
-        const viewH = window.innerHeight / viewport.zoom;
+        const viewW = viewportSize.width / viewport.zoom;
+        const viewH = viewportSize.height / viewport.zoom;
 
         // Default bounds if empty
         let minX = viewX;
@@ -226,7 +233,7 @@ export const CanvasMinimap: React.FC = () => {
             width: totalW + (padW * 2), 
             height: totalH + (padH * 2) 
         };
-    }, [elements, viewport]);
+    }, [elements, viewport, viewportSize.height, viewportSize.width]);
 
     const draw = useCallback(() => {
         const canvas = canvasRef.current;
@@ -354,8 +361,8 @@ export const CanvasMinimap: React.FC = () => {
         // Layer 4: Viewport Lens (Camera)
         const viewX = -viewport.x / viewport.zoom;
         const viewY = -viewport.y / viewport.zoom;
-        const viewW = window.innerWidth / viewport.zoom;
-        const viewH = window.innerHeight / viewport.zoom;
+        const viewW = viewportSize.width / viewport.zoom;
+        const viewH = viewportSize.height / viewport.zoom;
 
         const vx = toMiniX(viewX);
         const vy = toMiniY(viewY);
@@ -371,7 +378,7 @@ export const CanvasMinimap: React.FC = () => {
         ctx.fill();
         ctx.stroke();
 
-    }, [elements, viewport, getBounds]);
+    }, [elements, viewport, getBounds, viewportSize.height, viewportSize.width]);
 
     // Optimized: Only redraw when dependencies change, not every frame
     useEffect(() => {
@@ -399,8 +406,8 @@ export const CanvasMinimap: React.FC = () => {
         const worldY = ((mouseY - offsetY) / mapScale) + bounds.minY;
 
         // Center viewport on World Coord
-        const screenW = window.innerWidth;
-        const screenH = window.innerHeight;
+        const screenW = viewportSize.width;
+        const screenH = viewportSize.height;
         
         // formula: viewportX = screenCenter - worldX * zoom
         const newViewportX = (screenW / 2) - (worldX * viewport.zoom);

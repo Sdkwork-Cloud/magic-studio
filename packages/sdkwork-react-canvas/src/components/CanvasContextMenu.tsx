@@ -7,6 +7,7 @@ import {
     Maximize, RefreshCcw, Clipboard, Ungroup, Group
 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
+import { getCanvasViewportBounds } from '../utils/canvasContainer';
 ;
 
 interface CanvasContextMenuProps {
@@ -20,6 +21,10 @@ interface CanvasContextMenuProps {
 export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({ 
     x, y, targetId, onClose, onAction 
 }) => {
+    const MENU_WIDTH = 224;
+    const MENU_HEIGHT = 280;
+    const VIEW_MARGIN = 8;
+
     const menuRef = useRef<HTMLDivElement>(null);
     const selectedIds = useCanvasStore(s => s.selectedIds);
     const elements = useCanvasStore(s => s.elements);
@@ -57,9 +62,20 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
         onClose();
     };
 
+    const viewportBounds = getCanvasViewportBounds();
+    const boundaryLeft = viewportBounds.left;
+    const boundaryTop = viewportBounds.top;
+    const boundaryRight = viewportBounds.right;
+    const boundaryBottom = viewportBounds.bottom;
+
+    const minLeft = boundaryLeft + VIEW_MARGIN;
+    const maxLeft = Math.max(minLeft, boundaryRight - MENU_WIDTH - VIEW_MARGIN);
+    const minTop = boundaryTop + VIEW_MARGIN;
+    const maxTop = Math.max(minTop, boundaryBottom - MENU_HEIGHT - VIEW_MARGIN);
+
     const style = {
-        top: Math.min(y, window.innerHeight - 280),
-        left: Math.min(x, window.innerWidth - 200),
+        top: Math.min(Math.max(y, minTop), maxTop),
+        left: Math.min(Math.max(x, minLeft), maxLeft),
     };
 
     return (

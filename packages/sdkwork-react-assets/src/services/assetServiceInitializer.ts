@@ -8,7 +8,7 @@ import {
     EffectAssetService,
     TransitionAssetService,
     MusicAssetService,
-    DigitalHumanAssetService,
+    CharacterAssetService,
     SfxAssetService
 } from './impl';
 
@@ -26,7 +26,7 @@ export function initializeAssetServices(): void {
     assetServiceRegistry.register(new EffectAssetService());
     assetServiceRegistry.register(new TransitionAssetService());
     assetServiceRegistry.register(new MusicAssetService());
-    assetServiceRegistry.register(new DigitalHumanAssetService());
+    assetServiceRegistry.register(new CharacterAssetService());
     assetServiceRegistry.register(new SfxAssetService());
     
     console.log('[AssetCenter] All asset services initialized and registered');

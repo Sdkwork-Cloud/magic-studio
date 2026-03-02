@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useFilmStore } from '../store/filmStore';
 import { 
-    BookOpen, Palette, Edit2, Clapperboard, MapPin, Users, Box, BarChart3, TrendingUp
+    BookOpen, Palette, Edit2, Clapperboard, MapPin, Users, BarChart3
 } from 'lucide-react';
 
 import {
@@ -35,7 +35,7 @@ import { StoryboardPanel } from './overview/StoryboardPanel';
 export const ProjectOverview: React.FC = () => {
     const { 
         project, setView, 
-        updateShot, addShot, generateShotImage, generateShotVideo,
+        updateShot, addShot, generateShotImage,
         createCharacter, updateCharacter,
         createLocation, updateLocation,
         createProp, updateProp,

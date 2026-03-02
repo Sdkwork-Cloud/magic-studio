@@ -1,125 +1,138 @@
 import type { Asset } from '../entities';
 import { AssetGrid } from '../components/AssetGrid';
-import React, { useState } from 'react';
+import { AssetSidebar } from '../components/AssetSidebar';
+import { AssetCenterHeader } from '../components/AssetCenterHeader';
+import { AssetTypeTabs } from '../components/AssetTypeTabs';
+import { AssetFilterDrawer } from '../components/AssetFilterDrawer';
+import { AssetPreviewModal } from '../components/AssetPreviewModal';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAssetStore } from '../store/assetStore';
-import { Search, Upload, X, File as FileIcon, Film, Image as ImageIcon, Volume2 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { platform } from '@sdkwork/react-core';
-import { useAssetUrl } from '../hooks/useAssetUrl';
-import { resolveAssetUrlByAssetIdFirst } from '../asset-center';
-
-interface AssetPreviewModalProps {
-    asset: Asset;
-    onClose: () => void;
-}
-
-const AssetPreviewModal: React.FC<AssetPreviewModalProps> = ({ asset, onClose }) => {
-    const { url, loading } = useAssetUrl(asset, { resolver: resolveAssetUrlByAssetIdFirst });
-    const previewUrl = url || asset.path;
-    const hasRenderableUrl = !!previewUrl && !previewUrl.startsWith('assets://');
-    const isImage = asset.type === 'image' || /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(asset.path);
-    const isVideo = asset.type === 'video' || /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(asset.path);
-    const isAudio = ['audio', 'music', 'voice', 'sfx'].includes(asset.type);
-
-    return (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8" onClick={onClose}>
-            <div className="bg-[#1a1a1a] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="p-6 border-b border-[#333] flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white">{asset.name}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
-                        <X size={24} />
-                    </button>
-                </div>
-                <div className="p-8 flex items-center justify-center min-h-[400px]">
-                    {loading && (
-                        <p className="text-gray-400">Loading preview...</p>
-                    )}
-                    {!loading && isImage && hasRenderableUrl && (
-                        <img src={previewUrl} alt={asset.name} className="max-h-[70vh] max-w-full object-contain rounded-lg" />
-                    )}
-                    {!loading && isVideo && hasRenderableUrl && (
-                        <video src={previewUrl} className="max-h-[70vh] max-w-full rounded-lg" controls />
-                    )}
-                    {!loading && isAudio && hasRenderableUrl && (
-                        <div className="w-full max-w-xl flex flex-col items-center gap-6">
-                            <div className="w-20 h-20 rounded-full bg-[#252526] flex items-center justify-center border border-[#333]">
-                                <Volume2 size={30} className="text-emerald-400" />
-                            </div>
-                            <audio src={previewUrl} controls className="w-full" />
-                        </div>
-                    )}
-                    {!loading && !hasRenderableUrl && (
-                        <div className="text-gray-400 text-sm">Preview URL unavailable</div>
-                    )}
-                    {!loading && hasRenderableUrl && !isImage && !isVideo && !isAudio && (
-                        <div className="w-full max-w-xl rounded-xl border border-[#333] bg-[#111] p-6">
-                            <div className="flex items-center gap-3 text-gray-200">
-                                {asset.type === 'video' ? <Film size={20} /> : asset.type === 'image' ? <ImageIcon size={20} /> : <FileIcon size={20} />}
-                                <span className="font-medium">{asset.name}</span>
-                            </div>
-                            <div className="mt-3 text-xs text-gray-400 break-all">{previewUrl}</div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
+import { useAssetCenterShortcuts } from '../hooks/useAssetCenterShortcuts';
 
 const AssetsPage: React.FC = () => {
-    const { searchQuery, setSearchQuery, importAssets, deleteAsset } = useAssetStore();
-    const { t } = useTranslation();
-    const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+  const {
+    searchQuery,
+    setSearchQuery,
+    importAssets,
+    deleteAsset,
+    filterType,
+    setFilterType,
+    filterOrigin,
+    clearFilters,
+    pageData,
+    assets,
+    loadedAssets,
+    domain,
+    typeCounts,
+    allowedTypes
+  } = useAssetStore();
+  const { t } = useTranslation();
+  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-    const handlePreview = (asset: Asset) => {
-        setPreviewAsset(asset);
+  const handlePreview = (asset: Asset) => {
+    setPreviewAsset(asset);
+  };
+
+  const handleDelete = async (asset: Asset) => {
+    const confirmed = await platform.confirm(`Are you sure you want to delete "${asset.name}"?`, 'Delete Asset', 'warning');
+    if (confirmed) {
+      await deleteAsset(asset);
+    }
+  };
+
+  const hasQuery = searchQuery.trim().length > 0;
+  const hasActiveFilters = filterType !== 'all' || filterOrigin !== 'all';
+  const hasActiveCriteria = hasActiveFilters || hasQuery;
+  const totalLabel = pageData ? pageData.totalElements : loadedAssets.length;
+  const loadedLabel = loadedAssets.length;
+
+  const resultLabel = hasActiveCriteria
+    ? t('assetCenter.stats.filtered', { count: String(assets.length) })
+    : t('assetCenter.stats.results', { count: String(assets.length) });
+  const coverageLabel = totalLabel > loadedLabel
+    ? t('assetCenter.stats.loadedWithTotal', {
+      loaded: String(loadedLabel),
+      total: String(totalLabel)
+    })
+    : t('assetCenter.stats.total', { total: String(totalLabel) });
+
+  const domainLabel = useMemo(() => {
+    const fallback = domain
+      .split('-')
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(' ');
+    return t(`assetCenter.domains.${domain}`, fallback);
+  }, [domain, t]);
+
+  const clearAllCriteria = useCallback(() => {
+    clearFilters();
+    setSearchQuery('');
+  }, [clearFilters, setSearchQuery]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const closeMobileDrawerWhenDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setIsMobileFilterOpen(false);
+      }
     };
+    mediaQuery.addEventListener('change', closeMobileDrawerWhenDesktop);
+    return () => mediaQuery.removeEventListener('change', closeMobileDrawerWhenDesktop);
+  }, []);
 
-    const handleDelete = async (asset: Asset) => {
-        const confirmed = await platform.confirm(`Are you sure you want to delete "${asset.name}"?`, 'Delete Asset', 'warning');
-        if (confirmed) {
-            await deleteAsset(asset);
-        }
-    };
+  useAssetCenterShortcuts({
+    searchInputRef,
+    hasActiveCriteria,
+    onClearAllCriteria: clearAllCriteria
+  });
 
-    return (
-        <div className="flex w-full h-full bg-[#1e1e1e] overflow-hidden">
-            <div className="flex-1 flex flex-col min-w-0 bg-[#111]">
-                {/* Header */}
-                <div className="h-16 flex items-center px-6 border-b border-[#27272a] bg-[#1e1e1e] justify-between">
-                    <div className="relative w-96">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                        <input 
-                            type="text" 
-                            placeholder={t('common.actions.search') + "..."}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#252526] border border-[#333] text-gray-200 text-sm pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50"
-                        />
-                    </div>
+  return (
+    <div className="flex h-full w-full overflow-hidden bg-[#121214]">
+      <div className="hidden border-r border-[#27272a] bg-[#0f0f11] lg:block">
+        <AssetSidebar showTypeSection={false} />
+      </div>
 
-                    <div className="flex items-center gap-3">
-                         <button 
-                             onClick={importAssets}
-                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors"
-                         >
-                             <Upload size={14} /> Import
-                         </button>
-                    </div>
-                </div>
+      <AssetFilterDrawer open={isMobileFilterOpen} onClose={() => setIsMobileFilterOpen(false)}>
+        <AssetSidebar showTypeSection={false} />
+      </AssetFilterDrawer>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto">
-                    <AssetGrid onPreview={handlePreview} onDelete={handleDelete} />
-                </div>
-            </div>
+      <div className="flex min-w-0 flex-1 flex-col bg-[#111]">
+        <AssetCenterHeader
+          domainLabel={domainLabel}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          onOpenMobileFilters={() => setIsMobileFilterOpen(true)}
+          onImport={importAssets}
+          hasActiveCriteria={hasActiveCriteria}
+          onClearAll={clearAllCriteria}
+          resultLabel={resultLabel}
+          coverageLabel={coverageLabel}
+          searchInputRef={searchInputRef}
+        />
+        <AssetTypeTabs
+          filterType={filterType}
+          typeCounts={typeCounts}
+          allowedTypes={allowedTypes}
+          onChangeType={setFilterType}
+        />
 
-            {/* Preview Modal */}
-            {previewAsset && (
-                <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
-            )}
+        <div className="flex-1 overflow-y-auto">
+          <AssetGrid onPreview={handlePreview} onDelete={handleDelete} />
         </div>
-    );
+      </div>
+
+      {previewAsset && (
+        <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
+      )}
+    </div>
+  );
 };
 
 export default AssetsPage;

@@ -5,12 +5,12 @@ import { CoreAssetQueryService } from './CoreAssetQueryService';
 
 const coreQuery = new CoreAssetQueryService();
 
-export class DigitalHumanAssetService implements IAssetService {
+export class CharacterAssetService implements IAssetService {
     getCategory(): string {
-        return 'digital-human';
+        return 'character';
     }
 
     async findAll(pageRequest: PageRequest = { page: 0, size: 20 }): Promise<Page<AnyAsset>> {
-        return coreQuery.query('digital-human', pageRequest);
+        return coreQuery.query('character', pageRequest);
     }
 }

@@ -437,7 +437,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         }));
     };
 
-    const updateShot = (sceneUuid: string | undefined, shotUuid: string, data: Partial<FilmShot>) => {
+    const updateShot = (_sceneUuid: string | undefined, shotUuid: string, data: Partial<FilmShot>) => {
         setProject(prev => ({
             ...prev,
             shots: prev.shots.map(s => s.uuid === shotUuid ? { ...s, ...data } : s)

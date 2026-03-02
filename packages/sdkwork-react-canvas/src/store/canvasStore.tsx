@@ -4,6 +4,12 @@ import { produceWithPatches, applyPatches, enablePatches, Patch } from 'immer';
 import { CanvasBoard, CanvasElement, Viewport, SnapLine, CanvasNodeData } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { canvasService } from '../services/canvasService';
+import {
+    collectSelectedGroupRoots,
+    collectSelectionWithHierarchyAndConnectors,
+    detachChildrenFromGroups,
+    detectGroupCycles
+} from '../services/canvasHierarchyService';
 
 enablePatches();
 
@@ -37,7 +43,11 @@ interface CanvasState {
     addElement: (element: CanvasElement) => void;
     deleteElement: (id: string) => void;
     updateElement: (id: string, updates: Partial<CanvasElement>, isFinal?: boolean) => void;
-    updateElementsPosition: (updates: { id: string; x: number; y: number }[], isFinal: boolean) => void;
+    updateElementsPosition: (
+        updates: { id: string; x: number; y: number }[],
+        isFinal: boolean,
+        groupIdsToFit?: string[]
+    ) => void;
     
     selectElement: (id: string | null, multi?: boolean, deep?: boolean) => void;
     setSelectedIds: (ids: string[]) => void;
@@ -72,6 +82,205 @@ interface CanvasState {
     canUndo: () => boolean;
     canRedo: () => boolean;
 }
+
+const isCanvasDevMode = (): boolean => {
+    if (typeof process !== 'undefined' && process?.env) {
+        return process.env.NODE_ENV !== 'production';
+    }
+    if (typeof window !== 'undefined') {
+        const hostname = window.location?.hostname ?? '';
+        return hostname === 'localhost' || hostname === '127.0.0.1';
+    }
+    return false;
+};
+
+const SHOULD_RUN_CANVAS_INVARIANTS = isCanvasDevMode();
+
+const normalizeElementRelations = (draft: CanvasElement[], removedIds: Set<string>): void => {
+    for (let i = draft.length - 1; i >= 0; i -= 1) {
+        if (removedIds.has(draft[i].id)) {
+            draft.splice(i, 1);
+        }
+    }
+
+    const existingIds = new Set(draft.map((element) => element.id));
+
+    for (let i = draft.length - 1; i >= 0; i -= 1) {
+        const element = draft[i];
+
+        if (element.type === 'connector') {
+            const from = element.data?.connection?.from;
+            const to = element.data?.connection?.to;
+            if (!from || !to || !existingIds.has(from) || !existingIds.has(to)) {
+                draft.splice(i, 1);
+            }
+            continue;
+        }
+
+        if (element.groupId && !existingIds.has(element.groupId)) {
+            element.groupId = undefined;
+        }
+
+        if (element.type === 'group' && element.groupChildren) {
+            const nextChildren: string[] = [];
+            const dedupe = new Set<string>();
+            element.groupChildren.forEach((childId) => {
+                if (childId === element.id) return;
+                if (!existingIds.has(childId)) return;
+                if (dedupe.has(childId)) return;
+                dedupe.add(childId);
+                nextChildren.push(childId);
+            });
+            element.groupChildren = nextChildren;
+        }
+    }
+};
+
+const cloneElementWithMappedIds = (
+    element: CanvasElement,
+    idMap: Map<string, string>,
+    offsetX: number,
+    offsetY: number
+): CanvasElement | null => {
+    const cloneId = idMap.get(element.id) ?? generateUUID();
+    const clone: CanvasElement = {
+        ...element,
+        id: cloneId,
+        x: element.x + offsetX,
+        y: element.y + offsetY
+    };
+
+    if (clone.resource) {
+        clone.resource = { ...clone.resource, id: generateUUID(), uuid: generateUUID() };
+    }
+
+    if (clone.groupId) {
+        clone.groupId = idMap.get(clone.groupId);
+    }
+
+    if (clone.type === 'group' && clone.groupChildren) {
+        clone.groupChildren = Array.from(
+            new Set(
+                clone.groupChildren
+                    .map((childId) => idMap.get(childId))
+                    .filter((childId): childId is string => !!childId)
+            )
+        ).filter((childId) => childId !== cloneId);
+    }
+
+    if (clone.type === 'connector') {
+        const from = element.data?.connection?.from;
+        const to = element.data?.connection?.to;
+        // Copy only closed topology: both endpoints must exist in the copied set.
+        if (!from || !to || !idMap.has(from) || !idMap.has(to)) {
+            return null;
+        }
+        const mappedFrom = idMap.get(from);
+        const mappedTo = idMap.get(to);
+        if (!mappedFrom || !mappedTo) return null;
+        clone.data = {
+            ...clone.data,
+            connection: { from: mappedFrom, to: mappedTo }
+        };
+    }
+
+    return clone;
+};
+
+const isConnectableElement = (element: CanvasElement | undefined): boolean => {
+    if (!element) return false;
+    return element.type !== 'connector' && element.type !== 'group';
+};
+
+const collectCanvasIntegrityIssues = (elements: CanvasElement[]): string[] => {
+    const issues: string[] = [];
+    const elementById = new Map<string, CanvasElement>();
+    const groupById = new Map<string, CanvasElement>();
+    const connectorPairs = new Set<string>();
+
+    elements.forEach((element) => {
+        if (elementById.has(element.id)) {
+            issues.push(`Duplicate element id: ${element.id}`);
+            return;
+        }
+        elementById.set(element.id, element);
+        if (element.type === 'group') {
+            groupById.set(element.id, element);
+        }
+    });
+
+    elements.forEach((element) => {
+        if (element.type === 'connector') {
+            const from = element.data?.connection?.from;
+            const to = element.data?.connection?.to;
+            if (!from || !to) {
+                issues.push(`Connector ${element.id} missing from/to endpoint.`);
+                return;
+            }
+            if (from === to) {
+                issues.push(`Connector ${element.id} has self-loop endpoint ${from}.`);
+            }
+            const fromElement = elementById.get(from);
+            const toElement = elementById.get(to);
+            if (!isConnectableElement(fromElement) || !isConnectableElement(toElement)) {
+                issues.push(`Connector ${element.id} points to invalid endpoint(s): ${from} -> ${to}.`);
+            }
+            const pairKey = `${from}->${to}`;
+            if (connectorPairs.has(pairKey)) {
+                issues.push(`Duplicate connector pair detected: ${pairKey}.`);
+            } else {
+                connectorPairs.add(pairKey);
+            }
+            return;
+        }
+
+        if (element.groupId) {
+            const parent = groupById.get(element.groupId);
+            if (!parent) {
+                issues.push(`Element ${element.id} references missing group ${element.groupId}.`);
+            } else if (!parent.groupChildren?.includes(element.id)) {
+                issues.push(`Element ${element.id} groupId ${element.groupId} missing in parent's children.`);
+            }
+        }
+
+        if (element.type === 'group' && element.groupChildren) {
+            const childDedupe = new Set<string>();
+            element.groupChildren.forEach((childId) => {
+                if (childId === element.id) {
+                    issues.push(`Group ${element.id} includes itself as child.`);
+                    return;
+                }
+                if (childDedupe.has(childId)) {
+                    issues.push(`Group ${element.id} has duplicate child ${childId}.`);
+                    return;
+                }
+                childDedupe.add(childId);
+                const child = elementById.get(childId);
+                if (!child) {
+                    issues.push(`Group ${element.id} references missing child ${childId}.`);
+                    return;
+                }
+                if (child.groupId && child.groupId !== element.id) {
+                    issues.push(`Child ${childId} linked to different group ${child.groupId} (expected ${element.id}).`);
+                }
+            });
+        }
+    });
+
+    detectGroupCycles(elements).forEach((cycle) => {
+        issues.push(`Group cycle detected: ${cycle}`);
+    });
+
+    return issues;
+};
+
+const reportCanvasIntegrity = (elements: CanvasElement[], context: string): void => {
+    if (!SHOULD_RUN_CANVAS_INVARIANTS) return;
+    const issues = collectCanvasIntegrityIssues(elements);
+    if (issues.length === 0) return;
+    const preview = issues.slice(0, 12);
+    console.error(`[CanvasStore][Integrity] ${context} detected ${issues.length} issue(s).`, preview);
+};
 
 export const useCanvasStore = create<CanvasState>((set, get) => ({
     boards: [],
@@ -185,6 +394,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
             draft.push(element);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'addElement');
         
         const entry: HistoryEntry = { patches, inversePatches };
         
@@ -203,6 +414,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 Object.assign(draft[idx], updates);
             }
         });
+        if (patches.length === 0) return;
+        if (isFinal) reportCanvasIntegrity(nextElements, 'updateElement');
         
         set(state => ({
             elements: nextElements,
@@ -213,7 +426,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         }));
     },
 
-    updateElementsPosition: (updates, isFinal) => {
+    updateElementsPosition: (updates, isFinal, groupIdsToFit = []) => {
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
             const map = new Map<string, { x: number, y: number }>();
             updates.forEach(u => map.set(u.id, u));
@@ -224,7 +437,47 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                     el.y = upd.y;
                 }
             });
+
+            if (groupIdsToFit.length > 0) {
+                const targetGroupIds = new Set(groupIdsToFit);
+                const elementMap = new Map<string, CanvasElement>();
+                draft.forEach((element) => {
+                    elementMap.set(element.id, element);
+                });
+
+                const PADDING = 20;
+                targetGroupIds.forEach((groupId) => {
+                    const group = elementMap.get(groupId);
+                    if (!group || group.type !== 'group' || !group.groupChildren || group.groupChildren.length === 0) {
+                        return;
+                    }
+
+                    let minX = Infinity;
+                    let minY = Infinity;
+                    let maxX = -Infinity;
+                    let maxY = -Infinity;
+                    let hasChild = false;
+
+                    group.groupChildren.forEach((childId) => {
+                        const child = elementMap.get(childId);
+                        if (!child) return;
+                        hasChild = true;
+                        minX = Math.min(minX, child.x);
+                        minY = Math.min(minY, child.y);
+                        maxX = Math.max(maxX, child.x + child.width);
+                        maxY = Math.max(maxY, child.y + child.height);
+                    });
+
+                    if (!hasChild) return;
+                    group.x = minX - PADDING;
+                    group.y = minY - PADDING;
+                    group.width = (maxX - minX) + (PADDING * 2);
+                    group.height = (maxY - minY) + (PADDING * 2);
+                });
+            }
         });
+        if (patches.length === 0) return;
+        if (isFinal) reportCanvasIntegrity(nextElements, 'updateElementsPosition');
         
         set(state => ({
             elements: nextElements,
@@ -236,16 +489,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
     
     deleteElement: (id) => {
+        const removedIds = new Set([id]);
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
-            const idx = draft.findIndex(el => el.id === id);
-            if (idx !== -1) {
-                draft.splice(idx, 1);
-            }
+            normalizeElementRelations(draft, removedIds);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'deleteElement');
+        const existingIds = new Set(nextElements.map(el => el.id));
         
         set(state => ({
             elements: nextElements,
-            selectedIds: new Set(Array.from(state.selectedIds).filter(sid => sid !== id)),
+            selectedIds: new Set(Array.from(state.selectedIds).filter(sid => existingIds.has(sid))),
             past: state.past.length >= 50 ? [...state.past.slice(1), { patches, inversePatches }] : [...state.past, { patches, inversePatches }],
             future: []
         }));
@@ -284,14 +538,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     selectAll: () => set(state => ({ selectedIds: new Set(state.elements.map(e => e.id)) })),
     
     removeSelected: () => {
+        const removedIds = new Set(get().selectedIds);
+        if (removedIds.size === 0) return;
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
-            const state = get();
-            for (let i = draft.length - 1; i >= 0; i--) {
-                if (state.selectedIds.has(draft[i].id)) {
-                    draft.splice(i, 1);
-                }
-            }
+            normalizeElementRelations(draft, removedIds);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'removeSelected');
         
         set(state => ({
             elements: nextElements,
@@ -302,6 +555,20 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
 
     addConnection: (fromId, toId) => {
+        if (!fromId || !toId || fromId === toId) return;
+        const elements = get().elements;
+        const fromElement = elements.find(el => el.id === fromId);
+        const toElement = elements.find(el => el.id === toId);
+        if (!isConnectableElement(fromElement) || !isConnectableElement(toElement)) return;
+
+        const duplicate = elements.some((el) => {
+            if (el.type !== 'connector') return false;
+            const from = el.data?.connection?.from;
+            const to = el.data?.connection?.to;
+            return from === fromId && to === toId;
+        });
+        if (duplicate) return;
+
         const conn: CanvasElement = {
             id: generateUUID(),
             type: 'connector',
@@ -313,6 +580,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
             draft.push(conn);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'addConnection');
         
         set(state => ({
             elements: nextElements,
@@ -329,12 +598,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     
     bringToFront: () => {
         const state = get();
+        if (state.selectedIds.size === 0) return;
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
             const selected = draft.filter(e => state.selectedIds.has(e.id));
             const others = draft.filter(e => !state.selectedIds.has(e.id));
             draft.length = 0;
             draft.push(...others, ...selected);
         });
+        if (patches.length === 0) return;
         
         set(state => ({
             elements: nextElements,
@@ -345,12 +616,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     
     sendToBack: () => {
         const state = get();
+        if (state.selectedIds.size === 0) return;
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
             const selected = draft.filter(e => state.selectedIds.has(e.id));
             const others = draft.filter(e => !state.selectedIds.has(e.id));
             draft.length = 0;
             draft.push(...selected, ...others);
         });
+        if (patches.length === 0) return;
         
         set(state => ({
             elements: nextElements,
@@ -361,28 +634,34 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     
     duplicateSelected: () => {
         const state = get();
+        const selectedRoots = new Set(state.selectedIds);
+        const selectedElements = collectSelectionWithHierarchyAndConnectors(state.elements, selectedRoots);
+        if (selectedElements.length === 0) return;
+
+        const idMap = new Map<string, string>();
+        selectedElements.forEach((element) => {
+            idMap.set(element.id, generateUUID());
+        });
+
+        const createdIds: string[] = [];
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-            state.elements.forEach(el => {
-                if (state.selectedIds.has(el.id)) {
-                    const clone = { ...el, id: generateUUID(), x: el.x + 20, y: el.y + 20 };
-                    if (clone.resource) {
-                        clone.resource = { ...clone.resource, id: generateUUID(), uuid: generateUUID() };
-                    }
-                    draft.push(clone);
-                }
+            selectedElements.forEach((element) => {
+                const clone = cloneElementWithMappedIds(element, idMap, 20, 20);
+                if (!clone) return;
+                draft.push(clone);
+                createdIds.push(clone.id);
             });
         });
-        
-        const newIds = new Set<string>();
-        nextElements.forEach(el => {
-            if (!state.elements.some(e => e.id === el.id)) {
-                newIds.add(el.id);
-            }
-        });
+        if (patches.length === 0 || createdIds.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'duplicateSelected');
+
+        const selectedDuplicatedIds = Array.from(selectedRoots)
+            .map((id) => idMap.get(id))
+            .filter((id): id is string => !!id);
         
         set(state => ({
             elements: nextElements,
-            selectedIds: newIds,
+            selectedIds: new Set(selectedDuplicatedIds.length > 0 ? selectedDuplicatedIds : createdIds),
             past: state.past.length >= 50 ? [...state.past.slice(1), { patches, inversePatches }] : [...state.past, { patches, inversePatches }],
             future: []
         }));
@@ -390,44 +669,48 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     
     copySelection: () => {
         const state = get();
-        const selected = state.elements.filter(e => state.selectedIds.has(e.id));
-        set({ _clipboard: selected });
+        if (state.selectedIds.size === 0) {
+            set({ _clipboard: [] });
+            return;
+        }
+        const selectionWithTopology = collectSelectionWithHierarchyAndConnectors(state.elements, state.selectedIds);
+        set({ _clipboard: selectionWithTopology });
     },
     
     pasteSelection: () => {
         const state = get();
         if (state._clipboard.length === 0) return;
+
+        const idMap = new Map<string, string>();
+        state._clipboard.forEach((element) => {
+            idMap.set(element.id, generateUUID());
+        });
+
+        const createdIds: string[] = [];
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-            state._clipboard.forEach(el => {
-                draft.push({
-                    ...el,
-                    id: generateUUID(),
-                    x: el.x + 20,
-                    y: el.y + 20,
-                    resource: el.resource ? { ...el.resource, id: generateUUID(), uuid: generateUUID() } : undefined
-                });
+            state._clipboard.forEach((element) => {
+                const clone = cloneElementWithMappedIds(element, idMap, 20, 20);
+                if (!clone) return;
+                draft.push(clone);
+                createdIds.push(clone.id);
             });
         });
-        
-        const newIds = new Set<string>();
-        nextElements.forEach(el => {
-            if (!state.elements.some(e => e.id === el.id)) {
-                newIds.add(el.id);
-            }
-        });
+        if (patches.length === 0 || createdIds.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'pasteSelection');
         
         set(state => ({
             elements: nextElements,
-            selectedIds: newIds,
+            selectedIds: new Set(createdIds),
             past: state.past.length >= 50 ? [...state.past.slice(1), { patches, inversePatches }] : [...state.past, { patches, inversePatches }],
             future: []
         }));
     },
     
     nudgeSelection: (dx, dy) => {
+        const state = get();
+        if (state.selectedIds.size === 0) return;
         const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
-            const state = get();
             draft.forEach(el => {
                 if (state.selectedIds.has(el.id)) {
                     el.x += dx;
@@ -435,6 +718,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 }
             });
         });
+        if (patches.length === 0) return;
         
         set(state => ({
             elements: nextElements,
@@ -446,9 +730,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     groupSelected: () => {
         const state = get();
         if (state.selectedIds.size < 2) return;
+        const rootIds = collectSelectedGroupRoots(state);
+        if (rootIds.length < 2) return;
+        const rootIdSet = new Set(rootIds);
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-            const selectedEls = draft.filter(e => state.selectedIds.has(e.id));
+            const selectedEls = draft.filter(e => rootIdSet.has(e.id));
+            if (selectedEls.length < 2) return;
+
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             selectedEls.forEach(el => {
                 minX = Math.min(minX, el.x);
@@ -466,17 +755,21 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 width: (maxX - minX) + (padding * 2),
                 height: (maxY - minY) + (padding * 2),
                 data: { label: 'Group' },
-                groupChildren: Array.from(state.selectedIds)
+                groupChildren: Array.from(rootIdSet)
             };
-            
+
+            detachChildrenFromGroups(draft, rootIdSet);
+
             draft.forEach(el => {
-                if (state.selectedIds.has(el.id)) {
+                if (rootIdSet.has(el.id)) {
                     el.groupId = group.id;
                 }
             });
             
             draft.push(group);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'groupSelected');
         
         const newGroupId = nextElements.find(el => el.type === 'group' && !get().elements.some(e => e.id === el.id))?.id;
         
@@ -494,17 +787,24 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         if (groups.length === 0) return;
         
         const groupIds = new Set(groups.map(g => g!.id));
-        const childrenIds = groups.flatMap(g => g!.groupChildren || []);
+        const childrenIds = Array.from(new Set(groups.flatMap(g => g!.groupChildren || [])));
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
+            detachChildrenFromGroups(draft, groupIds);
+
             for (let i = draft.length - 1; i >= 0; i--) {
                 if (groupIds.has(draft[i].id)) {
                     draft.splice(i, 1);
-                } else if (childrenIds.includes(draft[i].id)) {
-                    draft[i].groupId = undefined;
+                } else {
+                    const parentGroupId = draft[i].groupId;
+                    if (childrenIds.includes(draft[i].id) && parentGroupId && groupIds.has(parentGroupId)) {
+                        draft[i].groupId = undefined;
+                    }
                 }
             }
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'ungroupSelected');
         
         set(state => ({
             elements: nextElements,
@@ -551,6 +851,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                     draft[idx].height = newH;
                 }
             });
+            if (patches.length === 0) return;
+            reportCanvasIntegrity(nextElements, 'fitGroupToChildren');
             
             set(state => ({
                 elements: nextElements,
@@ -592,6 +894,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 if (alignment === 'middle') el.y = targetVal - el.height / 2;
             });
         });
+        if (patches.length === 0) return;
         
         set(state => ({
             elements: nextElements,
@@ -610,34 +913,47 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const last = sorted[sorted.length - 1];
 
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
+            const nextPositionMap = new Map<string, number>();
             if (direction === 'horizontal') {
                 const totalSpan = (last.x + last.width) - first.x;
                 const sumWidths = sorted.reduce((sum, el) => sum + el.width, 0);
                 const gap = (totalSpan - sumWidths) / (sorted.length - 1);
                 let currentX = first.x;
-                
-                draft.forEach(el => {
-                    const idx = sorted.findIndex(s => s.id === el.id);
-                    if (idx === -1) return;
-                    if (idx === 0) { currentX += el.width + gap; return; }
-                    el.x = currentX;
-                    currentX += el.width + gap;
+                sorted.forEach((el, idx) => {
+                    if (idx === 0) {
+                        nextPositionMap.set(el.id, first.x);
+                        return;
+                    }
+                    currentX += sorted[idx - 1].width + gap;
+                    nextPositionMap.set(el.id, currentX);
                 });
             } else {
                 const totalSpan = (last.y + last.height) - first.y;
                 const sumHeights = sorted.reduce((sum, el) => sum + el.height, 0);
                 const gap = (totalSpan - sumHeights) / (sorted.length - 1);
                 let currentY = first.y;
-                
-                draft.forEach(el => {
-                    const idx = sorted.findIndex(s => s.id === el.id);
-                    if (idx === -1) return;
-                    if (idx === 0) { currentY += el.height + gap; return; }
-                    el.y = currentY;
-                    currentY += el.height + gap;
+
+                sorted.forEach((el, idx) => {
+                    if (idx === 0) {
+                        nextPositionMap.set(el.id, first.y);
+                        return;
+                    }
+                    currentY += sorted[idx - 1].height + gap;
+                    nextPositionMap.set(el.id, currentY);
                 });
             }
+
+            draft.forEach((element) => {
+                const nextValue = nextPositionMap.get(element.id);
+                if (nextValue === undefined) return;
+                if (direction === 'horizontal') {
+                    element.x = nextValue;
+                } else {
+                    element.y = nextValue;
+                }
+            });
         });
+        if (patches.length === 0) return;
         
         set(state => ({
             elements: nextElements,

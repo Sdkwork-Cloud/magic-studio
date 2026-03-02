@@ -27,7 +27,7 @@ export type {
   VideoAsset,
   ImageAsset,
   AudioAsset,
-  DigitalHumanAsset,
+  CharacterAsset,
   SfxAsset,
   TextAsset,
   EffectAsset,

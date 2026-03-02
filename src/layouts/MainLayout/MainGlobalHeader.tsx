@@ -1,10 +1,9 @@
 
 import { WindowControls } from '@sdkwork/react-commons'
-import React, { useState, useRef, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useRef, useEffect } from 'react';
 import {
   ChevronRight, Home, Terminal, Code, Settings, User,
-  BookOpen, Bug, RefreshCw,
-  Github, Rocket, Zap
+  BookOpen, Bug, RefreshCw, Zap
 } from 'lucide-react';
 import { ROUTES } from '../../router/routes';
 import { useAuthStore } from '@sdkwork/react-auth';
@@ -12,9 +11,8 @@ import { useWorkspaceStore, WorkspaceProjectSelector } from '@sdkwork/react-work
 import { useSettingsStore } from '@sdkwork/react-settings';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { useRouter, platform } from '@sdkwork/react-core';
-import { useEditorStore } from '@sdkwork/react-editor';
-import { GitHubSyncModal } from '@sdkwork/react-editor';
-import { PublishAppModal } from '@sdkwork/react-editor';
+
+const EditorProjectActions = lazy(() => import('./EditorProjectActions'));
 
 const MainGlobalHeader: React.FC = () => {
   const { currentPath } = useRouter();
@@ -24,13 +22,8 @@ const MainGlobalHeader: React.FC = () => {
   
   const { currentProject } = useWorkspaceStore();
 
-  const { syncToGitHub, publishApp, rootPath } = useEditorStore();
-
   const [showDevMenu, setShowDevMenu] = useState(false);
-  
-  const [showGitModal, setShowGitModal] = useState(false);
-  const [showPublishModal, setShowPublishModal] = useState(false);
-  
+
   const devRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,24 +77,10 @@ const MainGlobalHeader: React.FC = () => {
               </div>
            </div>
 
-           {/* Project Actions (Git / Publish) - Only if project/folder open AND in Editor mode */}
-           {rootPath && currentPath === ROUTES.EDITOR && (
-               <div className="flex items-center gap-1 px-2 h-full border-r border-gray-200 dark:border-[#1a1a1a]">
-                   <button 
-                       onClick={() => setShowGitModal(true)}
-                       className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-200 dark:hover:bg-[#2d2d2d] rounded transition-colors"
-                       title={t('editor.explorer.git.title')}
-                   >
-                       <Github size={14} />
-                   </button>
-                   <button 
-                       onClick={() => setShowPublishModal(true)}
-                       className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-[#2d2d2d] rounded transition-colors"
-                       title={t('editor.explorer.publish.title')}
-                   >
-                       <Rocket size={14} />
-                   </button>
-               </div>
+           {currentPath === ROUTES.EDITOR && (
+              <Suspense fallback={null}>
+                <EditorProjectActions projectName={currentProject?.name} />
+              </Suspense>
            )}
 
            {/* Developer Tools Toggle */}
@@ -143,21 +122,6 @@ const MainGlobalHeader: React.FC = () => {
            </div>
         </div>
 
-        {/* Modals */}
-        {showGitModal && (
-            <GitHubSyncModal 
-                onClose={() => setShowGitModal(false)}
-                onSync={syncToGitHub}
-            />
-        )}
-        
-        {showPublishModal && (
-            <PublishAppModal 
-                onClose={() => setShowPublishModal(false)}
-                onPublish={publishApp}
-                initialName={currentProject ? currentProject.name : 'my-app'}
-            />
-        )}
       </div>
     </>
   );

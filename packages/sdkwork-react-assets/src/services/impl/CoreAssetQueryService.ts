@@ -14,7 +14,7 @@ import type {
   AssetContentKey
 } from '@sdkwork/react-types';
 
-type QueryCategory = AssetType | 'media' | 'effects' | 'transitions' | 'digital-human';
+type QueryCategory = AssetType | 'media' | 'effects' | 'transitions';
 
 export class CoreAssetQueryService {
   async query(category: QueryCategory, pageRequest: PageRequest = { page: 0, size: 20 }): Promise<Page<AnyAsset>> {
@@ -28,8 +28,6 @@ export class CoreAssetQueryService {
         return 'effect';
       case 'transitions':
         return 'transition';
-      case 'digital-human':
-        return 'digital-human';
       case 'media':
         return undefined;
       default:
@@ -75,7 +73,7 @@ export class CoreAssetQueryService {
         return 'audio-studio';
       case 'music':
         return 'music';
-      case 'digital-human':
+      case 'character':
         return 'character';
       case 'sfx':
         return 'sfx';
@@ -93,12 +91,10 @@ export class CoreAssetQueryService {
         return ['effect'];
       case 'transitions':
         return ['transition'];
-      case 'digital-human':
-        return ['digitalHuman'];
       case 'media':
         return ['video', 'image'];
       default:
-        return [this.resolveFilterType(category) === 'digital-human' ? 'digitalHuman' : (this.resolveFilterType(category) as AssetContentKey)];
+        return [this.resolveFilterType(category) as AssetContentKey];
     }
   }
 }

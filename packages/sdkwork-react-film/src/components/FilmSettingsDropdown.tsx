@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-    Settings2, ChevronDown, Monitor, Cpu, Sparkles, Film, Video, Image as ImageIcon,
+    Settings2, ChevronDown, Monitor, Film,
     Ratio, Activity, Smartphone, LayoutTemplate, Square, Check, Download
 } from 'lucide-react';
 

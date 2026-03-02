@@ -10,8 +10,8 @@ class AssetServiceRegistry {
         voice: 'audio',
         voices: 'audio',
         speech: 'audio',
-        'digital-humans': 'digital-human',
-        'digital-human': 'digital-human'
+        character: 'character',
+        characters: 'character'
     };
 
     constructor() {

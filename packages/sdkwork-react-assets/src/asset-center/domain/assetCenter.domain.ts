@@ -60,18 +60,18 @@ export const ASSET_CENTER_DEFAULT_SORT = ['updatedAt,desc'];
 export const ASSET_CENTER_PROTOCOL = 'assets://';
 
 export const DOMAIN_ALLOWED_TYPES: Record<AssetBusinessDomain, AssetContentKey[]> = {
-  'asset-center': ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'digitalHuman', 'model3d', 'lottie', 'file', 'effect', 'transition', 'subtitle', 'sfx'],
+  'asset-center': ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'model3d', 'lottie', 'file', 'effect', 'transition', 'subtitle', 'sfx'],
   notes: ['text', 'image', 'video', 'audio', 'voice', 'file', 'subtitle'],
-  canvas: ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'digitalHuman', 'model3d', 'lottie', 'file', 'effect', 'transition', 'subtitle', 'sfx'],
+  canvas: ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'model3d', 'lottie', 'file', 'effect', 'transition', 'subtitle', 'sfx'],
   'image-studio': ['image', 'file'],
   'video-studio': ['video', 'image', 'audio', 'music', 'voice', 'effect', 'transition', 'subtitle', 'file'],
   'audio-studio': ['audio', 'music', 'voice', 'sfx', 'file'],
   music: ['music', 'audio', 'file'],
   'voice-speaker': ['voice', 'audio', 'file'],
   magiccut: ['video', 'image', 'audio', 'music', 'voice', 'text', 'effect', 'transition', 'subtitle', 'sfx', 'file'],
-  film: ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'digitalHuman', 'model3d', 'file'],
-  'portal-video': ['video', 'image', 'audio', 'music', 'voice', 'text', 'effect', 'transition', 'subtitle', 'file'],
-  character: ['character', 'digitalHuman', 'image', 'video', 'voice', 'file'],
+  film: ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'model3d', 'file'],
+  'portal-video': ['video', 'image', 'audio', 'music', 'voice', 'text', 'character', 'effect', 'transition', 'subtitle', 'file'],
+  character: ['character', 'image', 'video', 'voice', 'file'],
   sfx: ['sfx', 'audio', 'file']
 };
 
@@ -102,7 +102,6 @@ export const mapContentKeyToMediaType = (type: AssetContentKey): MediaResourceTy
     case 'subtitle':
       return MediaResourceType.SUBTITLE;
     case 'character':
-    case 'digitalHuman':
       return MediaResourceType.CHARACTER;
     case 'model3d':
       return MediaResourceType.MODEL_3D;
@@ -150,9 +149,6 @@ export const buildUnifiedAssetPayload = (
       break;
     case 'character':
       payload.character = primary as UnifiedAssetPayload['character'];
-      break;
-    case 'digitalHuman':
-      payload.digitalHuman = primary as UnifiedAssetPayload['digitalHuman'];
       break;
     case 'model3d':
       payload.model3d = primary as UnifiedAssetPayload['model3d'];
@@ -209,9 +205,6 @@ export const readUnifiedPayloadPrimary = (
       break;
     case 'character':
       primary = payload.character;
-      break;
-    case 'digitalHuman':
-      primary = payload.digitalHuman;
       break;
     case 'model3d':
       primary = payload.model3d;

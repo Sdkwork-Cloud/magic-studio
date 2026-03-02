@@ -2,7 +2,7 @@
 import React from 'react';
 import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useFilmStore } from '../store/filmStore';
-import { Bot, PenTool } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 export const FilmChatPanel: React.FC = () => {
     const { project, updateScript } = useFilmStore();

@@ -93,7 +93,7 @@ export const studio = {
         image_to_video: "Image to Video",
         motion: "Motion",
         multi_ref: "Multi-Ref",
-        avatar: "Digital Human",
+        avatar: "Character",
         lip_sync: "Lip Sync",
         start_frame: "Start Frame",
         end_frame: "End Frame",

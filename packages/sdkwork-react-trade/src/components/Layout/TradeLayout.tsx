@@ -57,7 +57,7 @@ const SIDEBAR_NAV_GROUPS: SidebarGroup[] = [
         items: [
             { id: 'video', label: '视频', icon: Video, route: ROUTES.VIDEO },
             { id: 'image', label: '图片', icon: ImageIcon, route: ROUTES.IMAGE },
-            { id: 'human', label: '数字人', icon: Smile, route: ROUTES.CHARACTER },
+            { id: 'human', label: '角色', icon: Smile, route: ROUTES.CHARACTER },
         ]
     },
     {

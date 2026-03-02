@@ -69,7 +69,6 @@ export const PACKAGE_BASED_ROUTES: RouteDefinition[] = [
         path: ROUTES.ASSETS,
         component: LazyPageWrapper(lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetsPage })))),
         layout: 'creation',
-        leftPane: lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetSidebar }))),
         provider: lazy(() => import('@sdkwork/react-assets').then(m => ({ default: m.AssetStoreProvider })))
     },
     

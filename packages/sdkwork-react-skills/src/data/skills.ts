@@ -51,8 +51,8 @@ export const AGENT_SKILLS: AgentSkill[] = [
     },
     {
         id: 'skill-003',
-        name: '数字人创建器',
-        description: '快速创建逼真的 AI 数字人，支持多种风格和表情。可用于视频、直播、客服等场景。',
+        name: '角色创建器',
+        description: '快速创建逼真的 AI 角色，支持多种风格和表情。可用于视频、直播、客服等场景。',
         icon: Users,
         category: 'character',
         author: { name: 'AvatarAI', verified: true },

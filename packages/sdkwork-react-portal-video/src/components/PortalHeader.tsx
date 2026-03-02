@@ -63,9 +63,9 @@ export const PortalHeader: React.FC = () => {
             return null;
         }
         return {
-            displayName: user.username || user.name || 'User',
+            displayName: user.name || 'User',
             email: user.email || '',
-            avatar: user.avatarUrl || user.avatar
+            avatar: user.avatar
         };
     }, [user]);
 

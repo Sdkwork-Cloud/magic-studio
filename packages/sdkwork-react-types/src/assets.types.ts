@@ -7,7 +7,8 @@ import type {
   FileMediaResource,
   VideoMediaResource,
   ImageMediaResource,
-  AudioMediaResource
+  AudioMediaResource,
+  CharacterMediaResource
 } from './media.types';
 
 // ============================================================================
@@ -22,7 +23,6 @@ export type AssetType =
   | 'voice'
   | 'text'
   | 'character'
-  | 'digital-human'
   | 'model3d'
   | 'lottie'
   | 'file'
@@ -86,7 +86,7 @@ export type ImageAsset = ImageMediaResource;
 
 export type AudioAsset = AudioMediaResource;
 
-export interface DigitalHumanAsset extends FileMediaResource {
+export interface CharacterAsset extends CharacterMediaResource {
   category?: 'avatar' | 'character' | 'avatar-animation' | 'full-body';
   metadata?: {
     modelName?: string;
@@ -150,7 +150,7 @@ export interface TransitionAsset extends FileMediaResource {
   };
 }
 
-export type AnyAsset = MediaResource | DigitalHumanAsset | SfxAsset | TextAsset | EffectAsset | TransitionAsset;
+export type AnyAsset = MediaResource | CharacterAsset | SfxAsset | TextAsset | EffectAsset | TransitionAsset;
 
 // ============================================================================
 // Asset Collection/Folder

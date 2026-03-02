@@ -401,7 +401,6 @@ export class RemoteAssetIndexRepository implements AssetIndexPort {
         voice: 0,
         text: 0,
         character: 0,
-        digitalHuman: 0,
         model3d: 0,
         lottie: 0,
         file: 0,

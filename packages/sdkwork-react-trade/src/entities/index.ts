@@ -96,7 +96,7 @@ export enum TaskType {
   VIDEO_COLORIZATION = 'VIDEO_COLORIZATION',
   /** 视频风格转换 */
   VIDEO_STYLE_TRANSFER = 'VIDEO_STYLE_TRANSFER',
-  /** 数字人视频 */
+  /** 角色视频 */
   AVATAR_VIDEO = 'AVATAR_VIDEO',
   /** 口型同步 */
   LIP_SYNC = 'LIP_SYNC',
@@ -384,6 +384,8 @@ export interface TradePageRequest {
   status?: string;
   /** 类型过滤 */
   type?: string;
+  /** 难度过滤 */
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
   /** 开始时间 */
   startTime?: string;
   /** 结束时间 */

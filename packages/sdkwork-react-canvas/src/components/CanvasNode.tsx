@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useLayoutEffect, forwardRef, useEffect } from 'react';
+import React, { useRef, useState, useLayoutEffect, useMemo, forwardRef, useEffect } from 'react';
 import { ElementToolbar } from './ElementToolbar';
 import { Z_LAYERS } from './CanvasBoard';
 import { 
@@ -23,6 +23,7 @@ import { ImageModelSelector } from '@sdkwork/react-image';
 import { VideoModelSelector } from '@sdkwork/react-video';
 import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 import { VideoNode } from './nodes/VideoNode';
+import { getCanvasViewportBounds } from '../utils/canvasContainer';
 
 export type LODLevel = 'detail' | 'simplified' | 'block';
 
@@ -38,6 +39,13 @@ interface CanvasNodeProps {
 
 const DRAG_THRESHOLD = 5;
 const MAX_INITIAL_MEDIA_SIZE = 500;
+const CHAT_INPUT_MIN_WIDTH = 520;
+const CHAT_INPUT_EXTRA_WIDTH = 160;
+const CHAT_INPUT_MAX_WIDTH = 860;
+const CHAT_INPUT_MIN_OVER_NODE = 40;
+const CHAT_INPUT_VIEWPORT_MARGIN = 24;
+const CHAT_INPUT_MIN_HEIGHT = 64;
+const CHAT_INPUT_MIN_HEIGHT_WITH_ATTACHMENTS = 84;
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -181,11 +189,14 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
     const [_isResizing, setIsResizing] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isNodeDragging, setIsNodeDragging] = useState(false);
     const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
+    const [chatInputOffsetX, setChatInputOffsetX] = useState(0);
     const [resolvedUrl, setResolvedUrl] = useState<string>('');
     
     const internalRef = useRef<HTMLDivElement>(null);
     const startPosRef = useRef<{x: number, y: number} | null>(null);
+    const dragGestureStartRef = useRef<{x: number, y: number} | null>(null);
 
     const selectionCount = selectedIds.size;
     const isMedia = type === 'image' || type === 'video';
@@ -207,6 +218,19 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
     const displaySrc = resolvedUrl;
     let textContent = resource?.metadata?.text || '';
 
+    const chatInputWidth = useMemo(() => {
+        const viewportBounds = getCanvasViewportBounds();
+        const viewportWidth = Math.max(0, viewportBounds.right - viewportBounds.left);
+        const maxViewportWidth = Math.max(360, viewportWidth - CHAT_INPUT_VIEWPORT_MARGIN * 2);
+        const desiredWidth = Math.max(width + CHAT_INPUT_EXTRA_WIDTH, CHAT_INPUT_MIN_WIDTH);
+        const hardCappedWidth = Math.min(desiredWidth, CHAT_INPUT_MAX_WIDTH, maxViewportWidth);
+        const shouldKeepOverNode = maxViewportWidth >= width + CHAT_INPUT_MIN_OVER_NODE;
+        if (shouldKeepOverNode && hardCappedWidth < width + CHAT_INPUT_MIN_OVER_NODE) {
+            return width + CHAT_INPUT_MIN_OVER_NODE;
+        }
+        return hardCappedWidth;
+    }, [width]);
+
     useLayoutEffect(() => {
         if (typeof ref === 'function') ref(internalRef.current);
         else if (ref) ref.current = internalRef.current;
@@ -215,14 +239,45 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
     useLayoutEffect(() => {
         if (selected && internalRef.current) {
             const rect = internalRef.current.getBoundingClientRect();
+            const viewportBounds = getCanvasViewportBounds();
             const REQUIRED_HEIGHT = 280; 
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
+            const topBoundary = viewportBounds.top;
+            const bottomBoundary = viewportBounds.bottom;
+            const spaceBelow = bottomBoundary - rect.bottom;
+            const spaceAbove = rect.top - topBoundary;
             if (spaceBelow >= REQUIRED_HEIGHT) setPlacement('bottom');
             else if (spaceAbove >= REQUIRED_HEIGHT) setPlacement('top');
             else setPlacement(spaceBelow >= spaceAbove ? 'bottom' : 'top');
         }
     }, [selected, x, y, width, height, viewport]);
+
+    useLayoutEffect(() => {
+        if (!selected || !internalRef.current) {
+            if (chatInputOffsetX !== 0) {
+                setChatInputOffsetX(0);
+            }
+            return;
+        }
+
+        const rect = internalRef.current.getBoundingClientRect();
+        const viewportBounds = getCanvasViewportBounds();
+        const minLeft = viewportBounds.left + CHAT_INPUT_VIEWPORT_MARGIN;
+        const maxRight = viewportBounds.right - CHAT_INPUT_VIEWPORT_MARGIN;
+
+        const expectedLeft = rect.left + (rect.width / 2) - (chatInputWidth / 2);
+        const expectedRight = expectedLeft + chatInputWidth;
+        let nextOffset = 0;
+
+        if (expectedLeft < minLeft) {
+            nextOffset = minLeft - expectedLeft;
+        } else if (expectedRight > maxRight) {
+            nextOffset = maxRight - expectedRight;
+        }
+
+        if (Math.abs(nextOffset - chatInputOffsetX) > 0.5) {
+            setChatInputOffsetX(nextOffset);
+        }
+    }, [selected, x, y, width, height, viewport, chatInputWidth, chatInputOffsetX]);
 
     const handleToolbarCallback = (action: string) => {
         switch (action) {
@@ -280,6 +335,42 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
         type: 'image',
         url: url
     }));
+
+    const chatInputMinHeight = attachments.length > 0
+        ? CHAT_INPUT_MIN_HEIGHT_WITH_ATTACHMENTS
+        : CHAT_INPUT_MIN_HEIGHT;
+
+    useEffect(() => {
+        const handleWindowMouseMove = (event: MouseEvent) => {
+            const start = dragGestureStartRef.current;
+            if (!start) return;
+            const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+            if (moved >= DRAG_THRESHOLD) {
+                setIsNodeDragging(true);
+            }
+        };
+
+        const handleWindowMouseUp = () => {
+            dragGestureStartRef.current = null;
+            setIsNodeDragging(false);
+        };
+
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!selected) {
+            dragGestureStartRef.current = null;
+            if (isNodeDragging) {
+                setIsNodeDragging(false);
+            }
+        }
+    }, [selected, isNodeDragging]);
 
     const handleGenerate = async () => {
         setIsGenerating(true);
@@ -358,6 +449,10 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
         }
         
         if (!_isResizing && !isEditing) {
+            if (e.button === 0) {
+                dragGestureStartRef.current = { x: e.clientX, y: e.clientY };
+                setIsNodeDragging(false);
+            }
             e.stopPropagation(); 
             if (e.button === 0) onMouseDown(e, id);
         }
@@ -576,13 +671,14 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                     <div onMouseDown={(e) => { e.stopPropagation(); onConnectStart(e, id, 'in'); }} className={`absolute left-0 top-1/2 -translate-x-1/2 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-crosshair transition-all z-50 shadow-sm hover:scale-150 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                     <div onMouseDown={(e) => { e.stopPropagation(); onConnectStart(e, id, 'out'); }} className={`absolute right-0 top-1/2 translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-crosshair transition-all z-50 shadow-sm hover:scale-150 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                     
-                    {selected && selectionCount === 1 && (type === 'image' || type === 'video') && (
+                    {selected && selectionCount === 1 && !isNodeDragging && (type === 'image' || type === 'video') && (
                         <div 
-                            className={`absolute left-1/2 -translate-x-1/2 z-[1000] cursor-default pointer-events-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ${placement === 'top' ? 'bottom-[100%] mb-4' : 'top-[100%] mt-4'}`} 
+                            className={`absolute left-1/2 z-[1000] cursor-default pointer-events-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ${placement === 'top' ? 'bottom-[100%] mb-4' : 'top-[100%] mt-4'}`} 
                             onMouseDown={e => e.stopPropagation()} 
                             onClick={e => e.stopPropagation()}
+                            style={{ transform: `translateX(calc(-50% + ${chatInputOffsetX}px))` }}
                         >
-                            <div className="w-[480px]">
+                            <div style={{ width: `${chatInputWidth}px` }}>
                                 <CreationChatInput 
                                     variant="compact"
                                     value={data?.prompt || ''}
@@ -591,8 +687,8 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                                     isGenerating={isGenerating}
                                     placeholder={type === 'video' ? "Describe the video scene..." : "Describe the image..."}
                                     footerControls={renderFooterControls()}
-                                    width={480} 
-                                    minHeight={60}
+                                    width={chatInputWidth}
+                                    minHeight={chatInputMinHeight}
                                     onUpload={handleAttachmentUpload}
                                     attachments={attachments}
                                     onRemoveAttachment={handleRemoveAttachment}

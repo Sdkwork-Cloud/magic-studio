@@ -1,7 +1,7 @@
 
 import { FilmScene, FilmShot, FilmLocation, FilmCharacter, FilmProp } from '@sdkwork/react-commons';
 import React from 'react';
-import { Clapperboard, ArrowRight, Sparkles, Loader2, Video, Mic, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Clapperboard, Video, Mic, Image as ImageIcon } from 'lucide-react';
 
 import { useFilmStore } from '../../store/filmStore';
 import { SceneListPanel } from './SceneListPanel';
@@ -21,7 +21,7 @@ interface StoryboardPanelProps {
 
 export const StoryboardPanel: React.FC<StoryboardPanelProps> = ({ 
     scenes, shots, locations, characters, props,
-    onEditShot, onAddShot, onGenerateShot, onViewAll 
+    onEditShot, onAddShot, onGenerateShot, onViewAll: _onViewAll
 }) => {
     const { 
         generateAllImages, 

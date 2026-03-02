@@ -14,6 +14,7 @@ import { film } from './film';
 import { video } from './video';
 import { image } from './image';
 import { portalVideo } from './portalVideo';
+import { assetCenter } from './assetCenter';
 
 export const en = {
     common,
@@ -36,5 +37,6 @@ export const en = {
     film,
     video,
     image,
-    portalVideo
+    portalVideo,
+    assetCenter
 };

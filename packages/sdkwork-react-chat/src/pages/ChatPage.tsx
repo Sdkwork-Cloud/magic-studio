@@ -12,14 +12,14 @@ const ChatPage: React.FC = () => {
     const { currentSession, isGenerating, sendMessage } = useChatStore();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { navigate, currentPath } = useRouter();
+    const { navigate } = useRouter();
 
     // Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [currentSession?.messages, isGenerating]);
 
-    const handleSend = (text: string, mode: ChatMode, model: string) => {
+    const handleSend = (text: string, _mode: ChatMode, model: string) => {
         sendMessage(text, model);
     };
 

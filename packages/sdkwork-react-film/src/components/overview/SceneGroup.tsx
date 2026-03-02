@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Plus, Edit2, Trash2, Image as ImageIcon, Video, Mic, User, Clock, Clapperboard } from 'lucide-react';
+import { Plus, Edit2, Trash2, Image as ImageIcon, Video, Mic, User, Clock } from 'lucide-react';
 
 import {
     FilmScene,
@@ -36,7 +36,7 @@ export interface SceneGroupProps {
 
 export const SceneGroup: React.FC<SceneGroupProps> = ({ 
     scene, location, shots, 
-    characters, storyProps, onGenerateAllImages, onGenerateAllVideos, onGenerateAllAudio,
+    characters, storyProps: _storyProps, onGenerateAllImages, onGenerateAllVideos, onGenerateAllAudio,
     onEditShot, onAddShot, onGenerateShot, onDeleteShot,
     onEditScene, onDeleteScene
 }) => {

@@ -4,9 +4,6 @@ import type { Asset, AssetOrigin, AssetType, AnyAsset } from '../../entities';
 import { mapContentKeyToMediaType, readUnifiedPayloadPrimary } from '../domain/assetCenter.domain';
 
 const toAssetType = (type: AssetContentKey): AssetType => {
-  if (type === 'digitalHuman') {
-    return 'digital-human';
-  }
   return type;
 };
 
