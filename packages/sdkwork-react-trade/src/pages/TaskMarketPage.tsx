@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Zap, Briefcase, FileText, DollarSign, Search, Filter, Banknote, Users, TrendingUp, Award, Sparkles } from 'lucide-react';
 import type { AvailableTask, TradePageRequest } from '../entities';
-import { taskService } from '../services/taskService';
+import { tradeBusinessService } from '../services';
 import { TaskCard } from '../components/Task/TaskCard';
 import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { TradeLayout } from '../components/Layout/TradeLayout';
@@ -28,7 +28,7 @@ const TaskMarketPage: React.FC = () => {
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const result = await taskService.getAvailableTasks(filters);
+      const result = await tradeBusinessService.taskService.getAvailableTasks(filters);
       setTasks(result.items);
       setTotal(result.total);
       setPage(result.currentPage);
@@ -41,7 +41,7 @@ const TaskMarketPage: React.FC = () => {
 
   const handleAcceptTask = async (task: AvailableTask) => {
     try {
-      await taskService.acceptTask({ taskUuid: task.uuid });
+      await tradeBusinessService.taskService.acceptTask({ taskUuid: task.uuid });
       alert('接单成功！');
       setSelectedTask(null);
       loadTasks();

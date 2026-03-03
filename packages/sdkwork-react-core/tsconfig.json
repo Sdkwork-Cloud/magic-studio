@@ -18,9 +18,16 @@
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@sdkwork/app-sdk": ["../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist"],
   "references": [
     { "path": "../sdkwork-react-types" }

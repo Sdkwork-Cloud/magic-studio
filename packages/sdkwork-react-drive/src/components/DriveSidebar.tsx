@@ -1,12 +1,11 @@
 
-import { driveService } from '../services/driveService'
 import React, { useState, useRef, useEffect } from 'react';
 import { HardDrive, Clock, Star, Trash2, Cloud, Plus, FolderPlus, FileUp } from 'lucide-react';
 import { useDriveStore } from '../store/driveStore';
 import { useTranslation } from '@sdkwork/react-i18n';
 
 export const DriveSidebar: React.FC = () => {
-    const { stats, createFolder, uploadFiles, navigateTo, currentPath } = useDriveStore();
+    const { stats, createFolder, uploadFiles, navigateTo, navigateHome, currentPath } = useDriveStore();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
@@ -35,9 +34,8 @@ export const DriveSidebar: React.FC = () => {
         uploadFiles();
     };
     
-    const goHome = async () => {
-        const home = await driveService.getDefaultPath();
-        navigateTo(home);
+    const goHome = () => {
+        navigateHome();
     };
 
     return (

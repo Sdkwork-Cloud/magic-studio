@@ -9,4 +9,4 @@ export * from './components/MediaSettings';
 export * from './components/StorageSettings';
 export * from './components/SidebarSettings';
 export * from './components/OpencodeSettings';
-export * from './services/settingsService';
+export * from './services';

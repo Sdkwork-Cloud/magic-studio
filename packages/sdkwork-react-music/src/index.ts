@@ -7,5 +7,5 @@ export { MusicStoreProvider, useMusicStore } from './store/musicStore';
 export * from './store';
 export * from './entities';
 export * from './constants';
-export * from './services/musicService';
+export * from './services';
 export * from './i18n';

@@ -1,6 +1,6 @@
 
 import { AppSettings } from '../entities'
-import { settingsService } from '../services/settingsService'
+import { settingsBusinessService } from '../services'
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from '../constants';
 import { i18nService, Locale } from '@sdkwork/react-i18n';
@@ -51,7 +51,7 @@ export const SettingsStoreProvider: React.FC<{ children: ReactNode }> = ({ child
 
   useEffect(() => {
     const load = async () => {
-      const result = await settingsService.getSettings();
+      const result = await settingsBusinessService.getSettings();
       if (result.success && result.data) {
           setSettings(result.data);
           syncLanguage(result.data.general.language);
@@ -66,13 +66,13 @@ export const SettingsStoreProvider: React.FC<{ children: ReactNode }> = ({ child
     // Real-time updates
     syncLanguage(newSettings.general.language);
     
-    await settingsService.updateSettings(newSettings);
+    await settingsBusinessService.updateSettings(newSettings);
   };
 
   const resetToDefaults = async () => {
     setSettings(DEFAULT_SETTINGS);
     syncLanguage(DEFAULT_SETTINGS.general.language);
-    await settingsService.updateSettings(DEFAULT_SETTINGS);
+    await settingsBusinessService.updateSettings(DEFAULT_SETTINGS);
   };
 
   return (
@@ -87,3 +87,4 @@ export const useSettingsStore = () => {
   if (!context) throw new Error('useSettingsStore must be used within a SettingsStoreProvider');
   return context;
 };
+

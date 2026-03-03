@@ -11,7 +11,7 @@ import { GenerationPreview } from '@sdkwork/react-image';
 import { VIDEO_PROVIDERS } from '@sdkwork/react-video';
 import { IMAGE_PROVIDERS } from '@sdkwork/react-image';
 import { FILM_STYLES } from '../constants';
-import { useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
+import { inlineDataService, useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 import { importFilmAssetFromFile } from '../utils/filmModalAssetImport';
 
 type FilmHomeAttachment = InputAttachment & {
@@ -147,7 +147,7 @@ const FilmHomePageContent: React.FC = () => {
                  if (scriptAttachment && (scriptAttachment.content || scriptAttachment.url)) {
                       const text =
                           scriptAttachment.content ||
-                          (scriptAttachment.url ? await (await fetch(scriptAttachment.url)).text() : '');
+                          (scriptAttachment.url ? await inlineDataService.fetchText(scriptAttachment.url) : '');
                       const name = prompt.slice(0, 30) || scriptAttachment.name.replace(/\.[^/.]+$/, "") || "New Short Drama";
                       await createProjectFromInput(name, text);
                  } else {

@@ -4,6 +4,6 @@ export { ChatSidebar } from './components/ChatSidebar';
 export { ChatInput } from './components/ChatInput';
 export { MessageBubble } from './components/MessageBubble';
 export * from './store/chatStore';
-export * from './services/chatService';
+export * from './services';
 export * from './entities';
 export * from './i18n';

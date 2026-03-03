@@ -1,0 +1,384 @@
+openapi: 3.1.0
+info:
+  title: Magic Studio Auth Upgrade API
+  version: 1.2.0
+  description: >
+    Auth API contract used to regenerate SDK facade and keep src/dist declarations aligned.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: auth
+paths:
+  /app/v3/api/auth/phone/login:
+    post:
+      tags: [auth]
+      summary: Login with phone verification code
+      operationId: authPhoneLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_LoginResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '401':
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+  /app/v3/api/auth/sms/send:
+    post:
+      tags: [auth]
+      summary: Send SMS verification code
+      operationId: authSendSmsCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+      responses:
+        '200':
+          description: SMS sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_SmsSendResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+  /app/v3/api/auth/sms/verify:
+    post:
+      tags: [auth]
+      summary: Verify SMS code
+      operationId: authVerifySmsCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsVerifyRequest'
+      responses:
+        '200':
+          description: Verify result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_SmsVerifyResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+  /app/v3/api/auth/password/reset/request:
+    post:
+      tags: [auth]
+      summary: Request password reset challenge
+      operationId: authRequestPasswordResetChallenge
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+  /app/v3/api/auth/password/reset/confirm:
+    post:
+      tags: [auth]
+      summary: Confirm password reset with verification code
+      operationId: authConfirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Password reset success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '401':
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+components:
+  schemas:
+    PhoneLoginRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+          example: '13800138000'
+        code:
+          type: string
+          minLength: 4
+          maxLength: 8
+          example: '123456'
+        deviceId:
+          type: string
+          example: web-abc123
+    SmsSendRequest:
+      type: object
+      required: [target, type, verifyType]
+      properties:
+        target:
+          type: string
+          example: '13800138000'
+        type:
+          type: string
+          enum: [phone]
+        verifyType:
+          type: string
+          enum: [login, register, reset_password]
+        deviceId:
+          type: string
+    SmsVerifyRequest:
+      type: object
+      required: [target, code, verifyType]
+      properties:
+        target:
+          type: string
+          example: '13800138000'
+        code:
+          type: string
+          minLength: 4
+          maxLength: 8
+          example: '123456'
+        verifyType:
+          type: string
+          enum: [login, register, reset_password]
+        deviceId:
+          type: string
+    PasswordResetRequest:
+      type: object
+      required: [account, channel]
+      properties:
+        account:
+          type: string
+          description: Email or phone
+          example: user@example.com
+        channel:
+          type: string
+          enum: [EMAIL, SMS]
+        deviceId:
+          type: string
+        locale:
+          type: string
+          example: zh-CN
+        redirectUri:
+          type: string
+          format: uri
+          example: https://studio.sdkwork.com/reset-password
+    PasswordResetConfirmRequest:
+      type: object
+      required: [account, code, newPassword, confirmPassword]
+      properties:
+        account:
+          type: string
+          example: user@example.com
+        code:
+          type: string
+          minLength: 4
+          maxLength: 8
+          example: '123456'
+        newPassword:
+          type: string
+          minLength: 6
+        confirmPassword:
+          type: string
+          minLength: 6
+    LoginResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenType, expiresIn, userInfo]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          format: int64
+        userInfo:
+          $ref: '#/components/schemas/UserInfo'
+    UserInfo:
+      type: object
+      required: [id, username]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        nickname:
+          type: string
+        avatar:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    SmsSendResponse:
+      type: object
+      required: [requestId, expiresAt, cooldownSeconds]
+      properties:
+        requestId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        cooldownSeconds:
+          type: integer
+          minimum: 0
+    SmsVerifyResponse:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
+        challengeToken:
+          type: string
+        expireAt:
+          type: string
+          format: date-time
+    PlusApiResult_LoginResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/LoginResponse'
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    PlusApiResult_SmsSendResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/SmsSendResponse'
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    PlusApiResult_SmsVerifyResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/SmsVerifyResponse'
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    PlusApiResult_Void:
+      type: object
+      required: [code, message, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+        data:
+          type: 'null'
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    PlusApiErrorResult:
+      type: object
+      required: [code, message, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Invalid request
+        data:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string

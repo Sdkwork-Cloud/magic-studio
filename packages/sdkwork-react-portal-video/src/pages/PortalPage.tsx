@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic } from 'lucide-react';
-import { useFilmStore, FilmStoreProvider } from 'sdkwork-react-film';
-import { useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
+import { useFilmStore, FilmStoreProvider } from '@sdkwork/react-film';
+import { inlineDataService, useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
 import { FILM_STYLES, GEN_MODES } from '../constants';
 import {
     CreationChatInput,
@@ -11,15 +11,15 @@ import {
     ChooseAssetModal,
     clearPortalLaunchSession,
     savePortalLaunchSession
-} from 'sdkwork-react-assets';
-import type { PortalTab } from 'sdkwork-react-assets';
+} from '@sdkwork/react-assets';
+import type { PortalTab } from '@sdkwork/react-assets';
 import { PortalSidebar } from '../components/PortalSidebar';
 import { PortalHeader } from '../components/PortalHeader';
 import { ToolsGrid } from '../components/ToolsGrid';
 import { CommunityGallery } from '../components/CommunityGallery';
 import { StickyHeroBar } from '../components/StickyHeroBar';
-import { GalleryCard, GalleryItem, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from 'sdkwork-react-commons';
-import { GenerationPreview } from 'sdkwork-react-image';
+import { GalleryCard, GalleryItem, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from '@sdkwork/react-commons';
+import { GenerationPreview } from '@sdkwork/react-image';
 import {
     importPortalAttachmentFromLocalFile,
     resolvePortalAttachmentFromAsset,
@@ -481,7 +481,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                  
                  if (scriptAttachment && (scriptAttachment.content || scriptAttachment.url)) {
                       const text = scriptAttachment.content
-                          || (scriptAttachment.url ? await (await fetch(scriptAttachment.url)).text() : '');
+                          || (scriptAttachment.url ? await inlineDataService.fetchText(scriptAttachment.url) : '');
                       const name = prompt.slice(0, 30) || scriptAttachment.name.replace(/\.[^/.]+$/, "") || "New Short Drama";
                       await createProjectFromInput(name, text);
                  } else {

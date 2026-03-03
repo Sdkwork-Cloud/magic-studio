@@ -1,5 +1,5 @@
 import { User } from '../entities/user.entity';
-import { authService } from '../services/authService';
+import { authBusinessService, authSessionService } from '../services';
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import type { LoginVO } from '@sdkwork/app-sdk';
 
@@ -10,7 +10,7 @@ interface AuthStoreContextType {
     refreshToken: string | null;
     login: (username: string, password: string) => Promise<void>;
     loginWithEmail: (email: string, password: string) => Promise<void>;
-    loginWithPhone: (phone: string, password: string) => Promise<void>;
+    loginWithPhone: (phone: string, code: string) => Promise<void>;
     logout: () => Promise<void>;
     register: (username: string, password: string, email?: string, phone?: string) => Promise<void>;
     refreshAccessToken: () => Promise<void>;
@@ -18,43 +18,28 @@ interface AuthStoreContextType {
 
 const AuthStoreContext = createContext<AuthStoreContextType | null>(null);
 
-const TOKEN_KEY = 'sdkwork_auth_token';
-const REFRESH_TOKEN_KEY = 'sdkwork_refresh_token';
-
 export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(() => {
-        const stored = localStorage.getItem('sdkwork_user');
-        return stored ? JSON.parse(stored) : null;
-    });
-    const [accessToken, setAccessToken] = useState<string | null>(() => {
-        return localStorage.getItem(TOKEN_KEY);
-    });
-    const [refreshToken, setRefreshToken] = useState<string | null>(() => {
-        return localStorage.getItem(REFRESH_TOKEN_KEY);
-    });
+    const [initialSession] = useState(() => authSessionService.readSession());
+    const [user, setUser] = useState<User | null>(() => initialSession.user);
+    const [accessToken, setAccessToken] = useState<string | null>(() => initialSession.accessToken);
+    const [refreshToken, setRefreshToken] = useState<string | null>(() => initialSession.refreshToken);
 
     const saveAuthData = useCallback((userData: User, loginVO: LoginVO) => {
         setUser(userData);
         setAccessToken(loginVO.accessToken);
-        setRefreshToken(loginVO.refreshToken);
-        
-        localStorage.setItem('sdkwork_user', JSON.stringify(userData));
-        localStorage.setItem(TOKEN_KEY, loginVO.accessToken);
-        localStorage.setItem(REFRESH_TOKEN_KEY, loginVO.refreshToken);
+        setRefreshToken(loginVO.refreshToken ?? null);
+        authSessionService.saveSession(userData, loginVO);
     }, []);
 
     const clearAuthData = useCallback(() => {
         setUser(null);
         setAccessToken(null);
         setRefreshToken(null);
-        
-        localStorage.removeItem('sdkwork_user');
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        authSessionService.clearSession();
     }, []);
 
     const login = async (username: string, password: string) => {
-        const result = await authService.login(username, password);
+        const result = await authBusinessService.login(username, password);
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
@@ -63,7 +48,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const loginWithEmail = async (email: string, password: string) => {
-        const result = await authService.loginWithEmail(email, password);
+        const result = await authBusinessService.loginWithEmail(email, password);
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
@@ -71,8 +56,8 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         }
     };
 
-    const loginWithPhone = async (phone: string, password: string) => {
-        const result = await authService.loginWithPhone(phone, password);
+    const loginWithPhone = async (phone: string, code: string) => {
+        const result = await authBusinessService.loginWithPhone(phone, code);
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
@@ -81,15 +66,15 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const logout = async () => {
-        await authService.logout();
+        await authBusinessService.logout();
         clearAuthData();
     };
 
     const register = async (username: string, password: string, email?: string, phone?: string) => {
-        const result = await authService.register(username, password, email, phone);
+        const result = await authBusinessService.register(username, password, email, phone);
         if (result.success && result.data) {
             setUser(result.data);
-            localStorage.setItem('sdkwork_user', JSON.stringify(result.data));
+            authSessionService.saveUser(result.data);
         } else {
             throw new Error(result.message || 'Registration failed');
         }
@@ -100,13 +85,11 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             throw new Error('No refresh token available');
         }
         
-        const result = await authService.refreshToken(refreshToken);
+        const result = await authBusinessService.refreshToken(refreshToken);
         if (result.success && result.data) {
             setAccessToken(result.data.accessToken);
-            setRefreshToken(result.data.refreshToken);
-            
-            localStorage.setItem(TOKEN_KEY, result.data.accessToken);
-            localStorage.setItem(REFRESH_TOKEN_KEY, result.data.refreshToken);
+            setRefreshToken(result.data.refreshToken ?? null);
+            authSessionService.saveTokens(result.data.accessToken, result.data.refreshToken ?? null);
         } else {
             clearAuthData();
             throw new Error(result.message || 'Token refresh failed');
@@ -138,3 +121,4 @@ export const useAuthStore = () => {
     }
     return context;
 };
+

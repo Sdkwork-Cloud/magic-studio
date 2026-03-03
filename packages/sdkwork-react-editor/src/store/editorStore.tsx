@@ -4,10 +4,8 @@ import { EditorFile } from '../types';
 import { platform, FileEntry } from '@sdkwork/react-core';
 import { pathUtils } from '@sdkwork/react-commons';
 import { GitSyncOptions, PublishOptions } from '../types';
-import { projectService } from '../services/projectService';
+import { editorBusinessService } from '../services';
 import { filePicker } from '../utils/filePicker';
-import { editorService } from '../services/editorService';
-import { editorSessionService } from '../services/editorSessionService';
 import { compressionService } from '@sdkwork/react-compression';
 import { vfs } from '@sdkwork/react-fs';
 
@@ -88,9 +86,9 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
       const restore = async () => {
           setIsLoading(true);
           try {
-              const session = await editorSessionService.loadSession();
+              const session = await editorBusinessService.editorSessionService.loadSession();
               if (session && session.rootPath) {
-                  const rootRes = await editorService.refreshDirectory(session.rootPath);
+                  const rootRes = await editorBusinessService.editorService.refreshDirectory(session.rootPath);
                   
                   if (rootRes.success) {
                       setRootPath(session.rootPath);
@@ -116,7 +114,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   useEffect(() => {
       if (rootPath) {
           const timeout = setTimeout(() => {
-              editorSessionService.saveSession(
+              editorBusinessService.editorSessionService.saveSession(
                   rootPath,
                   openFiles,
                   activeFilePath,
@@ -128,7 +126,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [rootPath, openFiles, activeFilePath, expandedPaths]);
 
   const refreshDirectory = useCallback(async (dirPath: string) => {
-      const result = await editorService.refreshDirectory(dirPath);
+      const result = await editorBusinessService.editorService.refreshDirectory(dirPath);
       if (result.success && result.data) {
           setFileTree(prevTree => {
              if (dirPath === rootPath) return result.data!;
@@ -168,7 +166,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   const openProject = useCallback(async (path: string) => {
       setIsLoading(true);
       try {
-          const result = await editorService.loadProjectTree(path);
+          const result = await editorBusinessService.editorService.loadProjectTree(path);
           if (result.success) {
               setFileTree(result.data!);
               setRootPath(path);
@@ -227,7 +225,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
         let content = '';
         
         if (!isBinary) {
-            const res = await editorService.readFile(path);
+            const res = await editorBusinessService.editorService.readFile(path);
             if (res.success) content = res.data!;
             else throw new Error(res.message);
         } else {
@@ -283,7 +281,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (!activeFilePath) return;
     const file = openFiles.find(f => f.path === activeFilePath);
     if (file && file.content !== undefined) {
-      const res = await editorService.writeFile(file.path, file.content);
+      const res = await editorBusinessService.editorService.writeFile(file.path, file.content);
       if (res.success) {
           setOpenFiles(prev => prev.map(f => f.path === activeFilePath ? { ...f, isDirty: false } : f));
       } else {
@@ -293,7 +291,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [activeFilePath, openFiles]);
 
   const createItem = useCallback(async (path: string, type: 'file' | 'folder') => {
-      const res = await editorService.createItem(path, type);
+      const res = await editorBusinessService.editorService.createItem(path, type);
       if (res.success) {
           if (type === 'file') {
               const name = pathUtils.basename(path);
@@ -310,7 +308,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [openFile, refreshDirectory, toggleDirectory]);
 
   const deleteItem = useCallback(async (path: string) => {
-      const res = await editorService.deleteItem(path);
+      const res = await editorBusinessService.editorService.deleteItem(path);
       if (res.success) {
           setOpenFiles(prev => prev.filter(f => !f.path.startsWith(path)));
           if (activeFilePath && activeFilePath.startsWith(path)) {
@@ -324,7 +322,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [activeFilePath, refreshDirectory]);
 
   const renameItem = useCallback(async (oldPath: string, newName: string) => {
-      const res = await editorService.renameItem(oldPath, newName);
+      const res = await editorBusinessService.editorService.renameItem(oldPath, newName);
       if (res.success) {
           const newPath = res.data!;
           const dir = pathUtils.dirname(oldPath);
@@ -477,12 +475,12 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
   
   const syncToGitHub = useCallback(async (options: GitSyncOptions) => {
       if (!rootPath) return;
-      await projectService.syncToGitHub(rootPath, options);
+      await editorBusinessService.projectService.syncToGitHub(rootPath, options);
   }, [rootPath]);
 
   const publishApp = useCallback(async (options: PublishOptions) => {
       if (!rootPath) throw new Error("No project open");
-      return await projectService.publishApp(rootPath, options);
+      return await editorBusinessService.projectService.publishApp(rootPath, options);
   }, [rootPath]);
 
   const copyItem = useCallback((path: string) => {
@@ -501,7 +499,7 @@ export const EditorStoreProvider: React.FC<{ children: ReactNode }> = ({ childre
       
       try {
           if (op === 'cut') {
-              const res = await editorService.renameItem(srcPath, destPath);
+              const res = await editorBusinessService.editorService.renameItem(srcPath, destPath);
               if(res.success) {
                   setInternalClipboard(null);
                   const srcParent = pathUtils.dirname(srcPath);

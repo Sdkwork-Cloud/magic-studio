@@ -4,10 +4,10 @@ import { GenerateHistory, EditorComponents } from '@sdkwork/react-generation-his
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageLeftGeneratorPanel } from './ImageLeftGeneratorPanel';
-import { genAIService } from '@sdkwork/react-core';
+import { genAIService, inlineDataService } from '@sdkwork/react-core';
 import { Sparkles, X, Check } from 'lucide-react';
 import { ImageStoreProvider, useImageStore } from '../store/imageStore';
-import { GenerationConfig } from '../services/imageService';
+import type { GenerationConfig } from '../services';
 import { ImageGridEditorModal } from './ImageGridEditorModal';
 import { ImageCanvasEditorModal } from './ImageCanvasEditorModal';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
@@ -32,30 +32,6 @@ const resolveScope = (): { workspaceId: string; projectId?: string } => {
         workspaceId: scope.workspaceId,
         projectId: scope.projectId
     };
-};
-
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
 };
 
 const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPrompt: string }> = ({ 
@@ -87,7 +63,7 @@ const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPr
         if (!url || url.startsWith('assets://')) {
             return;
         }
-        const inlineData = await tryExtractInlineData(url);
+        const inlineData = await inlineDataService.tryExtractInlineData(url);
         const scope = resolveScope();
         const ts = Date.now();
 

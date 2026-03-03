@@ -1,0 +1,43 @@
+{
+  "infrastructurePackages": [
+    "sdkwork-app-sdk-typescript",
+    "sdkwork-react-types"
+  ],
+  "seamExemptPackages": [
+    "sdkwork-react-core"
+  ],
+  "rootServiceExportExemptPackages": [
+    "sdkwork-react-core"
+  ],
+  "allowedOutsideServicePatterns": [
+    "packages\\/sdkwork-react-core\\/src\\/platform\\/web\\.ts$",
+    "packages\\/sdkwork-react-core\\/src\\/ai\\/genAIService\\.ts$",
+    "packages\\/sdkwork-app-sdk-typescript\\/"
+  ],
+  "interactionRules": [
+    {
+      "key": "fetch",
+      "label": "Network Fetch"
+    },
+    {
+      "key": "storage",
+      "label": "Web Storage"
+    },
+    {
+      "key": "clipboard",
+      "label": "Clipboard API"
+    },
+    {
+      "key": "invoke",
+      "label": "Tauri Invoke"
+    },
+    {
+      "key": "runtimePlatform",
+      "label": "Runtime Platform Bridge"
+    },
+    {
+      "key": "runtimeUploadHelper",
+      "label": "Runtime Upload Helper Bridge"
+    }
+  ]
+}

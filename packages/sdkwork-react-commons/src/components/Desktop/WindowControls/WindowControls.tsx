@@ -2,24 +2,12 @@
 
 import React from 'react';
 import { Minus, Square, X } from 'lucide-react';
-
-// Platform API will be injected at runtime
-const getPlatformAPI = () => {
-  if (typeof window !== 'undefined' && (window as any).__sdkworkPlatform) {
-    return (window as any).__sdkworkPlatform;
-  }
-  return {
-    minimizeWindow: () => {},
-    maximizeWindow: () => {},
-    closeWindow: () => {}
-  };
-};
+import { windowControlService } from '../../../services/windowControlService';
 
 export const WindowControls: React.FC = () => {
-  const platform = getPlatformAPI();
-  const handleMinimize = () => platform.minimizeWindow();
-  const handleMaximize = () => platform.maximizeWindow();
-  const handleClose = () => platform.closeWindow();
+  const handleMinimize = (): void => windowControlService.minimize();
+  const handleMaximize = (): void => windowControlService.maximize();
+  const handleClose = (): void => windowControlService.close();
 
   return (
     <div className="flex items-center h-full z-50 window-controls">

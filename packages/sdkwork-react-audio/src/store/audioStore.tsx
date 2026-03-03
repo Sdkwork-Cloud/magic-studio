@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { AudioTask, AudioGenerationParams } from '../entities';
-import { audioHistoryService } from '../services/audioHistoryService';
-import { audioService } from '../services/audioService';
+import { audioBusinessService } from '../services';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { inlineDataService } from '@sdkwork/react-core';
 
 interface AudioStoreContextType {
     history: AudioTask[];
@@ -33,30 +33,6 @@ const resolveAudioScope = (): { workspaceId: string; projectId?: string } => {
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
-};
-
 export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<AudioTask[]>([]);
     const [config, setConfigState] = useState<AudioGenerationParams>(DEFAULT_CONFIG);
@@ -64,7 +40,7 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
     const loadHistory = useCallback(async () => {
         try {
-            const result = await audioHistoryService.findAll({ page: 0, size: 50 });
+            const result = await audioBusinessService.audioHistoryService.findAll({ page: 0, size: 50 });
             if (result.success && result.data) {
                 setHistory(result.data.content);
             }
@@ -82,12 +58,12 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         
         setIsGenerating(true);
         try {
-            const generated = await audioService.generateAudio(config);
+            const generated = await audioBusinessService.audioService.generateAudio(config);
             const candidateUrl =
                 generated.results?.[0]?.url ||
                 generated.url ||
                 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-            const inlineData = await tryExtractInlineData(candidateUrl);
+            const inlineData = await inlineDataService.tryExtractInlineData(candidateUrl);
             const persisted = await assetBusinessFacade.importAudioStudioAsset({
                 scope: resolveAudioScope(),
                 type: 'audio',
@@ -116,7 +92,7 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 }]
             };
             
-            await audioHistoryService.save(newTask);
+            await audioBusinessService.audioHistoryService.save(newTask);
             setHistory(prev => [newTask, ...prev]);
         } catch (error) {
             console.error('Audio generation failed:', error);
@@ -127,7 +103,7 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
     const deleteTask = useCallback(async (id: string) => {
         try {
-            await audioHistoryService.deleteById(id);
+            await audioBusinessService.audioHistoryService.deleteById(id);
             setHistory(prev => prev.filter(t => t.id !== id));
         } catch (error) {
             console.error('Failed to delete task:', error);
@@ -168,3 +144,4 @@ export const useAudioStore = () => {
     }
     return context;
 };
+

@@ -11,7 +11,7 @@ import { useAuthStore } from '@sdkwork/react-auth';
 import { UniversalNoteEditor } from './NoteEditor';
 import { ChooseAsset } from '@sdkwork/react-assets';
 import { Note, ArticlePayload, PublishTarget, Button, generateUUID } from '@sdkwork/react-commons';
-import { publishingService } from '../services/publishingService';
+import { publishingService } from '../services';
 
 interface PublishModalProps {
     note: Note; // This must be the full note with content

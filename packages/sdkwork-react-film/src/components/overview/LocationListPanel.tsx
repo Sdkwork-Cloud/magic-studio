@@ -9,7 +9,7 @@ import {
     FilmLocation,
     MediaScene
 } from '@sdkwork/react-commons';
-import { filmService } from '../../services/filmService';
+import { filmService } from '../../services';
 import { hasFilmAssetReference } from '../../utils/filmAssetUrlResolver';
 import { importFilmAssetFromUrl } from '../../utils/filmModalAssetImport';
 import {

@@ -9,6 +9,16 @@ import { platform as _platform } from '@sdkwork/react-core';
 
 const API_KEY = process.env.API_KEY || '';
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+let genAIAdapterOverride: GenAIAdapter | null = null;
+let assetServiceAdapterOverride: AssetServiceAdapter | null = null;
+
+interface ImageGenerationPart {
+    text?: string;
+    inlineData?: {
+        mimeType: string;
+        data: string;
+    };
+}
 
 const resolveToData = async (source: string): Promise<{ mimeType: string, data: string } | null> => {
     if (!source) return null;
@@ -75,12 +85,15 @@ const resolveToData = async (source: string): Promise<{ mimeType: string, data: 
 };
 
 export const imageService = {
-    isConfigured: () => !!ai,
+    isConfigured: () => genAIAdapterOverride !== null || !!ai,
 
     generateImage: async (config: GenerationConfig): Promise<string> => {
+        if (genAIAdapterOverride) {
+            return genAIAdapterOverride.generateImage(config);
+        }
         if (!ai) throw new Error("API Key not configured");
 
-        const parts: any[] = [];
+        const parts: ImageGenerationPart[] = [];
 
         if (config.referenceImages && config.referenceImages.length > 0) {
             for (const imgPath of config.referenceImages) {
@@ -130,6 +143,9 @@ export const imageService = {
     },
 
     enhancePrompt: async (simplePrompt: string): Promise<string> => {
+        if (genAIAdapterOverride) {
+            return genAIAdapterOverride.enhancePrompt(simplePrompt);
+        }
         if (!ai) throw new Error("API Key not configured");
 
         const response = await ai.models.generateContent({
@@ -146,21 +162,29 @@ export const imageService = {
 
 // Adapter types for dependency injection
 export interface GenAIAdapter {
-    generateImage: (config: any) => Promise<string>;
+    generateImage: (config: GenerationConfig) => Promise<string>;
     enhancePrompt: (prompt: string) => Promise<string>;
 }
 
 export interface AssetServiceAdapter {
-    saveAsset: (data: any) => Promise<any>;
+    saveAsset: (data: unknown) => Promise<unknown>;
 }
 
 // Adapter setters for testing and mocking (stub implementations)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setGenAIAdapter(_adapter: GenAIAdapter) {
-    // Stub implementation for future use
+    genAIAdapterOverride = _adapter;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setAssetServiceAdapter(_adapter: AssetServiceAdapter) {
-    // Stub implementation for future use
+    assetServiceAdapterOverride = _adapter;
+}
+
+export function getGenAIAdapter(): GenAIAdapter | null {
+    return genAIAdapterOverride;
+}
+
+export function getAssetServiceAdapter(): AssetServiceAdapter | null {
+    return assetServiceAdapterOverride;
 }

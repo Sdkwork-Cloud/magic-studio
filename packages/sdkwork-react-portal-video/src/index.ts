@@ -10,3 +10,4 @@ export { ToolsGrid } from './components/ToolsGrid';
 export { CommunityGallery } from './components/CommunityGallery';
 export { StickyHeroBar } from './components/StickyHeroBar';
 export * from './constants';
+export * from './services';

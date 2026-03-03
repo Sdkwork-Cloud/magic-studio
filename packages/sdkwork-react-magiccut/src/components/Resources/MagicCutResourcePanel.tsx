@@ -11,7 +11,7 @@ import { assetService } from '@sdkwork/react-assets';
 import { useMagicCutEvent, useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
 import { LoadTemplateConfirmModal } from '../LoadTemplateConfirmModal';
-import { templateService } from '../../services/templateService';
+import { magicCutBusinessService } from '../../services';
 import { TemplateResourceGrid } from './grid/TemplateResourceGrid';
 import { TextResourcePanel } from './panels/TextResourcePanel';
 import { TransitionResourcePanel } from './panels/TransitionResourcePanel';
@@ -26,6 +26,8 @@ import { platform } from '@sdkwork/react-core';
 interface MagicCutResourcePanelProps {
     activeTab: string;
 }
+
+const templateService = magicCutBusinessService.templateService;
 
 type FilterCategory = 'all' | 'upload' | 'ai' | 'favorite';
 

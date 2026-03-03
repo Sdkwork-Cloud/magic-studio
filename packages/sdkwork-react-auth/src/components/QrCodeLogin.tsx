@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { RefreshCw, MessageCircle, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
-import { authService } from '../services/authService';
-import type { QrCodeStatusResponse } from '@sdkwork/app-sdk';
+import { authBusinessService } from '../services';
 
 interface QrCodeLoginProps {
     onLoginSuccess?: () => void;
@@ -73,7 +72,7 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
         setErrorMessage('');
         setCountdown(300);
         
-        const result = await authService.generateQrCode();
+        const result = await authBusinessService.generateQrCode();
         if (result.success && result.data) {
             const { qrUrl: url, qrContent: content, qrKey: key } = result.data;
             
@@ -112,7 +111,7 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
         }
 
         const pollInterval = setInterval(async () => {
-            const result = await authService.checkQrCodeStatus(qrKey);
+            const result = await authBusinessService.checkQrCodeStatus(qrKey);
             if (result.success && result.data) {
                 const response = result.data;
                 
@@ -265,3 +264,4 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
         </div>
     );
 };
+

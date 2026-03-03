@@ -84,6 +84,7 @@ class NoteService implements IBaseService<NoteSummary> {
           uuid: note.uuid,
           createdAt: note.createdAt,
           updatedAt: note.updatedAt,
+          deletedAt: note.deletedAt,
           title: note.title,
           type: note.type,
           parentId: parentIdOverride ?? note.parentId ?? null,
@@ -93,6 +94,49 @@ class NoteService implements IBaseService<NoteSummary> {
           metadata: note.metadata,
           publishStatus: note.publishStatus
       };
+  }
+
+  private toPage(content: NoteSummary[], pageRequest?: PageRequest): Page<NoteSummary> {
+      const size = pageRequest?.size || 1000;
+      const page = pageRequest?.page || 0;
+      const totalElements = content.length;
+      const totalPages = Math.ceil(totalElements / size);
+      const start = page * size;
+      const pagedContent = content.slice(start, start + size);
+
+      return {
+          content: pagedContent,
+          pageable: { pageNumber: page, pageSize: size, offset: start, paged: true, unpaged: false, sort: { sorted: true, unsorted: false, empty: false } },
+          last: page >= totalPages - 1,
+          totalPages,
+          totalElements,
+          size,
+          number: page,
+          sort: { sorted: true, unsorted: false, empty: false },
+          first: page === 0,
+          numberOfElements: pagedContent.length,
+          empty: pagedContent.length === 0
+      };
+  }
+
+  private hasDeletedAtField(entity: Partial<Note>): boolean {
+      return Object.prototype.hasOwnProperty.call(entity, 'deletedAt');
+  }
+
+  private normalizePath(value: string): string {
+      return pathUtils
+          .normalize(value)
+          .replace(/[\\/]+/g, '/')
+          .replace(/\/+$/, '');
+  }
+
+  private isSameOrDescendantPath(basePath: string, candidatePath: string | null | undefined): boolean {
+      if (!candidatePath) {
+          return false;
+      }
+      const normalizedBase = this.normalizePath(basePath);
+      const normalizedCandidate = this.normalizePath(candidatePath);
+      return normalizedCandidate === normalizedBase || normalizedCandidate.startsWith(`${normalizedBase}/`);
   }
 
   /**
@@ -113,11 +157,13 @@ class NoteService implements IBaseService<NoteSummary> {
       const entries = await vfs.readdir(dirPath);
       const root = await this.getRootPath();
 
-      for (const entryPath of entries) {
-          const entryName = entryPath.split('/').pop() || '';
+      for (const entry of entries) {
+          const entryPath = this.resolveEntryPath(dirPath, entry);
+          const entryName = pathUtils.basename(entryPath);
           if (entryName.startsWith('.')) continue; 
 
-          const isDirectory = !entryName.includes('.'); // Simple check if it's a directory path
+          const stat = await this.safeStat(entryPath);
+          const isDirectory = stat?.isDirectory ?? !entryName.includes('.');
           if (isDirectory) {
               const folder: NoteFolder = {
                   id: entryPath,
@@ -136,8 +182,9 @@ class NoteService implements IBaseService<NoteSummary> {
                   // Here, we do it once on startup.
                   const raw = await vfs.readFile(entryPath);
                   const fullNote: Note = JSON.parse(raw);
-                  
-                  const summary = this.toNoteSummary(fullNote, dirPath === root ? null : dirPath);
+
+                  const parentPath = pathUtils.dirname(entryPath);
+                  const summary = this.toNoteSummary(fullNote, parentPath === root ? null : parentPath);
 
                   this._summaryCache.push(summary);
                   this._searchEngine.add(summary);
@@ -146,6 +193,35 @@ class NoteService implements IBaseService<NoteSummary> {
               }
           }
       }
+  }
+
+  private safeStat = async (path: string): Promise<{ isDirectory: boolean; isFile: boolean } | null> => {
+      try {
+          const stat = await vfs.stat(path);
+          return {
+              isDirectory: !!stat.isDirectory,
+              isFile: !!stat.isFile
+          };
+      } catch {
+          return null;
+      }
+  };
+
+  private isAbsolutePath(path: string): boolean {
+      return (
+          path.startsWith('/') ||
+          path.startsWith('\\\\') ||
+          /^[a-zA-Z]:[\\/]/.test(path) ||
+          /^[a-zA-Z0-9+.-]+:\/\//.test(path)
+      );
+  }
+
+  private resolveEntryPath(baseDir: string, entry: string): string {
+      const normalized = pathUtils.normalize(entry);
+      if (this.isAbsolutePath(normalized)) {
+          return normalized;
+      }
+      return pathUtils.join(baseDir, normalized);
   }
 
   // --- IBaseService Implementation ---
@@ -158,10 +234,12 @@ class NoteService implements IBaseService<NoteSummary> {
       // 1. Search Logic
       if (pageRequest?.keyword && pageRequest.keyword.trim()) {
           const searchResults = this._searchEngine.search(pageRequest.keyword);
-          content = searchResults.map(r => this._searchEngine.getDocument(r.id)).filter((n): n is NoteSummary => n !== undefined);
+          content = searchResults
+              .map((result) => this._searchEngine.getDocument(result.id))
+              .filter((note): note is NoteSummary => note !== undefined && !note.deletedAt);
       } else {
           // Default: All items
-          content = [...this._summaryCache];
+          content = this._summaryCache.filter((item) => !item.deletedAt);
           // Default Sort: UpdatedAt Desc
           content.sort((a, b) => {
               const aTime = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
@@ -170,27 +248,28 @@ class NoteService implements IBaseService<NoteSummary> {
           });
       }
 
-      // 2. Pagination
-      const size = pageRequest?.size || 1000;
-      const page = pageRequest?.page || 0;
-      const totalElements = content.length;
-      const totalPages = Math.ceil(totalElements / size);
-      const start = page * size;
-      const pagedContent = content.slice(start, start + size);
+      return Result.success(this.toPage(content, pageRequest));
+  }
 
-      return Result.success({
-          content: pagedContent,
-          pageable: { pageNumber: page, pageSize: size, offset: start, paged: true, unpaged: false, sort: { sorted: true, unsorted: false, empty: false } },
-          last: page >= totalPages - 1,
-          totalPages,
-          totalElements,
-          size,
-          number: page,
-          sort: { sorted: true, unsorted: false, empty: false },
-          first: page === 0,
-          numberOfElements: pagedContent.length,
-          empty: pagedContent.length === 0
+  async findTrashed(pageRequest?: PageRequest): Promise<ServiceResult<Page<NoteSummary>>> {
+      await this.ensureInitialized();
+
+      let content = this._summaryCache.filter((item) => !!item.deletedAt);
+      if (pageRequest?.keyword && pageRequest.keyword.trim()) {
+          const keyword = pageRequest.keyword.trim().toLowerCase();
+          content = content.filter((item) => {
+              const target = `${item.title} ${item.snippet} ${(item.tags || []).join(' ')}`.toLowerCase();
+              return target.includes(keyword);
+          });
+      }
+
+      content.sort((a, b) => {
+          const aTime = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
+          const bTime = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
+          return bTime - aTime;
       });
+
+      return Result.success(this.toPage(content, pageRequest));
   }
 
   /**
@@ -251,6 +330,7 @@ class NoteService implements IBaseService<NoteSummary> {
               snippet: this.createSnippet(mergedContent),
               metadata: entity.metadata ?? original.metadata,
               publishStatus: entity.publishStatus ?? original.publishStatus,
+              deletedAt: this.hasDeletedAtField(entity) ? entity.deletedAt : original.deletedAt,
               createdAt: original.createdAt,
               updatedAt: now
           };
@@ -268,6 +348,7 @@ class NoteService implements IBaseService<NoteSummary> {
               snippet: this.createSnippet(content),
               metadata: entity.metadata,
               publishStatus: entity.publishStatus,
+              deletedAt: entity.deletedAt,
               createdAt: now,
               updatedAt: now
           };
@@ -319,6 +400,52 @@ class NoteService implements IBaseService<NoteSummary> {
       }
   }
 
+  async moveToTrash(id: string): Promise<ServiceResult<NoteSummary>> {
+      await this.ensureInitialized();
+      const found = this._summaryCache.find((item) => item.id === id);
+      if (!found) {
+          return Result.error('Note not found');
+      }
+      if (found.deletedAt) {
+          return Result.success(found);
+      }
+      return this.save({
+          id,
+          deletedAt: new Date().toISOString()
+      });
+  }
+
+  async restoreFromTrash(id: string): Promise<ServiceResult<NoteSummary>> {
+      await this.ensureInitialized();
+      const found = this._summaryCache.find((item) => item.id === id);
+      if (!found) {
+          return Result.error('Note not found');
+      }
+      if (!found.deletedAt) {
+          return Result.success(found);
+      }
+      return this.save({
+          id,
+          deletedAt: undefined
+      });
+  }
+
+  async clearTrash(): Promise<ServiceResult<number>> {
+      await this.ensureInitialized();
+      const trashedIds = this._summaryCache.filter((item) => !!item.deletedAt).map((item) => item.id);
+      let deletedCount = 0;
+
+      for (const id of trashedIds) {
+          const result = await this.deleteById(id);
+          if (!result.success) {
+              return Result.error(result.message || 'Failed to clear trash');
+          }
+          deletedCount += 1;
+      }
+
+      return Result.success(deletedCount);
+  }
+
   // Stubs
   async delete(entity: NoteSummary): Promise<ServiceResult<void>> { return this.deleteById(entity.id); }
   async deleteAll(_ids: string[]): Promise<ServiceResult<void>> { return Result.success(undefined); }
@@ -362,12 +489,12 @@ class NoteService implements IBaseService<NoteSummary> {
   async deleteFolder(id: string): Promise<ServiceResult<void>> {
       try {
           await vfs.delete(id);
-          this._foldersCache = this._foldersCache.filter(f => f.id !== id);
-          
-          // Also remove contained notes from cache
-          const toRemove = this._summaryCache.filter(n => n.parentId?.startsWith(id));
+          this._foldersCache = this._foldersCache.filter((folder) => !this.isSameOrDescendantPath(id, folder.id));
+
+          // Also remove contained notes from cache (path-safe, avoid prefix false positives)
+          const toRemove = this._summaryCache.filter((note) => this.isSameOrDescendantPath(id, note.parentId));
           toRemove.forEach(n => this._searchEngine.remove(n.id));
-          this._summaryCache = this._summaryCache.filter(n => !n.parentId?.startsWith(id));
+          this._summaryCache = this._summaryCache.filter((note) => !this.isSameOrDescendantPath(id, note.parentId));
           
           return Result.success(undefined);
       } catch (error: unknown) {

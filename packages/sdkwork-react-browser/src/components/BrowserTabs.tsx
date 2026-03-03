@@ -1,5 +1,5 @@
 
-import { browserService } from '../services/browserService'
+import { browserBusinessService } from '../services'
 import React from 'react';
 import { X, Plus, Globe } from 'lucide-react';
 import { useBrowserStore } from '../store/browserStore';
@@ -11,7 +11,7 @@ export const BrowserTabs: React.FC = () => {
         <div className="flex items-end h-10 bg-[#18181b] px-2 pt-1 gap-1 overflow-x-auto no-scrollbar border-b border-[#27272a] select-none">
             {tabs.map(tab => {
                 const isActive = tab.id === activeTabId;
-                const favicon = tab.url !== 'about:blank' ? browserService.getFaviconUrl(tab.url) : null;
+                const favicon = tab.url !== 'about:blank' ? browserBusinessService.browserService.getFaviconUrl(tab.url) : null;
 
                 return (
                     <div
@@ -66,3 +66,4 @@ export const BrowserTabs: React.FC = () => {
         </div>
     );
 };
+

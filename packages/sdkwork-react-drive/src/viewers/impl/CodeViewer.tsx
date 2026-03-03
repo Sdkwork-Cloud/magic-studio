@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Editor from '@monaco-editor/react';
 import { FileViewerProps } from '../types';
-import { Save, Loader2, Check } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useSettingsStore } from '@sdkwork/react-settings';
+import { inlineDataService } from '@sdkwork/react-core';
 
 export const CodeViewer: React.FC<FileViewerProps> = ({ item, url, onSave, isReadOnly, headerElement }) => {
     const { settings } = useSettingsStore();
@@ -20,9 +21,7 @@ export const CodeViewer: React.FC<FileViewerProps> = ({ item, url, onSave, isRea
     useEffect(() => {
         const load = async () => {
             try {
-                const response = await fetch(url);
-                const text = await response.text();
-                setContent(text);
+                setContent(await inlineDataService.fetchText(url));
             } catch (e) {
                 console.error("Failed to load text content", e);
                 setContent("// Error loading file content");

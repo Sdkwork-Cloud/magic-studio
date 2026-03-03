@@ -6,7 +6,7 @@ import { PropCard } from './PropCard';
 
 import { useFilmStore } from '../../store/filmStore';
 import { FilmProp, MediaScene } from '@sdkwork/react-commons';
-import { filmService } from '../../services/filmService';
+import { filmService } from '../../services';
 import { hasFilmAssetReference } from '../../utils/filmAssetUrlResolver';
 import { importFilmAssetFromUrl } from '../../utils/filmModalAssetImport';
 import {

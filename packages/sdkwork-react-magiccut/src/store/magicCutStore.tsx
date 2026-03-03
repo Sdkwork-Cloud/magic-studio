@@ -15,14 +15,11 @@ import { createTimelineStore, TimelineStore } from './transientStore';
 import { PlayerController } from '../controllers/PlayerController';
 import { NormalizedState, InteractionState, DragOperation } from './types';
 import { TrackRulesFactory } from '../domain/dnd/TrackRulesFactory';
-import { TrackFactory } from '../services/TrackFactory';
-import { timelineOperationService } from '../services/TimelineOperationService';
-import { magicCutProjectService } from '../services/magicCutProjectService';
-import { templateService } from '../services/templateService';
+import { TrackFactory, magicCutBusinessService } from '../services';
 ;
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
-import { uploadHelper, platform } from '@sdkwork/react-core';
+import { inlineDataService, uploadHelper, platform } from '@sdkwork/react-core';
 import type { AssetContentKey } from '@sdkwork/react-types';
 import { storageConfig } from '@sdkwork/react-fs';
 import { textRenderer, DEFAULT_TEXT_STYLE } from '../engine/text/TextRenderer';
@@ -44,6 +41,12 @@ type AssetImportSource = {
     sourcePath?: string;
     remoteUrl?: string;
 };
+
+const {
+    timelineOperationService,
+    magicCutProjectService,
+    templateService
+} = magicCutBusinessService;
 
 const ASSET_PROTOCOL_PREFIX = 'assets://';
 
@@ -93,14 +96,6 @@ const toAbsoluteAssetPath = async (path: string): Promise<string> => {
     return pathUtils.join(libraryRoot, relativePath);
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source.startsWith('data:') && !source.startsWith('blob:')) {
-        return undefined;
-    }
-    const response = await fetch(source);
-    return new Uint8Array(await response.arrayBuffer());
-};
-
 const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<AssetImportSource> => {
     const candidates = [resource.path, resource.url]
         .filter((item): item is string => typeof item === 'string' && item.length > 0);
@@ -115,7 +110,7 @@ const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<
         if (isAbsoluteFsPath(source)) {
             return { sourcePath: source };
         }
-        const inlineData = await tryExtractInlineData(source);
+        const inlineData = await inlineDataService.tryExtractInlineData(source);
         if (inlineData) {
             return { data: inlineData };
         }

@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
           { find: '@sdkwork/react-ide-config', replacement: path.resolve(__dirname, 'packages/sdkwork-react-ide-config/src/index.ts') },
           
           // SDK
-          { find: '@sdkwork/app-sdk', replacement: path.resolve(__dirname, 'packages/sdkwork-app-sdk-typescript/src/index.ts') },
+          { find: '@sdkwork/app-sdk', replacement: path.resolve(__dirname, 'sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts') },
         ]
       }
     };

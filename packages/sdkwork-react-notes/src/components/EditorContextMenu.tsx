@@ -37,12 +37,7 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({ x, y, edit
     const handleCopy = () => {
         if (hasSelection) {
             const text = editor.state.selection.content().toString();
-            // Use platform API if available for consistency, else browser API
-            if (platform.getPlatform() === 'desktop') {
-                platform.copy(text);
-            } else {
-                navigator.clipboard.writeText(text);
-            }
+            void platform.copy(text);
         }
         onClose();
     };
@@ -50,16 +45,11 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({ x, y, edit
     const handlePaste = async () => {
         try {
             const text = await platform.paste();
-            if (text) editor.commands.insertContent(text);
+            if (text) {
+                editor.commands.insertContent(text);
+            }
         } catch (e) {
             console.error('Paste failed', e);
-            // Fallback for web if platform.paste fails or isn't implemented
-            try {
-                const text = await navigator.clipboard.readText();
-                if (text) editor.commands.insertContent(text);
-            } catch (err) {
-                console.error('Web paste failed', err);
-            }
         }
         onClose();
     };
@@ -67,7 +57,7 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({ x, y, edit
     const handleCut = () => {
         if (hasSelection) {
              const text = editor.state.selection.content().toString();
-             platform.copy(text); // Or navigator.clipboard
+             void platform.copy(text);
              editor.commands.deleteSelection();
         }
         onClose();

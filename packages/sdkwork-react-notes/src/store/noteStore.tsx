@@ -1,10 +1,11 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback, useRef } from 'react';
 import { Note, NoteSummary, NoteFolder, TreeItem, generateUUID } from '@sdkwork/react-commons';
-import { noteService } from '../services/noteService';
+import { noteBusinessService } from '../services';
 
 interface NoteStoreContextType {
   notes: NoteSummary[]; 
+  trashedNotes: NoteSummary[];
   folders: NoteFolder[];
   activeNoteId: string | null;
   activeNote: Note | null; // Full content
@@ -18,6 +19,9 @@ interface NoteStoreContextType {
   createFolder: (name: string, parentId?: string | null) => Promise<string>;
   updateNote: (id: string, updates: Partial<Note>) => void;
   deleteItem: (id: string, kind: 'note' | 'folder') => Promise<void>;
+  restoreFromTrash: (id: string) => Promise<void>;
+  deletePermanently: (id: string) => Promise<void>;
+  clearTrash: () => Promise<void>;
   toggleFavorite: (id: string) => void;
   
   moveItem: (itemId: string, itemKind: 'note' | 'folder', newParentId: string | null) => Promise<void>;
@@ -28,6 +32,7 @@ interface NoteStoreContextType {
 }
 
 const NoteStoreContext = createContext<NoteStoreContextType | undefined>(undefined);
+const NOTE_SAVE_DEBOUNCE_MS = 500;
 
 const toNoteSummary = (note: Note): NoteSummary => {
   const { content: _content, ...summary } = note;
@@ -37,32 +42,117 @@ const toNoteSummary = (note: Note): NoteSummary => {
 export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Lists only store summaries to save memory
   const [notes, setNotes] = useState<NoteSummary[]>([]);
+  const [trashedNotes, setTrashedNotes] = useState<NoteSummary[]>([]);
   const [folders, setFolders] = useState<NoteFolder[]>([]);
   
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [activeNoteId, setActiveNoteIdState] = useState<string | null>(null);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const activeNoteIdRef = useRef<string | null>(null);
+  const pendingSavePayloadRef = useRef<Map<string, Partial<Note>>>(new Map());
+  const pendingSaveTimerRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const flushPendingSave = useCallback(async (noteId: string): Promise<void> => {
+    const timer = pendingSaveTimerRef.current.get(noteId);
+    if (timer) {
+      clearTimeout(timer);
+      pendingSaveTimerRef.current.delete(noteId);
+    }
+
+    const payload = pendingSavePayloadRef.current.get(noteId);
+    if (!payload) {
+      return;
+    }
+    pendingSavePayloadRef.current.delete(noteId);
+
+    try {
+      const result = await noteBusinessService.save({ id: noteId, ...payload });
+      if (!result.success || !result.data) {
+        return;
+      }
+      const persisted = result.data;
+      setNotes((prev) => {
+        const without = prev.filter((note) => note.id !== noteId);
+        if (persisted.deletedAt) {
+          return without;
+        }
+        return [{ ...persisted }, ...without];
+      });
+      setTrashedNotes((prev) => {
+        const without = prev.filter((note) => note.id !== noteId);
+        if (!persisted.deletedAt) {
+          return without;
+        }
+        return [{ ...persisted }, ...without];
+      });
+      setActiveNote((prev) =>
+        prev && prev.id === noteId
+          ? {
+              ...prev,
+              ...payload,
+              updatedAt: persisted.updatedAt
+            }
+          : prev
+      );
+    } catch (error) {
+      console.error('[NoteStore] Failed to persist note update', error);
+    }
+  }, []);
+
+  const flushAllPendingSaves = useCallback(async (): Promise<void> => {
+    const ids = new Set<string>([
+      ...pendingSavePayloadRef.current.keys(),
+      ...pendingSaveTimerRef.current.keys()
+    ]);
+    for (const id of ids) {
+      await flushPendingSave(id);
+    }
+  }, [flushPendingSave]);
+
+  const scheduleNoteSave = useCallback((noteId: string, updates: Partial<Note>) => {
+    const previous = pendingSavePayloadRef.current.get(noteId) || {};
+    pendingSavePayloadRef.current.set(noteId, { ...previous, ...updates });
+
+    const oldTimer = pendingSaveTimerRef.current.get(noteId);
+    if (oldTimer) {
+      clearTimeout(oldTimer);
+    }
+
+    const timer = setTimeout(() => {
+      void flushPendingSave(noteId);
+    }, NOTE_SAVE_DEBOUNCE_MS);
+    pendingSaveTimerRef.current.set(noteId, timer);
+  }, [flushPendingSave]);
 
   const loadList = useCallback(async () => {
+    await flushAllPendingSaves();
     setIsLoading(true);
     try {
-        const notesResult = await noteService.findAll({ page: 0, size: 2000 });
-        const foldersResult = await noteService.getFolders();
-        
-        if (notesResult.success && notesResult.data) {
-            setNotes(notesResult.data.content);
+        const snapshotResult = await noteBusinessService.queryWorkspaceSnapshot({ page: 0, size: 2000 });
+        if (!snapshotResult.success || !snapshotResult.data) {
+            return;
         }
-        if (foldersResult.success && foldersResult.data) {
-            setFolders(foldersResult.data);
+        const nextNotes = snapshotResult.data.notes;
+        const nextTrashedNotes = snapshotResult.data.trashedNotes;
+        const nextFolders = snapshotResult.data.folders;
+
+        setNotes(nextNotes);
+        setTrashedNotes(nextTrashedNotes);
+        setFolders(nextFolders);
+
+        const currentActiveId = activeNoteIdRef.current;
+        if (currentActiveId && !nextNotes.some((note) => note.id === currentActiveId)) {
+            setActiveNoteIdState(null);
+            setActiveNote(null);
         }
     } catch (e) {
         console.error("Failed to load notes list", e);
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [flushAllPendingSaves]);
 
   // Lazy Load Content
   useEffect(() => {
@@ -74,7 +164,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
           // Don't reload if we already have it (unless we force refresh elsewhere)
           if (activeNote?.id === activeNoteId) return;
 
-          const res = await noteService.findById(activeNoteId);
+          const res = await noteBusinessService.findById(activeNoteId);
           if (res.success && res.data) {
               setActiveNote(res.data);
           }
@@ -83,8 +173,54 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [activeNoteId]);
 
   useEffect(() => {
+    activeNoteIdRef.current = activeNoteId;
+  }, [activeNoteId]);
+
+  useEffect(() => {
     loadList();
   }, [loadList]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+    const flushNow = () => {
+      void flushAllPendingSaves();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushNow();
+      }
+    };
+
+    window.addEventListener('pagehide', flushNow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flushNow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [flushAllPendingSaves]);
+
+  useEffect(() => {
+    return () => {
+      const ids = Array.from(
+        new Set<string>([
+          ...pendingSavePayloadRef.current.keys(),
+          ...pendingSaveTimerRef.current.keys()
+        ])
+      );
+      for (const id of ids) {
+        void flushPendingSave(id);
+      }
+    };
+  }, [flushPendingSave]);
+
+  const setActiveNoteId = useCallback((id: string | null) => {
+    if (activeNoteId && activeNoteId !== id) {
+      void flushPendingSave(activeNoteId);
+    }
+    setActiveNoteIdState(id);
+  }, [activeNoteId, flushPendingSave]);
 
   const createNote = async (title: string, type: Note['type'] = 'doc', parentId: string | null = null) => {
     const newNote: Note = {
@@ -113,12 +249,12 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         setExpandedFolders(prev => new Set(prev).add(parentId));
     }
 
-    await noteService.save(newNote);
+    await noteBusinessService.save(newNote);
     return newNote.id;
   };
 
   const createFolder = async (name: string, parentId: string | null = null) => {
-    const res = await noteService.createFolder(name, parentId);
+    const res = await noteBusinessService.createFolder(name, parentId);
     if (parentId) setExpandedFolders(prev => new Set(prev).add(parentId));
     
     if (res.success) {
@@ -128,7 +264,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     return '';
   };
 
-  const updateNote = async (id: string, updates: Partial<Note>) => {
+  const updateNote = (id: string, updates: Partial<Note>) => {
     const { content: _ignoredContent, ...summaryUpdates } = updates;
 
     // 1. Update Active Content if matching
@@ -138,13 +274,14 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     // 2. Update Summary List (if metadata changed)
     setNotes(prev => prev.map(n => n.id === id ? { ...n, ...summaryUpdates, updatedAt: Date.now() } : n));
-    
-    // 3. Persist
-    await noteService.save({ id, ...updates });
+    setTrashedNotes(prev => prev.map(n => n.id === id ? { ...n, ...summaryUpdates, updatedAt: Date.now() } : n));
+
+    // 3. Persist (debounced per-note to prevent write storms while typing)
+    scheduleNoteSave(id, updates);
   };
 
   const renameFolder = async (id: string, newName: string) => {
-      const res = await noteService.renameFolder(id, newName);
+      const res = await noteBusinessService.renameFolder(id, newName);
       if (res.success) {
           const newPath = res.data!;
           if (expandedFolders.has(id)) {
@@ -163,15 +300,57 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const deleteItem = async (id: string, kind: 'note' | 'folder') => {
     if (kind === 'note') {
-        await noteService.deleteById(id);
+        await flushPendingSave(id);
+        const result = await noteBusinessService.moveToTrash(id);
+        if (!result.success || !result.data) {
+            return;
+        }
+        const moved = result.data;
         setNotes(prev => prev.filter(n => n.id !== id));
+        setTrashedNotes(prev => [moved, ...prev.filter(n => n.id !== id)]);
         if (activeNoteId === id) {
-            setActiveNoteId(null);
+            setActiveNoteIdState(null);
             setActiveNote(null);
         }
     } else {
-        await noteService.deleteFolder(id);
+        await noteBusinessService.deleteFolder(id);
         await loadList(); 
+    }
+  };
+
+  const restoreFromTrash = async (id: string) => {
+    await flushPendingSave(id);
+    const result = await noteBusinessService.restoreFromTrash(id);
+    if (!result.success || !result.data) {
+      return;
+    }
+    const restored = result.data;
+    setTrashedNotes((prev) => prev.filter((note) => note.id !== id));
+    setNotes((prev) => [restored, ...prev.filter((note) => note.id !== id)]);
+  };
+
+  const deletePermanently = async (id: string) => {
+    await flushPendingSave(id);
+    await noteBusinessService.deleteById(id);
+    setTrashedNotes((prev) => prev.filter((note) => note.id !== id));
+    setNotes((prev) => prev.filter((note) => note.id !== id));
+    if (activeNoteId === id) {
+      setActiveNoteIdState(null);
+      setActiveNote(null);
+    }
+  };
+
+  const clearTrash = async () => {
+    await flushAllPendingSaves();
+    const result = await noteBusinessService.clearTrash();
+    if (!result.success) {
+      return;
+    }
+    const trashedIdSet = new Set(trashedNotes.map((note) => note.id));
+    setTrashedNotes([]);
+    if (activeNoteId && trashedIdSet.has(activeNoteId)) {
+      setActiveNoteIdState(null);
+      setActiveNote(null);
     }
   };
 
@@ -186,10 +365,11 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (itemId === newParentId) return;
 
       if (itemKind === 'note') {
+          await flushPendingSave(itemId);
           const note = notes.find(n => n.id === itemId);
           if (note) {
               setNotes(prev => prev.map(n => n.id === itemId ? { ...n, parentId: newParentId } : n));
-              await noteService.moveNote(note, newParentId);
+              await noteBusinessService.moveNote(note, newParentId);
           }
       } else {
           // Folder move not fully implemented in service yet
@@ -253,9 +433,9 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   return (
     <NoteStoreContext.Provider value={{
-      notes, folders, activeNoteId, activeNote, isLoading, treeData, expandedFolders,
+      notes, trashedNotes, folders, activeNoteId, activeNote, isLoading, treeData, expandedFolders,
       recentNotes, favoriteNotes,
-      setActiveNoteId, createNote, createFolder, updateNote, deleteItem, toggleFavorite,
+      setActiveNoteId, createNote, createFolder, updateNote, deleteItem, restoreFromTrash, deletePermanently, clearTrash, toggleFavorite,
       moveItem, toggleFolderExpand, renameFolder, refresh: loadList
     }}>
       {children}

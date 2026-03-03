@@ -24,9 +24,11 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        '@sdkwork/react-assets',
         '@sdkwork/react-commons',
         '@sdkwork/react-core',
         '@sdkwork/react-fs',
+        '@sdkwork/react-settings',
         '@aws-sdk/client-s3',
         '@aws-sdk/s3-request-presigner'
       ],
@@ -35,9 +37,11 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          '@sdkwork/react-assets': 'SdkworkReactAssets',
           '@sdkwork/react-commons': 'SdkworkReactCommons',
           '@sdkwork/react-core': 'SdkworkReactCore',
           '@sdkwork/react-fs': 'SdkworkReactFs',
+          '@sdkwork/react-settings': 'SdkworkReactSettings',
           '@aws-sdk/client-s3': 'AWSS3',
           '@aws-sdk/s3-request-presigner': 'AWSS3Presigner'
         }

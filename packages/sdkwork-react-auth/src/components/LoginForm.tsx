@@ -1,6 +1,6 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { Button } from '@sdkwork/react-commons';
-import { authService } from '../services/authService';
+import { authBusinessService } from '../services';
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Smartphone, Key, User, QrCode, RefreshCw, Check } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -47,12 +47,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             return;
         }
         setErrors({});
-        try {
-            await authService.sendSmsCode(phone);
+        const result = await authBusinessService.sendSmsCode(phone, 'login');
+        if (result.success) {
             setTimer(60);
-        } catch (e) {
-            setErrors({ code: 'Failed to send code' });
+            return;
         }
+        setErrors({ code: result.message || 'Failed to send code' });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +73,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             if (method === 'account') {
                 await loginWithEmail(email, password);
             } else if (method === 'phone') {
+                const verifyResult = await authBusinessService.verifySmsCode(phone, code, 'login');
+                if (!verifyResult.success) {
+                    setErrors({ code: verifyResult.message || 'Verification failed' });
+                    return;
+                }
+                if (!verifyResult.data) {
+                    setErrors({ code: 'Invalid verification code' });
+                    return;
+                }
                 await loginWithPhone(phone, code);
             }
             
@@ -81,8 +90,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             } else {
                 navigate(ROUTES.HOME);
             }
-        } catch (e: any) {
-            setErrors({ form: e.message || 'Login failed' });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Login failed';
+            setErrors({ form: message });
         } finally {
             setIsLoading(false);
         }
@@ -247,3 +257,4 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
         </div>
     );
 };
+

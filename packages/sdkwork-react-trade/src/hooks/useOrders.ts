@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Order, OrderStatus, OrderType, TradePageRequest } from '../entities';
-import { orderService } from '../services/orderService';
+import { useState, useEffect, useCallback } from 'react';
+import type { Order, OrderStatus, OrderType, TradePageRequest } from '../entities';
+import { tradeBusinessService } from '../services';
 
 interface UseOrdersOptions {
   initialStatus?: OrderStatus;
@@ -19,9 +19,9 @@ interface UseOrdersReturn {
   setFilters: React.Dispatch<React.SetStateAction<TradePageRequest>>;
   setPage: (page: number) => void;
   refresh: () => void;
-  createOrder: typeof orderService.createOrder;
-  cancelOrder: typeof orderService.cancelOrder;
-  getOrderStatistics: typeof orderService.getOrderStatistics;
+  createOrder: typeof tradeBusinessService.orderService.createOrder;
+  cancelOrder: typeof tradeBusinessService.orderService.cancelOrder;
+  getOrderStatistics: typeof tradeBusinessService.orderService.getOrderStatistics;
 }
 
 export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
@@ -49,7 +49,7 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await orderService.getMyOrderList(filters);
+      const result = await tradeBusinessService.orderService.getMyOrderList(filters);
       setOrders(result.items);
       setTotal(result.total);
       setPageState(result.currentPage);
@@ -83,8 +83,9 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
     setFilters,
     setPage,
     refresh: loadOrders,
-    createOrder: orderService.createOrder,
-    cancelOrder: orderService.cancelOrder,
-    getOrderStatistics: orderService.getOrderStatistics,
-  };
-}
+    createOrder: tradeBusinessService.orderService.createOrder,
+    cancelOrder: tradeBusinessService.orderService.cancelOrder,
+    getOrderStatistics: tradeBusinessService.orderService.getOrderStatistics,
+  };
+}
+

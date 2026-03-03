@@ -1,11 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ImageTask, ImageGenerationConfig, GeneratedImageResult } from '../entities';
-import { imageService } from '../services/imageService';
-import { imageHistoryService } from '../services/imageHistoryService';
+import { imageBusinessService } from '../services';
 import { IMAGE_STYLES } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { platform as _platform } from '@sdkwork/react-core';
+import { platform as _platform, inlineDataService } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 
@@ -41,37 +40,12 @@ const resolveImageScope = (): { workspaceId: string; projectId?: string } => {
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        const buffer = await response.arrayBuffer();
-        return new Uint8Array(buffer);
-    }
-    return undefined;
-};
-
 const persistGeneratedImage = async (
     source: string,
     name: string,
     metadata: Record<string, unknown>
 ): Promise<string> => {
-    const inlineData = await tryExtractInlineData(source);
+    const inlineData = await inlineDataService.tryExtractInlineData(source);
     const result = await assetBusinessFacade.importImageStudioAsset({
         scope: resolveImageScope(),
         type: 'image',
@@ -103,7 +77,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
 
     useEffect(() => {
         const load = async () => {
-            const result = await imageHistoryService.findAll({ page: 0, size: 100 });
+            const result = await imageBusinessService.imageHistoryService.findAll({ page: 0, size: 100 });
             if (result.success && result.data) {
                 setHistory(result.data.content);
             }
@@ -121,7 +95,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         
         setIsGenerating(true);
         try {
-            const enhanced = await imageService.enhancePrompt(textToEnhance);
+            const enhanced = await imageBusinessService.imageService.enhancePrompt(textToEnhance);
             setConfig({ prompt: enhanced });
             return enhanced;
         } catch (e) {
@@ -149,7 +123,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await imageHistoryService.save(newTask);
+        await imageBusinessService.imageHistoryService.save(newTask);
 
         try {
             const style = IMAGE_STYLES.find(s => s.id === config.styleId);
@@ -167,7 +141,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
             targetModels.forEach(modelId => {
                 const count = config.batchSize || 1;
                 for(let i=0; i<count; i++) {
-                    const p = imageService.generateImage({
+                    const p = imageBusinessService.imageService.generateImage({
                         ...config,
                         prompt: fullPrompt,
                         model: modelId
@@ -197,7 +171,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
             };
             
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await imageHistoryService.save(completedTask);
+            await imageBusinessService.imageHistoryService.save(completedTask);
             
         } catch (e: any) {
             const failedTask: ImageTask = {
@@ -207,7 +181,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-            await imageHistoryService.save(failedTask);
+            await imageBusinessService.imageHistoryService.save(failedTask);
         } finally {
             setIsGenerating(false);
         }
@@ -233,7 +207,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await imageHistoryService.save(newTask);
+        await imageBusinessService.imageHistoryService.save(newTask);
 
         setTimeout(async () => {
             try {
@@ -252,7 +226,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
                 };
 
                 setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-                await imageHistoryService.save(completedTask);
+                await imageBusinessService.imageHistoryService.save(completedTask);
             } catch (e: any) {
                 const failedTask: ImageTask = {
                     ...newTask,
@@ -261,28 +235,28 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
                     updatedAt: Date.now()
                 };
                 setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-                await imageHistoryService.save(failedTask);
+                await imageBusinessService.imageHistoryService.save(failedTask);
             }
         }, 2000);
     };
 
     const deleteTask = async (id: string) => {
-        await imageHistoryService.deleteById(id);
+        await imageBusinessService.imageHistoryService.deleteById(id);
         setHistory(prev => prev.filter(t => t.id !== id));
     };
     
     const importTask = async (task: ImageTask) => {
-        await imageHistoryService.save(task);
+        await imageBusinessService.imageHistoryService.save(task);
         setHistory(prev => [task, ...prev]);
     };
 
     const clearHistory = async () => {
-        await imageHistoryService.clear();
+        await imageBusinessService.imageHistoryService.clear();
         setHistory([]);
     };
     
     const toggleFavorite = async (id: string) => {
-        await imageHistoryService.toggleFavorite(id);
+        await imageBusinessService.imageHistoryService.toggleFavorite(id);
         setHistory(prev => prev.map(t => 
             t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
         ));
@@ -319,13 +293,25 @@ export enum RemixIntent {
     VARIATION = 'VARIATION'
 }
 
+let remixServiceAdapterOverride: RemixServiceAdapter | null = null;
+let assetServiceAdapterOverride: AssetServiceAdapter | null = null;
+
 // Adapter setters for testing and mocking (stub implementations)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setRemixServiceAdapter(_adapter: RemixServiceAdapter) {
-    // Stub implementation for future use
+    remixServiceAdapterOverride = _adapter;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setAssetServiceAdapter(_adapter: AssetServiceAdapter) {
-    // Stub implementation for future use
+    assetServiceAdapterOverride = _adapter;
 }
+
+export function getRemixServiceAdapter(): RemixServiceAdapter | null {
+    return remixServiceAdapterOverride;
+}
+
+export function getAssetServiceAdapter(): AssetServiceAdapter | null {
+    return assetServiceAdapterOverride;
+}
+

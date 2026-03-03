@@ -3,6 +3,7 @@ import {
     Image, Video, Sparkles, Upload, X, ArrowLeft
 } from 'lucide-react';
 import { usePromptOptimizerStore } from '../store';
+import { promptBusinessService } from '../services';
 import { StyleSelector } from '@sdkwork/react-assets';
 import { IMAGE_STYLES, VIDEO_STYLES } from '@sdkwork/react-commons';
 import { useRouter } from '@sdkwork/react-core';
@@ -17,17 +18,23 @@ export const PromptOptimizerPage: React.FC = () => {
         inputVideo,
         inputImageUrl,
         inputVideoUrl,
+        isProcessing,
+        result,
         setType,
         setMode,
         setInputText,
         setInputImage,
         setInputVideo,
+        setIsProcessing,
+        setResult,
+        addToHistory,
         initChatContext,
     } = usePromptOptimizerStore();
     
     const { navigate } = useRouter();
     const [selectedStyle, setSelectedStyle] = useState<string>('');
     const [additionalInstructions, setAdditionalInstructions] = useState('');
+    const [optimizeError, setOptimizeError] = useState('');
     
     const handleTypeChange = (type: PromptType) => {
         setType(type);
@@ -56,11 +63,36 @@ export const PromptOptimizerPage: React.FC = () => {
         }
     }, [setInputVideo]);
     
-    const handleOptimize = () => {
+    const handleOptimize = async () => {
         if (!inputText.trim() && !inputImage && !inputVideo) return;
-        
-        initChatContext(currentType);
-        window.location.href = '/chat';
+
+        setOptimizeError('');
+        setIsProcessing(true);
+
+        try {
+            const optimization = await promptBusinessService.optimizePrompt({
+                type: currentType,
+                mode: currentMode,
+                inputText,
+                inputImage: inputImage || undefined,
+                inputVideo: inputVideo || undefined,
+                targetStyle: selectedStyle,
+                additionalInstructions,
+            });
+
+            if (!optimization.success || !optimization.data) {
+                setOptimizeError(optimization.message || 'Prompt optimization failed');
+                return;
+            }
+
+            setResult(optimization.data);
+            addToHistory(optimization.data);
+            setInputText(optimization.data.optimizedPrompt);
+            initChatContext(currentType);
+            navigate('/chat');
+        } finally {
+            setIsProcessing(false);
+        }
     };
     
     const handleGoBack = () => {
@@ -159,6 +191,13 @@ export const PromptOptimizerPage: React.FC = () => {
                                 className="w-full h-32 px-4 py-3 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none"
                             />
                         </div>
+
+                        {result && (
+                            <div className="space-y-2 rounded-lg border border-purple-500/30 bg-purple-500/10 p-3">
+                                <div className="text-xs font-medium text-purple-300">Latest optimized prompt</div>
+                                <div className="text-sm text-gray-100 leading-relaxed">{result.optimizedPrompt}</div>
+                            </div>
+                        )}
                         
                         {(currentMode === 'image-to-prompt' || currentMode === 'video-to-prompt') && (
                             <div>
@@ -246,12 +285,18 @@ export const PromptOptimizerPage: React.FC = () => {
                     
                     <button
                         onClick={handleOptimize}
-                        disabled={!inputText.trim() && !inputImage && !inputVideo}
+                        disabled={isProcessing || (!inputText.trim() && !inputImage && !inputVideo)}
                         className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all"
                     >
                         <Sparkles size={18} />
-                        Optimize Prompt
+                        {isProcessing ? 'Optimizing...' : 'Optimize Prompt'}
                     </button>
+
+                    {optimizeError && (
+                        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                            {optimizeError}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

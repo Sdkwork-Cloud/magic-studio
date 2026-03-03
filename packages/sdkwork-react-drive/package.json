@@ -27,10 +27,12 @@
     "dependencies":  {
                          "@aws-sdk/client-s3":  "catalog:",
                          "@aws-sdk/s3-request-presigner":  "catalog:",
+                         "@sdkwork/react-assets":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*",
                          "@sdkwork/react-editor":  "workspace:*",
-                         "@sdkwork/react-fs":  "workspace:*"
+                         "@sdkwork/react-fs":  "workspace:*",
+                         "@sdkwork/react-settings":  "workspace:*"
                      },
     "devDependencies":  {
                             "@types/react":  "catalog:",

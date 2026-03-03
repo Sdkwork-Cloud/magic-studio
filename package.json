@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "audit:services:policy": "node scripts/validate-service-encapsulation-policy.mjs",
+    "audit:services:policy:review-gate": "node scripts/check-service-policy-review-gate.mjs",
+    "audit:services": "node scripts/audit-service-encapsulation.mjs --strict",
+    "audit:services:report": "node scripts/audit-service-encapsulation.mjs",
+    "verify:service-standards": "node scripts/validate-service-encapsulation-policy.mjs && node scripts/audit-service-encapsulation.mjs --strict && tsc && vite build",
     "build:packages": "turbo run build --concurrency 100",
     "typecheck": "turbo run typecheck --concurrency 100",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

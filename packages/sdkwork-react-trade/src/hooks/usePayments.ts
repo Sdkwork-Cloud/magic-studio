@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Payment, PaymentStatus, TradePageRequest } from '../entities';
-import { paymentService } from '../services/paymentService';
+import { useState, useEffect, useCallback } from 'react';
+import type { Payment, PaymentStatus, TradePageRequest } from '../entities';
+import { tradeBusinessService } from '../services';
 
 interface UsePaymentsOptions {
   initialStatus?: PaymentStatus;
@@ -18,8 +18,8 @@ interface UsePaymentsReturn {
   setFilters: React.Dispatch<React.SetStateAction<TradePageRequest>>;
   setPage: (page: number) => void;
   refresh: () => void;
-  initiatePayment: typeof paymentService.initiatePayment;
-  getWallet: typeof paymentService.getWallet;
+  initiatePayment: typeof tradeBusinessService.paymentService.initiatePayment;
+  getWallet: typeof tradeBusinessService.paymentService.getWallet;
 }
 
 export function usePayments(options: UsePaymentsOptions = {}): UsePaymentsReturn {
@@ -45,7 +45,7 @@ export function usePayments(options: UsePaymentsOptions = {}): UsePaymentsReturn
   const loadPayments = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await paymentService.getMyPaymentList(filters);
+      const result = await tradeBusinessService.paymentService.getMyPaymentList(filters);
       setPayments(result.items);
       setTotal(result.total);
       setPageState(result.currentPage);
@@ -79,7 +79,8 @@ export function usePayments(options: UsePaymentsOptions = {}): UsePaymentsReturn
     setFilters,
     setPage,
     refresh: loadPayments,
-    initiatePayment: paymentService.initiatePayment,
-    getWallet: paymentService.getWallet,
-  };
-}
+    initiatePayment: tradeBusinessService.paymentService.initiatePayment,
+    getWallet: tradeBusinessService.paymentService.getWallet,
+  };
+}
+

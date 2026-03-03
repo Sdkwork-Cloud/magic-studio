@@ -3,6 +3,7 @@ import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip, CutTimeline, CutTrack } from '../entities';
 import { AudioEffectProcessor, createAudioEffectChain } from '../services/audio/AudioEffectProcessor';
 import type { AudioEffectConfig as LocalAudioEffectConfig } from '../services/audio/AudioEffectTypes';
+import { audioResourceFetchService } from '../services/audio/audioResourceFetchService';
 import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
 
 declare global {
@@ -205,8 +206,7 @@ export class AudioEngine {
                 const url = await resolveAssetUrlByAssetIdFirst(resource);
                 if (!url) return null;
 
-                const res = await fetch(url);
-                const arrayBuffer = await res.arrayBuffer();
+                const arrayBuffer = await audioResourceFetchService.fetchArrayBuffer(url);
                 const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
 
                 this.bufferCache.set(resource.id, audioBuffer);

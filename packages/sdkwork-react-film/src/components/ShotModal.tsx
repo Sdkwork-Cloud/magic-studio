@@ -8,6 +8,7 @@ import { PromptTextInput, ChooseAssetModal, type InputAttachment } from '@sdkwor
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 import { genAIService, uploadHelper } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
+import { filmPreferencesService } from '../services';
 import {
     buildAtomicAssetResource,
     resolveAtomicAssetResourceType,
@@ -23,8 +24,6 @@ interface ShotModalProps {
     sceneIndex?: number;
     characters?: FilmCharacter[];
 }
-
-const STORAGE_KEY_PRODUCT = 'film_shot_gen_product';
 
 const GENERATION_MODES = [
     { value: 'TEXT_TO_VIDEO', label: '文生视频', icon: Type, description: '使用文字生成视频' },
@@ -151,7 +150,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
 
     const handleProductChange = (prod: GenerationProduct) => {
         setGenProduct(prod);
-        localStorage.setItem(STORAGE_KEY_PRODUCT, prod);
+        filmPreferencesService.setLastGenerationProduct(prod);
     };
 
     useEffect(() => {
@@ -166,7 +165,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 setDialogueItems([]);
             }
 
-            const savedProduct = localStorage.getItem(STORAGE_KEY_PRODUCT);
+            const savedProduct = filmPreferencesService.getLastGenerationProduct();
             if (typeof initialData.generation?.product === 'string' && isGenerationProduct(initialData.generation.product)) {
                 setGenProduct(initialData.generation.product);
             } else if (savedProduct && isGenerationProduct(savedProduct)) {

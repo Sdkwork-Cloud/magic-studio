@@ -1,5 +1,6 @@
 
 import { LocalStorageService } from '@sdkwork/react-core';
+import { Result, type ServiceResult } from '@sdkwork/react-commons';
 import { ImageTask } from '../entities';
 import { STORAGE_KEY_HISTORY } from '../constants';
 
@@ -18,11 +19,11 @@ class ImageHistoryService extends LocalStorageService<ImageTask> {
         }
     }
 
-    async clear(): Promise<any> {
+    async clear(): Promise<ServiceResult<void>> {
         if (this.cache) {
             this.cache = [];
         }
-        return Promise.resolve({ success: true, data: undefined, timestamp: Date.now() });
+        return Result.success(undefined);
     }
 }
 

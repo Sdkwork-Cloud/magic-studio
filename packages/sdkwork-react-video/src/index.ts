@@ -5,5 +5,6 @@ export { VideoModelSelector } from './components/VideoModelSelector';
 export { VideoGeneratorModal } from './components/VideoGeneratorModal';
 export { VideoStoreProvider, useVideoStore } from './store/videoStore';
 export * from './entities';
+export * from './services';
 export * from './constants';
 export * from './i18n';

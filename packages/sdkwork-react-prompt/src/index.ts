@@ -45,3 +45,4 @@ export type {
     I18nNamespaceResource, 
     SupportedLocale 
 } from './i18n';
+export * from './services';

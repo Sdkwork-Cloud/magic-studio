@@ -7,3 +7,4 @@ export { FileIcon } from './components/file-explorer/FileIcon';
 export { GitHubSyncModal } from './components/modals/GitHubSyncModal';
 export { PublishAppModal } from './components/modals/PublishAppModal';
 export * from './utils/filePicker';
+export * from './services';

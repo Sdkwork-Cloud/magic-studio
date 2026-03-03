@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { VideoTask, VideoConfig, VideoGenerationMode } from '../entities';
-import { videoService } from '../services/videoService';
-import { videoHistoryService } from '../services/videoHistoryService';
+import { videoBusinessService } from '../services';
 import { VIDEO_MODELS, VIDEO_STYLES } from '../constants';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { inlineDataService } from '@sdkwork/react-core';
 
 interface VideoStoreContextType {
     history: VideoTask[];
@@ -30,30 +30,6 @@ const resolveVideoScope = (): { workspaceId: string; projectId?: string } => {
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
-};
-
 export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<VideoTask[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -78,7 +54,7 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load History
     useEffect(() => {
         const load = async () => {
-            const tasks = await videoHistoryService.findAll();
+            const tasks = await videoBusinessService.videoHistoryService.findAll();
             setHistory(tasks);
         };
         load();
@@ -111,7 +87,7 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await videoHistoryService.save(newTask);
+        await videoBusinessService.videoHistoryService.save(newTask);
 
         try {
             // Apply style prompt
@@ -122,8 +98,8 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 prompt: config.prompt + styleSuffix
             };
 
-            const result = await videoService.generateVideo(finalConfig);
-            const videoInlineData = await tryExtractInlineData(result.url);
+            const result = await videoBusinessService.videoService.generateVideo(finalConfig);
+            const videoInlineData = await inlineDataService.tryExtractInlineData(result.url);
             const persistedVideo = await assetBusinessFacade.importVideoStudioAsset({
                 scope: resolveVideoScope(),
                 type: 'video',
@@ -152,7 +128,7 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
             };
 
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await videoHistoryService.save(completedTask);
+            await videoBusinessService.videoHistoryService.save(completedTask);
 
         } catch (e: any) {
             const failedTask: VideoTask = {
@@ -162,29 +138,29 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-            await videoHistoryService.save(failedTask);
+            await videoBusinessService.videoHistoryService.save(failedTask);
         } finally {
             setIsGenerating(false);
         }
     };
 
     const deleteTask = async (id: string) => {
-        await videoHistoryService.delete(id);
+        await videoBusinessService.videoHistoryService.delete(id);
         setHistory(prev => prev.filter(t => t.id !== id));
     };
 
     const importTask = async (task: VideoTask) => {
-        await videoHistoryService.save(task);
+        await videoBusinessService.videoHistoryService.save(task);
         setHistory(prev => [task, ...prev]);
     };
 
     const clearHistory = async () => {
-        await videoHistoryService.clear();
+        await videoBusinessService.videoHistoryService.clear();
         setHistory([]);
     };
     
     const toggleFavorite = async (id: string) => {
-        await videoHistoryService.toggleFavorite(id);
+        await videoBusinessService.videoHistoryService.toggleFavorite(id);
         setHistory(prev => prev.map(t => 
             t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
         ));
@@ -205,3 +181,4 @@ export const useVideoStore = () => {
     if (!context) throw new Error('useVideoStore must be used within VideoStoreProvider');
     return context;
 };
+

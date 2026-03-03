@@ -6,7 +6,7 @@ import {
     Columns, Rows, Loader2, Save, Trash2,
     Minus, Plus, ImagePlus, ArrowUpCircle
 } from 'lucide-react';
-import { platform, uploadHelper } from '@sdkwork/react-core';
+import { inlineDataService, platform, uploadHelper } from '@sdkwork/react-core';
 ;
 import { SettingToggle } from '@sdkwork/react-settings';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
@@ -226,16 +226,17 @@ export const ImageGridEditor: React.FC<ImageGridEditorProps> = ({
             if (autoSaveTiles) {
                 const savePromises = cells.map(async (dataUrl, idx) => {
                     if (!dataUrl) return;
-                    const res = await fetch(dataUrl);
-                    const blob = await res.blob();
-                    const buffer = await blob.arrayBuffer();
+                    const inlineData = await inlineDataService.tryExtractInlineData(dataUrl);
+                    if (!inlineData) {
+                        return;
+                    }
                     const fileName = `tile_${Date.now()}_${idx + 1}.png`;
                     
                     await assetBusinessFacade.importImageStudioAsset({
                         scope: resolveImageScope(),
                         type: 'image',
                         name: fileName,
-                        data: new Uint8Array(buffer),
+                        data: inlineData,
                         metadata: {
                             origin: 'upload',
                             source: 'image-grid-editor-tile'

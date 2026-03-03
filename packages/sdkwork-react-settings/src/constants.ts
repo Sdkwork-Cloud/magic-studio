@@ -29,8 +29,8 @@ const CORE_TOOLS: SidebarItemConfig[] = [
     { id: 'editor', labelKey: 'sidebar.editor', route: ROUTES.EDITOR, icon: 'Code', visible: true },
     { id: 'notes', labelKey: 'sidebar.notes', route: ROUTES.NOTES, icon: 'BookOpen', visible: true },
     { id: 'prompt', labelKey: 'sidebar.prompt_optimizer', route: ROUTES.PROMPT, icon: 'Sparkles', visible: true },
-    { id: 'drive', labelKey: 'sidebar.drive', route: ROUTES.DRIVE, icon: 'Cloud', visible: true },
     { id: 'assets', labelKey: 'sidebar.assets', route: ROUTES.ASSETS, icon: 'Library', visible: true },
+    { id: 'drive', labelKey: 'sidebar.drive', route: ROUTES.DRIVE, icon: 'Cloud', visible: true },
     { id: 'portal', labelKey: 'sidebar.portal', route: ROUTES.PORTAL, icon: 'LayoutDashboard', visible: true },
     { id: 'separator-1', labelKey: '', route: '', icon: '', visible: true, children: [] },
     { id: 'chat', labelKey: 'sidebar.chat', route: ROUTES.CHAT, icon: 'MessageSquare', visible: true },
@@ -77,8 +77,8 @@ export const SIDEBAR_TEMPLATES: SidebarTemplate[] = [
         config: [
             CORE_TOOLS[1], // Notes
             CORE_TOOLS[2], // Prompt
-            CORE_TOOLS[3], // Drive
-            CORE_TOOLS[4], // Assets
+            CORE_TOOLS[3], // Assets
+            CORE_TOOLS[4], // Drive
             CORE_TOOLS[7], // Chat
             { ...CREATIVE_TOOLS, visible: true }
         ]

@@ -6,7 +6,7 @@ import { OrderList } from '../components/Order/OrderList';
 import { TaskCard } from '../components/Task/TaskCard';
 import { OrderCard } from '../components/Order/OrderCard';
 import { PaymentDialog } from '../components/Payment/PaymentDialog';
-import { taskService } from '../services/taskService';
+import { tradeBusinessService } from '../services';
 import { cn } from '@sdkwork/react-commons';
 
 type TradeCenterMode = 'market' | 'my';
@@ -46,7 +46,7 @@ export const TradeCenter: React.FC<TradeCenterPageProps> = ({
 
   const handleAcceptTask = async (task: AvailableTask) => {
     try {
-      await taskService.acceptTask({ taskUuid: task.uuid });
+      await tradeBusinessService.taskService.acceptTask({ taskUuid: task.uuid });
       alert('接单成功！');
       setSelectedTask(null);
     } catch (error) {

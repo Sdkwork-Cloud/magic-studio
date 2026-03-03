@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Zap, Briefcase, Clock, DollarSign } from 'lucide-react';
 import type { AvailableTask, TradePageRequest } from '../../entities';
-import { taskService } from '../../services/taskService';
+import { tradeBusinessService } from '../../services';
 import { TaskCard } from './TaskCard';
 import { cn } from '@sdkwork/react-commons';
 
@@ -41,7 +41,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const result = await taskService.getAvailableTasks(filters);
+      const result = await tradeBusinessService.taskService.getAvailableTasks(filters);
       setTasks(result.items);
       setTotal(result.total);
       setPage(result.currentPage);

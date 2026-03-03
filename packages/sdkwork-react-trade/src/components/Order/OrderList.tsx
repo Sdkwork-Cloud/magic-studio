@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, ChevronDown } from 'lucide-react';
 import type { Order, OrderStatus, OrderType, TradePageRequest } from '../../entities';
-import { orderService } from '../../services/orderService';
+import { tradeBusinessService } from '../../services';
 import { OrderCard } from './OrderCard';
 import { cn } from '@sdkwork/react-commons';
 
@@ -46,7 +46,7 @@ export const OrderList: React.FC<OrderListProps> = ({
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const result = await orderService.getMyOrderList(filters);
+      const result = await tradeBusinessService.orderService.getMyOrderList(filters);
       setOrders(result.items);
       setTotal(result.total);
       setPage(result.currentPage);

@@ -3,13 +3,9 @@ import { create } from 'zustand';
 import { produceWithPatches, applyPatches, enablePatches, Patch } from 'immer';
 import { CanvasBoard, CanvasElement, Viewport, SnapLine, CanvasNodeData } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
-import { canvasService } from '../services/canvasService';
-import {
-    collectSelectedGroupRoots,
-    collectSelectionWithHierarchyAndConnectors,
-    detachChildrenFromGroups,
-    detectGroupCycles
-} from '../services/canvasHierarchyService';
+import { canvasBusinessService } from '../services';
+
+const { canvasService, canvasHierarchyService } = canvasBusinessService;
 
 enablePatches();
 
@@ -267,7 +263,7 @@ const collectCanvasIntegrityIssues = (elements: CanvasElement[]): string[] => {
         }
     });
 
-    detectGroupCycles(elements).forEach((cycle) => {
+    canvasHierarchyService.detectGroupCycles(elements).forEach((cycle) => {
         issues.push(`Group cycle detected: ${cycle}`);
     });
 
@@ -635,7 +631,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     duplicateSelected: () => {
         const state = get();
         const selectedRoots = new Set(state.selectedIds);
-        const selectedElements = collectSelectionWithHierarchyAndConnectors(state.elements, selectedRoots);
+        const selectedElements = canvasHierarchyService.collectSelectionWithHierarchyAndConnectors(state.elements, selectedRoots);
         if (selectedElements.length === 0) return;
 
         const idMap = new Map<string, string>();
@@ -673,7 +669,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             set({ _clipboard: [] });
             return;
         }
-        const selectionWithTopology = collectSelectionWithHierarchyAndConnectors(state.elements, state.selectedIds);
+        const selectionWithTopology = canvasHierarchyService.collectSelectionWithHierarchyAndConnectors(state.elements, state.selectedIds);
         set({ _clipboard: selectionWithTopology });
     },
     
@@ -730,7 +726,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     groupSelected: () => {
         const state = get();
         if (state.selectedIds.size < 2) return;
-        const rootIds = collectSelectedGroupRoots(state);
+        const rootIds = canvasHierarchyService.collectSelectedGroupRoots(state);
         if (rootIds.length < 2) return;
         const rootIdSet = new Set(rootIds);
         
@@ -758,7 +754,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 groupChildren: Array.from(rootIdSet)
             };
 
-            detachChildrenFromGroups(draft, rootIdSet);
+            canvasHierarchyService.detachChildrenFromGroups(draft, rootIdSet);
 
             draft.forEach(el => {
                 if (rootIdSet.has(el.id)) {
@@ -790,7 +786,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const childrenIds = Array.from(new Set(groups.flatMap(g => g!.groupChildren || [])));
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-            detachChildrenFromGroups(draft, groupIds);
+            canvasHierarchyService.detachChildrenFromGroups(draft, groupIds);
 
             for (let i = draft.length - 1; i >= 0; i--) {
                 if (groupIds.has(draft[i].id)) {

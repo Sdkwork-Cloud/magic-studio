@@ -1,4 +1,5 @@
 import { readWorkspaceScope } from './assetCenterAdapters';
+import { assetUiStateService } from '../../services/assetUiStateService';
 import type {
   PortalLaunchAttachmentRef,
   PortalLaunchAttachmentType,
@@ -101,11 +102,7 @@ const normalizeAttachments = (
 };
 
 export const clearPortalLaunchSession = (): void => {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Ignore storage errors in non-browser runtime.
-  }
+  assetUiStateService.removeStorageValue(STORAGE_KEY);
 };
 
 export const savePortalLaunchSession = (
@@ -131,18 +128,14 @@ export const savePortalLaunchSession = (
     expiresAt: now + DEFAULT_TTL_MS
   };
 
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    // Ignore storage errors in non-browser runtime.
-  }
+  assetUiStateService.writeStorageValue(STORAGE_KEY, JSON.stringify(session));
 
   return session;
 };
 
 export const readPortalLaunchSession = (): PortalLaunchSession | null => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = assetUiStateService.readStorageValue(STORAGE_KEY);
     if (!raw) {
       return null;
     }

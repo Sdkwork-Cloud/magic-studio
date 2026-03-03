@@ -95,6 +95,32 @@ export const notes = {
             rich_text_tooltip: "Rich Text (WYSIWYG)",
             markdown_tooltip: "Raw Markdown Code"
         }
+        ,
+        media: {
+            image: "Image",
+            video: "Video",
+            audio_music: "Audio / Music",
+            file_attachment: "File Attachment",
+            mini_program: "Mini Program"
+        },
+        actions: {
+            write: "Write",
+            writing: "Writing...",
+            publish: "Publish",
+            generate_article: "Generate Article",
+            insert: "Insert",
+            insert_media: "Insert Media",
+            ai_tools: "AI Tools",
+            view_source: "View Source Code",
+            toggle_chat: "Toggle Chat Assistant",
+            generate_image: "Generate Image",
+            generate_video: "Generate Video",
+            generate_speech: "Generate Speech",
+            insert_to_note: "Insert to Note",
+            generative_ai: "Generative AI",
+            ai_tip_selection: "Tip: Select text to rewrite"
+        },
+        untitled_page: "Untitled Page"
     },
     sidebar: {
         actions: {
@@ -102,10 +128,21 @@ export const notes = {
             new_folder: "New Folder",
             rename: "Rename",
             delete: "Delete",
-            trash: "Trash"
+            trash: "Trash",
+            favorite: "Favorite",
+            unfavorite: "Unfavorite",
+            restore: "Restore",
+            delete_permanently: "Delete Permanently"
         },
         trash: "Trash",
+        trash_title: "TRASH",
+        trash_empty: "Trash is empty",
+        back_to_pages: "Back to pages",
         no_pages: "No pages yet",
-        empty_folder: "Empty"
+        empty_folder: "Empty",
+        recent: "RECENT",
+        untitled_page: "Untitled",
+        search_placeholder: "Search notes...",
+        search_empty: "No matching pages"
     }
 };

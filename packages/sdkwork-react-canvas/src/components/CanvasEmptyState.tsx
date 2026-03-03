@@ -5,7 +5,7 @@ import {
     Image as ImageIcon, Film, Type, StickyNote, LayoutGrid
 } from 'lucide-react';
 import { useCanvasStore } from '../store';
-import { NodeFactory } from '../services/nodeFactory';
+import { NodeFactory } from '../services';
 import { getCanvasViewportSize } from '../utils/canvasContainer';
 ;
 ;

@@ -1,6 +1,6 @@
 
 import { CanvasElementType } from '../entities';
-import { NodeFactory } from '../services/nodeFactory';
+import { NodeFactory } from '../services';
 import React from 'react';
 import { 
     MousePointer2, Type, Image as ImageIcon, Film, 

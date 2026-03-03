@@ -7,7 +7,7 @@ import {
     Award, AlertCircle, Bot, Brain, Puzzle,
     ImageIcon, Palette
 } from 'lucide-react';
-import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { platform, useRouter, ROUTES } from '@sdkwork/react-core';
 import { PortalHeader, PortalSidebar } from '@sdkwork/react-portal-video';
 import { AGENT_SKILLS } from '../data/skills';
 
@@ -72,7 +72,7 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId: propSkillId,
                 url: window.location.href
             });
         } else {
-            navigator.clipboard.writeText(window.location.href);
+            void platform.copy(window.location.href);
             alert('链接已复制到剪贴板');
         }
     };

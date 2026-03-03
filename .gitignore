@@ -132,6 +132,11 @@ env/
 
 # Scripts (project specific)
 scripts
+!scripts/
+scripts/*
+!scripts/audit-service-encapsulation.mjs
+!scripts/validate-service-encapsulation-policy.mjs
+!scripts/check-service-policy-review-gate.mjs
 
 # Debug
 npm-debug.log*
@@ -168,3 +173,11 @@ service-account.json
 # Documentation builds
 docs/.vitepress/dist
 docs/.vitepress/cache
+
+# Service audit reports (generated artifacts)
+docs/reports/*.md
+docs/reports/*.json
+!docs/reports/.gitkeep
+
+# Local SDK checkout
+sdkwork-sdk-app/

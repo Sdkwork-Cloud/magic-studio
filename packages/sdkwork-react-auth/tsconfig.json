@@ -19,9 +19,14 @@
     "paths": {
       "sdkwork-react-commons": ["../sdkwork-react-commons/src/index.ts"],
       "sdkwork-react-core": ["../sdkwork-react-core/src/index.ts"],
-      "sdkwork-react-i18n": ["../sdkwork-react-i18n/src/index.ts"]
+      "sdkwork-react-i18n": ["../sdkwork-react-i18n/src/index.ts"],
+      "@sdkwork/app-sdk": ["../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

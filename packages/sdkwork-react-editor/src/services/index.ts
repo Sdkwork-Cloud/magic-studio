@@ -1,2 +1,6 @@
-export { editorService, setVFSAdapter } from './editorService';
-export type { VFSAdapter, EditorFileEntry } from './editorService';
+import { editorBusinessService } from './editorBusinessService';
+
+export * from './editorBusinessService';
+export const editorService = editorBusinessService.editorService;
+export const editorSessionService = editorBusinessService.editorSessionService;
+export const projectService = editorBusinessService.projectService;

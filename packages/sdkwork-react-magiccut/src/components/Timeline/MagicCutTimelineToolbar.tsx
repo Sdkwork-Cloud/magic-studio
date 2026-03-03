@@ -11,6 +11,7 @@ import {
     mapUnifiedAssetToAnyAsset,
     readWorkspaceScope
 } from '@sdkwork/react-assets';
+import { inlineDataService } from '@sdkwork/react-core';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents, ZoomPayload, TimelineAddClipPayload } from '../../events';
@@ -51,40 +52,13 @@ const resolveMagiccutScope = (): { workspaceId: string; projectId?: string } => 
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-
-    return undefined;
-};
-
 const toMagiccutImportedResource = async (
     url: string,
     type: AssetContentKey,
     name: string,
     metadata: Record<string, unknown>
 ): Promise<AnyMediaResource> => {
-    const inlineData = await tryExtractInlineData(url);
+    const inlineData = await inlineDataService.tryExtractInlineData(url);
     const imported = await assetBusinessFacade.importMagiccutAsset({
         scope: resolveMagiccutScope(),
         type,

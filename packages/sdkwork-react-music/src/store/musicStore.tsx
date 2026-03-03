@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { MusicTask, MusicConfig } from '../entities';
-import { musicService } from '../services/musicService';
-import { musicHistoryService } from '../services/musicHistoryService';
+import { musicBusinessService } from '../services';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { inlineDataService } from '@sdkwork/react-core';
 
 export type { MusicTask, MusicConfig }; // Re-export entity types
 
@@ -33,30 +33,6 @@ const resolveMusicScope = (): { workspaceId: string; projectId?: string } => {
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
-};
-
 export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<MusicTask[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -75,7 +51,7 @@ export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
     useEffect(() => {
         const load = async () => {
-            const tasks = await musicHistoryService.findAll();
+            const tasks = await musicBusinessService.musicHistoryService.findAll();
             setHistory(tasks);
         };
         load();
@@ -104,11 +80,11 @@ export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await musicHistoryService.save(newTask);
+        await musicBusinessService.musicHistoryService.save(newTask);
 
         try {
-            const result = await musicService.generateMusic(config);
-            const inlineData = await tryExtractInlineData(result.url);
+            const result = await musicBusinessService.musicService.generateMusic(config);
+            const inlineData = await inlineDataService.tryExtractInlineData(result.url);
             const persisted = await assetBusinessFacade.importMusicAsset({
                 scope: resolveMusicScope(),
                 type: 'music',
@@ -138,7 +114,7 @@ export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children
             };
 
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await musicHistoryService.save(completedTask);
+            await musicBusinessService.musicHistoryService.save(completedTask);
 
         } catch (e: any) {
             const failedTask: MusicTask = {
@@ -148,24 +124,24 @@ export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-            await musicHistoryService.save(failedTask);
+            await musicBusinessService.musicHistoryService.save(failedTask);
         } finally {
             setIsGenerating(false);
         }
     };
 
     const deleteTask = async (id: string) => {
-        await musicHistoryService.delete(id);
+        await musicBusinessService.musicHistoryService.delete(id);
         setHistory(prev => prev.filter(t => t.id !== id));
     };
 
     const clearHistory = async () => {
-        await musicHistoryService.clear();
+        await musicBusinessService.musicHistoryService.clear();
         setHistory([]);
     };
     
     const toggleFavorite = async (id: string) => {
-        await musicHistoryService.toggleFavorite(id);
+        await musicBusinessService.musicHistoryService.toggleFavorite(id);
         setHistory(prev => prev.map(t => 
             t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
         ));
@@ -186,3 +162,4 @@ export const useMusicStore = () => {
     if (!context) throw new Error('useMusicStore must be used within MusicStoreProvider');
     return context;
 };
+

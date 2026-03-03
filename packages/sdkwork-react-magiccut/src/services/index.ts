@@ -1,5 +1,22 @@
-export * from './magicCutProjectService';
-export * from './PlayerPreviewService';
+export * from './magicCutBusinessService';
+export type {
+  ExportBitrate,
+  ExportConfig,
+  ExportFormat,
+  ExportFrameRate,
+  ExportResolution
+} from './export/types';
 
-// Asset services are now provided by sdkwork-react-assets package
-
+export { magicCutProjectService } from './magicCutProjectService';
+export { templateService } from './templateService';
+export { timelineOperationService } from './TimelineOperationService';
+export { playerPreviewService } from './PlayerPreviewService';
+export { videoExportService } from './export/videoExportService';
+export {
+  audioResourceFetchService,
+  setAudioResourceFetchServiceAdapter,
+  getAudioResourceFetchServiceAdapter,
+  resetAudioResourceFetchServiceAdapter,
+  type AudioResourceFetchService
+} from './audio/audioResourceFetchService';
+export { TrackFactory } from './TrackFactory';

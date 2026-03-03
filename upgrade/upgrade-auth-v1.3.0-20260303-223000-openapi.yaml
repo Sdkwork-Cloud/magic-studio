@@ -1,0 +1,441 @@
+openapi: 3.1.0
+info:
+  title: Magic Studio Auth Facade Upgrade API
+  version: 1.3.0
+  description: >
+    OpenAPI contract for SDK auth facade consolidation and auth business parity.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: auth
+paths:
+  /app/v3/api/auth/login:
+    post:
+      tags: [auth]
+      summary: Account password login
+      operationId: authFacadeLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginForm'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_LoginVO'
+  /app/v3/api/auth/register:
+    post:
+      tags: [auth]
+      summary: Account registration
+      operationId: authFacadeRegister
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterForm'
+      responses:
+        '200':
+          description: Register success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_UserInfoVO'
+  /app/v3/api/auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout current user
+      operationId: authFacadeLogout
+      responses:
+        '200':
+          description: Logout success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+  /app/v3/api/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token
+      operationId: authFacadeRefreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshForm'
+      responses:
+        '200':
+          description: Refresh success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_LoginVO'
+  /app/v3/api/auth/phone/login:
+    post:
+      tags: [auth]
+      summary: Phone + SMS code login
+      operationId: authFacadePhoneLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneLoginForm'
+      responses:
+        '200':
+          description: Phone login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_LoginVO'
+  /app/v3/api/auth/sms/send:
+    post:
+      tags: [auth]
+      summary: Send SMS verification code
+      operationId: authFacadeSendSmsCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCodeSendForm'
+      responses:
+        '200':
+          description: SMS sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+  /app/v3/api/auth/sms/verify:
+    post:
+      tags: [auth]
+      summary: Verify SMS verification code
+      operationId: authFacadeVerifySmsCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCodeCheckForm'
+      responses:
+        '200':
+          description: Verify success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_VerifyResultVO'
+  /app/v3/api/auth/password/reset/request:
+    post:
+      tags: [auth]
+      summary: Request password reset challenge
+      operationId: authFacadeRequestPasswordResetChallenge
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestForm'
+      responses:
+        '200':
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+  /app/v3/api/auth/password/reset/confirm:
+    post:
+      tags: [auth]
+      summary: Confirm password reset with verification code
+      operationId: authFacadeConfirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetForm'
+      responses:
+        '200':
+          description: Password reset success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_Void'
+  /app/v3/api/auth/qr/generate:
+    post:
+      tags: [auth]
+      summary: Generate login QR code
+      operationId: authFacadeGenerateQrCode
+      security: []
+      responses:
+        '200':
+          description: QR generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_QrCodeVO'
+  /app/v3/api/auth/qr/status/{qrKey}:
+    get:
+      tags: [auth]
+      summary: Check QR login status
+      operationId: authFacadeCheckQrCodeStatus
+      security: []
+      parameters:
+        - name: qrKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResult_QrCodeStatusVO'
+components:
+  schemas:
+    LoginForm:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        captcha:
+          type: string
+    RegisterForm:
+      type: object
+      required: [username, password, confirmPassword]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        confirmPassword:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    TokenRefreshForm:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    PhoneLoginForm:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+        deviceId:
+          type: string
+    VerifyCodeSendForm:
+      type: object
+      required: [target, type]
+      properties:
+        target:
+          type: string
+        type:
+          type: string
+          enum: [REGISTER, LOGIN, RESET_PASSWORD, BIND_EMAIL, BIND_PHONE]
+        verifyType:
+          type: string
+          enum: [EMAIL, PHONE]
+        deviceId:
+          type: string
+    VerifyCodeCheckForm:
+      type: object
+      required: [target, type, code]
+      properties:
+        target:
+          type: string
+        type:
+          type: string
+          enum: [REGISTER, LOGIN, RESET_PASSWORD, BIND_EMAIL, BIND_PHONE]
+        verifyType:
+          type: string
+          enum: [EMAIL, PHONE]
+        code:
+          type: string
+    PasswordResetRequestForm:
+      type: object
+      required: [account, channel]
+      properties:
+        account:
+          type: string
+        channel:
+          type: string
+          enum: [EMAIL, SMS]
+        deviceId:
+          type: string
+        locale:
+          type: string
+        redirectUri:
+          type: string
+          format: uri
+    PasswordResetForm:
+      type: object
+      required: [account, code, newPassword, confirmPassword]
+      properties:
+        account:
+          type: string
+        code:
+          type: string
+        newPassword:
+          type: string
+        confirmPassword:
+          type: string
+    UserInfoVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        nickname:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        avatar:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LoginVO:
+      type: object
+      required: [accessToken]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+        expiresIn:
+          type: integer
+        userInfo:
+          $ref: '#/components/schemas/UserInfoVO'
+    VerifyResultVO:
+      type: object
+      properties:
+        valid:
+          type: boolean
+    QrCodeVO:
+      type: object
+      properties:
+        qrKey:
+          type: string
+        qrUrl:
+          type: string
+        qrContent:
+          type: string
+        expireTime:
+          type: integer
+    QrCodeStatusVO:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, scanned, confirmed, expired]
+        userInfo:
+          $ref: '#/components/schemas/UserInfoVO'
+        token:
+          $ref: '#/components/schemas/LoginVO'
+    PlusApiResult_LoginVO:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          $ref: '#/components/schemas/LoginVO'
+    PlusApiResult_UserInfoVO:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          $ref: '#/components/schemas/UserInfoVO'
+    PlusApiResult_VerifyResultVO:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          $ref: '#/components/schemas/VerifyResultVO'
+    PlusApiResult_QrCodeVO:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          $ref: '#/components/schemas/QrCodeVO'
+    PlusApiResult_QrCodeStatusVO:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          $ref: '#/components/schemas/QrCodeStatusVO'
+    PlusApiResult_Void:
+      type: object
+      required: [code, msg, requestId]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        requestId:
+          type: string
+        data:
+          nullable: true

@@ -4,6 +4,18 @@ import { CanvasElement, CanvasElementType, CanvasNodeData } from '../entities';
 import { generateUUID, MediaResourceType } from '@sdkwork/react-commons';
 import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 
+type NodeStyle = Record<string, unknown>;
+type NodeResource = CanvasElement['resource'] | ResourceWithUrl | undefined;
+
+interface ResourceWithUrl {
+    url?: string;
+    [key: string]: unknown;
+}
+
+const isResourceWithUrl = (value: NodeResource): value is ResourceWithUrl => {
+    return typeof value === 'object' && value !== null;
+};
+
 // --- 1. The Strategy Interface (The Contract) ---
 export interface INodeCreationStrategy {
     readonly type: CanvasElementType;
@@ -12,13 +24,13 @@ export interface INodeCreationStrategy {
     getDimensions(content?: string): { width: number; height: number };
     
     /** Returns default style object */
-    getStyle(): Record<string, any>;
+    getStyle(): NodeStyle;
     
     /** Returns default color */
     getColor(): string;
     
     /** Returns default resource object if any */
-    createResource(id: string, content?: string): any;
+    createResource(id: string, content?: string): NodeResource;
     
     /** Returns specific data structure for this node type */
     getInitialData(): CanvasNodeData;
@@ -190,7 +202,7 @@ export interface CreateNodeOptions {
     height?: number;
     content?: string;
     data?: Partial<CanvasNodeData>;
-    style?: Record<string, any>;
+    style?: NodeStyle;
 }
 
 export class NodeFactory {
@@ -206,13 +218,15 @@ export class NodeFactory {
         const defaultColor = strategy.getColor();
         
         // Initialize Resource first to get content-aware dimensions for Text
-        let resource = strategy.createResource(id, options.content);
+        let resource: NodeResource = strategy.createResource(id, options.content);
         
         // Migrate legacy content option if provided
         if (options.content) {
              if (type === 'image' || type === 'video') {
                 if (!resource) resource = strategy.createResource(id); // Ensure resource exists
-                resource.url = options.content;
+                if (isResourceWithUrl(resource)) {
+                    resource.url = options.content;
+                }
             }
         }
 
@@ -229,7 +243,7 @@ export class NodeFactory {
             width,
             height,
             zIndex: NodeFactory.nextZIndex++,
-            resource,
+            resource: resource as CanvasElement['resource'],
             color: defaultColor,
             style: { ...defaultStyle, ...options.style },
             data: { ...defaultData, ...options.data },   

@@ -1,12 +1,12 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNoteStore } from '../store/noteStore';
 import { TreeItem, NoteType, logger } from '@sdkwork/react-commons';
 import { 
     Plus, Search, ChevronRight, Trash2, FileText, 
     Folder, FolderOpen, FilePlus, FolderPlus, Edit2, Star, Clock,
     BookOpen, Layout, Type, Code, MoreHorizontal, ChevronDown,
-    File as GenericFile, X
+    File as GenericFile, X, ArrowLeft, RotateCcw
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
@@ -51,6 +51,18 @@ const isDragPayload = (value: unknown): value is DragPayload => {
         typeof candidate.id === 'string' &&
         (candidate.kind === 'folder' || candidate.kind === 'note')
     );
+};
+
+const toTimestamp = (value: string | number): number => {
+    if (typeof value === 'number') {
+        return value;
+    }
+    const ts = new Date(value).getTime();
+    return Number.isNaN(ts) ? Date.now() : ts;
+};
+
+const escapeRegex = (value: string): string => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
 // --- Icons Mapping ---
@@ -263,7 +275,11 @@ const ContextMenu: React.FC<{
             )}
             
             {item.kind === 'note' && (
-                 <MenuOption onClick={onToggleFavorite} icon={<Star size={14} className={item.isFavorite ? "text-yellow-500 fill-yellow-500" : ""} />} label={item.isFavorite ? "Unfavorite" : "Favorite"} />
+                 <MenuOption
+                    onClick={onToggleFavorite}
+                    icon={<Star size={14} className={item.isFavorite ? "text-yellow-500 fill-yellow-500" : ""} />}
+                    label={item.isFavorite ? t('notes.sidebar.actions.unfavorite') : t('notes.sidebar.actions.favorite')}
+                />
             )}
 
             <MenuOption onClick={onRename} icon={<Edit2 size={14} />} label={t('notes.sidebar.actions.rename')} shortcut="F2" />
@@ -307,11 +323,12 @@ const SidebarItemRow: React.FC<{
     onDragOver: (e: React.DragEvent) => void;
     onDragLeave: () => void;
     onDrop: (e: React.DragEvent) => void;
+    untitledLabel: string;
     containerRef?: React.RefObject<HTMLDivElement | null>;
 }> = ({ 
     item, level, isSelected, isExpanded, isDragOver, isRenaming,
     onRenameCommit, onRenameCancel,
-    onClick, onToggle, onContextMenu, onDragStart, onDragOver, onDragLeave, onDrop, containerRef
+    onClick, onToggle, onContextMenu, onDragStart, onDragOver, onDragLeave, onDrop, untitledLabel, containerRef
 }) => {
     
     const isFolder = item.kind === 'folder';
@@ -328,7 +345,14 @@ const SidebarItemRow: React.FC<{
         Icon = TYPE_ICONS[item.type] || FileText;
         if (isSelected) iconClass = "text-white";
     }
-    
+
+    // Scroll into view if selected
+    useEffect(() => {
+        if (!isRenaming && isSelected && containerRef?.current) {
+             containerRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    }, [isRenaming, isSelected, containerRef]);
+
     // Render Inline Input if Renaming
     if (isRenaming) {
         return (
@@ -343,13 +367,6 @@ const SidebarItemRow: React.FC<{
     }
 
     const paddingLeft = 12 + (level * 12); 
-
-    // Scroll into view if selected
-    useEffect(() => {
-        if (isSelected && containerRef?.current) {
-             containerRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-    }, [isSelected]);
 
     return (
         <div 
@@ -382,7 +399,7 @@ const SidebarItemRow: React.FC<{
             <Icon size={16} className={`${iconClass} flex-shrink-0 mr-2 transition-colors`} fill={isFolder ? "currentColor" : "none"} fillOpacity={isFolder ? 0.2 : 0} />
 
             <span className={`truncate flex-1 font-medium text-[13px] ${item.kind === 'note' && isSelected ? 'text-white' : ''}`}>
-                {isFolder ? item.name : item.title || 'Untitled'}
+                {isFolder ? item.name : item.title || untitledLabel}
             </span>
             
             {/* Context Menu Trigger (Hover) */}
@@ -427,7 +444,7 @@ export const NoteSidebar: React.FC = () => {
         treeData, activeNoteId, setActiveNoteId, 
         createNote, createFolder, deleteItem, updateNote, renameFolder,
         toggleFolderExpand, moveItem, favoriteNotes, toggleFavorite, expandedFolders,
-        folders, notes
+        folders, notes, recentNotes, trashedNotes, restoreFromTrash, deletePermanently, clearTrash
     } = useNoteStore();
     const { t } = useTranslation();
 
@@ -440,6 +457,8 @@ export const NoteSidebar: React.FC = () => {
 
     const [dragOverId, setDragOverId] = useState<string | null>(null);
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, item: TreeItem } | null>(null);
+    const [isTrashView, setIsTrashView] = useState(false);
+    const [trashSelection, setTrashSelection] = useState<Set<string>>(new Set());
     const searchInputRef = useRef<HTMLInputElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const itemRef = useRef<HTMLDivElement>(null);
@@ -451,7 +470,102 @@ export const NoteSidebar: React.FC = () => {
 
     // Sections
     const [showFavorites, setShowFavorites] = useState(true);
+    const [showRecent, setShowRecent] = useState(true);
     const [showNotebooks, setShowNotebooks] = useState(true);
+    const normalizedSearch = search.trim().toLowerCase();
+    const folderById = useMemo(() => {
+        return new Map(folders.map((folder) => [folder.id, folder]));
+    }, [folders]);
+
+    const resolveFolderPath = useCallback((parentId: string | null | undefined): string => {
+        if (!parentId) {
+            return '/';
+        }
+        const segments: string[] = [];
+        const visited = new Set<string>();
+        let currentId: string | null | undefined = parentId;
+        while (currentId) {
+            if (visited.has(currentId)) {
+                break;
+            }
+            visited.add(currentId);
+            const folder = folderById.get(currentId);
+            if (!folder) {
+                break;
+            }
+            segments.unshift(folder.name);
+            currentId = folder.parentId;
+        }
+        return segments.length > 0 ? segments.join(' / ') : '/';
+    }, [folderById]);
+
+    const searchResults = useMemo(() => {
+        if (!normalizedSearch) {
+            return [];
+        }
+        return [...notes]
+            .filter((note) => {
+                const targetText = [
+                    note.title,
+                    note.snippet || '',
+                    ...(note.tags || [])
+                ].join(' ').toLowerCase();
+                return targetText.includes(normalizedSearch);
+            })
+            .sort((a, b) => toTimestamp(b.updatedAt) - toTimestamp(a.updatedAt))
+            .slice(0, 60);
+    }, [notes, normalizedSearch]);
+
+    const sortedTrashedNotes = useMemo(() => {
+        return [...trashedNotes].sort((a, b) => {
+            const aTime = toTimestamp(a.deletedAt || a.updatedAt);
+            const bTime = toTimestamp(b.deletedAt || b.updatedAt);
+            return bTime - aTime;
+        });
+    }, [trashedNotes]);
+
+    const filteredTrashedNotes = useMemo(() => {
+        if (!normalizedSearch) {
+            return sortedTrashedNotes;
+        }
+        return sortedTrashedNotes.filter((note) => {
+            const targetText = [
+                note.title,
+                note.snippet || '',
+                ...(note.tags || [])
+            ].join(' ').toLowerCase();
+            return targetText.includes(normalizedSearch);
+        });
+    }, [sortedTrashedNotes, normalizedSearch]);
+
+    const selectedTrashedNotes = useMemo(() => {
+        return filteredTrashedNotes.filter((note) => trashSelection.has(note.id));
+    }, [filteredTrashedNotes, trashSelection]);
+
+    const allVisibleTrashedSelected = useMemo(() => {
+        return filteredTrashedNotes.length > 0 && selectedTrashedNotes.length === filteredTrashedNotes.length;
+    }, [filteredTrashedNotes.length, selectedTrashedNotes.length]);
+
+    const renderHighlightedText = useCallback((text: string): React.ReactNode => {
+        if (!text || !normalizedSearch) {
+            return text;
+        }
+        const regex = new RegExp(`(${escapeRegex(normalizedSearch)})`, 'ig');
+        const parts = text.split(regex);
+        if (parts.length <= 1) {
+            return text;
+        }
+        return parts.map((part, index) => {
+            if (part.toLowerCase() === normalizedSearch) {
+                return (
+                    <mark key={`hl-${index}`} className="bg-amber-400/30 text-amber-200 rounded px-[1px]">
+                        {part}
+                    </mark>
+                );
+            }
+            return <React.Fragment key={`txt-${index}`}>{part}</React.Fragment>;
+        });
+    }, [normalizedSearch]);
 
     // Auto-focus search
     useEffect(() => {
@@ -461,13 +575,38 @@ export const NoteSidebar: React.FC = () => {
         }
     }, [isSearchOpen]);
 
+    useEffect(() => {
+        if (!isTrashView) {
+            setTrashSelection((prev) => (prev.size === 0 ? prev : new Set<string>()));
+        }
+    }, [isTrashView]);
+
+    useEffect(() => {
+        const validIds = new Set(filteredTrashedNotes.map((note) => note.id));
+        setTrashSelection((prev) => {
+            if (prev.size === 0) {
+                return prev;
+            }
+            let changed = false;
+            const next = new Set<string>();
+            prev.forEach((id) => {
+                if (validIds.has(id)) {
+                    next.add(id);
+                } else {
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    }, [filteredTrashedNotes]);
+
     // Flatten tree logic for keyboard navigation
     const getVisibleItems = useCallback(() => {
         const visible: TreeItem[] = [];
         const traverse = (items: TreeItem[]) => {
             for (const item of items) {
                 // Apply search filter if active
-                if (search && !((item.kind === 'folder' ? item.name : item.title).toLowerCase().includes(search.toLowerCase()))) {
+                if (normalizedSearch && !((item.kind === 'folder' ? item.name : item.title).toLowerCase().includes(normalizedSearch))) {
                     continue;
                 }
                 
@@ -479,7 +618,7 @@ export const NoteSidebar: React.FC = () => {
         };
         traverse(treeData);
         return visible;
-    }, [treeData, expandedFolders, search]);
+    }, [treeData, expandedFolders, normalizedSearch]);
 
     const handleDelete = async (item: TreeItem) => {
         if (confirm(`${t('common.actions.delete')} "${item.kind === 'folder' ? item.name : item.title}"?`)) {
@@ -491,8 +630,97 @@ export const NoteSidebar: React.FC = () => {
         setContextMenu(null);
     };
 
+    const toggleTrashSelection = (id: string) => {
+        setTrashSelection((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const toggleSelectAllVisibleTrash = () => {
+        setTrashSelection((prev) => {
+            if (filteredTrashedNotes.length === 0) {
+                return prev;
+            }
+            const next = new Set(prev);
+            if (allVisibleTrashedSelected) {
+                filteredTrashedNotes.forEach((note) => next.delete(note.id));
+            } else {
+                filteredTrashedNotes.forEach((note) => next.add(note.id));
+            }
+            return next;
+        });
+    };
+
+    const handleBatchRestore = async () => {
+        if (selectedTrashedNotes.length === 0) {
+            return;
+        }
+        const selectedIds = selectedTrashedNotes.map((note) => note.id);
+        for (const id of selectedIds) {
+            await restoreFromTrash(id);
+        }
+        setTrashSelection(new Set());
+    };
+
+    const handleBatchDeletePermanently = async () => {
+        if (selectedTrashedNotes.length === 0) {
+            return;
+        }
+        if (!confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
+            return;
+        }
+        const selectedIds = selectedTrashedNotes.map((note) => note.id);
+        for (const id of selectedIds) {
+            await deletePermanently(id);
+        }
+        setTrashSelection(new Set());
+    };
+
     // Keyboard Handler
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape' && isTrashView) {
+            e.preventDefault();
+            setIsTrashView(false);
+            return;
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            setIsSearchOpen(true);
+            return;
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            if (isTrashView) setIsTrashView(false);
+            if (e.shiftKey) {
+                initiateCreate('folder');
+            } else {
+                initiateCreate('note');
+            }
+            return;
+        }
+
+        if (isTrashView) {
+            if (isSearchOpen) {
+                return;
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                toggleSelectAllVisibleTrash();
+                return;
+            }
+            if (e.key === 'Delete' && selectedTrashedNotes.length > 0) {
+                e.preventDefault();
+                void handleBatchDeletePermanently();
+                return;
+            }
+            return;
+        }
         if (renamingId || creationState || isSearchOpen) return;
 
         if (['ArrowDown', 'ArrowUp'].includes(e.key)) {
@@ -570,6 +798,9 @@ export const NoteSidebar: React.FC = () => {
 
     // --- Creation Handlers ---
     const initiateCreate = (type: 'folder' | 'note', subType: NoteType = 'doc') => {
+        if (isTrashView) {
+            setIsTrashView(false);
+        }
         const parentId = getTargetParentId();
         if (parentId && !expandedFolders.has(parentId)) {
             toggleFolderExpand(parentId);
@@ -682,8 +913,8 @@ export const NoteSidebar: React.FC = () => {
         let nodesToRender = [...items];
         const isCreatingHere = creationState && creationState.parentId === parentId;
         
-        if (search) {
-             nodesToRender = nodesToRender.filter(i => (i.kind === 'folder' ? i.name : i.title).toLowerCase().includes(search.toLowerCase()));
+        if (normalizedSearch) {
+             nodesToRender = nodesToRender.filter(i => (i.kind === 'folder' ? i.name : i.title).toLowerCase().includes(normalizedSearch));
         }
 
         const nodes = nodesToRender.map(item => {
@@ -710,6 +941,7 @@ export const NoteSidebar: React.FC = () => {
                                 handleDrop(e, item.id);
                             }
                         }}
+                        untitledLabel={t('notes.sidebar.untitled_page')}
                         containerRef={itemRef}
                     />
                     {isFolder && item.isExpanded && (
@@ -721,7 +953,7 @@ export const NoteSidebar: React.FC = () => {
             );
         });
 
-        if (isCreatingHere && !search) {
+        if (isCreatingHere && !normalizedSearch) {
              let TempIcon = FolderPlus;
              let iconClass = "text-yellow-500";
 
@@ -734,7 +966,7 @@ export const NoteSidebar: React.FC = () => {
                  <div key="creating-temp">
                      <SidebarItemInput 
                          initialValue=""
-                         placeholder={creationState.type === 'folder' ? t('drive.sidebar.folder_name') : "Untitled"}
+                         placeholder={creationState.type === 'folder' ? t('drive.sidebar.folder_name') : t('notes.sidebar.untitled_page')}
                          onCommit={handleCreationCommit}
                          onCancel={handleCreationCancel}
                          level={level}
@@ -744,7 +976,7 @@ export const NoteSidebar: React.FC = () => {
              );
         }
 
-        if (nodes.length === 0 && level > 0 && !search) {
+        if (nodes.length === 0 && level > 0 && !normalizedSearch) {
              return (
                  <div className="py-1 text-[11px] text-gray-600 italic select-none" style={{ paddingLeft: `${12 + (level * 12) + 20}px` }}>
                     {t('notes.sidebar.empty_folder')}
@@ -759,7 +991,15 @@ export const NoteSidebar: React.FC = () => {
         <div 
             ref={sidebarRef}
             className="w-full bg-[#09090b] flex flex-col h-full flex-none font-sans text-sm select-none border-r border-[#27272a] outline-none"
-            onClick={() => { if(!renamingId) { setSelectedId(null); setRenamingId(null); } }}
+            onClick={() => {
+                if (!renamingId) {
+                    setSelectedId(null);
+                    setRenamingId(null);
+                }
+                if (isTrashView) {
+                    setTrashSelection((prev) => (prev.size === 0 ? prev : new Set<string>()));
+                }
+            }}
             onKeyDown={handleKeyDown}
             tabIndex={0}
         >
@@ -773,9 +1013,20 @@ export const NoteSidebar: React.FC = () => {
                             type="text" 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Escape' && setIsSearchOpen(false)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                    setIsSearchOpen(false);
+                                    setSearch('');
+                                }
+                                if (e.key === 'Enter' && searchResults.length > 0) {
+                                    const target = searchResults[0];
+                                    setSelectedId(target.id);
+                                    setActiveNoteId(target.id);
+                                    setIsSearchOpen(false);
+                                }
+                            }}
                             className="flex-1 bg-transparent border-none outline-none text-xs text-white h-7 placeholder-gray-600"
-                            placeholder="Filter..."
+                            placeholder={t('notes.sidebar.search_placeholder')}
                         />
                         <button onClick={() => { setIsSearchOpen(false); setSearch(''); }} className="text-gray-400 hover:text-white">
                             <X size={12} />
@@ -805,7 +1056,7 @@ export const NoteSidebar: React.FC = () => {
                 onDrop={(e) => { e.preventDefault(); }}
             >
                 {/* Empty State */}
-                {treeData.length === 0 && !search && !creationState && (
+                {treeData.length === 0 && !normalizedSearch && !creationState && (
                     <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3 px-6 text-center animate-in fade-in">
                         <BookOpen size={24} className="opacity-20" />
                         <p className="text-xs">{t('notes.sidebar.no_pages')}</p>
@@ -818,58 +1069,287 @@ export const NoteSidebar: React.FC = () => {
                     </div>
                 )}
 
-                {/* Favorites */}
-                {favoriteNotes.length > 0 && !search && (
-                    <div className="mb-2">
-                         <SectionHeader title={t('notes.favorites')} isOpen={showFavorites} onToggle={() => setShowFavorites(!showFavorites)} />
-                         {showFavorites && (
-                             <div className="mt-0.5">
-                                 {favoriteNotes.map(note => (
-                                     <SidebarItemRow 
-                                         key={`fav-${note.id}`}
-                                         item={{ ...note, kind: 'note' } as TreeItem}
-                                         level={0}
-                                         isSelected={selectedId === note.id}
-                                         isExpanded={false}
-                                         isDragOver={false}
-                                         isRenaming={false} 
-                                         onRenameCommit={() => {}}
-                                         onRenameCancel={() => {}}
-                                         onClick={(e) => handleItemClick(e, { ...note, kind: 'note' } as TreeItem)}
-                                         onToggle={() => {}}
-                                         onContextMenu={(e) => handleContextMenu(e, { ...note, kind: 'note' } as TreeItem)}
-                                         onDragStart={(e) => handleDragStart(e, { ...note, kind: 'note' } as TreeItem)}
-                                         onDragOver={() => {}}
-                                         onDragLeave={() => {}}
-                                         onDrop={(e) => { e.preventDefault(); }}
-                                     />
-                                 ))}
-                             </div>
-                         )}
+                {isTrashView ? (
+                    <div className="px-2 pt-1 pb-8">
+                        <div className="px-2 py-1 flex items-center justify-between gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <span>{t('notes.sidebar.trash_title')}</span>
+                            <div className="flex items-center gap-1">
+                                {filteredTrashedNotes.length > 0 && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleSelectAllVisibleTrash();
+                                        }}
+                                        className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded border text-[9px] transition-colors ${
+                                            allVisibleTrashedSelected
+                                                ? 'border-blue-500/60 text-blue-300 bg-blue-500/10'
+                                                : 'border-[#3b3b40] text-gray-400 hover:text-gray-200 hover:border-[#4a4a52]'
+                                        }`}
+                                        title={allVisibleTrashedSelected ? 'Deselect all' : 'Select all'}
+                                    >
+                                        ALL
+                                    </button>
+                                )}
+                                {sortedTrashedNotes.length > 0 && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
+                                                void clearTrash();
+                                            }
+                                        }}
+                                        className="inline-flex items-center justify-center p-1 rounded text-red-400 hover:bg-red-500/10"
+                                        title={t('notes.sidebar.actions.delete_permanently')}
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        {selectedTrashedNotes.length > 0 && (
+                            <div className="px-2 pb-2 flex items-center gap-1.5">
+                                <span className="text-[10px] text-gray-500">{selectedTrashedNotes.length} selected</span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        void handleBatchRestore();
+                                    }}
+                                    className="px-2 py-0.5 rounded border border-emerald-500/30 text-[10px] text-emerald-300 hover:bg-emerald-500/10"
+                                >
+                                    {t('notes.sidebar.actions.restore')}
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        void handleBatchDeletePermanently();
+                                    }}
+                                    className="px-2 py-0.5 rounded border border-red-500/30 text-[10px] text-red-300 hover:bg-red-500/10"
+                                >
+                                    {t('notes.sidebar.actions.delete_permanently')}
+                                </button>
+                            </div>
+                        )}
+                        {filteredTrashedNotes.length === 0 ? (
+                            <div className="px-3 py-6 text-xs text-gray-500 text-center">
+                                {normalizedSearch ? t('notes.sidebar.search_empty') : t('notes.sidebar.trash_empty')}
+                            </div>
+                        ) : (
+                            <div className="space-y-1">
+                                {filteredTrashedNotes.map((note) => (
+                                    <div
+                                        key={`trash-${note.id}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleTrashSelection(note.id);
+                                        }}
+                                        className={`px-3 py-2 rounded-lg border transition-colors cursor-pointer ${
+                                            trashSelection.has(note.id)
+                                                ? 'border-blue-500/50 bg-blue-500/10'
+                                                : 'border-[#2b2b2f] bg-[#111113] hover:border-[#3b3b40]'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleTrashSelection(note.id);
+                                                }}
+                                                className={`mt-0.5 h-3.5 w-3.5 rounded border flex items-center justify-center transition-colors ${
+                                                    trashSelection.has(note.id)
+                                                        ? 'border-blue-400 bg-blue-500/20'
+                                                        : 'border-gray-600 bg-transparent'
+                                                }`}
+                                                aria-label="Select"
+                                            >
+                                                {trashSelection.has(note.id) && <span className="h-2 w-2 rounded-[2px] bg-blue-300" />}
+                                            </button>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-[12px] font-medium text-gray-100 truncate">
+                                                    {renderHighlightedText(note.title || t('notes.sidebar.untitled_page'))}
+                                                </div>
+                                                {note.snippet && (
+                                                    <div className="text-[11px] text-gray-500 line-clamp-2 mt-0.5">
+                                                        {renderHighlightedText(note.snippet)}
+                                                    </div>
+                                                )}
+                                                <div className="text-[10px] text-gray-600 mt-1 truncate">
+                                                    {renderHighlightedText(resolveFolderPath(note.parentId))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            <span className="text-[10px] text-gray-600">
+                                                {new Date(toTimestamp(note.deletedAt || note.updatedAt)).toLocaleString()}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        void restoreFromTrash(note.id);
+                                                    }}
+                                                    className="p-1.5 rounded text-emerald-400 hover:bg-emerald-500/10"
+                                                    title={t('notes.sidebar.actions.restore')}
+                                                >
+                                                    <RotateCcw size={13} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
+                                                            void deletePermanently(note.id);
+                                                        }
+                                                    }}
+                                                    className="p-1.5 rounded text-red-400 hover:bg-red-500/10"
+                                                    title={t('notes.sidebar.actions.delete_permanently')}
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+                ) : normalizedSearch ? (
+                    <div className="px-2 pt-1">
+                        <div className="px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            {t('common.actions.search')}
+                        </div>
+                        {searchResults.length === 0 ? (
+                            <div className="px-3 py-6 text-xs text-gray-500 text-center">
+                                {t('notes.sidebar.search_empty')}
+                            </div>
+                        ) : (
+                            <div className="space-y-1 pb-6">
+                                {searchResults.map((note) => (
+                                    <button
+                                        key={`search-${note.id}`}
+                                        onClick={() => {
+                                            setSelectedId(note.id);
+                                            setActiveNoteId(note.id);
+                                            setIsSearchOpen(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                                            selectedId === note.id
+                                                ? 'bg-[#1e1e20] border-[#3a3a3f]'
+                                                : 'bg-transparent border-transparent hover:bg-[#1a1a1c] hover:border-[#2b2b2f]'
+                                        }`}
+                                    >
+                                        <div className="text-[12px] font-medium text-gray-100 truncate">
+                                            {renderHighlightedText(note.title || t('notes.sidebar.untitled_page'))}
+                                        </div>
+                                        {note.snippet && (
+                                            <div className="text-[11px] text-gray-500 line-clamp-2 mt-0.5">
+                                                {renderHighlightedText(note.snippet)}
+                                            </div>
+                                        )}
+                                        <div className="text-[10px] text-gray-600 mt-1 truncate">
+                                            {renderHighlightedText(resolveFolderPath(note.parentId))}
+                                        </div>
+                                        <div className="text-[10px] text-gray-600 mt-0.5">
+                                            {new Date(toTimestamp(note.updatedAt)).toLocaleString()}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {/* Favorites */}
+                        {favoriteNotes.length > 0 && (
+                            <div className="mb-2">
+                                <SectionHeader title={t('notes.favorites')} isOpen={showFavorites} onToggle={() => setShowFavorites(!showFavorites)} />
+                                {showFavorites && (
+                                    <div className="mt-0.5">
+                                        {favoriteNotes.map(note => (
+                                            <SidebarItemRow 
+                                                key={`fav-${note.id}`}
+                                                item={{ ...note, kind: 'note' } as TreeItem}
+                                                level={0}
+                                                isSelected={selectedId === note.id}
+                                                isExpanded={false}
+                                                isDragOver={false}
+                                                isRenaming={false} 
+                                                onRenameCommit={() => {}}
+                                                onRenameCancel={() => {}}
+                                                onClick={(e) => handleItemClick(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onToggle={() => {}}
+                                                onContextMenu={(e) => handleContextMenu(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onDragStart={(e) => handleDragStart(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onDragOver={() => {}}
+                                                onDragLeave={() => {}}
+                                                onDrop={(e) => { e.preventDefault(); }}
+                                                untitledLabel={t('notes.sidebar.untitled_page')}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                {/* Notebooks Tree */}
-                {(treeData.length > 0 || search || creationState) && (
-                    <div className="mb-4">
-                        {favoriteNotes.length > 0 && !search && (
-                             <SectionHeader title={t('notes.sidebar.notebooks')} isOpen={showNotebooks} onToggle={() => setShowNotebooks(!showNotebooks)} />
+                        {/* Recent */}
+                        {recentNotes.length > 0 && (
+                            <div className="mb-2">
+                                <SectionHeader title={t('notes.sidebar.recent')} isOpen={showRecent} onToggle={() => setShowRecent(!showRecent)} />
+                                {showRecent && (
+                                    <div className="mt-0.5">
+                                        {recentNotes.map(note => (
+                                            <SidebarItemRow 
+                                                key={`recent-${note.id}`}
+                                                item={{ ...note, kind: 'note' } as TreeItem}
+                                                level={0}
+                                                isSelected={selectedId === note.id}
+                                                isExpanded={false}
+                                                isDragOver={false}
+                                                isRenaming={false}
+                                                onRenameCommit={() => {}}
+                                                onRenameCancel={() => {}}
+                                                onClick={(e) => handleItemClick(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onToggle={() => {}}
+                                                onContextMenu={(e) => handleContextMenu(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onDragStart={(e) => handleDragStart(e, { ...note, kind: 'note' } as TreeItem)}
+                                                onDragOver={() => {}}
+                                                onDragLeave={() => {}}
+                                                onDrop={(e) => { e.preventDefault(); }}
+                                                untitledLabel={t('notes.sidebar.untitled_page')}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         )}
-                        
-                        {(showNotebooks || search) && (
-                             <div className="mt-0.5 pb-8">
-                                 {renderTreeNodes(treeData, 0, null)}
-                             </div>
+
+                        {/* Notebooks Tree */}
+                        {(treeData.length > 0 || creationState) && (
+                            <div className="mb-4">
+                                {(favoriteNotes.length > 0 || recentNotes.length > 0) && (
+                                    <SectionHeader title={t('notes.notebooks')} isOpen={showNotebooks} onToggle={() => setShowNotebooks(!showNotebooks)} />
+                                )}
+                                {showNotebooks && (
+                                    <div className="mt-0.5 pb-8">
+                                        {renderTreeNodes(treeData, 0, null)}
+                                    </div>
+                                )}
+                            </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
 
             {/* 3. Footer */}
             <div className="flex-none p-3 border-t border-[#27272a] bg-[#09090b]">
-                <button className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] w-full rounded-lg text-xs transition-colors">
-                    <Trash2 size={14} />
-                    <span>{t('notes.sidebar.trash')}</span>
+                <button
+                    onClick={() => {
+                        setSearch('');
+                        setIsSearchOpen(false);
+                        setIsTrashView((prev) => !prev);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] w-full rounded-lg text-xs transition-colors"
+                >
+                    {isTrashView ? <ArrowLeft size={14} /> : <Trash2 size={14} />}
+                    <span>{isTrashView ? t('notes.sidebar.back_to_pages') : t('notes.sidebar.trash')}</span>
                 </button>
             </div>
 

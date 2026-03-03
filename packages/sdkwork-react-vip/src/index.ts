@@ -5,4 +5,4 @@ export { PricingModal } from './components/PricingModal';
 export * from './entities/vip.entity';
 export * from './constants';
 export { VipStoreProvider, useVipStore } from './store';
-export { vipService } from './services/vipService';
+export * from './services';

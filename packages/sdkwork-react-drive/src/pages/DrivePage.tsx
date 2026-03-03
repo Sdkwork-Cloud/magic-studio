@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { DriveItem } from '../entities';
-import { DriveSidebar, DriveGrid, DriveBreadcrumbs, DriveContextMenu, FilePreviewModal, initViewers } from '../services/viewerBootstrap';
+import { DriveSidebar, DriveGrid, DriveBreadcrumbs, DriveContextMenu, FilePreviewModal, initViewers } from '../services';
 import { DriveStoreProvider, useDriveStore, SortOption, FileTypeFilter } from '../store/driveStore';
 import { 
     LayoutGrid, List as ListIcon, Search, UploadCloud, Cloud, 

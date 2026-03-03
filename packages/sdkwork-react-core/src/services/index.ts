@@ -1,4 +1,5 @@
 export { LocalStorageService } from './base/LocalStorageService';
+export { inlineDataService, type InlineDataService } from './base/inlineDataService';
 export * from './media';
 export * from './notification';
 export * from './remix';

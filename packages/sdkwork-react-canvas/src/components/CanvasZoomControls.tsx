@@ -1,6 +1,6 @@
 
 import { CanvasBoard, CanvasExportMode } from '../entities'
-import { canvasExportService } from '../services/canvasExportService'
+import { canvasBusinessService } from '../services'
 import React, { useState } from 'react';
 import { 
     Minus, Plus, FileJson, Clapperboard, MoreHorizontal,
@@ -44,7 +44,7 @@ export const CanvasZoomControls: React.FC = () => {
             const files = await uploadHelper.pickFiles(false, '.json');
             if (files.length > 0) {
                 const content = new TextDecoder().decode(files[0].data);
-                const board = await canvasExportService.importFromJson(content);
+                const board = await canvasBusinessService.canvasExportService.importFromJson(content);
                 importBoard(board);
                 await platform.notify("Import Successful", `Board "${board.title}" imported.`);
             }
@@ -62,7 +62,7 @@ export const CanvasZoomControls: React.FC = () => {
              return;
         }
 
-        const blob = canvasExportService.exportToJson(board);
+        const blob = canvasBusinessService.canvasExportService.exportToJson(board);
         const filename = `${board.title.replace(/\s+/g, '_')}_canvas.json`;
         
         if (platform.getPlatform() === 'desktop') {
@@ -95,7 +95,7 @@ export const CanvasZoomControls: React.FC = () => {
         
         try {
             // Pass board title explicitly and the selected mode
-            const projectId = await canvasExportService.exportToMagicCut(board, board.title, mode);
+            const projectId = await canvasBusinessService.canvasExportService.exportToMagicCut(board, board.title, mode);
             
             await platform.notify("Export Successful", "Project created in Magic Cut");
             

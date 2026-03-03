@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { VoiceTask, VoiceConfig } from '../entities';
-import { voiceService } from '../services/voiceService';
-import { voiceHistoryService } from '../services/voiceHistoryService';
+import { voiceBusinessService } from '../services';
 import { VOICE_MODELS, PRESET_VOICES } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { inlineDataService } from '@sdkwork/react-core';
 
 interface VoiceStoreContextType {
     history: VoiceTask[];
@@ -29,30 +29,6 @@ const resolveVoiceScope = (): { workspaceId: string; projectId?: string } => {
     };
 };
 
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
-};
-
 export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<VoiceTask[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -69,7 +45,7 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load History
     useEffect(() => {
         const load = async () => {
-            const result = await voiceHistoryService.findAll({ page: 0, size: 50 });
+            const result = await voiceBusinessService.voiceHistoryService.findAll({ page: 0, size: 50 });
             if (result.success && result.data) {
                 setHistory(result.data.content);
             }
@@ -102,12 +78,12 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await voiceHistoryService.save(newTask);
+        await voiceBusinessService.voiceHistoryService.save(newTask);
 
         try {
-            const rawResults = await voiceService.generateSpeech(config);
+            const rawResults = await voiceBusinessService.voiceService.generateSpeech(config);
             const persistedResults = await Promise.all(rawResults.map(async (result, index) => {
-                const inlineData = await tryExtractInlineData(result.url);
+                const inlineData = await inlineDataService.tryExtractInlineData(result.url);
                 const persisted = await assetBusinessFacade.importVoiceSpeakerAsset({
                     scope: resolveVoiceScope(),
                     type: 'voice',
@@ -135,7 +111,7 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await voiceHistoryService.save(completedTask);
+            await voiceBusinessService.voiceHistoryService.save(completedTask);
         } catch (e: any) {
             const failedTask: VoiceTask = {
                 ...newTask,
@@ -144,24 +120,24 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-            await voiceHistoryService.save(failedTask);
+            await voiceBusinessService.voiceHistoryService.save(failedTask);
         } finally {
             setIsGenerating(false);
         }
     };
 
     const deleteTask = async (id: string) => {
-        await voiceHistoryService.deleteById(id);
+        await voiceBusinessService.voiceHistoryService.deleteById(id);
         setHistory(prev => prev.filter(t => t.id !== id));
     };
 
     const clearHistory = async () => {
-        await voiceHistoryService.clear();
+        await voiceBusinessService.voiceHistoryService.clear();
         setHistory([]);
     };
 
     const toggleFavorite = async (id: string) => {
-        await voiceHistoryService.toggleFavorite(id);
+        await voiceBusinessService.voiceHistoryService.toggleFavorite(id);
         setHistory(prev => prev.map(t => 
             t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
         ));
@@ -182,3 +158,4 @@ export const useVoiceStore = () => {
     if (!context) throw new Error('useVoiceStore must be used within VoiceStoreProvider');
     return context;
 };
+

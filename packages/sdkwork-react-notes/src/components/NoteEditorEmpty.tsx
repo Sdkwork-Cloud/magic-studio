@@ -19,7 +19,7 @@ export const NoteEditorEmpty: React.FC = () => {
             </p>
             <div className="mt-8 flex gap-3">
                 <button 
-                    onClick={() => createNote('Untitled Note', 'doc')}
+                    onClick={() => createNote(t('notes.sidebar.untitled_page'), 'doc')}
                     className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all flex items-center gap-2"
                 >
                     <Plus size={16} /> {t('notes.sidebar.actions.new_page')}

@@ -1,13 +1,13 @@
 export { default as LoginPage } from './pages/LoginPage';
 export * from './entities/user.entity';
-export * from './services/authService';
+export * from './services';
 export * from './components';
 export * from './store/authStore';
 export * from './i18n';
 
 export type { 
-    LoginRequest, 
-    RegisterRequest, 
+    LoginForm as LoginRequest,
+    RegisterForm as RegisterRequest,
     LoginVO, 
-    UserInfo 
+    UserInfoVO as UserInfo
 } from '@sdkwork/app-sdk';

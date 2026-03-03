@@ -1,6 +1,6 @@
 
 import { PlanTier, Subscription } from '../entities'
-import { vipService } from '../services/vipService'
+import { vipBusinessService } from '../services'
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface VipStoreContextType {
@@ -22,7 +22,7 @@ export const VipStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
   const subscribe = async (planId: PlanTier, billingCycle: 'month' | 'year' | 'onetime' = 'month') => {
     setIsProcessing(true);
     try {
-      const sub = await vipService.subscribe(planId, billingCycle);
+      const sub = await vipBusinessService.subscribe(planId, billingCycle);
       setCurrentSubscription(sub);
     } catch (e) {
       console.error('Subscription failed', e);
@@ -43,3 +43,4 @@ export const useVipStore = () => {
   if (!context) throw new Error('useVipStore must be used within a VipStoreProvider');
   return context;
 };
+

@@ -18,17 +18,23 @@ import { CanvasAlignmentToolbar } from './CanvasAlignmentToolbar';
 import { CanvasMinimap } from './CanvasMinimap';
 import { CanvasZoomControls } from './CanvasZoomControls';
 import { SelectionOverlay } from './SelectionOverlay';
-import { NodeFactory } from '../services/nodeFactory';
 import {
-    AffectedConnection,
-    MoveElementStartPosition,
-    buildMoveCommitUpdates,
-    computeConnectionPreviewPaths,
-    computeGroupPreviewBounds,
-    computeMoveDeltaWithSnap,
-    hasMoveCommitChanges,
-    initializeMoveSession
-} from '../services/canvasInteractionService';
+    canvasBusinessService,
+    type AffectedConnection,
+    type MoveElementStartPosition
+} from '../services';
+
+const {
+    NodeFactory,
+    canvasInteractionService: {
+        buildMoveCommitUpdates,
+        computeConnectionPreviewPaths,
+        computeGroupPreviewBounds,
+        computeMoveDeltaWithSnap,
+        hasMoveCommitChanges,
+        initializeMoveSession
+    }
+} = canvasBusinessService;
 
 export const Z_LAYERS = {
     BACKGROUND: 0,

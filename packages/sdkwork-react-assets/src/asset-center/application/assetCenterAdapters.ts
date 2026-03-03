@@ -2,6 +2,7 @@ import type { Page, PageRequest } from '@sdkwork/react-commons';
 import type { AssetContentKey, AssetScope, UnifiedDigitalAsset } from '@sdkwork/react-types';
 import type { Asset, AssetOrigin, AssetType, AnyAsset } from '../../entities';
 import { mapContentKeyToMediaType, readUnifiedPayloadPrimary } from '../domain/assetCenter.domain';
+import { assetUiStateService } from '../../services/assetUiStateService';
 
 const toAssetType = (type: AssetContentKey): AssetType => {
   return type;
@@ -32,14 +33,7 @@ export const readWorkspaceScope = (
   const projectKey = options.projectKey || 'sdkwork_project_id';
   const defaultWorkspaceId = options.defaultWorkspaceId || 'default-workspace';
   const readStorage = (key: string): string | null => {
-    if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) {
-      return null;
-    }
-    try {
-      return globalThis.localStorage.getItem(key);
-    } catch {
-      return null;
-    }
+    return assetUiStateService.readStorageValue(key);
   };
 
   return {

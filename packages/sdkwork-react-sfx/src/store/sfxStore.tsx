@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { SfxTask, SfxConfig } from '../entities';
-import { sfxService } from '../services/sfxService';
-import { sfxHistoryService } from '../services/sfxHistoryService';
+import { sfxBusinessService } from '../services';
 import { SFX_MODELS } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
 
@@ -34,7 +33,7 @@ export const SfxStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Load History
     useEffect(() => {
         const load = async () => {
-            const result = await sfxHistoryService.findAll({ page: 0, size: 50 });
+            const result = await sfxBusinessService.sfxHistoryService.findAll({ page: 0, size: 50 });
             if (result.success && result.data) {
                 setHistory(result.data.content);
             }
@@ -63,10 +62,10 @@ export const SfxStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
 
         setHistory(prev => [newTask, ...prev]);
-        await sfxHistoryService.save(newTask);
+        await sfxBusinessService.sfxHistoryService.save(newTask);
 
         try {
-            const rawResults = await sfxService.generateSfx(config);
+            const rawResults = await sfxBusinessService.sfxService.generateSfx(config);
             
             const completedTask: SfxTask = {
                 ...newTask,
@@ -75,7 +74,7 @@ export const SfxStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await sfxHistoryService.save(completedTask);
+            await sfxBusinessService.sfxHistoryService.save(completedTask);
         } catch (e: any) {
             const failedTask: SfxTask = {
                 ...newTask,
@@ -84,24 +83,24 @@ export const SfxStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));
-            await sfxHistoryService.save(failedTask);
+            await sfxBusinessService.sfxHistoryService.save(failedTask);
         } finally {
             setIsGenerating(false);
         }
     };
 
     const deleteTask = async (id: string) => {
-        await sfxHistoryService.deleteById(id);
+        await sfxBusinessService.sfxHistoryService.deleteById(id);
         setHistory(prev => prev.filter(t => t.id !== id));
     };
 
     const clearHistory = async () => {
-        await sfxHistoryService.clear();
+        await sfxBusinessService.sfxHistoryService.clear();
         setHistory([]);
     };
 
     const toggleFavorite = async (id: string) => {
-        await sfxHistoryService.toggleFavorite(id);
+        await sfxBusinessService.sfxHistoryService.toggleFavorite(id);
         setHistory(prev => prev.map(t => 
             t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
         ));
@@ -122,3 +121,4 @@ export const useSfxStore = () => {
     if (!context) throw new Error('useSfxStore must be used within SfxStoreProvider');
     return context;
 };
+

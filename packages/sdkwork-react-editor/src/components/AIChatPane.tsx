@@ -2,6 +2,7 @@
 import React from 'react';
 import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useEditorStore } from '../store/editorStore';
+import { platform } from '@sdkwork/react-core';
 
 const AIChatPane: React.FC = () => {
     const { activeFilePath, openFiles, updateFileContent } = useEditorStore();
@@ -25,7 +26,7 @@ const AIChatPane: React.FC = () => {
         
         console.log("Insert requested:", text);
         // Fallback: Copy to clipboard if we can't directly insert via store easily without complex ref forwarding
-        navigator.clipboard.writeText(text);
+        platform.copy(text);
     };
 
     return (

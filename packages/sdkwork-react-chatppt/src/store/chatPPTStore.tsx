@@ -1,6 +1,6 @@
 
 import { Presentation, Slide } from '../entities';
-import { chatPPTService } from '../services/chatPPTService';
+import { chatPPTBusinessService } from '../services';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 ;
 ;
@@ -35,7 +35,7 @@ export const ChatPPTStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Load History
     useEffect(() => {
         const load = async () => {
-            const result = await chatPPTService.findAll({ page: 0, size: 50 });
+            const result = await chatPPTBusinessService.chatPPTService.findAll({ page: 0, size: 50 });
             if (result.success && result.data) {
                 setPresentations(result.data.content);
                 if (result.data.content.length > 0 && !activePresentationId) {
@@ -50,7 +50,7 @@ export const ChatPPTStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentSlide = activePresentation ? activePresentation.slides[activeSlideIndex] : null;
 
     const createPresentation = async (title: string) => {
-        const res = await chatPPTService.createPresentation(title);
+        const res = await chatPPTBusinessService.chatPPTService.createPresentation(title);
         if (res.success && res.data) {
             setPresentations(prev => [res.data!, ...prev]);
             setActivePresentationId(res.data.id);
@@ -59,7 +59,7 @@ export const ChatPPTStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
 
     const deletePresentation = async (id: string) => {
-        await chatPPTService.deleteById(id);
+        await chatPPTBusinessService.chatPPTService.deleteById(id);
         setPresentations(prev => prev.filter(p => p.id !== id));
         if (activePresentationId === id) setActivePresentationId(null);
     };
@@ -71,7 +71,7 @@ export const ChatPPTStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const addSlide = async (layout: Slide['layout'] = 'bullet-points') => {
         if (!activePresentationId) return;
-        const res = await chatPPTService.addSlide(activePresentationId, layout);
+        const res = await chatPPTBusinessService.chatPPTService.addSlide(activePresentationId, layout);
         if (res.success && res.data) {
              setPresentations(prev => prev.map(p => p.id === activePresentationId ? res.data! : p));
              setActiveSlideIndex(res.data.slides.length - 1);
@@ -85,7 +85,7 @@ export const ChatPPTStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
             slides: activePresentation.slides.map(s => s.id === slideId ? { ...s, ...updates } : s),
             updatedAt: Date.now()
         };
-        await chatPPTService.save(updatedPPT);
+        await chatPPTBusinessService.chatPPTService.save(updatedPPT);
         setPresentations(prev => prev.map(p => p.id === updatedPPT.id ? updatedPPT : p));
     };
 
@@ -120,3 +120,4 @@ export const useChatPPTStore = () => {
     if (!context) throw new Error('useChatPPTStore must be used within ChatPPTStoreProvider');
     return context;
 };
+

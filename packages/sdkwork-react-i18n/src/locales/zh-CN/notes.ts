@@ -95,6 +95,32 @@ export const notes = {
             rich_text_tooltip: "富文本模式 (所见即所得)",
             markdown_tooltip: "Markdown 源码模式"
         }
+        ,
+        media: {
+            image: "图片",
+            video: "视频",
+            audio_music: "音频 / 音乐",
+            file_attachment: "文件附件",
+            mini_program: "小程序"
+        },
+        actions: {
+            write: "写作",
+            writing: "写作中...",
+            publish: "发布",
+            generate_article: "生成文章",
+            insert: "插入",
+            insert_media: "插入媒体",
+            ai_tools: "AI 工具",
+            view_source: "查看源码",
+            toggle_chat: "切换聊天助手",
+            generate_image: "生成图片",
+            generate_video: "生成视频",
+            generate_speech: "生成语音",
+            insert_to_note: "插入到笔记",
+            generative_ai: "生成式 AI",
+            ai_tip_selection: "提示：可先选中文本再重写"
+        },
+        untitled_page: "未命名页面"
     },
     sidebar: {
         actions: {
@@ -102,10 +128,21 @@ export const notes = {
             new_folder: "新文件夹",
             rename: "重命名",
             delete: "删除",
-            trash: "垃圾桶"
+            trash: "垃圾桶",
+            favorite: "收藏",
+            unfavorite: "取消收藏",
+            restore: "恢复",
+            delete_permanently: "永久删除"
         },
         trash: "回收站",
+        trash_title: "回收站",
+        trash_empty: "回收站为空",
+        back_to_pages: "返回页面",
         no_pages: "暂无页面",
-        empty_folder: "空"
+        empty_folder: "空",
+        recent: "最近",
+        untitled_page: "未命名",
+        search_placeholder: "搜索笔记...",
+        search_empty: "没有匹配的页面"
     }
 };

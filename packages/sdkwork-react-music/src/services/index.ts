@@ -1,2 +1,5 @@
-export { musicService } from './musicService';
-export { musicHistoryService } from './musicHistoryService';
+import { musicBusinessService } from './musicBusinessService';
+
+export * from './musicBusinessService';
+export const musicService = musicBusinessService.musicService;
+export const musicHistoryService = musicBusinessService.musicHistoryService;

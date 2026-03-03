@@ -25,7 +25,7 @@ import {
     Image as ImageIcon, Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare, 
     Quote, Bold, Italic, Strikethrough, Undo, Redo,
     Video, Mic, ImagePlus, Plus, Music, File, Sparkles, Wand2, Loader2, PanelRight,
-    Send, AppWindow, FileCode
+    Send, AppWindow, FileCode, ChevronRight
 } from 'lucide-react';
 import { EditorContextMenu } from './EditorContextMenu';
 
@@ -128,6 +128,7 @@ const ToolbarDivider = () => <div className="w-[1px] h-5 bg-[#27272a] mx-1 flex-
 // --- Dropdown Components ---
 
 const InsertDropdown: React.FC<{ onUpload: (type: 'image' | 'video' | 'audio' | 'file') => void, onOpenMiniProgram: () => void }> = ({ onUpload, onOpenMiniProgram }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -153,30 +154,30 @@ const InsertDropdown: React.FC<{ onUpload: (type: 'image' | 'video' | 'audio' | 
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${isOpen ? 'bg-[#27272a] text-white' : 'text-gray-400 hover:text-white hover:bg-[#1e1e20]'}`}
-                title="Insert Media"
+                title={t('notes.editor.actions.insert_media')}
             >
                 <Plus size={14} />
-                <span>Insert</span>
+                <span>{t('notes.editor.actions.insert')}</span>
                 <ChevronDown size={10} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-[#1e1e20] border border-[#333] rounded-lg shadow-xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75 flex flex-col overflow-hidden">
                     <button onClick={() => handleSelect('image')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white transition-colors">
-                        <ImageIcon size={14} className="text-purple-500" /> Image
+                        <ImageIcon size={14} className="text-purple-500" /> {t('notes.editor.media.image')}
                     </button>
                     <button onClick={() => handleSelect('video')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white transition-colors">
-                        <Video size={14} className="text-blue-500" /> Video
+                        <Video size={14} className="text-blue-500" /> {t('notes.editor.media.video')}
                     </button>
                     <button onClick={() => handleSelect('audio')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white transition-colors">
-                        <Music size={14} className="text-pink-500" /> Audio / Music
+                        <Music size={14} className="text-pink-500" /> {t('notes.editor.media.audio_music')}
                     </button>
                     <button onClick={() => handleSelect('file')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white transition-colors">
-                        <File size={14} className="text-gray-500" /> File Attachment
+                        <File size={14} className="text-gray-500" /> {t('notes.editor.media.file_attachment')}
                     </button>
                     <div className="h-[1px] bg-[#27272a] my-1" />
                     <button onClick={() => handleSelect('miniprogram')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white transition-colors">
-                        <AppWindow size={14} className="text-green-500" /> Mini Program
+                        <AppWindow size={14} className="text-green-500" /> {t('notes.editor.media.mini_program')}
                     </button>
                 </div>
             )}
@@ -185,6 +186,7 @@ const InsertDropdown: React.FC<{ onUpload: (type: 'image' | 'video' | 'audio' | 
 };
 
 const AIDropdown: React.FC<{ onAction: (type: MediaType) => void }> = ({ onAction }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -206,28 +208,28 @@ const AIDropdown: React.FC<{ onAction: (type: MediaType) => void }> = ({ onActio
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${isOpen ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-transparent border-transparent text-gray-400 hover:bg-[#1e1e20] hover:text-white'}`}
-                title="AI Generation Tools"
+                title={t('notes.editor.actions.ai_tools')}
             >
                 <Sparkles size={14} />
-                <span>AI Tools</span>
+                <span>{t('notes.editor.actions.ai_tools')}</span>
                 <ChevronDown size={10} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
                 <div className="absolute top-full left-0 mt-1 w-52 bg-[#1e1e20] border border-[#333] rounded-lg shadow-xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75 flex flex-col overflow-hidden">
-                    <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-[#252526]/50">Generative AI</div>
+                    <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-[#252526]/50">{t('notes.editor.actions.generative_ai')}</div>
                     <button onClick={() => handleSelect('image')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white group transition-colors">
-                        <ImagePlus size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> Generate Image
+                        <ImagePlus size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> {t('notes.editor.actions.generate_image')}
                     </button>
                     <button onClick={() => handleSelect('video')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white group transition-colors">
-                        <Video size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> Generate Video
+                        <Video size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> {t('notes.editor.actions.generate_video')}
                     </button>
                     <button onClick={() => handleSelect('audio')} className="flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white group transition-colors">
-                        <Mic size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> Generate Speech
+                        <Mic size={14} className="text-purple-500 group-hover:scale-110 transition-transform" /> {t('notes.editor.actions.generate_speech')}
                     </button>
                     <div className="h-[1px] bg-[#27272a] my-1" />
                     <div className="px-3 py-1.5 text-xs text-gray-600 italic">
-                        Tip: Select text to rewrite
+                        {t('notes.editor.actions.ai_tip_selection')}
                     </div>
                 </div>
             )}
@@ -252,6 +254,7 @@ interface EditorToolbarProps {
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
     editor, onUpload, onOpenGenModal, onOpenAIWriter, onOpenMiniProgram, onViewSource, isGenerating, isChatOpen, onToggleChat, showChatToggle
 }) => {
+    const { t } = useTranslation();
     if (!editor) return null;
 
     return (
@@ -265,10 +268,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all shadow-sm mr-2
                     ${isGenerating ? 'bg-[#27272a] cursor-not-allowed text-gray-500' : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500'}
                 `}
-                title="Write with AI"
+                title={t('notes.editor.actions.write')}
             >
                 {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-                <span>{isGenerating ? 'Writing...' : 'Write'}</span>
+                <span>{isGenerating ? t('notes.editor.actions.writing') : t('notes.editor.actions.write')}</span>
             </button>
 
             <ToolbarDivider />
@@ -313,12 +316,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </div>
 
             {/* Right Side: Extras */}
-            <ToolbarButton onClick={onViewSource} icon={FileCode} title="View Source Code" className="mr-1" />
+            <ToolbarButton onClick={onViewSource} icon={FileCode} title={t('notes.editor.actions.view_source')} className="mr-1" />
             
             {showChatToggle && (
                 <>
                     <ToolbarDivider />
-                    <ToolbarButton onClick={onToggleChat} isActive={isChatOpen} icon={PanelRight} title="Toggle Chat Assistant" />
+                    <ToolbarButton onClick={onToggleChat} isActive={isChatOpen} icon={PanelRight} title={t('notes.editor.actions.toggle_chat')} />
                 </>
             )}
         </div>
@@ -331,6 +334,7 @@ export interface UniversalNoteEditorProps {
     initialContent?: string;
     initialTitle?: string;
     noteType?: NoteType;
+    breadcrumbs?: string[];
     lastUpdated?: string | number;
     tags?: string[];
     className?: string; // Allow custom styling
@@ -360,6 +364,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
     initialContent = '',
     initialTitle = '',
     noteType = 'doc',
+    breadcrumbs = [],
     lastUpdated = Date.now(),
     tags = [],
     className = '',
@@ -780,6 +785,18 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                     onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY }); }}
                 >
                     <div className={maxWidthClasses}>
+                        {breadcrumbs.length > 0 && (
+                            <div className="mb-4 flex items-center flex-wrap gap-1 text-[11px] text-gray-500">
+                                {breadcrumbs.map((segment, index) => (
+                                    <React.Fragment key={`${segment}-${index}`}>
+                                        {index > 0 && <ChevronRight size={10} className="text-gray-600" />}
+                                        <span className="px-1.5 py-0.5 rounded bg-[#141417] border border-[#242428] text-gray-400">
+                                            {segment}
+                                        </span>
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        )}
                         
                         {/* Metadata Header */}
                         {showMetadata && (
@@ -841,7 +858,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-all shadow-sm text-xs font-semibold"
                                         >
                                             <Send size={12} />
-                                            <span>Publish</span>
+                                            <span>{t('notes.editor.actions.publish')}</span>
                                         </button>
                                     )}
                                 </div>
@@ -858,7 +875,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                                     onTitleChange?.(e.target.value);
                                     adjustTitleHeight();
                                 }}
-                                placeholder="Untitled Page"
+                                placeholder={t('notes.editor.untitled_page')}
                                 readOnly={readOnly}
                                 rows={1}
                                 style={{ minHeight: '1.2em', maxHeight: '4.5em' }}
@@ -879,7 +896,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                                         title={t('notes.ai_drafter.title')}
                                     >
                                         <Sparkles size={12} fill="currentColor" />
-                                        <span>Generate Article</span>
+                                        <span>{t('notes.editor.actions.generate_article')}</span>
                                     </button>
                                 </div>
                             )}
@@ -958,7 +975,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                 <ImageGeneratorModal 
                     onClose={() => setGenModalType(null)}
                     onSuccess={handleImageSuccess}
-                    actionLabel="Insert to Note"
+                    actionLabel={t('notes.editor.actions.insert_to_note')}
                 />
             )}
             
@@ -966,7 +983,7 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                 <VideoGeneratorModal 
                     onClose={() => setGenModalType(null)}
                     onSuccess={handleVideoSuccess}
-                    actionLabel="Insert to Note"
+                    actionLabel={t('notes.editor.actions.insert_to_note')}
                 />
             )}
             
@@ -999,8 +1016,32 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 };
 
 export const NoteEditor: React.FC = () => {
-    const { activeNote, updateNote } = useNoteStore();
+    const { activeNote, updateNote, folders } = useNoteStore();
     const [showPublishModal, setShowPublishModal] = useState(false);
+
+    const breadcrumbs = useMemo(() => {
+        if (!activeNote?.parentId) {
+            return [] as string[];
+        }
+        const segments: string[] = [];
+        const visited = new Set<string>();
+        let currentParentId: string | null = activeNote.parentId;
+
+        while (currentParentId) {
+            if (visited.has(currentParentId)) {
+                break;
+            }
+            visited.add(currentParentId);
+            const folder = folders.find((item) => item.id === currentParentId);
+            if (!folder) {
+                break;
+            }
+            segments.unshift(folder.name);
+            currentParentId = folder.parentId;
+        }
+
+        return segments;
+    }, [activeNote?.parentId, folders]);
 
     if (!activeNote) {
         return <NoteEditorEmpty />;
@@ -1025,6 +1066,7 @@ export const NoteEditor: React.FC = () => {
                 initialContent={activeNote.content}
                 initialTitle={activeNote.title}
                 noteType={activeNote.type}
+                breadcrumbs={breadcrumbs}
                 lastUpdated={activeNote.updatedAt}
                 tags={activeNote.tags}
                 onChange={handleChange}

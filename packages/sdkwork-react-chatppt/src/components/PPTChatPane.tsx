@@ -2,6 +2,7 @@
 import React from 'react';
 import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useChatPPTStore } from '../store/chatPPTStore';
+import { platform } from '@sdkwork/react-core';
 
 export const PPTChatPane: React.FC = () => {
     const { activePresentation, generateSlidesFromPrompt } = useChatPPTStore();
@@ -13,7 +14,7 @@ export const PPTChatPane: React.FC = () => {
 
     const handleInsert = (text: string) => {
         // Just copy to clipboard for now in this context, or maybe insert to notes
-        navigator.clipboard.writeText(text);
+        platform.copy(text);
     };
     
     // In a real implementation, we would hook up the onSend to intercept specific commands

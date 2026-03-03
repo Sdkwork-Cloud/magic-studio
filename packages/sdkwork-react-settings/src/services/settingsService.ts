@@ -3,7 +3,7 @@ import { settingsRepository } from '../repository/settingsRepository';
 ;
 import { DEFAULT_SETTINGS } from '../constants';
 import { platform } from '@sdkwork/react-core';
-import { AppSettings } from '../entities';
+import { AppSettings, SidebarItemConfig } from '../entities';
 import { ServiceResult, Result } from '@sdkwork/react-commons';
 
 let settingsCache: AppSettings | null = null;
@@ -17,6 +17,30 @@ const getPlatformDefaultShell = async (): Promise<string> => {
   // Linux checks
   if (await platform.checkCommandExists('zsh')) return 'zsh';
   return 'bash';
+};
+
+const normalizeSidebarConfigOrder = (sidebarConfig?: SidebarItemConfig[]): SidebarItemConfig[] | undefined => {
+  if (!sidebarConfig || sidebarConfig.length === 0) {
+    return sidebarConfig;
+  }
+
+  const normalized = [...sidebarConfig];
+  const assetsIndex = normalized.findIndex((item) => item.id === 'assets');
+  const driveIndex = normalized.findIndex((item) => item.id === 'drive');
+
+  if (assetsIndex < 0 || driveIndex < 0 || driveIndex === assetsIndex + 1) {
+    return normalized;
+  }
+
+  const [driveItem] = normalized.splice(driveIndex, 1);
+  const targetAssetsIndex = normalized.findIndex((item) => item.id === 'assets');
+  if (targetAssetsIndex < 0) {
+    normalized.push(driveItem);
+    return normalized;
+  }
+
+  normalized.splice(targetAssetsIndex + 1, 0, driveItem);
+  return normalized;
 };
 
 const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
@@ -36,11 +60,17 @@ const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
     }
 
     // Deep merge with platform-validated defaults
+    const mergedAppearance = { ...DEFAULT_SETTINGS.appearance, ...saved?.appearance };
     const settings: AppSettings = {
       ...DEFAULT_SETTINGS,
       ...saved,
       general: { ...DEFAULT_SETTINGS.general, ...saved?.general },
-      appearance: { ...DEFAULT_SETTINGS.appearance, ...saved?.appearance },
+      appearance: {
+        ...mergedAppearance,
+        sidebarConfig: normalizeSidebarConfigOrder(
+          mergedAppearance.sidebarConfig || DEFAULT_SETTINGS.appearance.sidebarConfig
+        )
+      },
       editor: { ...DEFAULT_SETTINGS.editor, ...saved?.editor },
       terminal: { 
           ...DEFAULT_SETTINGS.terminal, 
@@ -85,8 +115,15 @@ export const settingsService = {
 
   updateSettings: async (settings: AppSettings): Promise<ServiceResult<void>> => {
     try {
-        await settingsRepository.saveSettings(settings);
-        settingsCache = settings;
+        const normalizedSettings: AppSettings = {
+          ...settings,
+          appearance: {
+            ...settings.appearance,
+            sidebarConfig: normalizeSidebarConfigOrder(settings.appearance.sidebarConfig)
+          }
+        };
+        await settingsRepository.saveSettings(normalizedSettings);
+        settingsCache = normalizedSettings;
         return Result.success(undefined);
     } catch (e: any) {
         console.error('Failed to save settings', e);

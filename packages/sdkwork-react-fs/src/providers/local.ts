@@ -1,42 +1,9 @@
 import { FileStat } from '@sdkwork/react-types';
 import { IFileSystemProvider } from '../types';
-
-// Platform API will be injected at runtime
-const getPlatformAPI = () => {
-  if (typeof window !== 'undefined' && (window as any).__sdkworkPlatform) {
-    return (window as any).__sdkworkPlatform;
-  }
-  // Fallback to no-op implementation
-  return {
-    readDir: async () => [] as string[],
-    readFile: async () => '',
-    writeFile: async () => {},
-    readFileBinary: async () => new Uint8Array(),
-    writeFileBinary: async () => {},
-    readFileBlob: async () => new Blob(),
-    writeFileBlob: async () => {},
-    stat: async () => ({ 
-      id: '',
-      uuid: '',
-      name: '',
-      type: 'file' as const,
-      isFile: true, 
-      isDirectory: false, 
-      size: 0, 
-      createdAt: new Date().toISOString(), 
-      updatedAt: new Date().toISOString()
-    } as FileStat),
-    createDir: async () => {},
-    delete: async () => {},
-    rename: async () => {},
-    copyFile: async () => {},
-    exists: async () => false,
-    mkdir: async () => {},
-    readdir: async () => [] as string[],
-    unlink: async () => {},
-    rmdir: async () => {}
-  };
-};
+import {
+  runtimePlatformService,
+  type RuntimeFsPlatformApi
+} from '../services/runtimePlatformService';
 
 const toPathName = (path: string): string => {
   const normalized = path.replace(/\\/g, '/');
@@ -75,8 +42,8 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
     supportsStreaming: false
   };
 
-  private get platform() {
-    return getPlatformAPI() as Record<string, any>;
+  private get platform(): RuntimeFsPlatformApi {
+    return runtimePlatformService.getPlatformApi();
   }
 
   async readdir(path: string): Promise<string[]> {
@@ -142,31 +109,35 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
 
   async stat(path: string): Promise<FileStat> {
     if (typeof this.platform.stat === 'function') {
-      const raw = await this.platform.stat(path);
+      const rawValue = await this.platform.stat(path);
+      const raw =
+        rawValue && typeof rawValue === 'object'
+          ? (rawValue as Record<string, unknown>)
+          : ({} as Record<string, unknown>);
       const isDirectory =
-        typeof raw?.isDirectory === 'boolean'
+        typeof raw.isDirectory === 'boolean'
           ? raw.isDirectory
-          : raw?.type === 'directory';
+          : raw.type === 'directory';
       const isFile =
-        typeof raw?.isFile === 'boolean'
+        typeof raw.isFile === 'boolean'
           ? raw.isFile
-          : raw?.type === 'file' || !isDirectory;
+          : raw.type === 'file' || !isDirectory;
       const timestamp = (() => {
-        if (typeof raw?.updatedAt === 'string') return raw.updatedAt;
-        if (typeof raw?.createdAt === 'string') return raw.createdAt;
-        const maybeMillis = Number(raw?.lastModified || raw?.createdAt || Date.now());
+        if (typeof raw.updatedAt === 'string') return raw.updatedAt;
+        if (typeof raw.createdAt === 'string') return raw.createdAt;
+        const maybeMillis = Number(raw.lastModified || raw.createdAt || Date.now());
         return new Date(Number.isNaN(maybeMillis) ? Date.now() : maybeMillis).toISOString();
       })();
       return {
-        id: typeof raw?.id === 'string' ? raw.id : path,
-        uuid: typeof raw?.uuid === 'string' ? raw.uuid : path,
-        name: typeof raw?.name === 'string' && raw.name.length > 0 ? raw.name : toPathName(path),
+        id: typeof raw.id === 'string' ? raw.id : path,
+        uuid: typeof raw.uuid === 'string' ? raw.uuid : path,
+        name: typeof raw.name === 'string' && raw.name.length > 0 ? raw.name : toPathName(path),
         path,
         isFile,
         isDirectory,
-        size: Number(raw?.size || 0),
+        size: Number(raw.size || 0),
         type: isDirectory ? 'directory' : 'file',
-        createdAt: typeof raw?.createdAt === 'string' ? raw.createdAt : timestamp,
+        createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : timestamp,
         updatedAt: timestamp
       };
     }

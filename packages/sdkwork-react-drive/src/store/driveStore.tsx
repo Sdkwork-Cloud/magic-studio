@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { DriveItem, DriveStats } from '../entities';
-import { driveService } from '../services/driveService';
-import { pathUtils } from '@sdkwork/react-commons';
+import { driveBusinessService } from '../services';
+import { pathUtils, type ServiceResult } from '@sdkwork/react-commons';
 import { uploadHelper, UploadFile } from '../utils/uploadHelper';
 
 type ViewMode = 'grid' | 'list';
@@ -22,6 +22,7 @@ export type FileTypeFilter =
     | '3d';
 
 interface DriveStoreContextType {
+  rootPath: string;
   currentPath: string;
   items: DriveItem[];
   stats: DriveStats | null;
@@ -36,6 +37,7 @@ interface DriveStoreContextType {
   setFilterType: (type: FileTypeFilter) => void;
 
   navigateTo: (path: string) => void;
+  navigateHome: () => void;
   navigateUp: () => void;
   refresh: () => Promise<void>;
   createFolder: (name: string) => Promise<void>;
@@ -57,7 +59,24 @@ interface DriveStoreContextType {
 
 const DriveStoreContext = createContext<DriveStoreContextType | undefined>(undefined);
 
+const getResultDataOrThrow = <T,>(result: ServiceResult<T>, operation: string): T => {
+  if (!result.success) {
+    throw new Error(result.message || `${operation} failed.`);
+  }
+  if (typeof result.data === 'undefined') {
+    throw new Error(`${operation} returned no data.`);
+  }
+  return result.data;
+};
+
+const ensureResultSuccess = (result: ServiceResult<unknown>, operation: string): void => {
+  if (!result.success) {
+    throw new Error(result.message || `${operation} failed.`);
+  }
+};
+
 export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [rootPath, setRootPath] = useState<string>('');
   const [currentPath, setCurrentPath] = useState<string>('');
   const [rawItems, setRawItems] = useState<DriveItem[]>([]);
   const [stats, setStats] = useState<DriveStats | null>(null);
@@ -71,7 +90,9 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
       const init = async () => {
-          const defaultPath = await driveService.getDefaultPath();
+          const defaultPathResult = await driveBusinessService.getDefaultPath();
+          const defaultPath = getResultDataOrThrow(defaultPathResult, 'Initialize drive root path');
+          setRootPath(defaultPath);
           setCurrentPath(defaultPath);
       };
       init();
@@ -90,11 +111,11 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
       setFilterType('all'); 
       
       try {
-          const result = await driveService.list(path);
-          setRawItems(result);
+          const listResult = await driveBusinessService.list(path);
+          setRawItems(getResultDataOrThrow(listResult, 'Load drive items'));
           
-          const s = await driveService.getProvider().getStats();
-          setStats(s);
+          const statsResult = await driveBusinessService.getStats();
+          setStats(getResultDataOrThrow(statsResult, 'Load drive stats'));
       } catch (e) {
           console.error("Failed to load path", e);
       } finally {
@@ -167,9 +188,16 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
       }
   };
 
+  const navigateHome = () => {
+      if (!rootPath) {
+          return;
+      }
+      navigateTo(rootPath);
+  };
+
   const navigateUp = () => {
       if (currentPath.startsWith('virtual://')) {
-           driveService.getDefaultPath().then(setCurrentPath);
+           navigateHome();
            return;
       }
       const parent = pathUtils.dirname(currentPath);
@@ -179,7 +207,8 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const createFolder = async (name: string) => {
-      await driveService.createFolder(name, currentPath);
+      const createResult = await driveBusinessService.createFolder(name, currentPath);
+      ensureResultSuccess(createResult, 'Create folder');
       await refresh();
   };
 
@@ -203,12 +232,19 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
               return;
           }
           
+          const hasNativeImportResult = await driveBusinessService.hasNativeImportCapability();
+          const hasNativeImport = getResultDataOrThrow(
+              hasNativeImportResult,
+              'Check native import capability'
+          );
           for (const file of files) {
-              if (file.path && driveService.getProvider().hasCapability('native_import')) {
-                   await driveService.importFile(currentPath, file.path);
+              if (file.path && hasNativeImport) {
+                   const importResult = await driveBusinessService.importFile(currentPath, file.path);
+                   ensureResultSuccess(importResult, 'Import file');
               } else {
                    if (file.data.length > 0) {
-                       await driveService.uploadFile(currentPath, file.name, file.data);
+                       const uploadResult = await driveBusinessService.uploadFile(currentPath, file.name, file.data);
+                       ensureResultSuccess(uploadResult, 'Upload file');
                    }
               }
           }
@@ -222,32 +258,38 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const deleteItems = async (ids: string[]) => {
-      await driveService.delete(ids);
+      const deleteResult = await driveBusinessService.delete(ids);
+      ensureResultSuccess(deleteResult, 'Delete items');
       await refresh();
   };
 
   const restoreItems = async (ids: string[]) => {
-      await driveService.restore(ids);
+      const restoreResult = await driveBusinessService.restore(ids);
+      ensureResultSuccess(restoreResult, 'Restore items');
       await refresh();
   };
 
   const emptyTrash = async () => {
-      await driveService.emptyTrash();
+      const emptyTrashResult = await driveBusinessService.emptyTrash();
+      ensureResultSuccess(emptyTrashResult, 'Empty trash');
       await refresh();
   };
 
   const toggleStar = async (id: string, status: boolean) => {
-      await driveService.toggleStar(id, status);
+      const toggleStarResult = await driveBusinessService.toggleStar(id, status);
+      ensureResultSuccess(toggleStarResult, 'Toggle starred status');
       await refresh();
   };
 
   const renameItem = async (id: string, newName: string) => {
-      await driveService.rename(id, newName);
+      const renameResult = await driveBusinessService.rename(id, newName);
+      ensureResultSuccess(renameResult, 'Rename item');
       await refresh();
   };
 
   const moveItems = async (ids: string[], targetFolderId: string) => {
-      await driveService.getProvider().move(ids, targetFolderId);
+      const moveResult = await driveBusinessService.move(ids, targetFolderId);
+      ensureResultSuccess(moveResult, 'Move items');
       await refresh();
   };
 
@@ -270,10 +312,10 @@ export const DriveStoreProvider: React.FC<{ children: ReactNode }> = ({ children
 
   return (
     <DriveStoreContext.Provider value={{
-        currentPath, items, stats, isLoading, viewMode, selection,
+        rootPath, currentPath, items, stats, isLoading, viewMode, selection,
         sortBy, sortDirection, setSort,
         filterType, setFilterType,
-        navigateTo, navigateUp, refresh, createFolder, uploadFiles, 
+        navigateTo, navigateHome, navigateUp, refresh, createFolder, uploadFiles, 
         deleteItems, restoreItems, emptyTrash, toggleStar, renameItem, moveItems,
         toggleSelection, clearSelection, selectAll, setViewMode, isVirtualView
     }}>

@@ -7,7 +7,7 @@ import {
   type InputAttachment,
   type PortalTab
 } from '@sdkwork/react-assets';
-import type { Asset } from 'sdkwork-react-commons';
+import type { Asset } from '@sdkwork/react-commons';
 
 export type PortalAttachment = InputAttachment & {
   assetId?: string;

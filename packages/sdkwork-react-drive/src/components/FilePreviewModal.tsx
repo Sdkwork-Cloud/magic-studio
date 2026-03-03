@@ -1,19 +1,24 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { X, Download, AlertCircle, FileText } from 'lucide-react';
+import { X, Download, AlertCircle } from 'lucide-react';
 import { vfs } from '@sdkwork/react-fs';
 import { viewerRegistry } from '../viewers/viewerRegistry';
-import { Button, pathUtils } from '@sdkwork/react-commons';
+import { pathUtils, type ServiceResult } from '@sdkwork/react-commons';
 import { DriveItem } from '../entities';
-import { driveService } from '../services/driveService';
+import { driveBusinessService } from '../services';
 import { FileIcon } from '@sdkwork/react-editor';
-import { platform } from '@sdkwork/react-core';
 import { assetService } from '@sdkwork/react-assets';
 
 interface FilePreviewModalProps {
     item: DriveItem;
     onClose: () => void;
 }
+
+const ensureResultSuccess = (result: ServiceResult<unknown>, operation: string): void => {
+    if (!result.success) {
+        throw new Error(result.message || `${operation} failed.`);
+    }
+};
 
 export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClose }) => {
     const [url, setUrl] = useState<string | null>(null);
@@ -102,7 +107,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
             if (typeof content === 'string') {
                 await vfs.writeFile(item.id, content);
             } else {
-                await driveService.uploadFile(parent, item.name, content);
+                const uploadResult = await driveBusinessService.uploadFile(parent, item.name, content);
+                ensureResultSuccess(uploadResult, 'Save file');
             }
         } catch (e) {
             console.error("Save failed", e);

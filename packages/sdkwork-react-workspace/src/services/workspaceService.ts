@@ -11,6 +11,34 @@ import { StudioWorkspace, StudioProject, ProjectType, pathUtils, generateUUID, I
  * Implements IBaseService for standard data access patterns.
  */
 class WorkspaceService implements IBaseService<StudioWorkspace> {
+  private isAbsolutePath(path: string): boolean {
+      if (!path) return false;
+      return (
+          path.startsWith('/') ||
+          path.startsWith('\\') ||
+          /^[a-zA-Z]:[\\/]/.test(path) ||
+          /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(path)
+      );
+  }
+
+  private resolveChildPath(parentPath: string, entryPath: string): string {
+      if (!entryPath) return parentPath;
+      const normalizedParent = pathUtils.normalize(parentPath);
+      const normalizedEntry = pathUtils.normalize(entryPath);
+
+      if (this.isAbsolutePath(normalizedEntry) || normalizedEntry.startsWith(normalizedParent)) {
+          return normalizedEntry;
+      }
+      return pathUtils.join(normalizedParent, normalizedEntry);
+  }
+
+  private isFileNotFoundError(error: unknown): boolean {
+      if (error instanceof Error && typeof error.message === 'string') {
+          const message = error.message.toLowerCase();
+          return message.includes('file not found') || message.includes('enoent');
+      }
+      return false;
+  }
   
   async initialize(): Promise<void> {
       const docRoot = await platform.getPath('documents');
@@ -29,9 +57,14 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
           const entries = await vfs.readdir(workspacesRoot);
           let workspaces: StudioWorkspace[] = [];
 
-          for (const entryPath of entries) {
+          for (const entry of entries) {
+              const entryPath = this.resolveChildPath(workspacesRoot, entry);
               const configPath = pathUtils.join(entryPath, 'workspace.json');
               try {
+                  const stat = await vfs.stat(entryPath);
+                  if (!stat.isDirectory) {
+                      continue;
+                  }
                   const content = await vfs.readFile(configPath);
                   const wsData = JSON.parse(content);
                   
@@ -40,14 +73,21 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
                   const projects: StudioProject[] = [];
                   try {
                       const projEntries = await vfs.readdir(projectsDir);
-                      for (const projEntryPath of projEntries) {
+                      for (const projEntry of projEntries) {
+                          const projEntryPath = this.resolveChildPath(projectsDir, projEntry);
                           const projConfigPath = pathUtils.join(projEntryPath, 'project.json');
                           try {
+                              const projStat = await vfs.stat(projEntryPath);
+                              if (!projStat.isDirectory) {
+                                  continue;
+                              }
                               const projContent = await vfs.readFile(projConfigPath);
                               const projData = JSON.parse(projContent);
                               projects.push({ ...projData, path: projEntryPath });
                           } catch (e) {
-                              logger.warn('[WorkspaceService] Failed to load project config', projConfigPath, e);
+                              if (!this.isFileNotFoundError(e)) {
+                                  logger.warn('[WorkspaceService] Failed to load project config', projConfigPath, e);
+                              }
                           }
                       }
                   } catch (e) {
@@ -56,7 +96,9 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
 
                   workspaces.push({ ...wsData, projects, path: entryPath });
               } catch (e) {
-                  logger.warn('[WorkspaceService] Failed to load workspace', entryPath, e);
+                  if (!this.isFileNotFoundError(e)) {
+                      logger.warn('[WorkspaceService] Failed to load workspace', entryPath, e);
+                  }
               }
           }
 

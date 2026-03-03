@@ -8,7 +8,7 @@ export { FilmSettingsDropdown } from './components/FilmSettingsDropdown';
 export { FilmPreviewPanel } from './components/FilmPreviewPanel';
 export { FilmStoreProvider, useFilmStore } from './store/filmStore';
 export * from './entities/film.entity';
-export * from './services/filmService';
+export * from './services';
 export * from './constants';
 export { FILM_STYLES } from './constants';
 export * from './i18n';

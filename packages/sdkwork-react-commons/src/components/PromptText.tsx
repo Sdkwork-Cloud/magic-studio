@@ -1,16 +1,7 @@
 
 import React, { useState } from 'react';
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
-
-// Platform API will be injected at runtime
-const getPlatformAPI = () => {
-  if (typeof window !== 'undefined' && (window as any).__sdkworkPlatform) {
-    return (window as any).__sdkworkPlatform;
-  }
-  return {
-    copy: (text: string) => { navigator.clipboard.writeText(text); }
-  };
-};
+import { clipboardService } from '../services/clipboardService';
 
 export interface PromptTextProps {
     text: string;
@@ -42,13 +33,16 @@ export const PromptText: React.FC<PromptTextProps> = ({
     // 1 line ~ 50-80 chars depending on width, but let's assume if it's super short we don't need truncate logic visually
     const isLongText = text.length > 150 || (text.match(/\n/g) || []).length > 2;
 
-    const handleCopy = (e: React.MouseEvent) => {
+    const handleCopy = async (e: React.MouseEvent): Promise<void> => {
         e.stopPropagation();
-        const platform = getPlatformAPI();
-        platform.copy(text);
-        setCopied(true);
-        if (onCopy) onCopy();
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            await clipboardService.copyText(text);
+            setCopied(true);
+            if (onCopy) onCopy();
+            setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+            console.error('[PromptText] Copy failed', error);
+        }
     };
 
     const toggleExpand = (e: React.MouseEvent) => {

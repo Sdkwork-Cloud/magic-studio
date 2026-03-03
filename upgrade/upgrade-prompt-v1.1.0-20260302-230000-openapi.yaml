@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Magic Studio Prompt Enhancement Upgrade API
+  version: 1.1.0
+  description: >
+    Prompt optimization API contract for TypeScript SDK generation.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: generation
+paths:
+  /app/v3/api/generation/prompt/enhance:
+    post:
+      tags:
+        - generation
+      summary: Enhance prompt for generation workflow
+      operationId: generationEnhancePrompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptEnhanceRequest'
+      responses:
+        '200':
+          description: Enhanced prompt generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResultPromptEnhanceResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiErrorResult'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PromptEnhanceRequest:
+      type: object
+      required:
+        - prompt
+        - generationType
+        - mode
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 3000
+          example: A cat in cyberpunk city at night
+        generationType:
+          type: string
+          enum: [IMAGE, VIDEO]
+        mode:
+          type: string
+          enum: [text-to-prompt, image-to-prompt, video-to-prompt]
+        style:
+          type: string
+          example: cinematic
+        additionalInstructions:
+          type: string
+          maxLength: 1000
+        language:
+          type: string
+          example: zh-CN
+        maxWords:
+          type: integer
+          minimum: 20
+          maximum: 500
+          default: 120
+        reference:
+          $ref: '#/components/schemas/PromptReference'
+    PromptReference:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+          format: uri
+    PromptEnhanceResponse:
+      type: object
+      required:
+        - optimizedPrompt
+      properties:
+        optimizedPrompt:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        tokensEstimated:
+          type: integer
+          minimum: 0
+        model:
+          type: string
+          description: LLM model used for enhancement.
+    PlusApiResultPromptEnhanceResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/PromptEnhanceResponse'
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    PlusApiErrorResult:
+      type: object
+      required: [code, message, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Invalid request
+        data:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string

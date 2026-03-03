@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { AvailableTask, TradePageRequest } from '../entities';
-import { taskService } from '../services/taskService';
+import { useState, useEffect, useCallback } from 'react';
+import type { AvailableTask, TradePageRequest } from '../entities';
+import { tradeBusinessService } from '../services';
 
 interface UseTasksOptions {
   pageSize?: number;
@@ -17,8 +17,8 @@ interface UseTasksReturn {
   setFilters: React.Dispatch<React.SetStateAction<TradePageRequest>>;
   setPage: (page: number) => void;
   refresh: () => void;
-  acceptTask: typeof taskService.acceptTask;
-  getAvailableTasks: typeof taskService.getAvailableTasks;
+  acceptTask: typeof tradeBusinessService.taskService.acceptTask;
+  getAvailableTasks: typeof tradeBusinessService.taskService.getAvailableTasks;
 }
 
 export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
@@ -42,7 +42,7 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
   const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await taskService.getAvailableTasks(filters);
+      const result = await tradeBusinessService.taskService.getAvailableTasks(filters);
       setTasks(result.items);
       setTotal(result.total);
       setPageState(result.currentPage);
@@ -76,7 +76,8 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
     setFilters,
     setPage,
     refresh: loadTasks,
-    acceptTask: taskService.acceptTask,
-    getAvailableTasks: taskService.getAvailableTasks,
-  };
-}
+    acceptTask: tradeBusinessService.taskService.acceptTask,
+    getAvailableTasks: tradeBusinessService.taskService.getAvailableTasks,
+  };
+}
+

@@ -2,6 +2,7 @@
 import { NoteSidebar, NoteEditor } from '../index'
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NoteStoreProvider } from '../store/noteStore';
+import { noteLayoutService } from '../services';
 
 // --- Resizer Component ---
 const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void }> = ({ onMouseDown }) => {
@@ -18,10 +19,7 @@ const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void }> = ({ onM
 
 const NotesPageContent: React.FC = () => {
     // --- Layout State ---
-    const [sidebarWidth, setSidebarWidth] = useState(() => {
-        const saved = localStorage.getItem('notes_sidebar_width');
-        return saved ? parseInt(saved, 10) : 260;
-    });
+    const [sidebarWidth, setSidebarWidth] = useState(() => noteLayoutService.getSidebarWidth(260));
     
     // Refs for event handlers to avoid re-binding
     const isResizingRef = useRef(false);
@@ -58,7 +56,7 @@ const NotesPageContent: React.FC = () => {
                 isResizingRef.current = false;
                 document.body.style.cursor = 'default';
                 document.body.style.userSelect = 'auto';
-                localStorage.setItem('notes_sidebar_width', sidebarWidthRef.current.toString());
+                noteLayoutService.saveSidebarWidth(sidebarWidthRef.current);
             }
         };
 

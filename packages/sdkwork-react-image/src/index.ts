@@ -7,7 +7,7 @@ export { ImageModelSelector } from './components/ImageModelSelector';
 export { AIImageGeneratorModal } from './components/AIImageGeneratorModal';
 export { ImageGeneratorModal } from './components/ImageGeneratorModal';
 export { ImageStoreProvider, useImageStore } from './store/imageStore';
-export * from './services/imageService';
+export * from './services';
 export * from './constants';
 export * from './i18n';
 

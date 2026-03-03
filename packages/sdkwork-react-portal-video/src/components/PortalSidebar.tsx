@@ -6,7 +6,7 @@ import {
     Music, 
     Sparkles, Crown, Volume2, Mic, ChevronRight,
     Layout, BookOpen, Scissors, Settings, LogOut,
-    Zap, Smile, Wand2, Download
+    Zap, Smile, Wand2, Download, Cloud
 } from 'lucide-react';
 
 import { useTranslation } from '@sdkwork/react-i18n';
@@ -41,6 +41,7 @@ export const PortalSidebar: React.FC = () => {
                 { id: 'home', label: t('sidebar.home'), icon: Home, route: ROUTES.PORTAL },
                 { id: 'discover', label: t('sidebar.discover'), icon: Compass, route: ROUTES.PORTAL_DISCOVER },
                 { id: 'assets', label: t('sidebar.assets'), icon: FolderOpen, route: ROUTES.ASSETS },
+                { id: 'drive', label: t('sidebar.drive'), icon: Cloud, route: ROUTES.DRIVE },
             ]
         },
         {

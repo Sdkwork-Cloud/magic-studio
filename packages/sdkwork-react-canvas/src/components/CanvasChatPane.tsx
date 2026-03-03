@@ -2,6 +2,7 @@
 import React from 'react';
 import { EmbeddedChatPane } from '@sdkwork/react-chat';
 import { useCanvasStore } from '../store/canvasStore';
+import { platform } from '@sdkwork/react-core';
 
 export const CanvasChatPane: React.FC = () => {
     const { activeBoard } = useCanvasStore();
@@ -15,7 +16,7 @@ export const CanvasChatPane: React.FC = () => {
     const handleInsert = (text: string) => {
         // If the user clicks insert on a text block, maybe create a sticky note
         // For now, simple copy
-        navigator.clipboard.writeText(text);
+        platform.copy(text);
     };
 
     return (

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ChatSession, ChatMessage } from '../entities';
-import { chatService } from '../services/chatService';
+import { chatBusinessService } from '../services';
 
 export interface ActiveChatSession extends ChatSession {
     messages: ChatMessage[];
@@ -36,7 +36,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   useEffect(() => {
     const init = async () => {
         setIsLoading(true);
-        const result = await chatService.findAll({ page: 0, size: 50 });
+        const result = await chatBusinessService.findAll({ page: 0, size: 50 });
         if (result.success && result.data) {
              const loaded = result.data.content;
              setSessions(loaded);
@@ -54,7 +54,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const createSession = useCallback(async (modelId: string = 'gpt-4o') => {
-    const res = await chatService.createSession(modelId);
+    const res = await chatBusinessService.createSession(modelId);
     if (res.success && res.data) {
         const newSession = res.data;
         setSessions(prev => [newSession, ...prev]);
@@ -66,7 +66,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const deleteSession = useCallback(async (id: string) => {
-    await chatService.deleteById(id);
+    await chatBusinessService.deleteById(id);
     setSessions(prev => {
         const remaining = prev.filter(s => s.id !== id);
         if (activeSessionId === id) {
@@ -87,7 +87,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     const meta = sessions.find(s => s.id === id);
     if (!meta) return;
 
-    const transcriptRes = await chatService.getTranscript(id);
+    const transcriptRes = await chatBusinessService.getTranscript(id);
     if (transcriptRes.success && transcriptRes.data) {
         setActiveSession({
             ...meta,
@@ -105,7 +105,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (activeSession && activeSession.id === id) {
           setActiveSession(prev => prev ? { ...prev, title } : null);
       }
-      chatService.save({ id, title });
+      chatBusinessService.save({ id, title });
   }, [activeSession]);
 
   const sendMessage = useCallback(async (content: string, modelId?: string, context?: string) => {
@@ -113,8 +113,8 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       setIsGenerating(true);
 
-      const userMsg = chatService.createMessage('user', content);
-      const aiMsg = chatService.createMessage('ai', '', modelId);
+      const userMsg = chatBusinessService.createMessage('user', content);
+      const aiMsg = chatBusinessService.createMessage('ai', '', modelId);
 
       const nextMessages = [...activeSession.messages, userMsg, aiMsg];
       
@@ -137,13 +137,13 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
           messageCount: nextMessages.length
       } : s));
 
-      await chatService.saveTranscript(activeSessionId, nextMessages);
+      await chatBusinessService.saveTranscript(activeSessionId, nextMessages);
 
       try {
           let accumulatedContent = '';
           const historyForAI = activeSession.messages; 
           
-          await chatService.streamResponse(
+          await chatBusinessService.streamResponse(
               content, 
               (chunk) => {
                   accumulatedContent += chunk;
@@ -170,7 +170,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                   : m
               );
               
-              chatService.saveTranscript(activeSessionId, finalMessages);
+              chatBusinessService.saveTranscript(activeSessionId, finalMessages);
               
               return { ...prev, messages: finalMessages };
           });
@@ -183,7 +183,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                   ? { ...m, status: 'error' as const, error: error.message || 'Failed to generate.' } 
                   : m
               );
-              chatService.saveTranscript(activeSessionId, finalMessages);
+              chatBusinessService.saveTranscript(activeSessionId, finalMessages);
               return { ...prev, messages: finalMessages };
           });
       } finally {
@@ -194,7 +194,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const clearSessions = useCallback(async () => {
       const ids = sessions.map(s => s.id);
-      await chatService.deleteAll(ids);
+      await chatBusinessService.deleteAll(ids);
       setSessions([]);
       setActiveSession(null);
       setActiveSessionId(null);
@@ -224,3 +224,4 @@ export const useChatStore = () => {
   if (!context) throw new Error('useChatStore must be used within a ChatStoreProvider');
   return context;
 };
+

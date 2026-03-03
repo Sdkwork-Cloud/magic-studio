@@ -1,10 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { BrowserTab, HistoryItem, Bookmark, DownloadItem } from '../entities/browser.entity';
-import { browserService } from '../services/browserService';
-import { browserHistoryService } from '../services/browserHistoryService';
-import { browserBookmarkService } from '../services/browserBookmarkService';
-import { browserDownloadService } from '../services/browserDownloadService';
+import { browserBusinessService } from '../services';
 
 interface BrowserStoreContextType {
   tabs: BrowserTab[];
@@ -42,8 +39,8 @@ export const BrowserStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   useEffect(() => {
     const init = async () => {
-      const hResult = await browserHistoryService.findAll({ page: 0, size: 100 });
-      const bResult = await browserBookmarkService.findAll({ page: 0, size: 1000 });
+      const hResult = await browserBusinessService.browserHistoryService.findAll({ page: 0, size: 100 });
+      const bResult = await browserBusinessService.browserBookmarkService.findAll({ page: 0, size: 1000 });
       
       if (hResult.success) setHistory(hResult.data?.content || []);
       if (bResult.success) setBookmarks(bResult.data?.content || []);
@@ -54,7 +51,7 @@ export const BrowserStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, []);
   
   useEffect(() => {
-      return browserDownloadService.subscribe((items) => {
+      return browserBusinessService.browserDownloadService.subscribe((items) => {
           setDownloads(items);
       });
   }, []);
@@ -106,30 +103,30 @@ export const BrowserStoreProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const addToHistory = useCallback(async (url: string, title: string) => {
       if (url === 'about:blank') return;
-      await browserHistoryService.addHistoryItem(url, title);
-      const hResult = await browserHistoryService.findAll({ page: 0, size: 100 });
+      await browserBusinessService.browserHistoryService.addHistoryItem(url, title);
+      const hResult = await browserBusinessService.browserHistoryService.findAll({ page: 0, size: 100 });
       if (hResult.success) setHistory(hResult.data?.content || []);
   }, []);
 
   const toggleBookmark = useCallback(async (url: string, title: string) => {
-      await browserBookmarkService.toggleBookmark(url, title);
-      const bResult = await browserBookmarkService.findAll({ page: 0, size: 1000 });
+      await browserBusinessService.browserBookmarkService.toggleBookmark(url, title);
+      const bResult = await browserBusinessService.browserBookmarkService.findAll({ page: 0, size: 1000 });
       if (bResult.success) setBookmarks(bResult.data?.content || []);
   }, []);
 
   const navigate = useCallback((url: string) => {
       if (activeTabId) {
-          const finalUrl = browserService.normalizeUrl(url);
+          const finalUrl = browserBusinessService.browserService.normalizeUrl(url);
           updateTab(activeTabId, { url: finalUrl, isLoading: true });
       }
   }, [activeTabId, updateTab]);
 
   const startDownload = useCallback((url: string) => {
-      browserDownloadService.startDownload(url);
+      browserBusinessService.browserDownloadService.startDownload(url);
   }, []);
   
   const clearDownloads = useCallback(() => {
-      browserDownloadService.clearCompleted();
+      browserBusinessService.browserDownloadService.clearCompleted();
   }, []);
 
   const goBack = useCallback(() => {}, []);
@@ -158,3 +155,4 @@ export const useBrowserStore = () => {
   if (!context) throw new Error('useBrowserStore must be used within a BrowserStoreProvider');
   return context;
 };
+

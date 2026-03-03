@@ -13,6 +13,7 @@ import type { Page } from '@sdkwork/react-commons';
 import type { AssetBusinessDomain, AssetContentKey } from '@sdkwork/react-types';
 import type { Asset, AssetType, AssetOrigin } from '../entities';
 import { createSpringPage } from '../services/impl/springPage';
+import { assetUiStateService } from '../services/assetUiStateService';
 import {
   assetBusinessFacade,
   assetCenterService,
@@ -72,7 +73,6 @@ const createEmptyPage = (
 ): Page<Asset> => createSpringPage([], { page, size, sort });
 
 const ASSET_PAGE_SIZE = 60;
-const FILTER_STORAGE_PREFIX = 'sdkwork.asset-center.filters.v1';
 const FILTER_ORIGIN_CANDIDATES: Array<AssetOrigin | 'all'> = [
   'all',
   'upload',
@@ -80,9 +80,6 @@ const FILTER_ORIGIN_CANDIDATES: Array<AssetOrigin | 'all'> = [
   'stock',
   'system'
 ];
-
-const buildFilterStorageKey = (domain: AssetBusinessDomain): string =>
-  `${FILTER_STORAGE_PREFIX}:${domain}`;
 
 const resolveQueryContentKeys = (
   filterType: AssetType | 'all',
@@ -124,51 +121,30 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
   }, [domain, initialAllowedTypes]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    const parsed = assetUiStateService.readFilters(domain);
+    if (!parsed) {
       return;
     }
-    try {
-      const raw = window.localStorage.getItem(buildFilterStorageKey(domain));
-      if (!raw) {
-        return;
-      }
-      const parsed = JSON.parse(raw) as {
-        type?: AssetType | 'all';
-        origin?: AssetOrigin | 'all';
-      };
-      if (parsed.origin && FILTER_ORIGIN_CANDIDATES.includes(parsed.origin)) {
-        setFilterOrigin(parsed.origin);
-      }
-      if (!parsed.type) {
-        return;
-      }
-      if (parsed.type === 'all') {
-        setFilterType('all');
-        return;
-      }
-      if (!allowedTypes || allowedTypes.length === 0 || allowedTypes.includes(parsed.type)) {
-        setFilterType(parsed.type);
-      }
-    } catch (error) {
-      console.warn('Failed to restore asset filters from local storage', error);
+    if (parsed.origin && FILTER_ORIGIN_CANDIDATES.includes(parsed.origin)) {
+      setFilterOrigin(parsed.origin);
+    }
+    if (!parsed.type) {
+      return;
+    }
+    if (parsed.type === 'all') {
+      setFilterType('all');
+      return;
+    }
+    if (!allowedTypes || allowedTypes.length === 0 || allowedTypes.includes(parsed.type)) {
+      setFilterType(parsed.type);
     }
   }, [allowedTypes, domain]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    try {
-      window.localStorage.setItem(
-        buildFilterStorageKey(domain),
-        JSON.stringify({
-          type: filterType,
-          origin: filterOrigin
-        })
-      );
-    } catch (error) {
-      console.warn('Failed to persist asset filters to local storage', error);
-    }
+    assetUiStateService.writeFilters(domain, {
+      type: filterType,
+      origin: filterOrigin
+    });
   }, [domain, filterOrigin, filterType]);
 
   const load = useCallback(async (page = 0) => {

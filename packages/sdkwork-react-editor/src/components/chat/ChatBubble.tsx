@@ -8,7 +8,7 @@ interface ChatBubbleProps {
 }
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
-  const isAi = message.role === 'ai';
+  const isAi = message.role === 'assistant';
 
   return (
     <div className={`flex flex-col w-full animate-in fade-in slide-in-from-bottom-1 duration-200 group`}>

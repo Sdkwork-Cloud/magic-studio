@@ -1,5 +1,5 @@
 import { AppNotification, NotificationType } from '../entities';
-import { notificationService } from '../services/notificationService';
+import { notificationBusinessService } from '../services';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 
@@ -23,7 +23,7 @@ export const NotificationStoreProvider: React.FC<{ children: ReactNode }> = ({ c
     const [isLoading, setIsLoading] = useState(true);
 
     const refresh = useCallback(async () => {
-        const res = await notificationService.findAll({ page: 0, size: 50 });
+        const res = await notificationBusinessService.findAll({ page: 0, size: 50 });
         if (res.success && res.data) {
             setNotifications(res.data.content);
             setUnreadCount(res.data.content.filter(n => !n.isRead).length);
@@ -33,7 +33,7 @@ export const NotificationStoreProvider: React.FC<{ children: ReactNode }> = ({ c
     useEffect(() => {
         const init = async () => {
             setIsLoading(true);
-            await notificationService.prune();
+            await notificationBusinessService.prune();
             await refresh();
             setIsLoading(false);
         };
@@ -41,7 +41,7 @@ export const NotificationStoreProvider: React.FC<{ children: ReactNode }> = ({ c
     }, [refresh]);
 
     const notify = useCallback(async (title: string, message: string, type: NotificationType = NotificationType.INFO, options?: { actionUrl?: string; actionLabel?: string }) => {
-        const res = await notificationService.notify(title, message, type, options);
+        const res = await notificationBusinessService.notify(title, message, type, options);
         if (res.success && res.data) {
             setNotifications(prev => [res.data!, ...prev]);
             setUnreadCount(prev => prev + 1);
@@ -51,19 +51,19 @@ export const NotificationStoreProvider: React.FC<{ children: ReactNode }> = ({ c
     const markAsRead = useCallback(async (id: string) => {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
-        await notificationService.markAsRead(id);
+        await notificationBusinessService.markAsRead(id);
     }, []);
 
     const markAllAsRead = useCallback(async () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setUnreadCount(0);
-        await notificationService.markAllAsRead();
+        await notificationBusinessService.markAllAsRead();
     }, []);
 
     const clearAll = useCallback(async () => {
         setNotifications([]);
         setUnreadCount(0);
-        await notificationService.deleteAll(notifications.map(n => n.id));
+        await notificationBusinessService.deleteAll(notifications.map(n => n.id));
     }, [notifications]);
 
     return (
@@ -81,3 +81,4 @@ export const useNotificationStore = () => {
     if (!context) throw new Error('useNotificationStore must be used within a NotificationStoreProvider');
     return context;
 };
+

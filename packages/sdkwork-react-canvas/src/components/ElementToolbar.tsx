@@ -5,7 +5,7 @@ import {
     MoreHorizontal, Loader2
 } from 'lucide-react'; 
 import { useTranslation } from '@sdkwork/react-i18n';
-import { canvasActionService } from '../services/canvasActionService';
+import { canvasBusinessService } from '../services';
 
 interface ElementToolbarProps {
     element: CanvasElement;
@@ -19,7 +19,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({ element, onActio
     const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
 
     // Get available actions from service
-    const actions = canvasActionService.getActions(element);
+    const actions = canvasBusinessService.canvasActionService.getActions(element);
     
     // Split into primary (toolbar) and overflow (menu) based on count or specific logic
     // For now, let's show first 4 items + separators, rest in More menu if too many

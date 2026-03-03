@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, CreditCard, Smartphone, Wallet, Coins, Loader2 } from 'lucide-react';
 import type { Order, PaymentMethod } from '../../entities';
 import { PaymentMethod as PaymentMethodEnum } from '../../entities';
-import { paymentService } from '../../services/paymentService';
+import { tradeBusinessService } from '../../services';
 import { cn } from '@sdkwork/react-commons';
 
 interface PaymentDialogProps {
@@ -75,7 +75,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
   const handlePay = async () => {
     setProcessing(true);
     try {
-      const result = await paymentService.initiatePayment({
+      const result = await tradeBusinessService.paymentService.initiatePayment({
         orderUuid: order.uuid,
         method: selectedMethod,
         useBalance: useBalance ? order.amount : undefined,
@@ -88,7 +88,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
           setRedirectUrl(result.redirectUrl);
           // 模拟支付回调 (实际场景中应该等待回调)
           setTimeout(() => {
-            paymentService.simulatePaymentCallback(result.payment!.uuid, true);
+            tradeBusinessService.paymentService.simulatePaymentCallback(result.payment!.uuid, true);
             onSuccess?.();
             onClose();
           }, 3000);

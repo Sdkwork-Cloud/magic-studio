@@ -1,1 +1,2 @@
-export * from './settingsService';
+export * from './settingsBusinessService';
+export { settingsBusinessService as settingsService } from './settingsBusinessService';

@@ -1,27 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Loader2, FolderOpen, Replace, Trash2, Eye } from 'lucide-react';
 import { BaseUploadProps } from './types';
-
-// Platform API and upload helpers will be injected at runtime
-const getPlatformAPI = () => {
-  if (typeof window !== 'undefined' && (window as any).__sdkworkPlatform) {
-    return (window as any).__sdkworkPlatform;
-  }
-  return {
-    getPlatform: () => 'web' as const,
-    convertFileSrc: (path: string) => path,
-    copy: (text: string) => { navigator.clipboard.writeText(text); }
-  };
-};
-
-const getUploadHelper = () => {
-  if (typeof window !== 'undefined' && (window as any).__sdkworkUploadHelper) {
-    return (window as any).__sdkworkUploadHelper;
-  }
-  return {
-    pickFiles: async () => [] as any[]
-  };
-};
+import { uploadRuntimeService } from '../../services/uploadRuntimeService';
 
 interface InternalBaseUploadProps extends BaseUploadProps {
     accept: string;
@@ -59,9 +39,7 @@ export const BaseUpload: React.FC<InternalBaseUploadProps> = ({
     const [internalLoading, setInternalLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const platform = getPlatformAPI();
-    const uploadHelper = getUploadHelper();
-    const isDesktop = platform.getPlatform() === 'desktop';
+    const isDesktop = uploadRuntimeService.getPlatform() === 'desktop';
 
     // Consolidated loading state.
     // Note: If value exists but isResolving is true, we consider it loading only if we don't have a resolvedUrl yet.
@@ -95,7 +73,7 @@ export const BaseUpload: React.FC<InternalBaseUploadProps> = ({
             const path = fileObj.path;
 
             if (isDesktop && path) {
-                const nativeUrl = platform.convertFileSrc(path);
+                const nativeUrl = uploadRuntimeService.convertFileSrc(path);
                 onChange({
                     data: new Uint8Array(0),
                     name: fileObj.name,
@@ -122,11 +100,11 @@ export const BaseUpload: React.FC<InternalBaseUploadProps> = ({
 
         if (isDesktop) {
             try {
-                const files = await uploadHelper.pickFiles(false, accept, false);
+                const files = await uploadRuntimeService.pickFiles(false, accept, false);
                 if (files.length > 0) {
                     const f = files[0];
                     if (onChange) {
-                        const url = f.path ? platform.convertFileSrc(f.path) : '';
+                        const url = f.path ? uploadRuntimeService.convertFileSrc(f.path) : '';
                         onChange({
                             data: f.data,
                             name: f.name,

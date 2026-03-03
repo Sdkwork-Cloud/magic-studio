@@ -13,9 +13,8 @@ import {
     FilmAssetMediaResource,
     generateUUID
 } from '@sdkwork/react-commons';
-import { filmService } from '../services/filmService';
-import { filmProjectService } from '../services/filmProjectService';
-import { genAIService } from '@sdkwork/react-core';
+import { filmService, filmProjectService } from '../services';
+import { genAIService, inlineDataService } from '@sdkwork/react-core';
 import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 import { createFilmAssetMediaResource } from '../utils/filmAssetFactories';
 
@@ -196,37 +195,13 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         };
     };
 
-    const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-        if (!source) {
-            return undefined;
-        }
-        if (source.startsWith('data:')) {
-            const comma = source.indexOf(',');
-            if (comma < 0) {
-                return undefined;
-            }
-            const base64 = source.slice(comma + 1);
-            const binary = atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i += 1) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            return bytes;
-        }
-        if (source.startsWith('blob:')) {
-            const response = await fetch(source);
-            return new Uint8Array(await response.arrayBuffer());
-        }
-        return undefined;
-    };
-
     const importGeneratedAssetToFilmCenter = async (
         sourceUrl: string,
         type: FilmImportType,
         name: string,
         metadata: Record<string, unknown>
     ): Promise<string> => {
-        const inlineData = await tryExtractInlineData(sourceUrl);
+        const inlineData = await inlineDataService.tryExtractInlineData(sourceUrl);
         const result = await assetBusinessFacade.importFilmAsset({
             scope: resolveFilmScope(),
             type,

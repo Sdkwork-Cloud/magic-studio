@@ -12,6 +12,7 @@ import {
   resolveTypeIcon,
   resolveTypeLabel
 } from './sidebar/assetSidebarConfig';
+import { assetUiStateService } from '../services/assetUiStateService';
 
 const FRAMEWORK_STYLE = buildFrameworkStyle();
 
@@ -23,9 +24,6 @@ const DEFAULT_SECTION_STATE: SectionState = {
   source: true,
   type: true
 };
-
-const buildSidebarSectionStorageKey = (domain: string): string =>
-  `sdkwork.asset-center.sidebar.sections.v1:${domain}`;
 
 const isSectionState = (value: unknown): value is SectionState => {
   if (!value || typeof value !== 'object') {
@@ -83,37 +81,16 @@ export const AssetSidebar: React.FC<AssetSidebarProps> = ({
   const [sections, setSections] = useState<SectionState>(DEFAULT_SECTION_STATE);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    try {
-      const raw = window.localStorage.getItem(buildSidebarSectionStorageKey(domain));
-      if (!raw) {
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (isSectionState(parsed)) {
-        setSections(parsed);
-      } else {
-        setSections(DEFAULT_SECTION_STATE);
-      }
-    } catch (error) {
-      console.warn('Failed to restore sidebar section state', error);
+    const parsed = assetUiStateService.readSidebarSections(domain);
+    if (isSectionState(parsed)) {
+      setSections(parsed);
+    } else {
+      setSections(DEFAULT_SECTION_STATE);
     }
   }, [domain]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    try {
-      window.localStorage.setItem(
-        buildSidebarSectionStorageKey(domain),
-        JSON.stringify(sections)
-      );
-    } catch (error) {
-      console.warn('Failed to persist sidebar section state', error);
-    }
+    assetUiStateService.writeSidebarSections(domain, sections);
   }, [domain, sections]);
 
   const toggleSection = useCallback((key: SectionKey) => {

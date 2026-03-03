@@ -7,7 +7,7 @@ import {
     ChevronDown, ArrowRightLeft, Layers, ScanFace, Sparkles, Check
 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
-import { genAIService, uploadHelper } from '@sdkwork/react-core';
+import { genAIService, inlineDataService, uploadHelper } from '@sdkwork/react-core';
 import { CanvasElement, CanvasMediaResource } from '../entities';
 import { Popover, AspectRatioSelector } from '@sdkwork/react-commons';
 import {
@@ -70,30 +70,6 @@ const resolveCanvasScope = (): { workspaceId: string; projectId?: string } => {
         workspaceId: scope.workspaceId,
         projectId: scope.projectId
     };
-};
-
-const tryExtractInlineData = async (source: string): Promise<Uint8Array | undefined> => {
-    if (!source) {
-        return undefined;
-    }
-    if (source.startsWith('data:')) {
-        const comma = source.indexOf(',');
-        if (comma < 0) {
-            return undefined;
-        }
-        const base64 = source.slice(comma + 1);
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i += 1) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
-    }
-    if (source.startsWith('blob:')) {
-        const response = await fetch(source);
-        return new Uint8Array(await response.arrayBuffer());
-    }
-    return undefined;
 };
 
 const toCanvasResource = (
@@ -397,7 +373,7 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
 
              if (!resultUrl) throw new Error("Generation returned empty URL");
 
-             const inlineData = await tryExtractInlineData(resultUrl);
+             const inlineData = await inlineDataService.tryExtractInlineData(resultUrl);
              const imported = await assetBusinessFacade.importCanvasAsset({
                  scope: resolveCanvasScope(),
                  type: assetType,

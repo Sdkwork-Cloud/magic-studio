@@ -1,6 +1,7 @@
 export * from './utils';
 export * from './constants';
 export * from './algorithms';
+export * from './services';
 
 // Export commons-specific types (MediaResource, FileSystem, etc.)
 export * from './types';

@@ -1,20 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
-import { ChevronRight, Home, Star, Clock, Trash2, HardDrive, Cloud } from 'lucide-react';
+import React from 'react';
+import { ChevronRight, Star, Clock, Trash2, HardDrive, Cloud } from 'lucide-react';
 import { useDriveStore } from '../store/driveStore';
-import { driveService } from '../services/driveService';
 import { pathUtils } from '@sdkwork/react-commons';
 
 export const DriveBreadcrumbs: React.FC = () => {
-    const { currentPath, navigateTo } = useDriveStore();
-    const [defaultPath, setDefaultPath] = useState<string>('');
-
-    useEffect(() => {
-        driveService.getDefaultPath().then(setDefaultPath);
-    }, []);
+    const { rootPath, currentPath, navigateTo, navigateHome } = useDriveStore();
 
     const handleHomeClick = () => {
-        if (defaultPath) navigateTo(defaultPath);
+        navigateHome();
     };
 
     // --- Virtual Paths (Special Views) ---
@@ -64,13 +58,13 @@ export const DriveBreadcrumbs: React.FC = () => {
     let displayParts: string[] = [];
     let basePath = '';
 
-    const isWindows = defaultPath.includes('\\');
+    const isWindows = rootPath.includes('\\');
     const separator = isWindows ? '\\' : '/';
 
     // Determine segments relative to "My Drive" root
-    if (defaultPath && currentPath.startsWith(defaultPath)) {
-        basePath = defaultPath;
-        const relative = currentPath.substring(defaultPath.length);
+    if (rootPath && currentPath.startsWith(rootPath)) {
+        basePath = rootPath;
+        const relative = currentPath.substring(rootPath.length);
         displayParts = relative.split(separator).filter(Boolean);
     } else {
         // Outside of root (system files)
@@ -81,7 +75,7 @@ export const DriveBreadcrumbs: React.FC = () => {
     const navigateToPart = (index: number) => {
         const partPath = displayParts.slice(0, index + 1).join(separator);
         let newPath = '';
-        if (basePath === defaultPath) {
+        if (basePath === rootPath) {
             newPath = pathUtils.join(basePath, partPath);
         } else {
             newPath = basePath + partPath;
@@ -95,14 +89,14 @@ export const DriveBreadcrumbs: React.FC = () => {
                 onClick={handleHomeClick}
                 className={`
                     flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all font-medium
-                    ${currentPath === defaultPath 
+                    ${currentPath === rootPath 
                         ? 'text-gray-200 bg-[#27272a] cursor-default shadow-sm border border-[#333]' 
                         : 'text-gray-400 hover:text-white hover:bg-[#27272a]'
                     }
                 `}
                 title="My Drive Root"
             >
-                <Cloud size={16} className={currentPath === defaultPath ? 'text-blue-500' : ''} />
+                <Cloud size={16} className={currentPath === rootPath ? 'text-blue-500' : ''} />
                 <span className="hidden sm:inline text-xs">My Drive</span>
             </button>
             

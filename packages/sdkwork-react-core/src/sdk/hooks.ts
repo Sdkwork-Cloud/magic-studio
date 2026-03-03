@@ -79,7 +79,7 @@ export function useAuth() {
 }
 
 export function useUser() {
-    return useSdkworkModule((c) => c.user);
+    return useSdkworkModule((c) => c.profile);
 }
 
 export function useAssets() {
@@ -91,7 +91,7 @@ export function useChat() {
 }
 
 export function useProject() {
-    return useSdkworkModule((c) => c.project);
+    return useSdkworkModule((c) => c.projects);
 }
 
 export function useHistory() {
@@ -103,7 +103,7 @@ export function useUpload() {
 }
 
 export function usePayment() {
-    return useSdkworkModule((c) => c.payment);
+    return useSdkworkModule((c) => c.payments);
 }
 
 export function useVip() {
@@ -111,7 +111,7 @@ export function useVip() {
 }
 
 export function useOrder() {
-    return useSdkworkModule((c) => c.order);
+    return useSdkworkModule((c) => c.orders);
 }
 
 export function useCart() {
@@ -119,7 +119,7 @@ export function useCart() {
 }
 
 export function useCoupon() {
-    return useSdkworkModule((c) => c.coupon);
+    return useSdkworkModule((c) => c.coupons);
 }
 
 export function useFavorite() {
@@ -143,11 +143,11 @@ export function useSearch() {
 }
 
 export function useModel() {
-    return useSdkworkModule((c) => c.model);
+    return useSdkworkModule((c) => c.models);
 }
 
 export function usePrompt() {
-    return useSdkworkModule((c) => c.prompt);
+    return useSdkworkModule((c) => c.generation);
 }
 
 export function useFeedback() {
@@ -155,7 +155,7 @@ export function useFeedback() {
 }
 
 export function useWorkspace() {
-    return useSdkworkModule((c) => c.workspace);
+    return useSdkworkModule((c) => c.workspaces);
 }
 
 export function useAnalytics() {
