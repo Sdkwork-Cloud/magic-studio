@@ -1,0 +1,311 @@
+﻿openapi: 3.1.0
+info:
+  title: SDKWork Voice Speaker Upgrade API
+  version: 1.1.0
+  description: >-
+    Additive OpenAPI contract for voice speaker clone workflow and market voice normalization.
+servers:
+  - url: https://api.sdkwork.example.com
+    description: Example server
+
+tags:
+  - name: VoiceSpeaker
+    description: Voice speaker and clone generation APIs
+
+paths:
+  /app/v3/api/generation/voice-speaker/clone-from-asset:
+    post:
+      tags: [VoiceSpeaker]
+      operationId: voiceSpeaker__cloneFromAsset
+      summary: Clone voice speaker from workspace asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceSpeakerCloneFromAssetForm'
+      responses:
+        '200':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResultGenerationTaskVO'
+
+  /app/v3/api/generation/voice-speaker/tasks/{taskId}/result:
+    get:
+      tags: [VoiceSpeaker]
+      operationId: voiceSpeaker__getCloneTaskResult
+      summary: Get deterministic clone task result
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResultVoiceSpeakerCloneTaskResultVO'
+
+  /app/v3/api/voice-speakers/{speakerId}/preview:
+    patch:
+      tags: [VoiceSpeaker]
+      operationId: voiceSpeakers__updatePreviewSettings
+      summary: Update speaker preview settings
+      parameters:
+        - in: path
+          name: speakerId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceSpeakerPreviewUpdateForm'
+      responses:
+        '200':
+          description: Updated speaker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResultVoiceSpeakerVO'
+
+  /app/v3/api/voice-speakers/market:
+    get:
+      tags: [VoiceSpeaker]
+      operationId: voiceSpeakers__listMarketVoices
+      summary: List normalized market voices
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 20
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: language
+          schema:
+            type: string
+        - in: query
+          name: gender
+          schema:
+            type: string
+            enum: [male, female, neutral]
+        - in: query
+          name: style
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Market voice page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlusApiResultPageMarketVoiceVO'
+
+components:
+  schemas:
+    PlusApiResultGenerationTaskVO:
+      type: object
+      required: [code, msg, data]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/GenerationTaskVO'
+
+    PlusApiResultVoiceSpeakerCloneTaskResultVO:
+      type: object
+      required: [code, msg, data]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/VoiceSpeakerCloneTaskResultVO'
+
+    PlusApiResultVoiceSpeakerVO:
+      type: object
+      required: [code, msg, data]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/VoiceSpeakerVO'
+
+    PlusApiResultPageMarketVoiceVO:
+      type: object
+      required: [code, msg, data]
+      properties:
+        code:
+          type: string
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageMarketVoiceVO'
+
+    GenerationTaskVO:
+      type: object
+      properties:
+        taskId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, SUCCESS, FAILED, CANCELLED]
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    VoiceSpeakerCloneFromAssetForm:
+      type: object
+      required: [assetId, speakerName]
+      properties:
+        assetId:
+          type: string
+          description: Workspace voice reference asset id
+        speakerName:
+          type: string
+        language:
+          type: string
+        model:
+          type: string
+        previewText:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    VoiceSpeakerCloneTaskResultVO:
+      type: object
+      required: [taskId, status]
+      properties:
+        taskId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, SUCCESS, FAILED, CANCELLED]
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+        speakerId:
+          type: string
+          description: Present when status is SUCCESS
+        speakerName:
+          type: string
+        previewAudioUrl:
+          type: string
+          format: uri
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+
+    VoiceSpeakerPreviewUpdateForm:
+      type: object
+      properties:
+        previewText:
+          type: string
+          maxLength: 500
+        previewAudioUrl:
+          type: string
+          format: uri
+
+    VoiceSpeakerVO:
+      type: object
+      properties:
+        speakerId:
+          type: string
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, neutral]
+        language:
+          type: string
+        style:
+          type: string
+        previewText:
+          type: string
+        previewAudioUrl:
+          type: string
+          format: uri
+        avatarUrl:
+          type: string
+          format: uri
+        provider:
+          type: string
+
+    MarketVoiceVO:
+      type: object
+      required: [voiceId, name]
+      properties:
+        voiceId:
+          type: string
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, neutral]
+        language:
+          type: string
+        style:
+          type: string
+        previewAudioUrl:
+          type: string
+          format: uri
+        provider:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+
+    PageMarketVoiceVO:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketVoiceVO'

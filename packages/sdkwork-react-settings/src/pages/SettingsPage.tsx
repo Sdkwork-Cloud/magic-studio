@@ -334,7 +334,7 @@ const SettingsPage: React.FC = () => {
                      {searchQuery && (
                          <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
                              <span className="sr-only">Clear</span>
-                             ��
+                             ×
                          </button>
                      )}
                  </div>

@@ -14,7 +14,8 @@ export interface I18nNamespaceResource {
     form?: I18nModuleResource;
     message?: I18nModuleResource;
     error?: I18nModuleResource;
-    [module: string]: I18nModuleResource | undefined;
+    // Allow root-level string keys (e.g. auth.sign_in) as well as module objects.
+    [module: string]: string | I18nModuleResource | undefined;
 }
 
 export interface I18nModuleResource {

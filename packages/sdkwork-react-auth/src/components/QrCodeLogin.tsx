@@ -5,6 +5,7 @@ import { authBusinessService } from '../services';
 
 interface QrCodeLoginProps {
     onLoginSuccess?: () => void;
+    size?: 'md' | 'lg';
 }
 
 type QrStatus = 'loading' | 'pending' | 'scanned' | 'confirmed' | 'expired' | 'error';
@@ -58,7 +59,7 @@ const generateQrDataUrl = (content: string, size: number = 200): string => {
     return canvas.toDataURL('image/png');
 };
 
-export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
+export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess, size = 'md' }) => {
     const { t } = useTranslation();
     const [qrUrl, setQrUrl] = useState<string>('');
     const [qrContent, setQrContent] = useState<string>('');
@@ -66,6 +67,9 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
     const [status, setStatus] = useState<QrStatus>('loading');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [countdown, setCountdown] = useState<number>(300); // 5 minutes
+
+    const qrSize = size === 'lg' ? 208 : 176;
+    const qrContainerClass = size === 'lg' ? 'w-52 h-52' : 'w-44 h-44';
 
     const generateQrCode = useCallback(async () => {
         setStatus('loading');
@@ -83,12 +87,12 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
                 setQrContent('');
             } else if (content) {
                 // Server provided content, render locally
-                const dataUrl = generateQrDataUrl(content, 176); // 176px for w-44
+                const dataUrl = generateQrDataUrl(content, qrSize);
                 setQrUrl(dataUrl);
                 setQrContent(content);
             } else {
                 setStatus('error');
-                setErrorMessage('Invalid QR code data');
+                setErrorMessage(t('auth.error.invalid_qr_data'));
                 return;
             }
             
@@ -96,9 +100,9 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
             setStatus('pending');
         } else {
             setStatus('error');
-            setErrorMessage(result.message || 'Failed to generate QR code');
+            setErrorMessage(result.message || t('auth.error.generate_qr_failed'));
         }
-    }, []);
+    }, [qrSize, t]);
 
     useEffect(() => {
         generateQrCode();
@@ -195,14 +199,14 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
             {/* QR Code Container */}
             <div className="relative mb-4">
                 <div className={`
-                    w-44 h-44 bg-white p-3 rounded-xl shadow-2xl transition-all duration-300
+                    ${qrContainerClass} bg-white p-3 rounded-xl shadow-2xl transition-all duration-300
                     ${status === 'expired' || status === 'error' ? 'opacity-50' : ''}
                 `}>
                     {qrUrl ? (
                         <img 
                             src={qrUrl} 
                             className="w-full h-full object-contain" 
-                            alt="QR Code" 
+                            alt={t('auth.page.qr_alt')} 
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded">

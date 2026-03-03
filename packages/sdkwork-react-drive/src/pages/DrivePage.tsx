@@ -4,10 +4,10 @@ import { DriveItem } from '../entities';
 import { DriveSidebar, DriveGrid, DriveBreadcrumbs, DriveContextMenu, FilePreviewModal, initViewers } from '../services';
 import { DriveStoreProvider, useDriveStore, SortOption, FileTypeFilter } from '../store/driveStore';
 import { 
-    LayoutGrid, List as ListIcon, Search, UploadCloud, Cloud, 
+    LayoutGrid, List as ListIcon, Search, UploadCloud, Cloud, SlidersHorizontal,
     ChevronDown, ArrowUp, ArrowDown, Trash2, 
     FileText, Image, Film, Code, Box, X, Music, Type, Database, Hexagon, Filter,
-    Download, Edit2, RotateCcw, Star, StarOff
+    Download, Edit2, RotateCcw, Star
 } from 'lucide-react';
 ;
 ;
@@ -30,6 +30,7 @@ const DriveContent: React.FC = () => {
     // UI Toggles
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     
     const filterRef = useRef<HTMLDivElement>(null);
@@ -46,6 +47,20 @@ const DriveContent: React.FC = () => {
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+            return;
+        }
+        const mediaQuery = window.matchMedia('(min-width: 1024px)');
+        const closeMobileSidebarWhenDesktop = (event: MediaQueryListEvent) => {
+            if (event.matches) {
+                setIsMobileSidebarOpen(false);
+            }
+        };
+        mediaQuery.addEventListener('change', closeMobileSidebarWhenDesktop);
+        return () => mediaQuery.removeEventListener('change', closeMobileSidebarWhenDesktop);
     }, []);
 
     // Global Shortcuts
@@ -181,7 +196,7 @@ const DriveContent: React.FC = () => {
 
     return (
         <div 
-            className="flex w-full h-full bg-[#111] text-gray-200 overflow-hidden relative" 
+            className="flex h-full w-full overflow-hidden bg-[#121214] text-gray-200 relative" 
             onClick={() => { clearSelection(); setContextMenu(null); }}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -189,121 +204,153 @@ const DriveContent: React.FC = () => {
             onDrop={handleDrop}
             onContextMenu={(e) => handleContextMenu(e)}
         >
-            <DriveSidebar />
+            <div className="hidden border-r border-[#27272a] bg-[#0f0f11] lg:block">
+                <DriveSidebar />
+            </div>
 
-            <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#111] transition-colors duration-200">
+            {isMobileSidebarOpen && (
+                <div
+                    className="absolute inset-0 z-40 bg-black/60 lg:hidden"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                >
+                    <div
+                        className="h-full w-[272px] border-r border-[#27272a] bg-[#0f0f11]"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <DriveSidebar />
+                    </div>
+                </div>
+            )}
+
+            <div className="flex min-w-0 flex-1 flex-col bg-[#111]">
                 
                 {/* --- HEADER --- */}
-                <div className="h-14 border-b border-gray-200 dark:border-[#27272a] flex items-center px-4 justify-between bg-white dark:bg-[#18181b] select-none flex-none gap-4">
-                    
-                    {/* LEFT: Breadcrumbs (Always Visible) */}
-                    <div className="flex items-center flex-1 min-w-0 overflow-hidden">
-                        <DriveBreadcrumbs />
+                <div className="sticky top-0 z-20 border-b border-[#27272a] bg-[#141417]/95 px-4 py-2 backdrop-blur sm:px-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <h1 className="text-sm font-semibold text-gray-100">Drive</h1>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[#333] bg-[#202024] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-300">
+                                {isTrashView ? 'Trash' : isVirtualView ? currentPath.replace('virtual://', '') : 'My Drive'}
+                            </span>
+                            <span className="hidden items-center rounded-full border border-[#333] bg-[#202024] px-2 py-0.5 text-[10px] font-mono text-gray-400 sm:inline-flex">
+                                {`Items: ${items.length}`}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {!isTrashView && !isVirtualView && (
+                                <button
+                                    onClick={() => uploadFiles()}
+                                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-500"
+                                >
+                                    <UploadCloud size={13} />
+                                    Upload
+                                </button>
+                            )}
+                            {isTrashView && items.length > 0 && (
+                                <button
+                                    onClick={handleEmptyTrash}
+                                    className="flex items-center gap-2 rounded-lg border border-red-900/50 bg-red-900/30 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-900/50"
+                                >
+                                    <Trash2 size={13} />
+                                    Empty Trash
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    {/* RIGHT: Tools (Search, Filter, Sort, View, Primary) */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        
-                        {/* Search */}
-                        <div className="relative group w-48 transition-all focus-within:w-64">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500" />
+                    <div className="mt-2 flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setIsMobileSidebarOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] bg-[#222225] px-3 py-1.5 text-xs font-semibold text-gray-200 lg:hidden"
+                        >
+                            <SlidersHorizontal size={13} />
+                            Sidebar
+                        </button>
+
+                        <div className="relative w-full max-w-[36rem]">
+                            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <input 
                                 type="text" 
-                                placeholder="Search..." 
+                                placeholder="Search files and folders" 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-gray-100 dark:bg-[#252526] hover:bg-gray-200 dark:hover:bg-[#2a2a2d] border border-transparent dark:border-[#333] rounded-lg pl-9 pr-3 py-1.5 text-xs text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500/50 focus:bg-white dark:focus:bg-[#202022] focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-gray-500"
+                                className="w-full rounded-lg border border-[#333] bg-[#252526] py-1.5 pl-9 pr-3 text-sm text-gray-200 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                             />
                         </div>
 
-                        <div className="h-5 w-[1px] bg-gray-200 dark:bg-[#333] mx-1" />
+                        <div className="ml-auto flex items-center gap-2">
+                            {/* Filter Dropdown */}
+                            <div className="relative" ref={filterRef}>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowFilterMenu(!showFilterMenu); }}
+                                    className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${filterType !== 'all' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-[#333] bg-[#252526] text-gray-400 hover:bg-[#2a2a2d] hover:text-gray-200'}`}
+                                    title="Filter by Type"
+                                >
+                                    <CurrentFilterIcon size={14} />
+                                    <span className="hidden xl:inline">{currentFilterLabel}</span>
+                                    <ChevronDown size={10} className="opacity-50" />
+                                </button>
+                                {showFilterMenu && (
+                                    <div className="absolute top-full right-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-[#333] bg-[#252526] py-1 shadow-xl animate-in fade-in zoom-in-95 duration-75">
+                                        <div className="border-b border-[#333] bg-[#2a2a2d] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500">File Type</div>
+                                        <div className="max-h-[300px] overflow-y-auto">
+                                            {filterOptions.map(opt => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => handleFilterSelect(opt.id)}
+                                                    className={`flex w-full items-center gap-3 px-3 py-2 text-left text-xs transition-colors ${filterType === opt.id ? 'bg-blue-500/10 text-blue-400' : 'text-gray-300 hover:bg-[#333]'}`}
+                                                >
+                                                    <opt.icon size={14} className="opacity-70" />
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
-                        {/* Filter Dropdown */}
-                        <div className="relative" ref={filterRef}>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setShowFilterMenu(!showFilterMenu); }}
-                                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${filterType !== 'all' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30' : 'bg-gray-100 dark:bg-[#252526] border-transparent dark:border-[#333] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#2a2a2d]'}`}
-                                title="Filter by Type"
-                            >
-                                <CurrentFilterIcon size={14} />
-                                <span className="hidden xl:inline">{currentFilterLabel}</span>
-                                <ChevronDown size={10} className="opacity-50" />
-                            </button>
-                            {showFilterMenu && (
-                                <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-[#252526] border border-gray-200 dark:border-[#333] rounded-lg shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-75 overflow-hidden">
-                                    <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-[#2a2a2d] border-b border-gray-200 dark:border-[#333]">File Type</div>
-                                    <div className="max-h-[300px] overflow-y-auto">
-                                        {filterOptions.map(opt => (
+                            {/* Sort Dropdown */}
+                            <div className="relative" ref={sortMenuRef}>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
+                                    className="rounded-lg border border-[#333] bg-[#252526] p-1.5 text-gray-400 transition-colors hover:bg-[#2a2a2d] hover:text-gray-200"
+                                    title="Sort Options"
+                                >
+                                    <ArrowDown size={14} className={sortDirection === 'asc' ? 'rotate-180' : ''} />
+                                </button>
+                                {showSortMenu && (
+                                    <div className="absolute top-full right-0 z-50 mt-1 flex w-40 flex-col rounded-lg border border-[#333] bg-[#252526] py-1 text-xs shadow-xl animate-in fade-in zoom-in-95 duration-75">
+                                        {['name', 'date', 'size'].map((opt) => (
                                             <button
-                                                key={opt.id}
-                                                onClick={() => handleFilterSelect(opt.id)}
-                                                className={`flex items-center gap-3 w-full px-3 py-2 text-xs text-left transition-colors ${filterType === opt.id ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333]'}`}
+                                                key={opt}
+                                                onClick={() => handleSortOption(opt as SortOption)}
+                                                className={`flex items-center justify-between px-3 py-2 text-left hover:bg-[#333] ${sortBy === opt ? 'text-blue-400' : 'text-gray-300'}`}
                                             >
-                                                <opt.icon size={14} className="opacity-70" />
-                                                {opt.label}
+                                                <span className="capitalize">{opt}</span>
+                                                {sortBy === opt && (sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
                                             </button>
                                         ))}
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        {/* Sort Dropdown */}
-                        <div className="relative" ref={sortMenuRef}>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
-                                className="p-1.5 rounded-lg bg-gray-100 dark:bg-[#252526] border border-transparent dark:border-[#333] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#2a2a2d] transition-colors"
-                                title="Sort Options"
-                            >
-                                <ArrowDown size={14} className={sortDirection === 'asc' ? 'rotate-180' : ''} />
-                            </button>
-                             {showSortMenu && (
-                                 <div className="absolute top-full right-0 mt-1 w-40 bg-white dark:bg-[#252526] border border-gray-200 dark:border-[#333] rounded-lg shadow-xl py-1 z-50 flex flex-col text-xs animate-in fade-in zoom-in-95 duration-75">
-                                     {['name', 'date', 'size'].map((opt) => (
-                                         <button
-                                            key={opt}
-                                            onClick={() => handleSortOption(opt as SortOption)}
-                                            className={`flex items-center justify-between px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#333] text-left ${sortBy === opt ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}
-                                         >
-                                             <span className="capitalize">{opt}</span>
-                                             {sortBy === opt && (sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
-                                         </button>
-                                     ))}
-                                 </div>
-                             )}
+                            {/* View Switch */}
+                            <div className="flex rounded-lg border border-[#333] bg-[#252526] p-0.5">
+                                <button onClick={() => setViewMode('list')} className={`rounded p-1 ${viewMode === 'list' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
+                                    <ListIcon size={14} />
+                                </button>
+                                <button onClick={() => setViewMode('grid')} className={`rounded p-1 ${viewMode === 'grid' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
+                                    <LayoutGrid size={14} />
+                                </button>
+                            </div>
                         </div>
-
-                        {/* View Switch */}
-                        <div className="flex bg-gray-100 dark:bg-[#252526] p-0.5 rounded-lg border border-gray-200 dark:border-[#333]">
-                             <button onClick={() => setViewMode('list')} className={`p-1 rounded ${viewMode === 'list' ? 'bg-white dark:bg-[#333] text-blue-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}`}>
-                                 <ListIcon size={14} />
-                             </button>
-                             <button onClick={() => setViewMode('grid')} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-[#333] text-blue-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}`}>
-                                 <LayoutGrid size={14} />
-                             </button>
-                        </div>
-                        
-                        {/* Primary Upload Action */}
-                        {!isTrashView && !isVirtualView && (
-                             <button 
-                                 onClick={() => uploadFiles()}
-                                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors shadow-sm ml-2"
-                             >
-                                 <UploadCloud size={14} />
-                                 <span className="hidden lg:inline">Upload</span>
-                             </button>
-                         )}
-
-                         {/* Empty Trash Action */}
-                         {isTrashView && items.length > 0 && (
-                            <button 
-                                onClick={handleEmptyTrash}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg text-xs font-medium transition-colors ml-2"
-                            >
-                                <Trash2 size={14} /> Empty Trash
-                            </button>
-                        )}
                     </div>
+                </div>
+
+                <div className="border-b border-[#27272a] bg-[#18181b] px-4 py-2 sm:px-6">
+                    <DriveBreadcrumbs />
                 </div>
 
                 {/* --- FILE VIEW --- */}
@@ -331,8 +378,8 @@ const DriveContent: React.FC = () => {
 
             {/* --- FLOATING ACTION BAR (Selection) --- */}
             {selection.size > 0 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-full shadow-2xl shadow-black/20 dark:shadow-black/50 animate-in slide-in-from-bottom-4 fade-in duration-200 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
-                    <div className="px-2 text-xs font-semibold text-gray-700 dark:text-white border-r border-gray-200 dark:border-[#333] mr-1">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-2 bg-[#1e1e1e] border border-[#333] rounded-full shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 fade-in duration-200 backdrop-blur-sm bg-opacity-90">
+                    <div className="px-2 text-xs font-semibold text-white border-r border-[#333] mr-1">
                         {selection.size} selected
                     </div>
                     
@@ -351,17 +398,17 @@ const DriveContent: React.FC = () => {
                             
                             <BarAction onClick={() => handleBulkStar(true)} icon={<Star size={14} />} label="Star" />
                             
-                            <div className="w-[1px] h-4 bg-gray-200 dark:bg-[#333] mx-1" />
+                            <div className="w-[1px] h-4 bg-[#333] mx-1" />
                             
                             <BarAction onClick={handleBulkDelete} icon={<Trash2 size={14} />} label="Delete" danger />
                         </>
                     )}
 
-                    <div className="w-[1px] h-4 bg-gray-200 dark:bg-[#333] mx-1" />
+                    <div className="w-[1px] h-4 bg-[#333] mx-1" />
                     
                     <button 
                         onClick={clearSelection}
-                        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#333] text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="p-1.5 rounded-full hover:bg-[#333] text-gray-500 hover:text-white transition-colors"
                     >
                         <X size={14} />
                     </button>
@@ -372,7 +419,7 @@ const DriveContent: React.FC = () => {
             {isDragging && !isTrashView && (
                 <div className="absolute inset-0 z-50 bg-blue-500/10 backdrop-blur-[2px] border-4 border-dashed border-blue-500 m-4 rounded-2xl flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
                     <Cloud size={64} className="text-blue-400 mb-4 animate-bounce" />
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-md">Drop files to upload</h2>
+                    <h2 className="text-2xl font-bold text-white drop-shadow-md">Drop files to upload</h2>
                 </div>
             )}
 

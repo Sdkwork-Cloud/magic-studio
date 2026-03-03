@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Loader2 } from 'lucide-react';
+import { voiceBusinessService } from '../../services';
 
 interface VoicePreviewButtonProps {
   url?: string;
@@ -13,6 +14,7 @@ export const VoicePreviewButton: React.FC<VoicePreviewButtonProps> = ({
   className = "",
   activeColor = "text-white"
 }) => {
+  const speakerService = voiceBusinessService.voiceSpeakerService;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -20,46 +22,58 @@ export const VoicePreviewButton: React.FC<VoicePreviewButtonProps> = ({
   useEffect(() => {
     return () => {
       if (audioRef.current) {
-        audioRef.current.pause();
+        speakerService.stopPreviewAudio(audioRef.current);
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [speakerService]);
 
-  const togglePlay = (e: React.MouseEvent) => {
+  const togglePlay = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!url) return;
 
     if (isPlaying) {
-      audioRef.current?.pause();
+      speakerService.stopPreviewAudio(audioRef.current);
+      audioRef.current = null;
       setIsPlaying(false);
-    } else {
-      if (!audioRef.current) {
-        setIsLoading(true);
-        const audio = new Audio(url);
-        audio.onended = () => setIsPlaying(false);
-        audio.oncanplaythrough = () => setIsLoading(false);
-        audio.onerror = () => {
-            setIsLoading(false);
-            setIsPlaying(false);
-            console.error("Audio preview failed");
-        };
-        audioRef.current = audio;
-      }
-      
-      audioRef.current.play().then(() => {
-          setIsPlaying(true);
-      }).catch(() => {
+      return;
+    }
+
+    if (audioRef.current) {
+      speakerService.stopPreviewAudio(audioRef.current);
+      audioRef.current = null;
+    }
+
+    setIsLoading(true);
+    const audio = await speakerService.playPreviewAudio(url, {
+      onPlaying: () => {
+        setIsLoading(false);
+        setIsPlaying(true);
+      },
+      onEnded: () => {
+        setIsPlaying(false);
+        audioRef.current = null;
+      },
+      onError: (error) => {
+          console.error("Audio preview failed", error);
           setIsLoading(false);
           setIsPlaying(false);
-      });
+          audioRef.current = null;
+      }
+    });
+    audioRef.current = audio;
+    if (!audio) {
+      setIsLoading(false);
+      setIsPlaying(false);
     }
   };
 
   return (
     <button 
-      onClick={togglePlay}
+      onClick={(event) => {
+        void togglePlay(event);
+      }}
       disabled={!url || isLoading}
       className={`
         w-8 h-8 rounded-full flex items-center justify-center transition-all

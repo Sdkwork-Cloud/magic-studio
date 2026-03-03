@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useVoiceStore } from '../store/voiceStore';
 import { VoiceModelSelector } from './VoiceModelSelector';
 import { 
@@ -8,38 +8,23 @@ import {
 } from 'lucide-react';
 
 import { AudioUpload } from '@sdkwork/react-commons';
-
-interface UploadedFile {
-    data: Uint8Array | File;
-    name: string;
-    url: string;
-    path?: string;
-}
 import { AudioRecorder } from '@sdkwork/react-audio';
 import {
     PromptTextInput,
-    ChooseAsset,
-    assetBusinessFacade,
-    readWorkspaceScope,
-    resolveAssetUrlByAssetIdFirst
+    ChooseAsset
 } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { SettingInput, SettingSelect, SettingSlider, SettingTextArea } from '@sdkwork/react-settings';
+import { voiceBusinessService, type UploadedVoiceReferenceInput } from '../services';
 
 type VoiceMode = 'design' | 'clone';
 type InputMethod = 'upload' | 'mic';
 
-const resolveVoiceScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
-};
-
 export const VoiceLeftGeneratorPanel: React.FC = () => {
     const { config, setConfig, generate, isGenerating } = useVoiceStore();
+    const speakerService = voiceBusinessService.voiceSpeakerService;
+    const previewAudioRef = useRef<HTMLAudioElement | null>(null);
     const [mode, setMode] = useState<VoiceMode>('design');
     const [inputMethod, setInputMethod] = useState<InputMethod>('upload');
     const [showAIModal, setShowAIModal] = useState(false);
@@ -51,33 +36,27 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
         }
     }, []);
 
-    const handleRecordingComplete = async (blob: Blob) => {
-        const buffer = new Uint8Array(await blob.arrayBuffer());
-        const result = await assetBusinessFacade.importVoiceSpeakerAsset({
-            scope: resolveVoiceScope(),
-            type: 'voice',
-            name: `rec_${Date.now()}.webm`,
-            data: buffer,
-            metadata: {
-                origin: 'upload',
-                source: 'voice-recorder'
+    useEffect(() => {
+        return () => {
+            if (previewAudioRef.current) {
+                speakerService.stopPreviewAudio(previewAudioRef.current);
+                previewAudioRef.current = null;
             }
-        });
-        setConfig({ referenceAudio: result.primaryLocator.uri });
+        };
+    }, [speakerService]);
+
+    const handleRecordingComplete = async (blob: Blob) => {
+        const imported = await speakerService.importReferenceAudioFromBlob(
+            blob,
+            `rec_${Date.now()}.webm`,
+            'voice-recorder'
+        );
+        setConfig({ referenceAudio: imported.path || imported.id });
     };
 
-    const handleAudioUpload = async (file: UploadedFile) => {
-        const result = await assetBusinessFacade.importVoiceSpeakerAsset({
-            scope: resolveVoiceScope(),
-            type: 'voice',
-            name: file.name,
-            data: file.data,
-            metadata: {
-                origin: 'upload',
-                source: 'voice-upload'
-            }
-        });
-        setConfig({ referenceAudio: result.primaryLocator.uri });
+    const handleAudioUpload = async (file: UploadedVoiceReferenceInput) => {
+        const imported = await speakerService.importReferenceAudioFromUpload(file, 'voice-upload');
+        setConfig({ referenceAudio: imported.path || imported.id });
     };
 
     const handleAIImageSuccess = (url: string | string[]) => {
@@ -88,10 +67,22 @@ export const VoiceLeftGeneratorPanel: React.FC = () => {
 
     const handlePlayAudio = async () => {
         if (config.referenceAudio) {
-             const url = await resolveAssetUrlByAssetIdFirst({ path: config.referenceAudio });
+             const url = await speakerService.resolveVoiceAssetUrl(config.referenceAudio);
+             if (previewAudioRef.current) {
+                 speakerService.stopPreviewAudio(previewAudioRef.current);
+                 previewAudioRef.current = null;
+             }
              if (url) {
-                 const audio = new Audio(url);
-                 audio.play().catch(e => console.error("Playback failed", e));
+                 const audio = await speakerService.playPreviewAudio(url, {
+                     onEnded: () => {
+                         previewAudioRef.current = null;
+                     },
+                     onError: (error) => {
+                         console.error("Playback failed", error);
+                         previewAudioRef.current = null;
+                     }
+                 });
+                 previewAudioRef.current = audio;
              }
         }
     };

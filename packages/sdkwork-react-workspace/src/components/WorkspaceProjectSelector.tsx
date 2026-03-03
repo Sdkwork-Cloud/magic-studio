@@ -138,10 +138,10 @@ export const WorkspaceProjectSelector: React.FC<WorkspaceProjectSelectorProps> =
             </button>
 
             {showMenu && (
-                <div className={menuStyles} style={{ width: '480px' }}>
+                <div className={menuStyles} style={{ width: '520px' }}>
                     <div className="flex h-[320px]">
                         {/* Left: Workspace List */}
-                        <div className={`w-1/2 flex flex-col border-r ${isPortal ? 'border-white/5' : 'border-gray-200 dark:border-[#27272a]'}`}>
+                        <div className={`w-[180px] flex-none flex flex-col border-r ${isPortal ? 'border-white/5' : 'border-gray-200 dark:border-[#27272a]'}`}>
                             <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center justify-between ${
                                 isPortal 
                                     ? 'text-gray-500 bg-[#1a1a1c] border-b border-white/5' 
@@ -173,15 +173,15 @@ export const WorkspaceProjectSelector: React.FC<WorkspaceProjectSelectorProps> =
                                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1c]'
                                             }`}
                                         >
-                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                <LayoutGrid size={14} className={
+                                            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                                                <LayoutGrid size={14} className={`flex-none ${
                                                     selectedWorkspaceUuid === ws.uuid
                                                         ? isPortal ? 'text-blue-400' : 'text-blue-600 dark:text-blue-400'
                                                         : isPortal ? 'text-gray-500' : 'text-gray-400 dark:text-gray-500'
-                                                } />
+                                                }`} />
                                                 <span className="truncate">{ws.name}</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1 flex-none">
                                                 {selectedWorkspaceUuid === ws.uuid && (
                                                     <Check size={14} className={isPortal ? 'text-blue-400' : 'text-blue-600 dark:text-blue-400'} />
                                                 )}
@@ -214,7 +214,7 @@ export const WorkspaceProjectSelector: React.FC<WorkspaceProjectSelectorProps> =
                         </div>
 
                         {/* Right: Project List */}
-                        <div className="w-1/2 flex flex-col">
+                        <div className="flex-1 min-w-0 flex flex-col">
                             <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center justify-between ${
                                 isPortal 
                                     ? 'text-gray-500 bg-[#1a1a1c] border-b border-white/5' 
@@ -254,15 +254,15 @@ export const WorkspaceProjectSelector: React.FC<WorkspaceProjectSelectorProps> =
                                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1c]'
                                             }`}
                                         >
-                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                <Box size={14} className={
+                                            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                                                <Box size={14} className={`flex-none ${
                                                     currentProject?.uuid === p.uuid && currentWorkspace?.uuid === activeWorkspace.uuid
                                                         ? isPortal ? 'text-orange-400' : 'text-orange-500 dark:text-orange-400'
                                                         : isPortal ? 'text-gray-500' : 'text-gray-400 dark:text-gray-500'
-                                                } />
+                                                }`} />
                                                 <span className="truncate">{p.name}</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1 flex-none">
                                                 {currentProject?.uuid === p.uuid && currentWorkspace?.uuid === activeWorkspace.uuid && (
                                                     <Check size={14} className={isPortal ? 'text-orange-400' : 'text-orange-500 dark:text-orange-400'} />
                                                 )}

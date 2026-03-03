@@ -2,7 +2,7 @@
 import { useRouter } from '@sdkwork/react-core'
 import React from 'react';
 import { 
-    Scissors, Layout, BookOpen, ChevronLeft, FolderOpen
+    Scissors, Layout, BookOpen, ChevronLeft, FolderOpen, HardDrive
 } from 'lucide-react';
 ;
 import { ROUTES } from '../../router/routes';
@@ -19,6 +19,7 @@ export const CreationLayoutSidebar: React.FC<CreationLayoutSidebarProps> = ({ cl
         { id: 'canvas', label: 'Canvas', route: ROUTES.CANVAS, icon: Layout, color: 'text-blue-500' },
         { id: 'notes', label: 'Notes', route: ROUTES.NOTES, icon: BookOpen, color: 'text-yellow-500' },
         { id: 'assets', label: 'Assets', route: ROUTES.ASSETS, icon: FolderOpen, color: 'text-purple-500' },
+        { id: 'drive', label: 'Drive', route: ROUTES.DRIVE, icon: HardDrive, color: 'text-cyan-500' },
     ];
 
     return (

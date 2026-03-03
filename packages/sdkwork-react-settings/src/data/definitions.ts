@@ -70,8 +70,8 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     options: [
       { labelKey: 'settings.general.language.options.system', value: 'system' },
       { label: 'English (US)', value: 'en' },
-      { label: '中文 (简�?', value: 'zh-CN' },
-      // { label: '日本�?, value: 'ja' },
+      { label: '中文 (简体)', value: 'zh-CN' },
+      // { label: '日本语', value: 'ja' },
     ]
   },
   {

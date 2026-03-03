@@ -6,6 +6,11 @@ export const voiceZhCN: I18nNamespaceResource = {
         subtitle: '声音创作',
         generate: '创建声音',
         creating: '处理中...',
+        gender: {
+            male: '男声',
+            female: '女声',
+            neutral: '中性'
+        }
     },
     page: {
         design: '声音设计',
@@ -29,4 +34,130 @@ export const voiceZhCN: I18nNamespaceResource = {
         cloneVoice: '克隆声音',
         createVoice: '创建声音',
     },
+    choose: {
+        defaultLabel: '声音',
+        emptyTitle: '选择声音',
+        emptySubtitle: '支持统一市场与自定义克隆',
+        openLab: '实验室',
+        openLabTitle: '打开声音实验室',
+        providerFallback: '声音',
+        selectedTag: '当前',
+        hint: '点击打开声音市场与声音实验室'
+    },
+    selector: {
+        title: '选择声音',
+        subtitle: '统一市场选择 + 自定义克隆声音',
+        openLabButton: '声音实验室',
+        collectionMarket: '统一市场',
+        collectionMine: '我的声音',
+        searchPlaceholder: '按名称 / 风格 / 提供方搜索...',
+        refreshList: '刷新列表',
+        filtersTitle: '筛选',
+        genderTitle: '性别',
+        languageTitle: '语言',
+        providerTitle: '提供方',
+        styleTitle: '风格',
+        all: '全部',
+        providerUnknown: '未知',
+        styleNeutral: '中性',
+        resultCount: '个声音',
+        sortBy: '排序',
+        sortRecommended: '推荐',
+        sortNewest: '最新',
+        sortName: '名称',
+        filterSummary: '当前筛选',
+        filterCountSuffix: '项生效',
+        filterNone: '无',
+        quickActions: '快捷操作',
+        quickDesign: '快速设计声音',
+        quickClone: '克隆我的声音',
+        loadingVoices: '正在加载声音...',
+        emptyMine: '还没有可用的自定义声音，试试“声音实验室”。',
+        emptyMarket: '未找到符合条件的市场声音。',
+        clearFilters: '清空筛选',
+        selectedPrefix: '已选择',
+        noSelection: '尚未选择声音',
+        cancel: '取消',
+        confirmSelection: '确认选择'
+    },
+    lab: {
+        title: '声音实验室',
+        subtitle: '头像先行，快速完成声音人格设计与克隆',
+        modeDesign: '设计声音',
+        modeClone: '克隆声音',
+        avatarTitle: '声音头像',
+        avatarHintDesign: '声音人格封面 · 支持上传与 AI 生成',
+        avatarHintClone: '克隆人格封面 · 支持上传与 AI 生成',
+        avatarUploadLabel: '上传头像',
+        avatarMode: {
+            portrait: '肖像',
+            portraitHelper: '突出面部细节，适合角色识别。',
+            fullBody: '全身',
+            fullBodyHelper: '保留完整形象，用于人物展示。',
+            threeView: '三视图',
+            threeViewHelper: '多角度构图，便于后续设计延展。'
+        },
+        composition: '构图',
+        form: {
+            name: '声音名称 *',
+            nameDesignPlaceholder: '例如：科技解说员',
+            nameClonePlaceholder: '例如：我的克隆旁白',
+            language: '语言',
+            gender: '性别',
+            style: '风格',
+            description: '声音描述',
+            descriptionPlaceholder: '描述声音特征，例如：温暖、稳重、节奏清晰、适合品牌讲解',
+            previewText: '预览文字',
+            previewTextPlaceholder: '填写用于试听的朗读文本'
+        },
+        cloneReference: {
+            label: '克隆参考音频 *',
+            uploadLabel: '选择或上传参考音频',
+            methodUpload: '本地上传',
+            methodRecord: '录音',
+            methodLibrary: '素材库',
+            readyTitle: '参考音频已就绪',
+            audioSample: '音频样本',
+            replaceHint: '点击移除后，可通过上传、录音或素材库重新选择。',
+            play: '播放',
+            remove: '移除',
+            localUploadLabel: '上传本地参考音频',
+            importing: '正在导入参考音频...'
+        },
+        summary: {
+            title: '预览摘要',
+            designDesc: '根据风格和描述快速创建可复用声音配置。',
+            cloneDesc: '基于参考音频生成相似音色，适合个性化旁白与角色配音。',
+            name: '名称',
+            language: '语言',
+            style: '风格',
+            previewText: '预览文字',
+            previewTextEmpty: '未填写',
+            composition: '头像构图',
+            mode: '模式',
+            modeDesign: '设计',
+            modeClone: '克隆'
+        },
+        footer: {
+            cloneHint: '建议上传 10-60 秒清晰人声样本',
+            designHint: '设计完成后会加入“我的声音”列表',
+            cancel: '取消',
+            save: '保存到声音库'
+        },
+        fallback: {
+            customVoice: '自定义声音',
+            clonedVoice: '克隆声音'
+        }
+    },
+    card: {
+        sourceCustom: '自定义',
+        sourceWorkspace: '工作区',
+        sourceMarket: '市场',
+        providerFallback: '声音来源',
+        styleFallback: '中性',
+        descriptionFallback: '适用于解说、视频旁白和角色配音',
+        playPreview: '播放试听',
+        pausePreview: '暂停试听',
+        playing: '播放中'
+    }
 };

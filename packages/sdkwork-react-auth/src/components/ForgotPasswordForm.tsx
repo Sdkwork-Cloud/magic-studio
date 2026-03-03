@@ -57,7 +57,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         setIsLoading(false);
 
         if (!result.success) {
-            setErrors({ form: result.message || 'Failed to send reset request' });
+            setErrors({ form: result.message || t('auth.error.send_reset_request_failed') });
             return;
         }
 
@@ -100,7 +100,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         setIsLoading(false);
 
         if (!result.success) {
-            setErrors({ form: result.message || 'Failed to reset password' });
+            setErrors({ form: result.message || t('auth.error.reset_password_failed') });
             return;
         }
 
@@ -116,16 +116,16 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                 <div>
                     {channel === 'EMAIL' ? (
                         <>
-                            <h3 className="text-xl font-bold text-white mb-2">Check your email</h3>
+                            <h3 className="text-xl font-bold text-white mb-2">{t('auth.message.reset_email_title')}</h3>
                             <p className="text-sm text-gray-400 max-w-xs mx-auto">
-                                We have sent a password reset link to <span className="text-white font-medium">{account}</span>
+                                {t('auth.message.reset_email_desc', { account })}
                             </p>
                         </>
                     ) : (
                         <>
-                            <h3 className="text-xl font-bold text-white mb-2">Password reset successful</h3>
+                            <h3 className="text-xl font-bold text-white mb-2">{t('auth.message.reset_success_title')}</h3>
                             <p className="text-sm text-gray-400 max-w-xs mx-auto">
-                                Your password has been updated. Please return to login with your new password.
+                                {t('auth.message.reset_success_desc')}
                             </p>
                         </>
                     )}
@@ -159,7 +159,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                         }
                     `}
                 >
-                    Email
+                    {t('auth.page.email_tab')}
                 </button>
                 <button
                     type="button"
@@ -175,13 +175,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                         }
                     `}
                 >
-                    SMS
+                    {t('auth.page.sms_tab')}
                 </button>
             </div>
 
             <AuthInput
                 label={channel === 'EMAIL' ? t('auth.email_label') : t('auth.phone_label')}
-                placeholder={channel === 'EMAIL' ? 'you@example.com' : t('auth.phone_placeholder')}
+                placeholder={channel === 'EMAIL' ? t('auth.email_example') : t('auth.phone_placeholder')}
                 icon={channel === 'EMAIL' ? <Mail size={16} /> : <Smartphone size={16} />}
                 value={account}
                 onChange={(e) => setAccount(e.target.value)}
@@ -195,7 +195,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                     disabled={isLoading}
                     className="w-full h-12 text-sm font-bold bg-blue-600 hover:bg-blue-500 border-0"
                 >
-                    {isLoading ? 'Sending...' : t('auth.send_link')}
+                    {isLoading ? t('auth.sending') : t('auth.send_link')}
                 </Button>
             ) : (
                 <>
@@ -226,7 +226,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
                     <AuthInput
                         label={t('auth.password_label')}
-                        placeholder="Min 6 characters"
+                        placeholder={t('auth.password_min_placeholder')}
                         type="password"
                         icon={<Lock size={16} />}
                         value={newPassword}
@@ -236,7 +236,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
                     <AuthInput
                         label={t('auth.confirm_password')}
-                        placeholder="Repeat password"
+                        placeholder={t('auth.confirm_password_placeholder')}
                         type="password"
                         icon={<CheckCircle2 size={16} />}
                         value={confirmPassword}
@@ -249,7 +249,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                         disabled={isLoading}
                         className="w-full h-12 text-sm font-bold bg-blue-600 hover:bg-blue-500 border-0"
                     >
-                        {isLoading ? 'Resetting...' : 'Reset Password'}
+                        {isLoading ? t('auth.resetting') : t('auth.reset_password_action')}
                     </Button>
                 </>
             )}

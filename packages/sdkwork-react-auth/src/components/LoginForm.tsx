@@ -52,7 +52,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             setTimer(60);
             return;
         }
-        setErrors({ code: result.message || 'Failed to send code' });
+        setErrors({ code: result.message || t('auth.error.send_code_failed') });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -75,11 +75,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             } else if (method === 'phone') {
                 const verifyResult = await authBusinessService.verifySmsCode(phone, code, 'login');
                 if (!verifyResult.success) {
-                    setErrors({ code: verifyResult.message || 'Verification failed' });
+                    setErrors({ code: verifyResult.message || t('auth.error.verification_failed') });
                     return;
                 }
                 if (!verifyResult.data) {
-                    setErrors({ code: 'Invalid verification code' });
+                    setErrors({ code: t('auth.error.invalid_verification_code') });
                     return;
                 }
                 await loginWithPhone(phone, code);
@@ -91,7 +91,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
                 navigate(ROUTES.HOME);
             }
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Login failed';
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.login_failed');
             setErrors({ form: message });
         } finally {
             setIsLoading(false);
@@ -131,11 +131,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
                 <div className="flex flex-col items-center justify-center py-8 space-y-4 h-[300px]">
                     <div className="relative group cursor-pointer">
                         <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-2xl">
-                             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=OpenStudioLogin`} className="w-full h-full object-contain" alt="QR" />
+                             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=OpenStudioLogin`} className="w-full h-full object-contain" alt={t('auth.page.qr_alt')} />
                         </div>
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
                              <RefreshCw size={24} />
-                             <span className="text-xs font-bold">Click to Refresh</span>
+                             <span className="text-xs font-bold">{t('auth.page.refresh_hint')}</span>
                         </div>
                     </div>
                     <div className="text-center">

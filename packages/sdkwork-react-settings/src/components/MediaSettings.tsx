@@ -298,7 +298,7 @@ const MediaSettings: React.FC = () => {
                                                 </optgroup>
                                             ))}
                                         </select>
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">��</div>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▼</div>
                                     </div>
                                 </div>
                             </SettingsSection>

@@ -47,7 +47,7 @@ export const PACKAGE_BASED_ROUTES: RouteDefinition[] = [
     {
         path: ROUTES.DRIVE,
         component: lazy(() => import('@sdkwork/react-drive').then(m => ({ default: m.DrivePage }))),
-        layout: 'main'
+        layout: 'creation'
     },
     {
         path: ROUTES.BROWSER,

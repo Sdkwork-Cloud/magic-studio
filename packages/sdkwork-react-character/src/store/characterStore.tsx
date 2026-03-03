@@ -23,7 +23,7 @@ export const CharacterStoreProvider: React.FC<{ children: ReactNode }> = ({ chil
   const [history, setHistory] = useState<CharacterTask[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [config, setConfigState] = useState<CharacterConfig>({
-    model: 'gemini-3-flash-image',
+    model: 'gemini-2.5-flash-image',
     prompt: '',
     gender: 'male',
     archetype: 'hero',
@@ -36,7 +36,7 @@ export const CharacterStoreProvider: React.FC<{ children: ReactNode }> = ({ chil
     accessories: '',
     aspectRatio: '9:16',
     mediaType: 'character',
-    voiceId: 'male',
+    voiceId: 'Puck',
     avatarMode: 'full-body',
     avatarImage: ''
   });

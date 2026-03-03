@@ -29,13 +29,13 @@ export const WechatQrPanel: React.FC = () => {
                          <img 
                             src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=OpenStudioLogin" 
                             className="w-full h-full object-contain" 
-                            alt="WeChat QR" 
+                            alt={t('auth.page.wechat_qr_alt')} 
                         />
                         
                         {/* Hover Overlay for Refresh */}
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 text-white cursor-pointer rounded-xl">
                             <RefreshCw size={24} />
-                            <span className="text-xs font-medium">Click to Refresh</span>
+                            <span className="text-xs font-medium">{t('auth.page.refresh_hint')}</span>
                         </div>
                     </div>
                 </div>
@@ -43,7 +43,7 @@ export const WechatQrPanel: React.FC = () => {
                 {/* Footer Security Badge */}
                 <div className="mt-8 flex items-center gap-2 text-[10px] text-gray-600 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
                     <ShieldCheck size={12} className="text-gray-500" />
-                    <span>Bank-grade Security</span>
+                    <span>{t('auth.page.security_badge')}</span>
                 </div>
             </div>
         </div>

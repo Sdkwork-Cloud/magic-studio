@@ -47,7 +47,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
             return;
         }
 
-        setErrors((prev) => ({ ...prev, code: result.message || 'Failed to send code' }));
+        setErrors((prev) => ({ ...prev, code: result.message || t('auth.error.send_code_failed') }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -82,18 +82,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         try {
             const verifyResult = await authBusinessService.verifySmsCode(phone, code, 'register');
             if (!verifyResult.success) {
-                setErrors({ code: verifyResult.message || 'Verification failed' });
+                setErrors({ code: verifyResult.message || t('auth.error.verification_failed') });
                 return;
             }
             if (!verifyResult.data) {
-                setErrors({ code: 'Invalid verification code' });
+                setErrors({ code: t('auth.error.invalid_verification_code') });
                 return;
             }
 
             const username = email.split('@')[0];
             const registerResult = await authBusinessService.register(username, password, email, phone);
             if (!registerResult.success) {
-                setErrors({ form: registerResult.message || 'Registration failed' });
+                setErrors({ form: registerResult.message || t('auth.error.registration_failed') });
                 return;
             }
 
@@ -104,7 +104,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                 navigate(ROUTES.HOME);
             }
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Registration failed';
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.registration_failed');
             setErrors({ form: message });
         } finally {
             setIsLoading(false);
@@ -120,7 +120,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
             <AuthInput
                 label={t('auth.email_label')}
-                placeholder="you@example.com"
+                placeholder={t('auth.email_example')}
                 icon={<Mail size={16} />}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -163,7 +163,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
             <AuthInput
                 label={t('auth.password_label')}
-                placeholder="Min 6 characters"
+                placeholder={t('auth.password_min_placeholder')}
                 type="password"
                 icon={<Lock size={16} />}
                 value={password}
@@ -173,7 +173,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
             <AuthInput
                 label={t('auth.confirm_password')}
-                placeholder="Repeat password"
+                placeholder={t('auth.confirm_password_placeholder')}
                 type="password"
                 icon={<CheckCircle2 size={16} />}
                 value={confirmPass}
@@ -219,7 +219,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                 disabled={isLoading}
                 className="w-full h-12 text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 shadow-lg shadow-blue-900/20"
             >
-                {isLoading ? 'Creating...' : t('auth.register_now')}
+                {isLoading ? t('auth.creating') : t('auth.register_now')}
             </Button>
         </form>
     );

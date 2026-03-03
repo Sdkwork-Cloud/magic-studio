@@ -28,7 +28,10 @@
                          "@sdkwork/react-assets":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*",
-                         "@sdkwork/react-types":  "workspace:*"
+                         "@sdkwork/react-i18n":  "workspace:*",
+                         "@sdkwork/react-image":  "workspace:*",
+                         "@sdkwork/react-types":  "workspace:*",
+                         "@sdkwork/react-voicespeaker":  "workspace:*"
                      },
     "devDependencies":  {
                             "@types/react":  "catalog:",

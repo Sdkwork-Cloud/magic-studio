@@ -133,7 +133,7 @@ export const APP_ROUTES: RouteDefinition[] = [
     { path: ROUTES.EDITOR, component: EditorPage, layout: 'main', provider: EditorStoreProvider },
     { path: ROUTES.CHAT, component: ChatPage, layout: 'none' },
     { path: ROUTES.BROWSER, component: BrowserPage, layout: 'main' },
-    { path: ROUTES.DRIVE, component: DrivePage, layout: 'main' },
+    { path: ROUTES.DRIVE, component: DrivePage, layout: 'creation' },
     { 
         path: ROUTES.ASSETS, 
         component: AssetsPage, 

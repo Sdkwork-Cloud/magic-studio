@@ -6,6 +6,11 @@ export const voiceEnUS: I18nNamespaceResource = {
         subtitle: 'Voice Creation',
         generate: 'Create Voice',
         creating: 'Processing...',
+        gender: {
+            male: 'Male',
+            female: 'Female',
+            neutral: 'Neutral'
+        }
     },
     page: {
         design: 'Voice Design',
@@ -29,4 +34,130 @@ export const voiceEnUS: I18nNamespaceResource = {
         cloneVoice: 'Clone Voice',
         createVoice: 'Create Voice',
     },
+    choose: {
+        defaultLabel: 'Voice',
+        emptyTitle: 'Select Voice',
+        emptySubtitle: 'Supports market voices and custom cloning',
+        openLab: 'Lab',
+        openLabTitle: 'Open Voice Lab',
+        providerFallback: 'Voice',
+        selectedTag: 'Current',
+        hint: 'Tap to open the voice market and voice lab'
+    },
+    selector: {
+        title: 'Select Voice',
+        subtitle: 'Market selection + custom voice cloning',
+        openLabButton: 'Voice Lab',
+        collectionMarket: 'Market',
+        collectionMine: 'My Voices',
+        searchPlaceholder: 'Search by name / style / provider...',
+        refreshList: 'Refresh',
+        filtersTitle: 'Filters',
+        genderTitle: 'Gender',
+        languageTitle: 'Language',
+        providerTitle: 'Provider',
+        styleTitle: 'Style',
+        all: 'All',
+        providerUnknown: 'Unknown',
+        styleNeutral: 'Neutral',
+        resultCount: 'voices',
+        sortBy: 'Sort',
+        sortRecommended: 'Recommended',
+        sortNewest: 'Newest',
+        sortName: 'Name',
+        filterSummary: 'Current filters',
+        filterCountSuffix: 'active',
+        filterNone: 'none',
+        quickActions: 'Quick Actions',
+        quickDesign: 'Quick Voice Design',
+        quickClone: 'Clone My Voice',
+        loadingVoices: 'Loading voices...',
+        emptyMine: 'No custom voices yet. Try Voice Lab.',
+        emptyMarket: 'No market voices match your filters.',
+        clearFilters: 'Clear filters',
+        selectedPrefix: 'Selected',
+        noSelection: 'No voice selected',
+        cancel: 'Cancel',
+        confirmSelection: 'Confirm Selection'
+    },
+    lab: {
+        title: 'Voice Lab',
+        subtitle: 'Start with avatar to quickly design or clone a voice persona',
+        modeDesign: 'Design Voice',
+        modeClone: 'Clone Voice',
+        avatarTitle: 'Voice Avatar',
+        avatarHintDesign: 'Voice persona cover · supports upload and AI generation',
+        avatarHintClone: 'Clone persona cover · supports upload and AI generation',
+        avatarUploadLabel: 'Upload Avatar',
+        avatarMode: {
+            portrait: 'Portrait',
+            portraitHelper: 'Focus on facial details for stronger identity.',
+            fullBody: 'Full Body',
+            fullBodyHelper: 'Keep the full character frame for presentation.',
+            threeView: 'Three View',
+            threeViewHelper: 'Multi-angle layout for downstream design extension.'
+        },
+        composition: 'Composition',
+        form: {
+            name: 'Voice Name *',
+            nameDesignPlaceholder: 'e.g. Tech Narrator',
+            nameClonePlaceholder: 'e.g. My Clone Narration',
+            language: 'Language',
+            gender: 'Gender',
+            style: 'Style',
+            description: 'Voice Description',
+            descriptionPlaceholder: 'Describe voice traits, e.g. warm, steady, clear rhythm, suitable for brand narration',
+            previewText: 'Preview Text',
+            previewTextPlaceholder: 'Enter text for preview playback'
+        },
+        cloneReference: {
+            label: 'Clone Reference Audio *',
+            uploadLabel: 'Select or upload reference audio',
+            methodUpload: 'Upload',
+            methodRecord: 'Record',
+            methodLibrary: 'Library',
+            readyTitle: 'Reference Audio Ready',
+            audioSample: 'Audio Sample',
+            replaceHint: 'Remove first, then choose upload, record, or library to replace.',
+            play: 'Play',
+            remove: 'Remove',
+            localUploadLabel: 'Upload local reference audio',
+            importing: 'Importing reference audio...'
+        },
+        summary: {
+            title: 'Preview Summary',
+            designDesc: 'Create a reusable voice preset quickly with style and description.',
+            cloneDesc: 'Generate similar timbre from reference audio for personalized narration and character dubbing.',
+            name: 'Name',
+            language: 'Language',
+            style: 'Style',
+            previewText: 'Preview Text',
+            previewTextEmpty: 'Not set',
+            composition: 'Avatar Composition',
+            mode: 'Mode',
+            modeDesign: 'Design',
+            modeClone: 'Clone'
+        },
+        footer: {
+            cloneHint: 'Recommended: upload 10-60 seconds of clean speech sample',
+            designHint: 'After saving, it will appear in "My Voices"',
+            cancel: 'Cancel',
+            save: 'Save to Voice Library'
+        },
+        fallback: {
+            customVoice: 'Custom Voice',
+            clonedVoice: 'Cloned Voice'
+        }
+    },
+    card: {
+        sourceCustom: 'Custom',
+        sourceWorkspace: 'Workspace',
+        sourceMarket: 'Market',
+        providerFallback: 'Voice Provider',
+        styleFallback: 'Neutral',
+        descriptionFallback: 'Good for narration, video, and character dubbing',
+        playPreview: 'Play preview',
+        pausePreview: 'Pause preview',
+        playing: 'Playing'
+    }
 };

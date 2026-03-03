@@ -128,7 +128,7 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
     { path: ROUTES.EDITOR, component: LazyPageWrapper(EditorPage), layout: 'main' },
     { path: ROUTES.CHAT, component: ChatPage, layout: 'main' },
     { path: ROUTES.BROWSER, component: BrowserPage, layout: 'main' },
-    { path: ROUTES.DRIVE, component: DrivePage, layout: 'main' },
+    { path: ROUTES.DRIVE, component: DrivePage, layout: 'creation' },
     { 
         path: ROUTES.ASSETS, 
         component: LazyPageWrapper(AssetsPage), 

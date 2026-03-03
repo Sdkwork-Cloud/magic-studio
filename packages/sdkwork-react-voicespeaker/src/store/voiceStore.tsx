@@ -3,7 +3,6 @@ import { VoiceTask, VoiceConfig } from '../entities';
 import { voiceBusinessService } from '../services';
 import { VOICE_MODELS, PRESET_VOICES } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 
 interface VoiceStoreContextType {
@@ -20,14 +19,6 @@ interface VoiceStoreContextType {
 }
 
 const VoiceStoreContext = createContext<VoiceStoreContextType | undefined>(undefined);
-
-const resolveVoiceScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
-};
 
 export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<VoiceTask[]>([]);
@@ -84,24 +75,12 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
             const rawResults = await voiceBusinessService.voiceService.generateSpeech(config);
             const persistedResults = await Promise.all(rawResults.map(async (result, index) => {
                 const inlineData = await inlineDataService.tryExtractInlineData(result.url);
-                const persisted = await assetBusinessFacade.importVoiceSpeakerAsset({
-                    scope: resolveVoiceScope(),
-                    type: 'voice',
-                    name: `voice_gen_${taskId}_${index + 1}.wav`,
-                    data: inlineData,
-                    remoteUrl: inlineData ? undefined : result.url,
-                    metadata: {
-                        origin: 'ai',
-                        source: 'voice-speaker-generate',
-                        text: result.text,
-                        speakerName: result.speakerName,
-                        duration: result.duration
-                    }
+                return voiceBusinessService.voiceSpeakerService.persistGeneratedVoiceResult({
+                    taskId,
+                    index,
+                    result,
+                    inlineData
                 });
-                return {
-                    ...result,
-                    url: persisted.primaryLocator.uri
-                };
             }));
             
             const completedTask: VoiceTask = {

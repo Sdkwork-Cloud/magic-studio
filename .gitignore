@@ -181,3 +181,5 @@ docs/reports/*.json
 
 # Local SDK checkout
 sdkwork-sdk-app/
+.pnpm-store/
+.pnpm-store/*

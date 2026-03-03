@@ -71,7 +71,13 @@ export const WorkspaceStoreProvider: React.FC<{ children: ReactNode }> = ({ chil
 
   const addProject = useCallback(async (name: string, type: ProjectType, description: string, coverImage?: { data: Uint8Array, name: string }) => {
     if (!currentWorkspace) return;
-    const res = await workspaceBusinessService.saveProject(currentWorkspace.uuid, { name, type, description, coverImage } as any);
+    const res = await workspaceBusinessService.createProject(
+      currentWorkspace.uuid,
+      name,
+      type,
+      description,
+      coverImage
+    );
     if (res.success) {
       await loadWorkspaces();
     }

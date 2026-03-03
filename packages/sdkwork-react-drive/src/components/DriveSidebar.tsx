@@ -39,7 +39,8 @@ export const DriveSidebar: React.FC = () => {
     };
 
     return (
-        <div className="w-64 bg-[#18181b] border-r border-[#27272a] flex flex-col p-4 select-none">
+        <div className="h-full w-[272px] select-none p-3">
+            <div className="flex h-full min-h-0 flex-col rounded-xl border border-[#27272a] bg-[#18181b] p-4">
             {/* New Button with Dropdown */}
             <div className="relative mb-6" ref={menuRef}>
                 <button 
@@ -72,7 +73,7 @@ export const DriveSidebar: React.FC = () => {
             </div>
 
             {/* Nav Links */}
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 min-h-0 space-y-1">
                 <SidebarLink 
                     icon={<HardDrive size={18} />} 
                     label={t('drive.sidebar.my_drive')} 
@@ -115,6 +116,7 @@ export const DriveSidebar: React.FC = () => {
                     <span className="text-gray-500">{formatSize(stats?.usedBytes || 0)} {t('drive.sidebar.used')}</span>
                     <button className="text-blue-400 hover:text-blue-300 transition-colors">{t('drive.sidebar.upgrade')}</button>
                 </div>
+            </div>
             </div>
         </div>
     );

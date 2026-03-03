@@ -1,6 +1,7 @@
 import { User } from '../entities/user.entity';
 import { authBusinessService, authSessionService } from '../services';
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { i18nService } from '@sdkwork/react-i18n';
 import type { LoginVO } from '@sdkwork/app-sdk';
 
 interface AuthStoreContextType {
@@ -43,7 +44,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
-            throw new Error(result.message || 'Login failed');
+            throw new Error(result.message || i18nService.t('auth.error.login_failed'));
         }
     };
 
@@ -52,7 +53,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
-            throw new Error(result.message || 'Login failed');
+            throw new Error(result.message || i18nService.t('auth.error.login_failed'));
         }
     };
 
@@ -61,7 +62,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (result.success && result.data) {
             saveAuthData(result.data.user, result.data.loginVO);
         } else {
-            throw new Error(result.message || 'Login failed');
+            throw new Error(result.message || i18nService.t('auth.error.login_failed'));
         }
     };
 
@@ -76,7 +77,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             setUser(result.data);
             authSessionService.saveUser(result.data);
         } else {
-            throw new Error(result.message || 'Registration failed');
+            throw new Error(result.message || i18nService.t('auth.error.registration_failed'));
         }
     };
 
@@ -92,7 +93,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             authSessionService.saveTokens(result.data.accessToken, result.data.refreshToken ?? null);
         } else {
             clearAuthData();
-            throw new Error(result.message || 'Token refresh failed');
+            throw new Error(result.message || i18nService.t('auth.error.token_refresh_failed'));
         }
     };
 

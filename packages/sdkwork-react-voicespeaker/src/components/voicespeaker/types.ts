@@ -6,8 +6,13 @@ export interface IVoice {
   style?: string;   // e.g. 'News', 'Story', 'Whisper'
   language: string; // e.g. 'en-US', 'zh-CN'
   previewUrl?: string;
+  previewText?: string;
   tags?: string[];
   provider?: string; // e.g. 'OpenAI', 'ElevenLabs'
+  source?: 'market' | 'workspace' | 'custom' | string;
+  description?: string;
+  avatarUrl?: string;
+  createdAt?: number;
 }
 
 export interface ChooseVoiceSpeakerProps {
@@ -33,4 +38,5 @@ export interface ChooseVoiceSpeakerModalProps {
   onConfirm: (voice: IVoice) => void;
   voices?: IVoice[];
   title?: string;
+  initialView?: 'library' | 'lab';
 }
