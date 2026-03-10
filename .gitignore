@@ -27,6 +27,7 @@ out
 
 # Turbo
 .turbo
+.worktrees/
 
 # IDE and Editor
 .vscode/*
