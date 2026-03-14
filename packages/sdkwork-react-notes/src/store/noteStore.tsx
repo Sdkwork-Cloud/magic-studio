@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback, useRef } from 'react';
-import { Note, NoteSummary, NoteFolder, TreeItem, generateUUID } from '@sdkwork/react-commons';
+import { Note, NoteSummary, NoteFolder, TreeItem } from '@sdkwork/react-commons';
 import { noteBusinessService } from '../services';
 
 interface NoteStoreContextType {
@@ -9,6 +9,7 @@ interface NoteStoreContextType {
   folders: NoteFolder[];
   activeNoteId: string | null;
   activeNote: Note | null; // Full content
+  operationError: string | null;
   isLoading: boolean;
   treeData: TreeItem[];
   recentNotes: NoteSummary[];
@@ -18,26 +19,22 @@ interface NoteStoreContextType {
   createNote: (title: string, type?: Note['type'], parentId?: string | null) => Promise<string>;
   createFolder: (name: string, parentId?: string | null) => Promise<string>;
   updateNote: (id: string, updates: Partial<Note>) => void;
-  deleteItem: (id: string, kind: 'note' | 'folder') => Promise<void>;
-  restoreFromTrash: (id: string) => Promise<void>;
-  deletePermanently: (id: string) => Promise<void>;
-  clearTrash: () => Promise<void>;
+  deleteItem: (id: string, kind: 'note' | 'folder') => Promise<boolean>;
+  restoreFromTrash: (id: string) => Promise<boolean>;
+  deletePermanently: (id: string) => Promise<boolean>;
+  clearTrash: () => Promise<boolean>;
   toggleFavorite: (id: string) => void;
   
-  moveItem: (itemId: string, itemKind: 'note' | 'folder', newParentId: string | null) => Promise<void>;
+  moveItem: (itemId: string, itemKind: 'note' | 'folder', newParentId: string | null) => Promise<boolean>;
   toggleFolderExpand: (folderId: string) => void;
   renameFolder: (id: string, newName: string) => Promise<string>;
   expandedFolders: Set<string>;
+  clearOperationError: () => void;
   refresh: () => Promise<void>;
 }
 
 const NoteStoreContext = createContext<NoteStoreContextType | undefined>(undefined);
 const NOTE_SAVE_DEBOUNCE_MS = 500;
-
-const toNoteSummary = (note: Note): NoteSummary => {
-  const { content: _content, ...summary } = note;
-  return summary;
-};
 
 export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Lists only store summaries to save memory
@@ -47,6 +44,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   
   const [activeNoteId, setActiveNoteIdState] = useState<string | null>(null);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -101,6 +99,18 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, []);
 
+  const pushOperationError = useCallback((message: string) => {
+    const normalized = message.trim();
+    if (!normalized) {
+      return;
+    }
+    setOperationError(normalized);
+  }, []);
+
+  const clearOperationError = useCallback(() => {
+    setOperationError(null);
+  }, []);
+
   const flushAllPendingSaves = useCallback(async (): Promise<void> => {
     const ids = new Set<string>([
       ...pendingSavePayloadRef.current.keys(),
@@ -132,6 +142,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     try {
         const snapshotResult = await noteBusinessService.queryWorkspaceSnapshot({ page: 0, size: 2000 });
         if (!snapshotResult.success || !snapshotResult.data) {
+            pushOperationError(snapshotResult.message || 'Failed to load notes');
             return;
         }
         const nextNotes = snapshotResult.data.notes;
@@ -147,12 +158,15 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             setActiveNoteIdState(null);
             setActiveNote(null);
         }
+        clearOperationError();
     } catch (e) {
         console.error("Failed to load notes list", e);
+        const message = e instanceof Error ? e.message : 'Failed to load notes';
+        pushOperationError(message);
     } finally {
         setIsLoading(false);
     }
-  }, [flushAllPendingSaves]);
+  }, [clearOperationError, flushAllPendingSaves, pushOperationError]);
 
   // Lazy Load Content
   useEffect(() => {
@@ -223,34 +237,39 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [activeNoteId, flushPendingSave]);
 
   const createNote = async (title: string, type: Note['type'] = 'doc', parentId: string | null = null) => {
-    const newNote: Note = {
-      id: generateUUID(),
-      uuid: generateUUID(),
-      title,
-      content: '',
-      type,
-      parentId,
-      tags: [],
-      isFavorite: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      snippet: ''
-    };
-    
-    // Add summary to list immediately
-    const summary = toNoteSummary(newNote);
-    setNotes(prev => [summary, ...prev]);
-    
-    // Set Active
-    setActiveNoteId(newNote.id);
-    setActiveNote(newNote); 
-    
     if (parentId) {
-        setExpandedFolders(prev => new Set(prev).add(parentId));
+      setExpandedFolders(prev => new Set(prev).add(parentId));
     }
 
-    await noteBusinessService.save(newNote);
-    return newNote.id;
+    const result = await noteBusinessService.save({
+      title,
+      type,
+      parentId,
+      content: '',
+      tags: [],
+      isFavorite: false
+    });
+    if (!result.success || !result.data) {
+      pushOperationError(result.message || 'Failed to create note');
+      return '';
+    }
+    clearOperationError();
+
+    const createdSummary = result.data;
+    const detailResult = await noteBusinessService.findById(createdSummary.id);
+    const createdNote: Note = detailResult.success && detailResult.data
+      ? detailResult.data
+      : {
+          ...createdSummary,
+          content: '',
+          type
+        };
+
+    setNotes(prev => [createdSummary, ...prev.filter(note => note.id !== createdSummary.id)]);
+    setTrashedNotes(prev => prev.filter(note => note.id !== createdSummary.id));
+    setActiveNoteId(createdSummary.id);
+    setActiveNote(createdNote);
+    return createdSummary.id;
   };
 
   const createFolder = async (name: string, parentId: string | null = null) => {
@@ -258,9 +277,11 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (parentId) setExpandedFolders(prev => new Set(prev).add(parentId));
     
     if (res.success) {
+        clearOperationError();
         setFolders(prev => [...prev, res.data!]);
         return res.data!.id;
     }
+    pushOperationError(res.message || 'Failed to create folder');
     return '';
   };
 
@@ -283,6 +304,7 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   const renameFolder = async (id: string, newName: string) => {
       const res = await noteBusinessService.renameFolder(id, newName);
       if (res.success) {
+          clearOperationError();
           const newPath = res.data!;
           if (expandedFolders.has(id)) {
               setExpandedFolders(prev => {
@@ -295,16 +317,19 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
           await loadList();
           return newPath;
       }
+      pushOperationError(res.message || 'Failed to rename folder');
       return id;
   };
 
-  const deleteItem = async (id: string, kind: 'note' | 'folder') => {
+  const deleteItem = async (id: string, kind: 'note' | 'folder'): Promise<boolean> => {
     if (kind === 'note') {
         await flushPendingSave(id);
         const result = await noteBusinessService.moveToTrash(id);
         if (!result.success || !result.data) {
-            return;
+            pushOperationError(result.message || 'Failed to move note to trash');
+            return false;
         }
+        clearOperationError();
         const moved = result.data;
         setNotes(prev => prev.filter(n => n.id !== id));
         setTrashedNotes(prev => [moved, ...prev.filter(n => n.id !== id)]);
@@ -312,46 +337,65 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
             setActiveNoteIdState(null);
             setActiveNote(null);
         }
+        return true;
     } else {
-        await noteBusinessService.deleteFolder(id);
+        const result = await noteBusinessService.deleteFolder(id);
+        if (!result.success) {
+            pushOperationError(result.message || 'Failed to delete folder');
+            return false;
+        }
+        clearOperationError();
         await loadList(); 
+        return true;
     }
   };
 
-  const restoreFromTrash = async (id: string) => {
+  const restoreFromTrash = async (id: string): Promise<boolean> => {
     await flushPendingSave(id);
     const result = await noteBusinessService.restoreFromTrash(id);
     if (!result.success || !result.data) {
-      return;
+      pushOperationError(result.message || 'Failed to restore note');
+      return false;
     }
+    clearOperationError();
     const restored = result.data;
     setTrashedNotes((prev) => prev.filter((note) => note.id !== id));
     setNotes((prev) => [restored, ...prev.filter((note) => note.id !== id)]);
+    return true;
   };
 
-  const deletePermanently = async (id: string) => {
+  const deletePermanently = async (id: string): Promise<boolean> => {
     await flushPendingSave(id);
-    await noteBusinessService.deleteById(id);
+    const result = await noteBusinessService.deleteById(id);
+    if (!result.success) {
+      pushOperationError(result.message || 'Failed to delete note permanently');
+      return false;
+    }
+    clearOperationError();
     setTrashedNotes((prev) => prev.filter((note) => note.id !== id));
     setNotes((prev) => prev.filter((note) => note.id !== id));
     if (activeNoteId === id) {
       setActiveNoteIdState(null);
       setActiveNote(null);
     }
+    return true;
   };
 
-  const clearTrash = async () => {
+  const clearTrash = async (): Promise<boolean> => {
     await flushAllPendingSaves();
     const result = await noteBusinessService.clearTrash();
     if (!result.success) {
-      return;
+      pushOperationError(result.message || 'Failed to clear trash');
+      return false;
     }
+    clearOperationError();
     const trashedIdSet = new Set(trashedNotes.map((note) => note.id));
     setTrashedNotes([]);
     if (activeNoteId && trashedIdSet.has(activeNoteId)) {
       setActiveNoteIdState(null);
       setActiveNote(null);
     }
+    return true;
   };
 
   const toggleFavorite = async (id: string) => {
@@ -361,24 +405,55 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const moveItem = async (itemId: string, itemKind: 'note' | 'folder', newParentId: string | null) => {
-      if (itemId === newParentId) return;
+  const moveItem = async (itemId: string, itemKind: 'note' | 'folder', newParentId: string | null): Promise<boolean> => {
+      if (itemId === newParentId) return false;
+      let moved = false;
+
+      if (itemKind === 'folder' && newParentId) {
+          const parentById = new Map<string, string | null>();
+          folders.forEach((folder) => {
+              parentById.set(folder.id, folder.parentId);
+          });
+          let cursor: string | null = newParentId;
+          while (cursor) {
+              if (cursor === itemId) {
+                  return false;
+              }
+              cursor = parentById.get(cursor) || null;
+          }
+      }
 
       if (itemKind === 'note') {
           await flushPendingSave(itemId);
           const note = notes.find(n => n.id === itemId);
           if (note) {
+              const previousParentId = note.parentId;
               setNotes(prev => prev.map(n => n.id === itemId ? { ...n, parentId: newParentId } : n));
-              await noteBusinessService.moveNote(note, newParentId);
+              const moveResult = await noteBusinessService.moveNote(note, newParentId);
+              if (!moveResult.success) {
+                  setNotes(prev => prev.map(n => n.id === itemId ? { ...n, parentId: previousParentId } : n));
+                  await loadList();
+                  pushOperationError(moveResult.message || 'Failed to move note');
+              } else {
+                  clearOperationError();
+                  moved = true;
+              }
           }
       } else {
-          // Folder move not fully implemented in service yet
+          const moveResult = await noteBusinessService.moveFolder(itemId, newParentId);
+          if (!moveResult.success) {
+              pushOperationError(moveResult.message || 'Failed to move folder');
+          } else {
+              clearOperationError();
+              moved = true;
+          }
           await loadList();
       }
       
-      if (newParentId) {
+      if (moved && newParentId) {
           setExpandedFolders(prev => new Set(prev).add(newParentId));
       }
+      return moved;
   };
 
   const toggleFolderExpand = (folderId: string) => {
@@ -433,10 +508,10 @@ export const NoteStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   return (
     <NoteStoreContext.Provider value={{
-      notes, trashedNotes, folders, activeNoteId, activeNote, isLoading, treeData, expandedFolders,
+      notes, trashedNotes, folders, activeNoteId, activeNote, operationError, isLoading, treeData, expandedFolders,
       recentNotes, favoriteNotes,
       setActiveNoteId, createNote, createFolder, updateNote, deleteItem, restoreFromTrash, deletePermanently, clearTrash, toggleFavorite,
-      moveItem, toggleFolderExpand, renameFolder, refresh: loadList
+      moveItem, toggleFolderExpand, renameFolder, clearOperationError, refresh: loadList
     }}>
       {children}
     </NoteStoreContext.Provider>

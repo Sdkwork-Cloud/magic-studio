@@ -6,7 +6,7 @@ import { IMAGE_STYLES } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { platform as _platform, inlineDataService } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { importAssetBySdk, importAssetFromUrlBySdk, resolveAssetPrimaryUrlBySdk } from '@sdkwork/react-assets';
 
 interface ImageStoreContextType {
     history: ImageTask[];
@@ -32,33 +32,30 @@ interface ImageStoreProviderProps {
 
 type StoreGeneratedResult = GeneratedImageResult & { modelId?: string };
 
-const resolveImageScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
-};
-
 const persistGeneratedImage = async (
     source: string,
     name: string,
-    metadata: Record<string, unknown>
+    _metadata: Record<string, unknown>
 ): Promise<string> => {
     const inlineData = await inlineDataService.tryExtractInlineData(source);
-    const result = await assetBusinessFacade.importImageStudioAsset({
-        scope: resolveImageScope(),
-        type: 'image',
-        name,
-        data: inlineData,
-        remoteUrl: inlineData ? undefined : source,
-        metadata: {
-            ...metadata,
-            origin: 'ai',
-            source: 'image-studio-gen'
-        }
-    });
-    return result.primaryLocator.uri;
+    const uploaded = inlineData
+        ? await importAssetBySdk(
+            {
+                name,
+                data: inlineData
+            },
+            'image',
+            { domain: 'image-studio' }
+        )
+        : await importAssetFromUrlBySdk(
+            source,
+            'image',
+            {
+                name,
+                domain: 'image-studio'
+            }
+        );
+    return (await resolveAssetPrimaryUrlBySdk(uploaded.id)) || uploaded.path || source;
 };
 
 export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children, initialConfig }) => {

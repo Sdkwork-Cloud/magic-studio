@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check, Sparkles } from 'lucide-react';
-import { VipPlan } from '../entities';
+import { PlanTier, VipPlan } from '../entities';
 import { VIP_PLANS } from '../constants';
 import { PaymentModal } from './PaymentModal';
 
@@ -18,11 +18,12 @@ interface TabInfo {
 }
 
 interface SelectedPlan {
-    planId: string;
+    planId: PlanTier;
     planName: string;
     price: number;
     currency: string;
     billingCycle: string;
+    purchaseCycle: 'month' | 'year' | 'onetime';
 }
 
 const TABS: TabInfo[] = [
@@ -135,6 +136,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ onClose }) => {
             price: pricing.price,
             currency: plan.currency,
             billingCycle: activeTab === 'yearly' ? '年' : activeTab === 'monthly' ? '月' : '月',
+            purchaseCycle: activeTab === 'yearly' ? 'year' : activeTab === 'monthly' ? 'month' : 'onetime',
         });
         setShowPaymentModal(true);
     };
@@ -305,10 +307,12 @@ export const PricingModal: React.FC<PricingModalProps> = ({ onClose }) => {
                 <PaymentModal
                     isOpen={showPaymentModal}
                     onClose={handlePaymentClose}
+                    planId={selectedPlan.planId}
                     planName={selectedPlan.planName}
                     price={selectedPlan.price}
                     currency={selectedPlan.currency}
                     billingCycle={selectedPlan.billingCycle}
+                    purchaseCycle={selectedPlan.purchaseCycle}
                 />
             )}
         </>,

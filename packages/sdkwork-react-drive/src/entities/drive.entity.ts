@@ -6,8 +6,12 @@ export interface DriveItem {
   parentId: string | null;
   name: string;
   type: DriveItemType;
+  path?: string;
   size: number;
   mimeType?: string;
+  status?: string;
+  previewUrl?: string;
+  objectKey?: string;
   updatedAt: number;
   createdAt: number;
   owner?: string;

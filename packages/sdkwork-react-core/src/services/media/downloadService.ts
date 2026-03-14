@@ -1,7 +1,7 @@
 
 import { vfs } from '@sdkwork/react-fs';
 import { pathUtils } from '@sdkwork/react-commons';
-import { platform } from '../../platform';
+import { getPlatformRuntime } from '../../platform';
 import { storageConfig } from '@sdkwork/react-fs';
 import { AnyMediaResource } from '@sdkwork/react-commons';
 ;
@@ -35,7 +35,8 @@ class DownloadService {
     private async ensureInit() {
         if (this.initPromise) return this.initPromise;
         this.initPromise = (async () => {
-            const root = await platform.getPath('documents');
+            const runtime = getPlatformRuntime();
+            const root = await runtime.system.path('documents');
             const downloadDir = pathUtils.join(root, storageConfig.library.downloads);
             try { await vfs.createDir(downloadDir); } catch {}
         })();
@@ -159,8 +160,8 @@ class DownloadService {
                     // For Desktop, we might prefer using asset:// protocol URL directly instead of reading blob
                     // But for consistency and WebGL textures in web mode, Blob is safer fallback
                     
-                    if (platform.getPlatform() === 'desktop') {
-                        const assetUrl = platform.convertFileSrc(localPath);
+                    if (getPlatformRuntime().system.kind() === 'desktop') {
+                        const assetUrl = getPlatformRuntime().fileSystem.convertFileSrc(localPath);
                         this.localPathCache.set(resource.id, assetUrl);
                     } else {
                         // Read into memory to create Blob URL for UI (Web Mode)
@@ -277,8 +278,8 @@ class DownloadService {
             const ext = resource.extension || resource.url.split('.').pop()?.split('?')[0] || 'bin';
             
             let finalUrl = '';
-            if (platform.getPlatform() === 'desktop') {
-                finalUrl = platform.convertFileSrc(localPath);
+            if (getPlatformRuntime().system.kind() === 'desktop') {
+                finalUrl = getPlatformRuntime().fileSystem.convertFileSrc(localPath);
             } else {
                 const blobUrl = this.createBlobUrl(combined, resource.mimeType || this.guessMime(ext));
                 finalUrl = blobUrl;
@@ -310,7 +311,7 @@ class DownloadService {
 
     private async resolveLocalPath(resource: AnyMediaResource): Promise<string> {
         await this.ensureInit();
-        const root = await platform.getPath('documents');
+        const root = await getPlatformRuntime().system.path('documents');
         const ext = resource.extension || resource.url?.split('.').pop()?.split('?')[0] || 'bin';
         const filename = `${resource.id}.${ext}`;
         return pathUtils.join(root, storageConfig.library.downloads, filename);

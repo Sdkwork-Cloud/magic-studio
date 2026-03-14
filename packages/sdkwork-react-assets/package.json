@@ -53,6 +53,7 @@
                              "react-dom":  "\u003e=18.0.0"
                          },
     "dependencies":  {
+                         "@sdkwork/app-sdk":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*",
                          "@sdkwork/react-fs":  "workspace:*",

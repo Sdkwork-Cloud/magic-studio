@@ -1,15 +1,32 @@
+import { getSdkworkClient } from '@sdkwork/react-core';
 import type {
   Order,
+  OrderStatistics,
   OrderStatus,
   OrderType,
+  PaymentMethod,
+  PaymentStatus,
+  TaskType,
   TradePageRequest,
   TradePageResponse,
-  OrderStatistics,
-  TaskType,
-  PaymentStatus,
 } from '../entities';
-import { OrderStatus as OrderStatusEnum } from '../entities';
-import { generateUUID } from '@sdkwork/react-commons';
+import {
+  OrderStatus as OrderStatusEnum,
+  OrderType as OrderTypeEnum,
+  PaymentMethod as PaymentMethodEnum,
+  PaymentStatus as PaymentStatusEnum,
+} from '../entities';
+
+type AnyRecord = Record<string, unknown>;
+
+interface ApiEnvelope<T> {
+  code?: string | number;
+  data?: T;
+  msg?: string;
+  message?: string;
+}
+
+const SUCCESS_CODE = '2000';
 
 /**
  * 创建订单参数
@@ -51,282 +68,420 @@ export interface CancelOrderParams {
  * 订单服务接口
  */
 export interface IOrderService {
-  /**
-   * 创建订单
-   */
   createOrder(params: CreateOrderParams): Promise<Order>;
-
-  /**
-   * 根据 UUID 获取订单详情
-   */
   getOrderById(uuid: string): Promise<Order | null>;
-
-  /**
-   * 根据订单号获取订单详情
-   */
   getOrderByNo(orderNo: string): Promise<Order | null>;
-
-  /**
-   * 获取订单列表 (分页)
-   */
   getOrderList(params: TradePageRequest): Promise<TradePageResponse<Order>>;
-
-  /**
-   * 获取我的订单列表 (分页)
-   */
   getMyOrderList(params: TradePageRequest): Promise<TradePageResponse<Order>>;
-
-  /**
-   * 更新订单状态
-   */
   updateOrderStatus(uuid: string, status: OrderStatus): Promise<Order>;
-
-  /**
-   * 取消订单
-   */
   cancelOrder(params: CancelOrderParams): Promise<Order>;
-
-  /**
-   * 删除订单
-   */
   deleteOrder(uuid: string): Promise<void>;
-
-  /**
-   * 获取订单统计信息
-   */
   getOrderStatistics(): Promise<OrderStatistics>;
-
-  /**
-   * 获取待支付订单列表
-   */
   getPendingPaymentOrders(): Promise<Order[]>;
-
-  /**
-   * 获取进行中订单列表
-   */
   getInProgressOrders(): Promise<Order[]>;
 }
 
+function normalizeText(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
+function toId(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') {
+    return value.trim() || fallback;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  return fallback;
+}
+
+function unwrapApiData<T>(payload: T | ApiEnvelope<T>, fallbackMessage: string): T {
+  if (payload && typeof payload === 'object') {
+    const envelope = payload as ApiEnvelope<T>;
+    if ('code' in envelope) {
+      const code = String(envelope.code ?? '').trim();
+      if (code && code !== SUCCESS_CODE && !code.startsWith('2')) {
+        throw new Error(normalizeText(envelope.msg) || normalizeText(envelope.message) || fallbackMessage);
+      }
+    }
+    if ('data' in envelope && envelope.data !== undefined) {
+      return envelope.data as T;
+    }
+  }
+  return payload as T;
+}
+
+function mapOrderStatus(value: unknown): OrderStatus {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+
+  if (!normalized || normalized === 'PENDING' || normalized === 'UNPAID' || normalized.includes('PENDING_PAYMENT')) {
+    return OrderStatusEnum.PENDING_PAYMENT;
+  }
+  if (normalized === 'PAID') {
+    return OrderStatusEnum.PAID;
+  }
+  if (
+    normalized.includes('PENDING_SHIPMENT')
+    || normalized.includes('PENDING_RECEIPT')
+    || normalized === 'PROCESSING'
+    || normalized === 'SHIPPED'
+    || normalized === 'DELIVERED'
+    || normalized.includes('IN_PROGRESS')
+  ) {
+    return OrderStatusEnum.IN_PROGRESS;
+  }
+  if (normalized.includes('COMPLETE')) {
+    return OrderStatusEnum.COMPLETED;
+  }
+  if (normalized.includes('REFUND')) {
+    return OrderStatusEnum.REFUNDED;
+  }
+  if (normalized.includes('CANCEL') || normalized.includes('CLOSE')) {
+    return OrderStatusEnum.CANCELLED;
+  }
+  if (normalized.includes('DISPUTE')) {
+    return OrderStatusEnum.DISPUTED;
+  }
+  return OrderStatusEnum.PENDING_PAYMENT;
+}
+
+function mapOrderType(value: unknown): OrderType {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+  const fallback = OrderTypeEnum.CUSTOM_SERVICE;
+
+  const allowed: Record<string, OrderType> = {
+    VIDEO_GENERATION: OrderTypeEnum.VIDEO_GENERATION,
+    IMAGE_GENERATION: OrderTypeEnum.IMAGE_GENERATION,
+    AUDIO_GENERATION: OrderTypeEnum.AUDIO_GENERATION,
+    MUSIC_GENERATION: OrderTypeEnum.MUSIC_GENERATION,
+    VIDEO_EDITING: OrderTypeEnum.VIDEO_EDITING,
+    CUSTOM_SERVICE: OrderTypeEnum.CUSTOM_SERVICE,
+    SUBSCRIPTION: OrderTypeEnum.SUBSCRIPTION,
+    CREDIT_TOPUP: OrderTypeEnum.CREDIT_TOPUP,
+  };
+
+  return allowed[normalized] || fallback;
+}
+
+function mapPaymentMethod(value: unknown): PaymentMethod | undefined {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+  if (!normalized) {
+    return undefined;
+  }
+  const map: Record<string, PaymentMethod> = {
+    ALIPAY: PaymentMethodEnum.ALIPAY,
+    WECHAT_PAY: PaymentMethodEnum.WECHAT_PAY,
+    CREDIT_CARD: PaymentMethodEnum.CREDIT_CARD,
+    BALANCE: PaymentMethodEnum.BALANCE,
+    POINTS: PaymentMethodEnum.POINTS,
+    MIXED: PaymentMethodEnum.MIXED,
+  };
+  return map[normalized];
+}
+
+function mapPaymentStatus(orderStatus: OrderStatus): PaymentStatus {
+  if (orderStatus === OrderStatusEnum.PENDING_PAYMENT) {
+    return PaymentStatusEnum.PENDING;
+  }
+  if (orderStatus === OrderStatusEnum.IN_PROGRESS) {
+    return PaymentStatusEnum.PROCESSING;
+  }
+  if (orderStatus === OrderStatusEnum.REFUNDED) {
+    return PaymentStatusEnum.REFUNDED;
+  }
+  if (orderStatus === OrderStatusEnum.CANCELLED || orderStatus === OrderStatusEnum.DISPUTED) {
+    return PaymentStatusEnum.FAILED;
+  }
+  return PaymentStatusEnum.SUCCESS;
+}
+
+function mapOrder(raw: AnyRecord): Order {
+  const nowIso = new Date().toISOString();
+  const uuid = toId(raw.orderId, toId(raw.orderSn, `order-${Date.now()}`));
+  const orderNo = toId(raw.orderSn, uuid);
+  const status = mapOrderStatus(raw.status);
+  const amount = toNumber(raw.totalAmount, 0);
+  const paidAmount = toNumber(raw.paidAmount, 0);
+  const usedPoints = toNumber(raw.paidPointsAmount, 0);
+
+  return {
+    uuid,
+    orderNo,
+    type: mapOrderType(raw.orderType),
+    status,
+    title: normalizeText(raw.subject) || `Order ${orderNo}`,
+    description: normalizeText(raw.remark) || undefined,
+    amount,
+    paidAmount,
+    usedPoints,
+    usedBalance: Math.max(0, paidAmount - usedPoints),
+    paymentMethod: mapPaymentMethod(raw.paymentMethod),
+    paymentStatus: mapPaymentStatus(status),
+    taskUuid: undefined,
+    taskType: undefined as TaskType | undefined,
+    taskParams: undefined,
+    resourceUuids: undefined,
+    userUuid: toId(raw.userId),
+    workspaceUuid: undefined,
+    projectUuid: undefined,
+    remark: normalizeText(raw.remark) || undefined,
+    cancelReason: undefined,
+    failureReason: undefined,
+    paidAt: normalizeText(raw.payTime) || undefined,
+    completedAt: normalizeText(raw.completeTime) || undefined,
+    cancelledAt: normalizeText(raw.cancelTime) || undefined,
+    expiresAt: normalizeText(raw.expireTime) || undefined,
+    metadata: undefined,
+    createdAt: normalizeText(raw.createdAt) || nowIso,
+    updatedAt: normalizeText(raw.updatedAt) || nowIso,
+  };
+}
+
+function toOrderQueryStatus(status?: string): string | undefined {
+  const normalized = normalizeText(status).replace(/[\s-]+/g, '_').toUpperCase();
+  if (!normalized) {
+    return undefined;
+  }
+  if (normalized === OrderStatusEnum.IN_PROGRESS) {
+    return 'PENDING_SHIPMENT';
+  }
+  return normalized;
+}
+
+function toSdkPaymentMethod(method: PaymentMethod | undefined): string {
+  if (!method) {
+    return 'ALIPAY';
+  }
+  const mapping: Record<PaymentMethod, string> = {
+    [PaymentMethodEnum.ALIPAY]: 'ALIPAY',
+    [PaymentMethodEnum.WECHAT_PAY]: 'WECHAT_PAY',
+    [PaymentMethodEnum.CREDIT_CARD]: 'CREDIT_CARD',
+    [PaymentMethodEnum.BALANCE]: 'BALANCE',
+    [PaymentMethodEnum.POINTS]: 'POINTS',
+    [PaymentMethodEnum.MIXED]: 'MIXED',
+  };
+  return mapping[method] || 'ALIPAY';
+}
+
+function toTradePageResponse(pageData: AnyRecord, fallbackPage: number, fallbackSize: number): TradePageResponse<Order> {
+  const list = Array.isArray(pageData.content) ? pageData.content as AnyRecord[] : [];
+  const items = list.map((item) => mapOrder(item));
+  const total = toNumber(pageData.totalElements, items.length);
+  const pageRaw = toNumber(pageData.number, fallbackPage - 1);
+  const currentPage = pageRaw + 1;
+  const pageSize = toNumber(pageData.size, fallbackSize);
+  const totalPages = Math.max(1, toNumber(pageData.totalPages, Math.ceil(total / Math.max(1, pageSize))));
+
+  return {
+    items,
+    total,
+    totalPages,
+    currentPage,
+    pageSize,
+  };
+}
+
 /**
- * 订单服务实现 (本地存储版本)
+ * 订单服务实现（SDK-only）
  */
 export class OrderService implements IOrderService {
-  private readonly STORAGE_KEY = 'trade_orders';
-
-  private generateOrderNo(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `ORD${timestamp}${random}`;
-  }
-
-  private async getOrders(): Promise<Order[]> {
-    const data = localStorage.getItem(this.STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private async saveOrders(orders: Order[]): Promise<void> {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(orders));
-  }
-
   async createOrder(params: CreateOrderParams): Promise<Order> {
-    const orders = await this.getOrders();
-    const now = new Date().toISOString();
-    const expiresAt = params.expireInMinutes
-      ? new Date(Date.now() + params.expireInMinutes * 60 * 1000).toISOString()
-      : undefined;
-
-    const order: Order = {
-      uuid: generateUUID(),
-      orderNo: this.generateOrderNo(),
-      type: params.type,
-      status: OrderStatusEnum.PENDING_PAYMENT,
-      title: params.title,
-      description: params.description,
-      amount: params.amount,
-      paidAmount: 0,
-      usedPoints: 0,
-      usedBalance: 0,
-      paymentStatus: 'PENDING' as PaymentStatus,
-      taskType: params.taskType as TaskType | undefined,
-      taskParams: params.taskParams,
-      workspaceUuid: params.workspaceUuid,
-      projectUuid: params.projectUuid,
-      remark: params.remark,
-      userUuid: 'current-user', // TODO: 从认证上下文获取
-      createdAt: now,
-      updatedAt: now,
-      expiresAt,
+    const client = getSdkworkClient();
+    const primaryProductId = params.projectUuid || params.workspaceUuid || 'virtual-product';
+    const body = {
+      orderType: params.type,
+      productId: primaryProductId,
+      quantity: 1,
+      items: [
+        {
+          productId: primaryProductId,
+          quantity: 1,
+          price: String(params.amount),
+          productName: params.title,
+          contentType: params.taskType || 'GENERATION',
+          contentId: params.projectUuid || params.workspaceUuid || undefined,
+        },
+      ],
+      paymentMethod: 'ALIPAY',
+      remark: params.remark || params.description || '',
+      sourceChannel: 'magic-studio-v2',
+      rechargePoints: params.type === OrderTypeEnum.CREDIT_TOPUP ? Math.max(0, Math.round(params.amount)) : undefined,
+      orderPayloadValid: true,
     };
 
-    orders.push(order);
-    await this.saveOrders(orders);
-    return order;
+    const response = await client.orders.createOrder(body);
+    const created = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to create order');
+    const orderId = toId(created.orderId);
+    if (orderId) {
+      const detail = await this.getOrderById(orderId);
+      if (detail) {
+        return detail;
+      }
+    }
+    return mapOrder(created);
   }
 
   async getOrderById(uuid: string): Promise<Order | null> {
-    const orders = await this.getOrders();
-    return orders.find((o) => o.uuid === uuid) || null;
+    const orderId = toId(uuid);
+    if (!orderId) {
+      return null;
+    }
+    const client = getSdkworkClient();
+    const response = await client.orders.getOrderDetail(orderId);
+    const detail = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to load order detail');
+    return mapOrder(detail);
   }
 
   async getOrderByNo(orderNo: string): Promise<Order | null> {
-    const orders = await this.getOrders();
-    return orders.find((o) => o.orderNo === orderNo) || null;
+    const no = normalizeText(orderNo);
+    if (!no) {
+      return null;
+    }
+    const list = await this.getOrderList({
+      page: 1,
+      pageSize: 20,
+      keyword: no,
+    });
+    return list.items.find((item) => item.orderNo === no) || null;
   }
 
   async getOrderList(params: TradePageRequest): Promise<TradePageResponse<Order>> {
-    const orders = await this.getOrders();
-    return this.paginateOrders(orders, params);
+    const page = Math.max(1, toNumber(params.page, 1));
+    const pageSize = Math.max(1, toNumber(params.pageSize, 10));
+    const client = getSdkworkClient();
+    const response = await client.orders.listOrders({
+      page,
+      pageNo: page,
+      pageSize,
+      size: pageSize,
+      keyword: params.keyword,
+      status: toOrderQueryStatus(params.status),
+      orderType: normalizeText(params.type) || undefined,
+      startDate: params.startTime,
+      endDate: params.endTime,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+    });
+    const pageData = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to load orders');
+    return toTradePageResponse(pageData, page, pageSize);
   }
 
   async getMyOrderList(params: TradePageRequest): Promise<TradePageResponse<Order>> {
-    // TODO: 从认证上下文获取当前用户 UUID
-    const orders = await this.getOrders();
-    const myOrders = orders.filter((o) => o.userUuid === 'current-user');
-    return this.paginateOrders(myOrders, params);
-  }
-
-  private paginateOrders(orders: Order[], params: TradePageRequest): TradePageResponse<Order> {
-    let filtered = [...orders];
-
-    // 应用过滤
-    if (params.status) {
-      filtered = filtered.filter((o) => o.status === params.status);
-    }
-    if (params.type) {
-      filtered = filtered.filter((o) => o.type === params.type);
-    }
-    if (params.keyword) {
-      const keyword = params.keyword.toLowerCase();
-      filtered = filtered.filter(
-        (o) =>
-          o.title.toLowerCase().includes(keyword) ||
-          o.orderNo.toLowerCase().includes(keyword) ||
-          o.description?.toLowerCase().includes(keyword)
-      );
-    }
-    if (params.startTime) {
-      filtered = filtered.filter((o) => o.createdAt >= params.startTime!);
-    }
-    if (params.endTime) {
-      filtered = filtered.filter((o) => o.createdAt <= params.endTime!);
-    }
-
-    // 排序
-    if (params.sortBy) {
-      filtered.sort((a, b) => {
-        const aVal = a[params.sortBy as keyof Order];
-        const bVal = b[params.sortBy as keyof Order];
-        if (aVal && bVal) {
-          if (aVal < bVal) return params.sortOrder === 'desc' ? 1 : -1;
-          if (aVal > bVal) return params.sortOrder === 'desc' ? -1 : 1;
-        }
-        return 0;
-      });
-    } else {
-      // 默认按创建时间降序
-      filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    }
-
-    // 分页
-    const page = params.page || 1;
-    const pageSize = params.pageSize || 10;
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / pageSize);
-    const start = (page - 1) * pageSize;
-    const items = filtered.slice(start, start + pageSize);
-
-    return {
-      items,
-      total,
-      totalPages,
-      currentPage: page,
-      pageSize,
-    };
+    return this.getOrderList(params);
   }
 
   async updateOrderStatus(uuid: string, status: OrderStatus): Promise<Order> {
-    const orders = await this.getOrders();
-    const index = orders.findIndex((o) => o.uuid === uuid);
-    if (index === -1) {
-      throw new Error(`Order not found: ${uuid}`);
+    const orderId = toId(uuid);
+    if (!orderId) {
+      throw new Error('Order uuid is required');
     }
 
-    const order = orders[index];
-    order.status = status;
-    order.updatedAt = new Date().toISOString();
-
-    // 根据状态设置相关时间
+    const client = getSdkworkClient();
+    if (status === OrderStatusEnum.CANCELLED) {
+      await client.orders.cancelOrder(orderId, { reason: 'user_cancelled' });
+      const detail = await this.getOrderById(orderId);
+      if (!detail) {
+        throw new Error('Order not found after cancel');
+      }
+      return detail;
+    }
+    if (status === OrderStatusEnum.COMPLETED) {
+      await client.orders.confirmReceipt(orderId);
+      const detail = await this.getOrderById(orderId);
+      if (!detail) {
+        throw new Error('Order not found after confirm');
+      }
+      return detail;
+    }
     if (status === OrderStatusEnum.PAID) {
-      order.paidAt = order.updatedAt;
-      order.paymentStatus = 'SUCCESS' as PaymentStatus;
-    } else if (status === OrderStatusEnum.COMPLETED) {
-      order.completedAt = order.updatedAt;
-    } else if (status === OrderStatusEnum.CANCELLED) {
-      order.cancelledAt = order.updatedAt;
+      await client.orders.payOrder(orderId, { paymentMethod: toSdkPaymentMethod(PaymentMethodEnum.ALIPAY) });
+      const detail = await this.getOrderById(orderId);
+      if (!detail) {
+        throw new Error('Order not found after pay');
+      }
+      return detail;
+    }
+    if (status === OrderStatusEnum.REFUNDED) {
+      await client.orders.applyRefund(orderId, { reason: 'manual_refund' });
+      const detail = await this.getOrderById(orderId);
+      if (!detail) {
+        throw new Error('Order not found after refund');
+      }
+      return detail;
     }
 
-    orders[index] = order;
-    await this.saveOrders(orders);
-    return order;
+    throw new Error(`Unsupported status transition: ${status}`);
   }
 
   async cancelOrder(params: CancelOrderParams): Promise<Order> {
-    const orders = await this.getOrders();
-    const index = orders.findIndex((o) => o.uuid === params.orderUuid);
-    if (index === -1) {
-      throw new Error(`Order not found: ${params.orderUuid}`);
+    const orderId = toId(params.orderUuid);
+    if (!orderId) {
+      throw new Error('Order uuid is required');
     }
-
-    const order = orders[index];
-    if (order.status !== OrderStatusEnum.PENDING_PAYMENT) {
-      throw new Error('Only pending payment orders can be cancelled');
+    const client = getSdkworkClient();
+    await client.orders.cancelOrder(orderId, {
+      reason: normalizeText(params.reason) || 'user_cancelled',
+    });
+    const detail = await this.getOrderById(orderId);
+    if (!detail) {
+      throw new Error('Order not found after cancel');
     }
-
-    order.status = OrderStatusEnum.CANCELLED;
-    order.cancelReason = params.reason;
-    order.cancelledAt = new Date().toISOString();
-    order.updatedAt = order.cancelledAt;
-
-    orders[index] = order;
-    await this.saveOrders(orders);
-    return order;
+    return detail;
   }
 
   async deleteOrder(uuid: string): Promise<void> {
-    const orders = await this.getOrders();
-    const filtered = orders.filter((o) => o.uuid !== uuid);
-    await this.saveOrders(filtered);
+    const orderId = toId(uuid);
+    if (!orderId) {
+      return;
+    }
+    const client = getSdkworkClient();
+    await client.orders.deleteOrder(orderId);
   }
 
   async getOrderStatistics(): Promise<OrderStatistics> {
-    const orders = await this.getOrders();
-    const now = new Date();
-    const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const client = getSdkworkClient();
+    const response = await client.orders.getOrderStatistics();
+    const stats = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to load order statistics');
 
-    const stats: OrderStatistics = {
-      totalOrders: orders.length,
-      pendingPaymentOrders: orders.filter((o) => o.status === OrderStatusEnum.PENDING_PAYMENT).length,
-      inProgressOrders: orders.filter((o) => o.status === OrderStatusEnum.IN_PROGRESS).length,
-      completedOrders: orders.filter((o) => o.status === OrderStatusEnum.COMPLETED).length,
-      totalSpent: orders
-        .filter((o) => o.status === OrderStatusEnum.COMPLETED)
-        .reduce((sum, o) => sum + o.paidAmount, 0),
-      monthSpent: orders
-        .filter((o) => o.status === OrderStatusEnum.COMPLETED && new Date(o.createdAt) >= monthAgo)
-        .reduce((sum, o) => sum + o.paidAmount, 0),
+    return {
+      totalOrders: toNumber(stats.totalOrders, 0),
+      pendingPaymentOrders: toNumber(stats.pendingPayment, 0),
+      inProgressOrders: toNumber(stats.pendingShipment, 0) + toNumber(stats.pendingReceipt, 0),
+      completedOrders: toNumber(stats.completed, 0),
+      totalSpent: toNumber(stats.totalAmount, 0),
+      monthSpent: 0,
     };
-
-    return stats;
   }
 
   async getPendingPaymentOrders(): Promise<Order[]> {
-    const orders = await this.getOrders();
-    return orders.filter((o) => o.status === OrderStatusEnum.PENDING_PAYMENT);
+    const page = await this.getMyOrderList({
+      page: 1,
+      pageSize: 100,
+      status: OrderStatusEnum.PENDING_PAYMENT,
+    });
+    return page.items;
   }
 
   async getInProgressOrders(): Promise<Order[]> {
-    const orders = await this.getOrders();
-    return orders.filter((o) => o.status === OrderStatusEnum.IN_PROGRESS);
+    const page = await this.getMyOrderList({
+      page: 1,
+      pageSize: 100,
+      status: OrderStatusEnum.IN_PROGRESS,
+    });
+    return page.items;
   }
 }
 

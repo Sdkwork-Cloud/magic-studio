@@ -1,6 +1,6 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { Button } from '@sdkwork/react-commons';
-import { authBusinessService } from '../services';
+import { appAuthService } from '../services';
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Smartphone, Key, User, QrCode, RefreshCw, Check } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -47,12 +47,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             return;
         }
         setErrors({});
-        const result = await authBusinessService.sendSmsCode(phone, 'login');
-        if (result.success) {
+        try {
+            await appAuthService.sendVerifyCode({
+                target: phone,
+                verifyType: 'PHONE',
+                scene: 'LOGIN',
+            });
             setTimer(60);
-            return;
+        } catch (error) {
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.send_code_failed');
+            setErrors({ code: message });
         }
-        setErrors({ code: result.message || t('auth.error.send_code_failed') });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -73,15 +78,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
             if (method === 'account') {
                 await loginWithEmail(email, password);
             } else if (method === 'phone') {
-                const verifyResult = await authBusinessService.verifySmsCode(phone, code, 'login');
-                if (!verifyResult.success) {
-                    setErrors({ code: verifyResult.message || t('auth.error.verification_failed') });
-                    return;
-                }
-                if (!verifyResult.data) {
-                    setErrors({ code: t('auth.error.invalid_verification_code') });
-                    return;
-                }
                 await loginWithPhone(phone, code);
             }
             

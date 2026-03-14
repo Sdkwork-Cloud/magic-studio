@@ -2,6 +2,15 @@ export * from './assetBusinessService';
 export { assetUiStateService } from './assetUiStateService';
 export { assetService, ASSET_CATEGORIES, setMediaAnalysisAdapter } from './assetService';
 export type { MediaAnalysisAdapter, MediaAnalysisResult } from './assetService';
+export {
+  queryAssetsBySdk,
+  importAssetBySdk,
+  importAssetFromUrlBySdk,
+  renameAssetBySdk,
+  deleteAssetBySdk,
+  resolveAssetPrimaryUrlBySdk
+} from './assetSdkQueryService';
+export type { AssetSdkQueryCategory } from './assetSdkQueryService';
 
 // Enhanced asset types and services
 export { assetServiceRegistry } from './AssetServiceRegistry';

@@ -12,7 +12,13 @@ interface CreateProjectModalProps {
     initialType?: ProjectType;
 }
 
-const PROJECT_TYPES: { id: ProjectType; label: string; icon: any; desc: string; color: string }[] = [
+const PROJECT_TYPES: {
+    id: ProjectType;
+    label: string;
+    icon: React.ElementType;
+    desc: string;
+    color: string;
+}[] = [
     { id: 'APP', label: 'Application', icon: Box, desc: 'Full-stack web or desktop app', color: 'text-blue-500' },
     { id: 'VIDEO', label: 'Video Project', icon: Video, desc: 'AI video generation & editing', color: 'text-pink-500' },
     { id: 'AUDIO', label: 'Audio Project', icon: Music, desc: 'Music & speech generation', color: 'text-indigo-500' },
@@ -63,9 +69,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                 data && coverFile ? { data, name: coverFile.name } : undefined
             );
             onClose();
-        } catch (e: any) {
-            console.error("Create project failed:", e);
-            setError(e.message || "Failed to create project");
+        } catch (error: unknown) {
+            console.error("Create project failed:", error);
+            setError(error instanceof Error ? error.message : "Failed to create project");
         } finally {
             setIsSubmitting(false);
         }

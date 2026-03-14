@@ -1,91 +1,34 @@
 import { Page, PageRequest } from '@sdkwork/react-commons';
-import { AssetType } from '../../entities';
-import { AnyAsset } from '../../entities';
+import type { AssetType, AnyAsset, Asset } from '../../entities';
 import { createSpringPage } from './springPage';
-import {
-  assetCenterService,
-  mapUnifiedPageToAnyAssetPage,
-  normalizeSpringPageRequest,
-  readWorkspaceScope
-} from '../../asset-center';
-import type {
-  AssetBusinessDomain,
-  AssetCenterPageRequest,
-  AssetContentKey
-} from '@sdkwork/react-types';
+import { mapContentKeyToMediaType, normalizeSpringPageRequest } from '../../asset-center';
+import { assetBusinessService } from '../assetBusinessService';
 
 type QueryCategory = AssetType | 'media' | 'effects' | 'transitions';
+
+const toAnyAsset = (asset: Asset): AnyAsset => ({
+  id: asset.id,
+  uuid: asset.uuid,
+  createdAt: asset.createdAt,
+  updatedAt: asset.updatedAt,
+  name: asset.name,
+  type: mapContentKeyToMediaType(asset.type),
+  path: asset.path,
+  url: typeof asset.metadata?.primaryUrl === 'string' ? asset.metadata.primaryUrl : asset.path,
+  mimeType: typeof asset.metadata?.mimeType === 'string' ? asset.metadata.mimeType : undefined,
+  size: asset.size,
+  origin: asset.origin,
+  metadata: asset.metadata,
+  isFavorite: asset.isFavorite
+});
 
 export class CoreAssetQueryService {
   async query(category: QueryCategory, pageRequest: PageRequest = { page: 0, size: 20 }): Promise<Page<AnyAsset>> {
     const normalized = normalizeSpringPageRequest(pageRequest);
-    return this.queryFromAssetCenter(category, normalized);
+    return this.queryFromSdk(category, normalized);
   }
 
-  private resolveFilterType(category: QueryCategory): AssetType | undefined {
-    switch (category) {
-      case 'effects':
-        return 'effect';
-      case 'transitions':
-        return 'transition';
-      case 'media':
-        return undefined;
-      default:
-        return category;
-    }
-  }
-
-  private async queryFromAssetCenter(category: QueryCategory, normalized: PageRequest): Promise<Page<AnyAsset>> {
-    try {
-      await assetCenterService.initialize();
-      const domain = this.resolveDomain(category);
-      const types = this.resolveContentKeys(category);
-      const scope = readWorkspaceScope();
-
-      const query: AssetCenterPageRequest = {
-        page: normalized.page,
-        size: normalized.size,
-        sort: normalized.sort,
-        keyword: normalized.keyword,
-        scope: {
-          workspaceId: scope.workspaceId,
-          projectId: scope.projectId,
-          domain
-        },
-        types
-      };
-
-      const result = await assetCenterService.query(query);
-      return mapUnifiedPageToAnyAssetPage(result);
-    } catch (error) {
-      console.warn('[CoreAssetQueryService] Query asset-center failed', error);
-      return createSpringPage([], normalized);
-    }
-  }
-
-  private resolveDomain(category: QueryCategory): AssetBusinessDomain {
-    switch (category) {
-      case 'video':
-        return 'video-studio';
-      case 'image':
-        return 'image-studio';
-      case 'audio':
-        return 'audio-studio';
-      case 'music':
-        return 'music';
-      case 'character':
-        return 'character';
-      case 'sfx':
-        return 'sfx';
-      case 'effects':
-      case 'transitions':
-      case 'media':
-      default:
-        return 'asset-center';
-    }
-  }
-
-  private resolveContentKeys(category: QueryCategory): AssetContentKey[] | undefined {
+  private resolveAllowedTypes(category: QueryCategory): AssetType[] | undefined {
     switch (category) {
       case 'effects':
         return ['effect'];
@@ -94,7 +37,28 @@ export class CoreAssetQueryService {
       case 'media':
         return ['video', 'image'];
       default:
-        return [this.resolveFilterType(category) as AssetContentKey];
+        return [category];
+    }
+  }
+
+  private async queryFromSdk(category: QueryCategory, normalized: PageRequest): Promise<Page<AnyAsset>> {
+    try {
+      const result = await assetBusinessService.queryAssetsBySdk({
+        category,
+        pageRequest: normalized,
+        allowedTypes: this.resolveAllowedTypes(category)
+      });
+
+      const content = result.content.map((item) => toAnyAsset(item));
+      return {
+        ...result,
+        content,
+        numberOfElements: content.length,
+        empty: content.length === 0
+      };
+    } catch (error) {
+      console.warn('[CoreAssetQueryService] Query sdk assets failed', error);
+      return createSpringPage([], normalized);
     }
   }
 }

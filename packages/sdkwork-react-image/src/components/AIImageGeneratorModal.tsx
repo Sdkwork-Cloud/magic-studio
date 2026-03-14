@@ -4,13 +4,13 @@ import { GenerateHistory, EditorComponents } from '@sdkwork/react-generation-his
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageLeftGeneratorPanel } from './ImageLeftGeneratorPanel';
-import { genAIService, inlineDataService } from '@sdkwork/react-core';
+import { genAIService } from '@sdkwork/react-core';
 import { Sparkles, X, Check } from 'lucide-react';
 import { ImageStoreProvider, useImageStore } from '../store/imageStore';
 import type { GenerationConfig } from '../services';
 import { ImageGridEditorModal } from './ImageGridEditorModal';
 import { ImageCanvasEditorModal } from './ImageCanvasEditorModal';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { importAssetFromUrlBySdk } from '@sdkwork/react-assets';
 import { MediaType } from '@sdkwork/react-commons';
 
 export interface AIImageGeneratorModalProps {
@@ -24,14 +24,6 @@ export interface AIImageGeneratorModalProps {
 const editors: EditorComponents = {
     GridEditor: ImageGridEditorModal,
     CanvasEditor: ImageCanvasEditorModal
-};
-
-const resolveScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
 };
 
 const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPrompt: string }> = ({ 
@@ -63,65 +55,43 @@ const AIImageGeneratorContent: React.FC<AIImageGeneratorModalProps & { initialPr
         if (!url || url.startsWith('assets://')) {
             return;
         }
-        const inlineData = await inlineDataService.tryExtractInlineData(url);
-        const scope = resolveScope();
         const ts = Date.now();
 
         if (type === 'video') {
-            await assetBusinessFacade.importVideoStudioAsset({
-                scope,
-                type: 'video',
+            await importAssetFromUrlBySdk(url, 'video', {
                 name: `gen_video_${ts}.mp4`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : url,
-                metadata: { origin: 'ai', source: 'image-modal-save' }
+                domain: 'video-studio'
             });
             return;
         }
 
         if (type === 'audio') {
-            await assetBusinessFacade.importAudioStudioAsset({
-                scope,
-                type: 'audio',
+            await importAssetFromUrlBySdk(url, 'audio', {
                 name: `gen_audio_${ts}.wav`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : url,
-                metadata: { origin: 'ai', source: 'image-modal-save' }
+                domain: 'audio-studio'
             });
             return;
         }
 
         if (type === 'music') {
-            await assetBusinessFacade.importMusicAsset({
-                scope,
-                type: 'music',
+            await importAssetFromUrlBySdk(url, 'music', {
                 name: `gen_music_${ts}.mp3`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : url,
-                metadata: { origin: 'ai', source: 'image-modal-save' }
+                domain: 'music'
             });
             return;
         }
 
         if (type === 'voice') {
-            await assetBusinessFacade.importVoiceSpeakerAsset({
-                scope,
-                type: 'voice',
+            await importAssetFromUrlBySdk(url, 'voice', {
                 name: `gen_voice_${ts}.wav`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : url,
-                metadata: { origin: 'ai', source: 'image-modal-save' }
+                domain: 'voice-speaker'
             });
             return;
         }
 
-        await assetBusinessFacade.importImageStudioAsset({
-            scope,
-            type: 'image',
+        await importAssetFromUrlBySdk(url, 'image', {
             name: `gen_image_${ts}.png`,
-            data: inlineData,
-            remoteUrl: inlineData ? undefined : url,
-            metadata: { origin: 'ai', source: 'image-modal-save' }
+            domain: 'image-studio'
         });
     };
 

@@ -4,6 +4,7 @@ export { VoiceLeftGeneratorPanel } from './components/VoiceLeftGeneratorPanel';
 export { VoiceModelSelector } from './components/VoiceModelSelector';
 export { VoicePanel, type VoicePanelProps } from './components/VoicePanel';
 export { ChooseVoiceSpeaker } from './components/voicespeaker/ChooseVoiceSpeaker';
+export * from './components/panel';
 export { VoiceStoreProvider, useVoiceStore } from './store/voiceStore';
 export * from './entities';
 export * from './services';

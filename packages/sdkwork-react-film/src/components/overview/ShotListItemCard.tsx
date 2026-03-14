@@ -1,6 +1,6 @@
 import { FilmShot, useAssetUrl } from '@sdkwork/react-commons'
 import React, { useState, useRef, useEffect } from 'react';
-import { Clapperboard, Video, Image as ImageIcon, Sparkles, Play, Mic, AlertCircle, Trash2, Clock, MoreHorizontal, Edit2, Wand2, Check, X, Type } from 'lucide-react';
+import { Clapperboard, Video, Image as ImageIcon, Sparkles, Play, Mic, AlertCircle, Trash2, Edit2, Check, X, Type } from 'lucide-react';
 import {
     hasFilmAssetReference,
     resolveFilmAssetUrlByAssetIdFirst,

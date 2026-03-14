@@ -142,6 +142,29 @@ export const notes = {
         empty_folder: "空",
         recent: "最近",
         untitled_page: "未命名",
+        drop_to_root: "拖拽到此处可移动到根目录",
+        selection: {
+            all: "全部",
+            select_all: "全选",
+            deselect_all: "取消全选",
+            selected_count: "已选择 {count} 项",
+            select_item: "选择笔记"
+        },
+        confirm: {
+            delete_item: "确认删除“{name}”？",
+            delete_single: "确认永久删除该笔记？此操作无法撤销。",
+            delete_batch: "确认永久删除已选择的 {count} 条笔记？此操作无法撤销。",
+            clear_trash: "确认永久清空回收站？此操作无法撤销。"
+        },
+        feedback: {
+            restore_success: "已恢复笔记",
+            delete_success: "已永久删除笔记",
+            batch_restore_success: "已恢复 {count} 条笔记",
+            batch_restore_partial: "已恢复 {success} 条笔记，{failed} 条失败",
+            batch_delete_success: "已永久删除 {count} 条笔记",
+            batch_delete_partial: "已永久删除 {success} 条笔记，{failed} 条失败",
+            clear_trash_success: "已清空回收站"
+        },
         search_placeholder: "搜索笔记...",
         search_empty: "没有匹配的页面"
     }

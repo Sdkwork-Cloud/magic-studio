@@ -26,6 +26,9 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
     
     const [config, setConfigState] = useState<VoiceConfig>({
         text: '',
+        previewText: 'Hello, this is a preview of my new voice. How do I sound?',
+        mode: 'design',
+        inputMethod: 'upload',
         voiceId: PRESET_VOICES[0].id,
         model: VOICE_MODELS[0].id,
         speed: 1.0,
@@ -49,21 +52,27 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
     };
 
     const generate = async () => {
-        if (!config.text.trim() && !config.referenceAudio) return;
+        const inputText = (config.text || config.previewText || '').trim();
+        if (!inputText) return;
+        if ((config.mode || 'design') === 'clone' && !config.referenceAudio) return;
         if (isGenerating) return;
         
         setIsGenerating(true);
+        const normalizedConfig: VoiceConfig = {
+            ...config,
+            text: inputText
+        };
         
         const taskId = generateUUID();
         const newTask: VoiceTask = {
             id: taskId,
             uuid: taskId,
             type: 'VOICE_TASK',
-            speakerId: config.voiceId,
-            text: config.text,
+            speakerId: normalizedConfig.voiceId,
+            text: normalizedConfig.text,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            config: { ...config },
+            config: { ...normalizedConfig },
             status: 'pending',
             results: []
         };
@@ -72,7 +81,7 @@ export const VoiceStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         await voiceBusinessService.voiceHistoryService.save(newTask);
 
         try {
-            const rawResults = await voiceBusinessService.voiceService.generateSpeech(config);
+            const rawResults = await voiceBusinessService.voiceService.generateSpeech(normalizedConfig);
             const persistedResults = await Promise.all(rawResults.map(async (result, index) => {
                 const inlineData = await inlineDataService.tryExtractInlineData(result.url);
                 return voiceBusinessService.voiceSpeakerService.persistGeneratedVoiceResult({

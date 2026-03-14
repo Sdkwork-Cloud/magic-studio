@@ -52,7 +52,11 @@ import { NoteEditorEmpty } from './NoteEditorEmpty';
 import { ImageGeneratorModal } from '@sdkwork/react-image';
 import { VideoGeneratorModal } from '@sdkwork/react-video';
 
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import {
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    resolveAssetPrimaryUrlBySdk
+} from '@sdkwork/react-assets';
 import { AssetType } from '@sdkwork/react-commons';
 
 // --- Helper: Advanced Word Count (CJK support) ---
@@ -67,11 +71,6 @@ const countWords = (text: string): number => {
 const sanitizeStreamingHtml = (html: string): string => {
     let clean = html.replace(/<li>\s*<\/li>/g, '<li><p></p></li>');
     return clean;
-};
-
-const resolveNotesScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return { workspaceId: scope.workspaceId, projectId: scope.projectId };
 };
 
 const toAssetContentType = (type: AssetType): 'image' | 'video' | 'audio' | 'file' => {
@@ -539,24 +538,18 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
                      if (type === 'video') assetType = 'video';
                      if (type === 'audio') assetType = 'audio';
 
-                     const result = await assetBusinessFacade.importNotesAsset({
-                        scope: resolveNotesScope(),
-                        type: toAssetContentType(assetType),
-                        name: file.name,
-                        data: file.data,
-                        sourcePath: file.path,
-                        metadata: { source: 'note-upload', origin: 'upload' }
-                     });
-                     const payload = result.asset.payload;
-                     const primaryCandidate =
-                        typeof result.asset.primaryType === 'string'
-                            ? payload[result.asset.primaryType]
-                            : undefined;
-                     const payloadAssets = payload.assets;
-                     const fallbackAsset = Array.isArray(payloadAssets) ? payloadAssets[0] : undefined;
-                     const primaryResource = primaryCandidate ?? fallbackAsset;
-                     const src = result.primaryLocator.uri;
-                     const size = typeof primaryResource?.size === 'number' ? primaryResource.size : 0;
+                     const uploaded = await importAssetBySdk(
+                        {
+                            name: file.name,
+                            data: file.data
+                        },
+                        toAssetContentType(assetType),
+                        { domain: 'notes' }
+                     );
+                     const src =
+                        (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                        uploaded.path;
+                     const size = file.data.length;
                      
                      if (type === 'image') {
                         editor.chain().focus().insertContent({ type: 'image', attrs: { src } }).run();
@@ -699,14 +692,15 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 
     const handleImageSuccess = async (url: string) => {
         try {
-            const result = await assetBusinessFacade.importNotesAsset({
-                scope: resolveNotesScope(),
-                type: 'image',
+            const uploaded = await importAssetFromUrlBySdk(url, 'image', {
                 name: `gen_img_${Date.now()}.png`,
-                remoteUrl: url,
-                metadata: { source: 'note-gen', origin: 'ai' }
+                domain: 'notes'
             });
-            if (editor) editor.chain().focus().insertContent({ type: 'image', attrs: { src: result.primaryLocator.uri } }).run();
+            const src =
+                (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                uploaded.path ||
+                url;
+            if (editor) editor.chain().focus().insertContent({ type: 'image', attrs: { src } }).run();
         } catch (e) {
             console.error("Failed to save asset", e);
             if (editor) editor.chain().focus().insertContent({ type: 'image', attrs: { src: url } }).run();
@@ -716,14 +710,15 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
     
     const handleVideoSuccess = async (url: string) => {
          try {
-             const result = await assetBusinessFacade.importNotesAsset({
-                 scope: resolveNotesScope(),
-                 type: 'video',
+             const uploaded = await importAssetFromUrlBySdk(url, 'video', {
                  name: `gen_vid_${Date.now()}.mp4`,
-                 remoteUrl: url,
-                 metadata: { source: 'note-gen', origin: 'ai' }
+                 domain: 'notes'
              });
-             if (editor) editor.chain().focus().insertContent(`<video src="${result.primaryLocator.uri}" controls class="w-full rounded-lg my-4"></video>`).run();
+             const src =
+                (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                uploaded.path ||
+                url;
+             if (editor) editor.chain().focus().insertContent(`<video src="${src}" controls class="w-full rounded-lg my-4"></video>`).run();
          } catch (e) {
              console.error("Failed to save video asset", e);
              if (editor) editor.chain().focus().insertContent(`<video src="${url}" controls class="w-full rounded-lg my-4"></video>`).run();
@@ -733,14 +728,15 @@ export const UniversalNoteEditor: React.FC<UniversalNoteEditorProps> = ({
 
     const handleAudioSuccess = async (url: string) => {
          try {
-             const result = await assetBusinessFacade.importNotesAsset({
-                 scope: resolveNotesScope(),
-                 type: 'audio',
+             const uploaded = await importAssetFromUrlBySdk(url, 'audio', {
                  name: `gen_aud_${Date.now()}.wav`,
-                 remoteUrl: url,
-                 metadata: { source: 'note-gen', origin: 'ai' }
+                 domain: 'notes'
              });
-             if (editor) editor.chain().focus().insertContent(`<audio src="${result.primaryLocator.uri}" controls class="w-full my-4"></audio>`).run();
+             const src =
+                (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                uploaded.path ||
+                url;
+             if (editor) editor.chain().focus().insertContent(`<audio src="${src}" controls class="w-full my-4"></audio>`).run();
          } catch (e) {
              console.error("Failed to save audio asset", e);
              if (editor) editor.chain().focus().insertContent(`<audio src="${url}" controls class="w-full my-4"></audio>`).run();

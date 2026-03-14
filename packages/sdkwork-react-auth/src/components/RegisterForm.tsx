@@ -1,6 +1,6 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core';
 import { Button } from '@sdkwork/react-commons';
-import { authBusinessService } from '../services';
+import { appAuthService } from '../services';
 import React, { useEffect, useState } from 'react';
 import { Mail, Lock, CheckCircle2, Check, Smartphone, Key } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -13,7 +13,7 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     const { t } = useTranslation();
-    const { loginWithEmail } = useAuthStore();
+    const { register } = useAuthStore();
     const { navigate } = useRouter();
 
     const [email, setEmail] = useState('');
@@ -40,14 +40,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
             return;
         }
 
-        const result = await authBusinessService.sendSmsCode(phone, 'register');
-        if (result.success) {
+        try {
+            await appAuthService.sendVerifyCode({
+                target: phone,
+                verifyType: 'PHONE',
+                scene: 'REGISTER',
+            });
             setErrors((prev) => ({ ...prev, phone: '', code: '' }));
             setTimer(60);
-            return;
+        } catch (error) {
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.send_code_failed');
+            setErrors((prev) => ({ ...prev, code: message }));
         }
-
-        setErrors((prev) => ({ ...prev, code: result.message || t('auth.error.send_code_failed') }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -80,24 +84,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
         setIsLoading(true);
         try {
-            const verifyResult = await authBusinessService.verifySmsCode(phone, code, 'register');
-            if (!verifyResult.success) {
-                setErrors({ code: verifyResult.message || t('auth.error.verification_failed') });
-                return;
-            }
-            if (!verifyResult.data) {
-                setErrors({ code: t('auth.error.invalid_verification_code') });
-                return;
-            }
-
             const username = email.split('@')[0];
-            const registerResult = await authBusinessService.register(username, password, email, phone);
-            if (!registerResult.success) {
-                setErrors({ form: registerResult.message || t('auth.error.registration_failed') });
-                return;
-            }
-
-            await loginWithEmail(email, password);
+            await register(username, password, email, phone, code);
             if (onSuccess) {
                 onSuccess();
             } else {

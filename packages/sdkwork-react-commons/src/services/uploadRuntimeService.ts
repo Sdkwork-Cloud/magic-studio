@@ -13,6 +13,15 @@ interface PlatformBridge {
   convertFileSrc?: (path: string) => string;
 }
 
+interface PlatformRuntimeBridge {
+  system?: {
+    kind?: () => UploadRuntimePlatform;
+  };
+  fileSystem?: {
+    convertFileSrc?: (path: string) => string;
+  };
+}
+
 interface UploadHelperBridge {
   pickFiles?: (
     multiple: boolean,
@@ -60,6 +69,22 @@ const getPlatformBridge = (): PlatformBridge | null => {
   return globalWindow.__sdkworkPlatform as PlatformBridge;
 };
 
+const getPlatformRuntimeBridge = (): PlatformRuntimeBridge | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const globalWindow = window as Window & { __sdkworkPlatformRuntime?: unknown };
+  if (
+    !globalWindow.__sdkworkPlatformRuntime ||
+    typeof globalWindow.__sdkworkPlatformRuntime !== 'object'
+  ) {
+    return null;
+  }
+
+  return globalWindow.__sdkworkPlatformRuntime as PlatformRuntimeBridge;
+};
+
 const getUploadHelperBridge = (): UploadHelperBridge | null => {
   if (typeof window === 'undefined') {
     return null;
@@ -85,6 +110,11 @@ export interface UploadRuntimeServiceAdapter {
 
 const localUploadRuntimeAdapter: UploadRuntimeServiceAdapter = {
   getPlatform(): UploadRuntimePlatform {
+    const runtime = getPlatformRuntimeBridge();
+    if (runtime?.system?.kind) {
+      return runtime.system.kind();
+    }
+
     const platform = getPlatformBridge();
     if (!platform?.getPlatform) {
       return 'web';
@@ -92,6 +122,11 @@ const localUploadRuntimeAdapter: UploadRuntimeServiceAdapter = {
     return platform.getPlatform();
   },
   convertFileSrc(path: string): string {
+    const runtime = getPlatformRuntimeBridge();
+    if (runtime?.fileSystem?.convertFileSrc) {
+      return runtime.fileSystem.convertFileSrc(path);
+    }
+
     const platform = getPlatformBridge();
     if (!platform?.convertFileSrc) {
       return path;

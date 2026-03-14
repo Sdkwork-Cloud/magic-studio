@@ -130,16 +130,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({ isOpen, onClose,
         }
     }, [isOpen, initialData]);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!isOpen) return;
-            if (e.key === 'Escape') onClose();
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, name, description, faceImage, threeViewImage, gridViewImage, gender, age, traits, voiceId]);
-
     const handleSave = useCallback(() => {
         if (!name.trim()) return;
         onSave({ 
@@ -160,7 +150,29 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({ isOpen, onClose,
             }
         });
         onClose();
-    }, [name, description, faceImage, threeViewImage, gridViewImage, gender, age, traits, voiceId]);
+    }, [
+        name,
+        description,
+        faceImage,
+        threeViewImage,
+        gridViewImage,
+        gender,
+        age,
+        traits,
+        voiceId,
+        onSave,
+        onClose
+    ]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isOpen) return;
+            if (e.key === 'Escape') onClose();
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, handleSave, onClose]);
 
     const handleEnhanceDescription = async (text: string) => {
         setIsEnhancing(true);

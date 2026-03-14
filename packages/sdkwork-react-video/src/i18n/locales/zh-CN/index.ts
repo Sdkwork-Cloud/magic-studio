@@ -25,11 +25,15 @@ export const videoZhCN: I18nNamespaceResource = {
         maxItems: '最多 {count}',
     },
     modes: {
-        textToVideo: '文生视频',
-        imageToVideo: '图生视频',
-        videoToVideo: '视频转视频',
+        allRoundReference: '全能参考生视频',
+        subjectReference: '主体参考生视频',
+        smartMultiFrame: '智能多帧生视频',
+        startEndFrame: '首尾帧生视频',
+        moreTools: '更多工具',
         faceSwap: '换脸',
         lipSync: '对口型',
+        videoToVideo: '视频转视频',
+        imageToVideo: '图生视频',
     },
     message: {
         noHistory: '暂无历史记录',

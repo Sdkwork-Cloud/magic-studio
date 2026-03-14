@@ -1,5 +1,5 @@
 import { platform } from '@sdkwork/react-core';
-import { uploadHelper } from '@sdkwork/react-core';
+import { getPlatformRuntime, getPlatformRuntimeApi, uploadHelper } from '@sdkwork/react-core';
 import { initializeAssetServices, assetCenterService } from '@sdkwork/react-assets';
 import { i18nService, registerPackageI18n } from '@sdkwork/react-i18n';
 import { initSdkworkFromEnv } from '@sdkwork/react-core';
@@ -23,13 +23,16 @@ type DeferredWindow = Window & {
 };
 
 /**
- * 注入全局 Platform API 和 Upload Helper
- * 这是 sdkwork-react-commons 和 sdkwork-react-fs 包运行所必需的
+ * 注入全局 Platform API �?Upload Helper
+ * 这是 sdkwork-react-commons �?sdkwork-react-fs 包运行所必需�?
  */
 const injectGlobalAPI = () => {
   if (typeof window !== 'undefined') {
+    const runtime = getPlatformRuntime();
+    const runtimeApi = getPlatformRuntimeApi();
     // 注入 Platform API
-    (window as any).__sdkworkPlatform = platform;
+    (window as any).__sdkworkPlatform = runtimeApi;
+    (window as any).__sdkworkPlatformRuntime = runtime;
     
     // 注入 Upload Helper
     (window as any).__sdkworkUploadHelper = uploadHelper;
@@ -39,8 +42,8 @@ const injectGlobalAPI = () => {
 };
 
 /**
- * 初始化 SDK
- * 从环境变量加载配置并初始化 SDKWork 客户端
+ * 初始�?SDK
+ * 从环境变量加载配置并初始�?SDKWork 客户�?
  */
 const initializeSdk = () => {
   console.log('[Magic Studio] Initializing SDK...');
@@ -57,7 +60,7 @@ const initializeSdk = () => {
 
 /**
  * 初始化国际化
- * 注册所有包的翻译资源
+ * 注册所有包的翻译资�?
  */
 const initializeI18n = () => {
   console.log('[Magic Studio] Initializing i18n...');
@@ -145,10 +148,11 @@ const initializeAssetCenter = async () => {
 const logEnvironmentInfo = async (platformName: string) => {
   console.log(`[Magic Studio] Initialized on ${platformName} platform.`);
   try {
-    const theme = await platform.getSystemTheme();
+    const runtime = getPlatformRuntime();
+    const theme = await runtime.system.theme();
     console.log(`[Magic Studio] System Theme: ${theme}`);
 
-    const home = await platform.getPath('home');
+    const home = await runtime.system.path('home');
     console.log(`[Magic Studio] Home Directory: ${home}`);
   } catch (e) {
     console.warn('[Magic Studio] Failed to retrieve environment info:', e);
@@ -158,20 +162,21 @@ const logEnvironmentInfo = async (platformName: string) => {
 const checkForDesktopUpdates = async () => {
   try {
     console.log('[Magic Studio] Checking for updates...');
-    const update = await platform.checkForUpdates();
+    const runtime = getPlatformRuntime();
+    const update = await runtime.app.checkForUpdates();
     if (!update) {
       return;
     }
 
-    const shouldUpdate = await platform.confirm(
+    const shouldUpdate = await runtime.dialog.confirm(
       `New version ${update.version} is available.\n\n${update.body || 'Bug fixes and performance improvements.'}\n\nUpdate now?`,
       'Update Available',
       'info'
     );
 
     if (shouldUpdate) {
-      await platform.notify('Updating...', 'Magic Studio is downloading updates and will restart shortly.');
-      await platform.installUpdate();
+      await runtime.dialog.notify('Updating...', 'Magic Studio is downloading updates and will restart shortly.');
+      await runtime.app.installUpdate();
     }
   } catch (e) {
     console.error('[Magic Studio] Update check failed:', e);

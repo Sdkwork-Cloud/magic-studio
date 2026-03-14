@@ -1,5 +1,5 @@
 import { Button } from '@sdkwork/react-commons';
-import { authBusinessService } from '../services';
+import { appAuthService } from '../services';
 import React, { useEffect, useState } from 'react';
 import { Mail, CheckCircle2, Lock, Smartphone, Key } from 'lucide-react';
 import { AuthInput } from './AuthInput';
@@ -52,14 +52,15 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         setIsLoading(true);
         setErrors({});
-
-        const result = await authBusinessService.requestPasswordReset(account, channel);
-        setIsLoading(false);
-
-        if (!result.success) {
-            setErrors({ form: result.message || t('auth.error.send_reset_request_failed') });
+        try {
+            await appAuthService.requestPasswordReset({ account, channel });
+        } catch (error) {
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.send_reset_request_failed');
+            setErrors({ form: message });
+            setIsLoading(false);
             return;
         }
+        setIsLoading(false);
 
         if (channel === 'EMAIL') {
             setIsSent(true);
@@ -95,14 +96,20 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         setIsLoading(true);
         setErrors({});
-
-        const result = await authBusinessService.resetPassword(account, code, newPassword);
-        setIsLoading(false);
-
-        if (!result.success) {
-            setErrors({ form: result.message || t('auth.error.reset_password_failed') });
+        try {
+            await appAuthService.resetPassword({
+                account,
+                code,
+                newPassword,
+                confirmPassword,
+            });
+        } catch (error) {
+            const message = error instanceof Error && error.message ? error.message : t('auth.error.reset_password_failed');
+            setErrors({ form: message });
+            setIsLoading(false);
             return;
         }
+        setIsLoading(false);
 
         setIsSent(true);
     };

@@ -1,6 +1,6 @@
 
 import { IBaseService, BaseEntity, ServiceResult, Page, PageRequest, Result } from '@sdkwork/react-commons';
-import { platform } from '../../platform';
+import { getPlatformRuntime } from '../../platform';
 
 /**
  * Generic LocalStorage Service (v2.1)
@@ -12,13 +12,16 @@ import { platform } from '../../platform';
  */
 export class LocalStorageService<T extends BaseEntity> implements IBaseService<T> {
     protected cache: T[] | null = null;
+    private get runtime() {
+        return getPlatformRuntime();
+    }
 
     constructor(protected storageKey: string) {}
 
     protected async ensureInitialized(): Promise<void> {
         if (this.cache !== null) return;
         try {
-            const data = await platform.getStorage(this.storageKey);
+            const data = await this.runtime.storage.get(this.storageKey);
             this.cache = data ? JSON.parse(data) : [];
         } catch (e) {
             console.error(`[LocalStorageService] Failed to load ${this.storageKey}`, e);
@@ -28,7 +31,7 @@ export class LocalStorageService<T extends BaseEntity> implements IBaseService<T
 
     protected async persist(): Promise<void> {
         if (this.cache === null) return;
-        await platform.setStorage(this.storageKey, JSON.stringify(this.cache));
+        await this.runtime.storage.set(this.storageKey, JSON.stringify(this.cache));
     }
 
     /**

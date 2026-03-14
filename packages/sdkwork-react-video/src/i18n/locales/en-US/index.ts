@@ -25,11 +25,15 @@ export const videoEnUS: I18nNamespaceResource = {
         maxItems: 'Max: {count}',
     },
     modes: {
-        textToVideo: 'Text to Video',
-        imageToVideo: 'Image to Video',
-        videoToVideo: 'Video to Video',
+        allRoundReference: 'All-round Reference Video',
+        subjectReference: 'Subject Reference Video',
+        smartMultiFrame: 'Smart Multi-Frame Video',
+        startEndFrame: 'Start-End Frame Video',
+        moreTools: 'More Tools',
         faceSwap: 'Face Swap',
         lipSync: 'Lip Sync',
+        videoToVideo: 'Video to Video',
+        imageToVideo: 'Image to Video',
     },
     message: {
         noHistory: 'No History Yet',

@@ -27,6 +27,8 @@
                              "react-dom":  "\u003e=18.0.0"
                          },
     "dependencies":  {
+                         "@sdkwork/app-sdk":  "workspace:*",
+                         "@sdkwork/react-auth":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*"
                      },

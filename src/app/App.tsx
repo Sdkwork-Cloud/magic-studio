@@ -15,6 +15,8 @@ import { MagicCutLayout } from '../layouts/MagicCutLayout/MagicCutLayout';
 import { NotesLayout } from '../layouts/NotesLayout/NotesLayout';
 import { BlankLayout } from '../layouts/BlankLayout/BlankLayout';
 
+const DEFAULT_LAYOUT = 'blank';
+
 const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.ReactNode; leftPane?: React.ComponentType<any> }>> = {
     main: MainLayout,
     generation: GenerationLayout,
@@ -22,6 +24,7 @@ const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.Re
     vibe: VibeLayout,
     'magic-cut': MagicCutLayout,
     notes: NotesLayout,
+    blank: BlankLayout,
     none: BlankLayout,
 };
 
@@ -77,14 +80,17 @@ const AppContent: React.FC = () => {
   if (!route) {
       return (
         <Suspense fallback={<RouteLoadingFallback />}>
-          <HomePage />
+          <BlankLayout>
+            <HomePage />
+          </BlankLayout>
         </Suspense>
       );
   }
 
   const { component: Component, layout, leftPane: LeftPaneComponent, provider: RouteProvider } = route;
 
-  const LayoutComponent = LAYOUT_COMPONENTS[layout] || BlankLayout;
+  const layoutKey = layout ?? DEFAULT_LAYOUT;
+  const LayoutComponent = LAYOUT_COMPONENTS[layoutKey] || LAYOUT_COMPONENTS[DEFAULT_LAYOUT];
 
   const contentWithLayout = (
     <Suspense fallback={<RouteLoadingFallback />}>

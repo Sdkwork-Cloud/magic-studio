@@ -27,6 +27,7 @@
     "dependencies":  {
                          "@aws-sdk/client-s3":  "catalog:",
                          "@aws-sdk/s3-request-presigner":  "catalog:",
+                         "@sdkwork/app-sdk":  "workspace:*",
                          "@sdkwork/react-assets":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*",

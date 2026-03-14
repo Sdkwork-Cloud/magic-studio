@@ -8,5 +8,5 @@ export { NotesLayout, type NotesLayoutProps } from './NotesLayout/NotesLayout';
 export { BlankLayout, type BlankLayoutProps } from './BlankLayout/BlankLayout';
 
 // Layout types
-export type LayoutType = 'main' | 'none' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
+export type LayoutType = 'main' | 'none' | 'blank' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
 

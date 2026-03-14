@@ -1,4 +1,122 @@
-import { VideoConfig, GeneratedVideoResult } from '../entities';
+import { GeneratedVideoResult, LipSyncStage, UnifiedVideoGenerationRequest } from '../entities';
+
+type LipSyncTaskStatus = 'queued' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+
+export interface LipSyncTaskCreateResult {
+    taskId: string;
+    providerTaskId: string;
+    provider: string;
+    stage: LipSyncStage;
+}
+
+export interface LipSyncTaskState {
+    taskId: string;
+    status: LipSyncTaskStatus;
+    stage: LipSyncStage;
+    progress: number;
+    result?: GeneratedVideoResult;
+    error?: {
+        code: string;
+        message: string;
+    };
+}
+
+interface MockLipSyncTaskRecord {
+    taskId: string;
+    providerTaskId: string;
+    provider: string;
+    createdAt: number;
+    updatedAt: number;
+    request: UnifiedVideoGenerationRequest;
+    status: LipSyncTaskStatus;
+    stage: LipSyncStage;
+    progress: number;
+    result?: GeneratedVideoResult;
+    error?: {
+        code: string;
+        message: string;
+    };
+}
+
+const mockLipSyncTasks = new Map<string, MockLipSyncTaskRecord>();
+
+const toServiceError = (code: string, message: string): Error & { code: string } => {
+    const error = new Error(message) as Error & { code: string };
+    error.code = code;
+    return error;
+};
+
+const buildMockLipSyncResult = (taskId: string, modelId: string): GeneratedVideoResult => ({
+    id: `lipsync_video_${taskId}`,
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    mp4Url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    posterUrl: 'https://sample-videos.com/img/Sample-jpg-image-500kb.jpg',
+    modelId
+});
+
+const resolveMockLipSyncState = (record: MockLipSyncTaskRecord): LipSyncTaskState => {
+    if (record.status === 'failed') {
+        return {
+            taskId: record.taskId,
+            status: record.status,
+            stage: 'failed',
+            progress: record.progress,
+            error: record.error
+        };
+    }
+    if (record.status === 'canceled') {
+        return {
+            taskId: record.taskId,
+            status: record.status,
+            stage: 'canceled',
+            progress: record.progress,
+            error: record.error
+        };
+    }
+    if (record.status === 'succeeded' && record.result) {
+        return {
+            taskId: record.taskId,
+            status: 'succeeded',
+            stage: 'succeeded',
+            progress: 100,
+            result: record.result
+        };
+    }
+
+    const elapsedMs = Date.now() - record.createdAt;
+
+    if (elapsedMs < 1200) {
+        record.status = 'queued';
+        record.stage = 'validating';
+        record.progress = 5;
+    } else if (elapsedMs < 3200) {
+        record.status = 'queued';
+        record.stage = 'queued';
+        record.progress = 18;
+    } else if (elapsedMs < 11000) {
+        record.status = 'processing';
+        record.stage = 'processing';
+        const processingElapsed = elapsedMs - 3200;
+        const progressive = 20 + Math.floor(processingElapsed / 140);
+        record.progress = Math.min(94, progressive);
+    } else {
+        record.status = 'succeeded';
+        record.stage = 'succeeded';
+        record.progress = 100;
+        record.result = buildMockLipSyncResult(record.taskId, record.request.model);
+    }
+
+    record.updatedAt = Date.now();
+
+    return {
+        taskId: record.taskId,
+        status: record.status,
+        stage: record.stage,
+        progress: record.progress,
+        result: record.result,
+        error: record.error
+    };
+};
 
 // Mock video generation service for demonstration
 export const videoService = {
@@ -7,8 +125,8 @@ export const videoService = {
     /**
      * Generate a video using configured models.
      */
-    generateVideo: async (config: VideoConfig): Promise<GeneratedVideoResult> => {
-        console.log('[VideoService] Generating video with config:', config);
+    generateVideo: async (request: UnifiedVideoGenerationRequest): Promise<GeneratedVideoResult> => {
+        console.log('[VideoService] Generating video with request:', request);
         
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -17,7 +135,7 @@ export const videoService = {
         let videoUrl = '';
         let posterUrl = '';
         
-        switch (config.mode) {
+        switch (request.generationType) {
             case 'avatar':
                 videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
                 posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-100kb.jpg';
@@ -50,8 +168,82 @@ export const videoService = {
             url: videoUrl,
             mp4Url: videoUrl,
             posterUrl: posterUrl,
-            modelId: config.model
+            modelId: request.model
         };
+    },
+
+    createLipSyncTask: async (request: UnifiedVideoGenerationRequest): Promise<LipSyncTaskCreateResult> => {
+        console.log('[VideoService] Creating lip-sync task:', request);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        const sourceType = (request.options?.lipSyncSourceType as string) || 'video';
+        const hasSourceVideo = request.assets.some((asset) => asset.role === 'source_video' && asset.type === 'video');
+        const hasSourceImage = request.assets.some((asset) => asset.role === 'source_image' && asset.type === 'image');
+        const driverType = (request.options?.lipSyncDriverType as string) || 'audio';
+        const hasAudioDriver = request.assets.some((asset) => asset.role === 'driver_audio' && asset.type === 'audio');
+        const hasTtsDriver = !!request.prompt?.trim();
+        const hasDriver = driverType === 'tts' ? hasTtsDriver : hasAudioDriver;
+        const hasSource = sourceType === 'image' ? hasSourceImage : hasSourceVideo;
+
+        if (!hasSource || !hasDriver) {
+            throw toServiceError('LIPSYNC_INPUT_INVALID', 'Lip Sync requires source media and audio/tts driver.');
+        }
+
+        const taskId = `lipsync_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const providerTaskId = `mock_provider_${taskId}`;
+        const provider = 'mock-kling';
+
+        mockLipSyncTasks.set(taskId, {
+            taskId,
+            providerTaskId,
+            provider,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            request: { ...request },
+            status: 'queued',
+            stage: 'validating',
+            progress: 0
+        });
+
+        return {
+            taskId,
+            providerTaskId,
+            provider,
+            stage: 'validating'
+        };
+    },
+
+    queryLipSyncTask: async (taskId: string): Promise<LipSyncTaskState> => {
+        await new Promise((resolve) => setTimeout(resolve, 220));
+
+        const record = mockLipSyncTasks.get(taskId);
+        if (!record) {
+            throw toServiceError('LIPSYNC_TASK_NOT_FOUND', `Lip Sync task not found: ${taskId}`);
+        }
+
+        return resolveMockLipSyncState(record);
+    },
+
+    cancelLipSyncTask: async (taskId: string): Promise<void> => {
+        await new Promise((resolve) => setTimeout(resolve, 180));
+
+        const record = mockLipSyncTasks.get(taskId);
+        if (!record) {
+            throw toServiceError('LIPSYNC_TASK_NOT_FOUND', `Lip Sync task not found: ${taskId}`);
+        }
+
+        if (record.status === 'succeeded') {
+            return;
+        }
+
+        record.status = 'canceled';
+        record.stage = 'canceled';
+        record.progress = Math.min(99, record.progress || 0);
+        record.error = {
+            code: 'LIPSYNC_CANCELED',
+            message: 'Lip Sync task canceled by user.'
+        };
+        record.updatedAt = Date.now();
     },
 
     /**

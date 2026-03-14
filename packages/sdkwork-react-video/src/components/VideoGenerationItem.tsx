@@ -1,7 +1,7 @@
 ﻿import { VideoTask } from '@sdkwork/react-commons'
 import React from 'react';
 import {
-    Download, Trash2, Copy, Repeat2, Film, AlertCircle
+    Download, Trash2, Copy, Repeat2, Film, AlertCircle, Mic
 } from 'lucide-react';
 import { platform } from '@sdkwork/react-core';
 
@@ -13,6 +13,18 @@ interface VideoGenerationItemProps {
 
 export const VideoGenerationItem: React.FC<VideoGenerationItemProps> = ({ task, onDelete, onReuse }) => {
     const videoUrl = task.results?.[0]?.url;
+    const isLipSyncTask = task.taskType === 'lip_sync' || task.config.mode === 'lip-sync';
+    const stageLabelMap: Record<string, string> = {
+        validating: 'Validating',
+        queued: 'Queued',
+        processing: 'Processing',
+        succeeded: 'Completed',
+        failed: 'Failed',
+        canceled: 'Canceled'
+    };
+    const pendingLabel = isLipSyncTask
+        ? `Lip Sync ${stageLabelMap[task.stage || 'processing'] || 'Processing'}${typeof task.progress === 'number' ? ` (${Math.max(0, Math.min(100, Math.round(task.progress)))}%)` : ''}`
+        : 'Generating video... (this may take a few minutes)';
 
     const handleDownload = () => {
         if (!videoUrl) {
@@ -30,13 +42,25 @@ export const VideoGenerationItem: React.FC<VideoGenerationItemProps> = ({ task, 
                 <div className="flex justify-between items-start gap-4">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="flex items-center gap-1.5 text-pink-400 bg-[#252526] px-1.5 py-0.5 rounded border border-[#333]">
-                                <Film size={10} />
-                                <span className="text-[10px] font-bold uppercase">Video</span>
-                            </div>
+                            {isLipSyncTask ? (
+                                <div className="flex items-center gap-1.5 text-blue-300 bg-[#252526] px-1.5 py-0.5 rounded border border-[#333]">
+                                    <Mic size={10} />
+                                    <span className="text-[10px] font-bold uppercase">Lip Sync</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 text-pink-400 bg-[#252526] px-1.5 py-0.5 rounded border border-[#333]">
+                                    <Film size={10} />
+                                    <span className="text-[10px] font-bold uppercase">Video</span>
+                                </div>
+                            )}
                             <span className="text-[10px] text-gray-500 font-mono">
                                 {new Date(task.createdAt).toLocaleString()}
                             </span>
+                            {task.stage && (
+                                <span className="text-[10px] text-blue-300 border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase font-medium">
+                                    {stageLabelMap[task.stage] || task.stage}
+                                </span>
+                            )}
                             <span className="text-[10px] text-gray-600 border border-[#333] px-1.5 py-0.5 rounded uppercase font-medium bg-[#111]">
                                 {task.config.aspectRatio} / {task.config.resolution}
                             </span>
@@ -52,12 +76,12 @@ export const VideoGenerationItem: React.FC<VideoGenerationItemProps> = ({ task, 
                 {task.status === 'pending' ? (
                     <div className="w-full aspect-video bg-[#111] rounded-lg border border-[#27272a] border-dashed flex flex-col items-center justify-center text-pink-400 gap-3">
                         <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-medium animate-pulse">Generating video... (this may take a few minutes)</span>
+                        <span className="text-xs font-medium animate-pulse">{pendingLabel}</span>
                     </div>
                 ) : task.status === 'failed' ? (
                     <div className="w-full h-32 bg-red-900/10 border border-red-900/30 rounded-lg flex flex-col items-center justify-center text-red-400 gap-2">
                         <AlertCircle size={24} />
-                        <span className="text-xs">{task.error || 'Video generation failed'}</span>
+                        <span className="text-xs">{task.error || (isLipSyncTask ? 'Lip Sync generation failed' : 'Video generation failed')}</span>
                     </div>
                 ) : videoUrl ? (
                     <div className="w-full flex justify-center bg-black rounded-lg overflow-hidden border border-[#27272a]">
@@ -76,7 +100,7 @@ export const VideoGenerationItem: React.FC<VideoGenerationItemProps> = ({ task, 
                     onClick={() => onReuse(task)}
                     className="text-xs text-gray-500 hover:text-pink-400 flex items-center gap-1 transition-colors"
                 >
-                    <Repeat2 size={12} /> Regenerate
+                    <Repeat2 size={12} /> {isLipSyncTask ? 'Retry Lip Sync' : 'Regenerate'}
                 </button>
 
                 <div className="flex items-center gap-2">

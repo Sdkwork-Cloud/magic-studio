@@ -20,16 +20,17 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@sdkwork/app-sdk": ["../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"]
+      "@sdkwork/app-sdk": ["../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"]
     }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "../../sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/**/*.ts"
+    "../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"],
   "references": [
     { "path": "../sdkwork-react-types" }
   ]
 }
+

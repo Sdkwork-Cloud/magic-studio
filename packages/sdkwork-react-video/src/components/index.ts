@@ -5,3 +5,5 @@ export * from './VideoGeneratorModal';
 export * from './VideoHistory';
 export * from './VideoLeftGeneratorPanel';
 export * from './VideoModelSelector';
+export * from './modes';
+export * from './panel';

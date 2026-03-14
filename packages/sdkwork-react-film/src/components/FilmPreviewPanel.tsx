@@ -32,7 +32,17 @@ const PreviewStage: React.FC = () => {
         }
     }, [isPreviewPlaying, currentPreviewItem]);
 
-    if (!currentPreviewItem) {
+    const shot = currentPreviewItem?.shot ?? null;
+    const primaryImageAsset =
+        shot?.assets?.find((asset: unknown) => hasFilmAssetReference(asset)) ?? null;
+    const { url: videoUrl } = useAssetUrl(toFilmUseAssetSource(shot?.generation?.video || null), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+    const { url: imageUrl } = useAssetUrl(toFilmUseAssetSource(primaryImageAsset || null), {
+        resolver: resolveFilmAssetUrlByAssetIdFirst
+    });
+
+    if (!currentPreviewItem || !shot) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center bg-black text-gray-600">
                 <Monitor size={48} className="opacity-20 mb-4" />
@@ -40,16 +50,6 @@ const PreviewStage: React.FC = () => {
             </div>
         );
     }
-
-    const { shot } = currentPreviewItem;
-    const primaryImageAsset =
-        shot.assets?.find((asset: unknown) => hasFilmAssetReference(asset)) ?? null;
-    const { url: videoUrl } = useAssetUrl(toFilmUseAssetSource(shot.generation?.video || null), {
-        resolver: resolveFilmAssetUrlByAssetIdFirst
-    });
-    const { url: imageUrl } = useAssetUrl(toFilmUseAssetSource(primaryImageAsset || null), {
-        resolver: resolveFilmAssetUrlByAssetIdFirst
-    });
     
     const subtitleText = shot.dialogue?.items?.map((d: { text: string }) => d.text).join(' ') || '';
 
@@ -203,6 +203,7 @@ const PreviewTimeline: React.FC = () => {
     const activeCardRef = useRef<HTMLDivElement>(null);
     const requestRef = useRef<number | null>(null);
     const lastTimeRef = useRef<number>(Date.now());
+    const roundedPreviewTime = Math.floor(previewTime);
 
     // Playback Loop
     useEffect(() => {
@@ -246,7 +247,7 @@ const PreviewTimeline: React.FC = () => {
                 card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
-    }, [previewItems, Math.floor(previewTime)]); // Debounce slightly by flooring time
+    }, [previewItems, roundedPreviewTime]); // Debounce slightly by flooring time
 
     return (
         <div className="h-48 bg-[#0a0a0a] border-t border-[#27272a] relative flex flex-col shrink-0 select-none">

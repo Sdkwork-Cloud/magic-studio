@@ -1,7 +1,7 @@
 
 import { vfs } from '@sdkwork/react-fs';
 import { pathUtils } from '@sdkwork/react-commons';
-import { platform } from '../../platform';
+import { getPlatformRuntime } from '../../platform';
 import { thumbnailGenerator } from './thumbnailGenerator';
 import { storageConfig } from '@sdkwork/react-fs';
 ;
@@ -29,7 +29,8 @@ class MediaService {
     async initialize() {
         if (this.initPromise) return this.initPromise;
         this.initPromise = (async () => {
-            const root = await platform.getPath('documents');
+            const runtime = getPlatformRuntime();
+            const root = await runtime.system.path('documents');
             try { await vfs.createDir(pathUtils.join(root, storageConfig.globalCache.root)); } catch {}
             try { await vfs.createDir(pathUtils.join(root, storageConfig.globalCache.thumbnails)); } catch {}
             try { await vfs.createDir(pathUtils.join(root, storageConfig.globalCache.waveforms)); } catch {}
@@ -40,7 +41,8 @@ class MediaService {
 
     async getVideoThumbnail(resourceId: string, sourceUrl: string, time: number): Promise<string | null> {
         // Validation: If URL is empty or unresolved assets path without handling, we can't generate
-        if (!sourceUrl || (sourceUrl.startsWith('assets://') && platform.getPlatform() === 'web')) {
+        const runtime = getPlatformRuntime();
+        if (!sourceUrl || (sourceUrl.startsWith('assets://') && runtime.system.kind() === 'web')) {
              // For web, if it's still virtual, try to resolve it first
              if (sourceUrl.startsWith('assets://')) {
                   // Fallthrough to attempt resolve inside task
@@ -56,7 +58,7 @@ class MediaService {
         const timeKey = Math.floor(time * 10) / 10; 
         
         const cacheFilename = `${this.hashString(resourceId)}_${timeKey}.jpg`;
-        const root = await platform.getPath('documents');
+        const root = await runtime.system.path('documents');
         const vfsPath = pathUtils.join(root, storageConfig.globalCache.thumbnails, cacheFilename);
         const cacheKey = `thumb:${vfsPath}`;
 
@@ -117,7 +119,7 @@ class MediaService {
         const task = (async () => {
             try {
                 // 1. Resolve resource to a concrete, readable source (URL or VFS path)
-                const plat = platform.getPlatform();
+                const plat = getPlatformRuntime().system.kind();
 
                 // On Web, hydrate virtual assets (assets://) into VFS/blob URLs
                 if (plat === 'web' && resource.path?.startsWith('assets://')) {
@@ -144,7 +146,7 @@ class MediaService {
                     vfsPath = url.replace(/^asset:\/\//, '');
                 } else if (plat === 'desktop') {
                     // Desktop: local filesystem path, convert to fetchable URL
-                    fetchUrl = platform.convertFileSrc(url);
+                    fetchUrl = getPlatformRuntime().fileSystem.convertFileSrc(url);
                 } else {
                     // Web + plain path -> VFS
                     vfsPath = url;

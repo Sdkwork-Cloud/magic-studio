@@ -24,18 +24,34 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        'sdkwork-react-commons',
-        'sdkwork-react-core',
-        'sdkwork-react-assets'
+        '@sdkwork/react-assets',
+        '@sdkwork/react-chat',
+        '@sdkwork/react-commons',
+        '@sdkwork/react-core',
+        '@sdkwork/react-image',
+        '@sdkwork/react-notes',
+        '@sdkwork/react-settings',
+        '@sdkwork/react-types',
+        '@sdkwork/react-video',
+        '@sdkwork/react-voicespeaker',
+        '@sdkwork/react-workspace'
       ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
-          'sdkwork-react-commons': 'SdkworkReactCommons',
-          'sdkwork-react-core': 'SdkworkReactCore',
-          'sdkwork-react-assets': 'SdkworkReactAssets'
+          '@sdkwork/react-assets': 'SdkworkReactAssets',
+          '@sdkwork/react-chat': 'SdkworkReactChat',
+          '@sdkwork/react-commons': 'SdkworkReactCommons',
+          '@sdkwork/react-core': 'SdkworkReactCore',
+          '@sdkwork/react-image': 'SdkworkReactImage',
+          '@sdkwork/react-notes': 'SdkworkReactNotes',
+          '@sdkwork/react-settings': 'SdkworkReactSettings',
+          '@sdkwork/react-types': 'SdkworkReactTypes',
+          '@sdkwork/react-video': 'SdkworkReactVideo',
+          '@sdkwork/react-voicespeaker': 'SdkworkReactVoiceSpeaker',
+          '@sdkwork/react-workspace': 'SdkworkReactWorkspace'
         }
       }
     },

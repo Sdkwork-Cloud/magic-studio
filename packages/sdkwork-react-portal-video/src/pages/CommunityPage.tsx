@@ -1,245 +1,321 @@
-import React, { useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-    Heart, MessageCircle, Share2, Eye, TrendingUp, Clock,
-    Award, Filter, Search, Plus, Image as ImageIcon,
-    Video as VideoIcon, Music, Mic
+  AlertCircle,
+  Filter,
+  Flame,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Music,
+  Plus,
+  Search,
+  Video as VideoIcon,
 } from 'lucide-react';
+import { GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
+import { GenerationPreview } from '@sdkwork/react-image';
 import { PortalHeader } from '../components/PortalHeader';
+import { portalVideoBusinessService, type PortalDiscoverTab } from '../services';
 
-interface CommunityGalleryItem {
-    id: string;
-    title: string;
-    type: 'image' | 'video' | 'music' | 'speech';
-    url: string;
-    aspectRatio: '16:9' | '1:1';
-    author: { id: string; name: string; avatar: string };
-    stats: { likes: number; views: string; comments: number };
-    prompt: string;
-    model: string;
-    createdAt: number;
-    badges: Array<{ text: string; color: string }>;
-}
+type CategoryKey = 'all' | 'trending' | 'latest' | 'image' | 'video' | 'music' | 'voice';
 
-interface CategoryTab {
-    id: 'all' | 'trending' | 'latest' | 'image' | 'video' | 'music' | 'speech';
-    label: string;
-    icon: LucideIcon;
-}
-
-// 模拟社区数据 - 使用简化的数据结构以适应 GalleryCard
-const COMMUNITY_GALLERY: CommunityGalleryItem[] = [
-    {
-        id: 'c1',
-        title: 'AI 生成的未来城市',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '16:9',
-        author: { id: 'u1', name: 'AI 艺术家', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=artist1' },
-        stats: { likes: 2340, views: '15k', comments: 89 },
-        prompt: '未来城市，霓虹灯，赛博朋克风格',
-        model: 'stable-diffusion-xl',
-        createdAt: Date.now() - 3600000,
-        badges: [{ text: '热门', color: 'bg-red-600' }]
-    },
-    {
-        id: 'c2',
-        title: '动态海浪视频',
-        type: 'video',
-        url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '16:9',
-        author: { id: 'u2', name: '视频创作者', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=artist2' },
-        stats: { likes: 1890, views: '12k', comments: 56 },
-        prompt: '海浪拍打沙滩，4K 高清',
-        model: 'runway-gen2',
-        createdAt: Date.now() - 7200000,
-        badges: [{ text: '精选', color: 'bg-blue-600' }]
-    },
-    {
-        id: 'c3',
-        title: '电子音乐作品',
-        type: 'music',
-        url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '1:1',
-        author: { id: 'u3', name: '音乐制作人', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=artist3' },
-        stats: { likes: 3200, views: '20k', comments: 124 },
-        prompt: '电子舞曲，节奏感强',
-        model: 'musiclm',
-        createdAt: Date.now() - 10800000,
-        badges: [{ text: '原创', color: 'bg-purple-600' }]
-    },
-    {
-        id: 'c4',
-        title: 'AI 配音演示',
-        type: 'speech',
-        url: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac6d5?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '16:9',
-        author: { id: 'u4', name: '配音演员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=artist4' },
-        stats: { likes: 1560, views: '8k', comments: 43 },
-        prompt: '温暖的女声配音',
-        model: 'elevenlabs',
-        createdAt: Date.now() - 14400000,
-        badges: [{ text: '推荐', color: 'bg-green-600' }]
-    },
+const CATEGORY_TABS: Array<{ id: CategoryKey; label: string; icon: React.ComponentType<{ size?: number }> }> = [
+  { id: 'all', label: 'All', icon: Filter },
+  { id: 'trending', label: 'Trending', icon: Flame },
+  { id: 'latest', label: 'Latest', icon: Flame },
+  { id: 'image', label: 'Image', icon: ImageIcon },
+  { id: 'video', label: 'Video', icon: VideoIcon },
+  { id: 'music', label: 'Music', icon: Music },
+  { id: 'voice', label: 'Voice', icon: Mic },
 ];
 
-const CATEGORY_TABS: CategoryTab[] = [
-    { id: 'all', label: '全部', icon: Filter },
-    { id: 'trending', label: '热门', icon: TrendingUp },
-    { id: 'latest', label: '最新', icon: Clock },
-    { id: 'image', label: '图片', icon: ImageIcon },
-    { id: 'video', label: '视频', icon: VideoIcon },
-    { id: 'music', label: '音乐', icon: Music },
-    { id: 'speech', label: '配音', icon: Mic },
-];
+function resolveTab(category: CategoryKey): PortalDiscoverTab {
+  if (category === 'latest') {
+    return 'latest';
+  }
+  return 'trending';
+}
+
+function resolveContentType(category: CategoryKey): 'image' | 'video' | 'music' | 'audio' | undefined {
+  if (category === 'image') {
+    return 'image';
+  }
+  if (category === 'video') {
+    return 'video';
+  }
+  if (category === 'music') {
+    return 'music';
+  }
+  if (category === 'voice') {
+    return 'audio';
+  }
+  return undefined;
+}
 
 const CommunityPage: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [items, setItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [previewItem, setPreviewItem] = useState<GalleryItem | null>(null);
+  const [refreshSeed, setRefreshSeed] = useState(0);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishDraft, setPublishDraft] = useState({
+    title: '',
+    content: '',
+    coverImage: '',
+  });
 
-    const filteredGallery = COMMUNITY_GALLERY.filter(item => {
-        const matchesCategory = activeCategory === 'all' || 
-            activeCategory === 'trending' || 
-            activeCategory === 'latest' || 
-            item.type === activeCategory;
-        const matchesSearch = searchQuery === '' || 
-            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.prompt.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+  const requestQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
 
-    return (
-        <div className="min-h-screen bg-[#020202]">
-            {/* 顶部 Header */}
-            <PortalHeader />
-            
-            {/* 顶部横幅 */}
-            <div className="relative h-64 bg-gradient-to-r from-orange-600/20 via-red-600/20 to-yellow-500/20 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                        <h1 className="text-4xl font-bold text-white mb-2">社区广场</h1>
-                        <p className="text-gray-400 text-sm">发现、分享你的 AI 创作灵感</p>
-                    </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#020202] to-transparent" />
-            </div>
+  useEffect(() => {
+    let canceled = false;
 
-            {/* 控制栏 */}
-            <div className="sticky top-16 z-40 bg-[#020202]/95 backdrop-blur-xl border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between gap-4">
-                        {/* 分类标签 */}
-                        <div className="flex items-center gap-2 overflow-x-auto">
-                            {CATEGORY_TABS.map((tab) => {
-                                const Icon = tab.icon;
-                                const isActive = activeCategory === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveCategory(tab.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                                            isActive
-                                                ? 'bg-[#1a1a1c] text-white border border-white/10'
-                                                : 'text-gray-400 hover:text-white hover:bg-[#1a1a1c]/50 border border-transparent'
-                                        }`}
-                                    >
-                                        <Icon size={14} />
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+    const loadCommunityFeed = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const feedItems = await portalVideoBusinessService.getDiscoverWorks({
+          tab: resolveTab(activeCategory),
+          contentType: resolveContentType(activeCategory),
+          keyword: requestQuery || undefined,
+          page: 1,
+          size: 24,
+        });
+        if (!canceled) {
+          setItems(feedItems);
+          setPreviewItem(null);
+        }
+      } catch (requestError) {
+        if (!canceled) {
+          setItems([]);
+          setError(
+            requestError instanceof Error ? requestError.message : 'Failed to load community feed.',
+          );
+        }
+      } finally {
+        if (!canceled) {
+          setLoading(false);
+        }
+      }
+    };
 
-                        {/* 搜索框 */}
-                        <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="搜索作品..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-64 bg-[#1a1a1c] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
-                            />
-                        </div>
+    void loadCommunityFeed();
+    return () => {
+      canceled = true;
+    };
+  }, [activeCategory, requestQuery, refreshSeed]);
 
-                        {/* 发布按钮 */}
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors">
-                            <Plus size={14} />
-                            发布作品
-                        </button>
-                    </div>
-                </div>
-            </div>
+  const closePublishDialog = () => {
+    if (publishing) {
+      return;
+    }
+    setPublishOpen(false);
+    setPublishError(null);
+  };
 
-            {/* 内容区域 */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* 统计信息 */}
-                <div className="flex items-center gap-6 mb-6 text-xs text-gray-400">
-                    <span>共 {filteredGallery.length} 件作品</span>
-                    <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                            <TrendingUp size={12} />
-                            本周热门
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Award size={12} />
-                            精选作品
-                        </span>
-                    </div>
-                </div>
+  const handlePublish = async () => {
+    const content = publishDraft.content.trim();
+    if (!content) {
+      setPublishError('Content is required.');
+      return;
+    }
 
-                {/* 作品网格 */}
-                {filteredGallery.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredGallery.map((item) => (
-                            <div key={item.id} className="group relative bg-[#1a1a1c] rounded-xl overflow-hidden border border-white/5 hover:border-white/10 transition-all">
-                                {/* 简化的作品卡片 */}
-                                <div className="relative aspect-video overflow-hidden">
-                                    <div 
-                                        className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                        style={{ backgroundImage: `url(${item.url})` }}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                    
-                                    {/* 悬浮操作栏 */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="flex items-center gap-3">
-                                            <button className="flex items-center gap-1 text-xs text-white/80 hover:text-white">
-                                                <Heart size={14} />
-                                                {item.stats.likes}
-                                            </button>
-                                            <button className="flex items-center gap-1 text-xs text-white/80 hover:text-white">
-                                                <MessageCircle size={14} />
-                                                {item.stats.comments}
-                                            </button>
-                                            <button className="flex items-center gap-1 text-xs text-white/80 hover:text-white">
-                                                <Eye size={14} />
-                                                {item.stats.views}
-                                            </button>
-                                        </div>
-                                        <button className="text-white/80 hover:text-white">
-                                            <Share2 size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                {/* 信息区域 */}
-                                <div className="p-3">
-                                    <h3 className="text-sm font-bold text-white mb-1 truncate">{item.title}</h3>
-                                    <p className="text-xs text-gray-500 truncate">{item.author.name}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20">
-                        <Filter size={48} className="mx-auto text-gray-600 mb-4" />
-                        <p className="text-gray-400 text-sm">暂无符合条件的作品</p>
-                    </div>
-                )}
-            </div>
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      const created = await portalVideoBusinessService.createFeed({
+        title: publishDraft.title.trim() || undefined,
+        content,
+        coverImage: publishDraft.coverImage.trim() || undefined,
+      });
+      setItems((previous) => [created, ...previous.filter((item) => item.id !== created.id)]);
+      setPublishDraft({ title: '', content: '', coverImage: '' });
+      setPublishOpen(false);
+      setRefreshSeed((value) => value + 1);
+    } catch (requestError) {
+      setPublishError(requestError instanceof Error ? requestError.message : 'Failed to publish feed.');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020202]">
+      <PortalHeader />
+
+      <div className="relative h-64 bg-gradient-to-r from-orange-600/20 via-red-600/20 to-yellow-500/20 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white mb-2">Community Creations</h1>
+            <p className="text-gray-400 text-sm">Discover and share works from the feed network.</p>
+          </div>
         </div>
-    );
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#020202] to-transparent" />
+      </div>
+
+      <div className="sticky top-16 z-40 bg-[#020202]/95 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              {CATEGORY_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeCategory === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveCategory(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'bg-[#1a1a1c] text-white border border-white/10'
+                        : 'text-gray-400 hover:text-white hover:bg-[#1a1a1c]/50 border border-transparent'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search feed works..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-64 bg-[#1a1a1c] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+              />
+            </div>
+
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors"
+              onClick={() => setPublishOpen(true)}
+            >
+              <Plus size={14} />
+              Publish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-center gap-2">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="h-56 rounded-2xl border border-white/10 bg-[#111] flex items-center justify-center text-gray-400">
+            <Loader2 size={20} className="animate-spin mr-2" />
+            Loading community feed...
+          </div>
+        ) : items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {items.map((item) => (
+              <GalleryCard key={item.id} item={item} onClick={() => setPreviewItem(item)} />
+            ))}
+          </div>
+        ) : (
+          <div className="h-56 rounded-2xl border border-white/10 bg-[#111] flex items-center justify-center text-sm text-gray-500">
+            No feed data matched this filter.
+          </div>
+        )}
+      </div>
+
+      {previewItem && (
+        <GenerationPreview mode="view" galleryItem={previewItem} relatedItems={items} onClose={() => setPreviewItem(null)} />
+      )}
+
+      {publishOpen && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closePublishDialog}
+        >
+          <div
+            className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#111] p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold text-white mb-1">Publish Feed</h2>
+            <p className="text-xs text-gray-400 mb-5">
+              Submit a community post through APP SDK feed API.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Title (optional)</label>
+                <input
+                  type="text"
+                  value={publishDraft.title}
+                  onChange={(event) =>
+                    setPublishDraft((previous) => ({ ...previous, title: event.target.value }))
+                  }
+                  className="w-full bg-[#1a1a1c] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/25"
+                  placeholder="e.g. Sunset cinematic scene"
+                  disabled={publishing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Content</label>
+                <textarea
+                  value={publishDraft.content}
+                  onChange={(event) =>
+                    setPublishDraft((previous) => ({ ...previous, content: event.target.value }))
+                  }
+                  className="w-full min-h-[120px] bg-[#1a1a1c] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/25"
+                  placeholder="Describe your creation..."
+                  disabled={publishing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Cover Image URL (optional)</label>
+                <input
+                  type="url"
+                  value={publishDraft.coverImage}
+                  onChange={(event) =>
+                    setPublishDraft((previous) => ({ ...previous, coverImage: event.target.value }))
+                  }
+                  className="w-full bg-[#1a1a1c] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/25"
+                  placeholder="https://..."
+                  disabled={publishing}
+                />
+              </div>
+            </div>
+
+            {publishError && (
+              <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                {publishError}
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg border border-white/10 text-sm text-gray-300 hover:text-white hover:border-white/20 disabled:opacity-50"
+                onClick={closePublishDialog}
+                disabled={publishing}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white disabled:opacity-60"
+                onClick={() => void handlePublish()}
+                disabled={publishing}
+              >
+                {publishing ? 'Publishing...' : 'Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default CommunityPage;

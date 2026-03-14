@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     initSdkworkClient,
+    initSdkworkFromEnv,
     getSdkworkClient,
     hasSdkworkClient,
     type SdkworkConfig,
@@ -48,6 +49,19 @@ export function useSdkwork(): UseSdkworkResult {
     };
 }
 
+export function useAppSdkClient(): SdkworkClient | null {
+    return useMemo(() => {
+        try {
+            if (hasSdkworkClient()) {
+                return getSdkworkClient();
+            }
+            return initSdkworkFromEnv();
+        } catch {
+            return null;
+        }
+    }, []);
+}
+
 export interface UseSdkworkModuleResult<T> {
     module: T | null;
     isReady: boolean;
@@ -59,8 +73,10 @@ export function useSdkworkModule<T>(
     const [module, setModule] = useState<T | null>(null);
 
     useEffect(() => {
-        if (hasSdkworkClient()) {
+        try {
             setModule(getModule(getSdkworkClient()));
+        } catch {
+            setModule(null);
         }
     }, [getModule]);
 
@@ -79,7 +95,7 @@ export function useAuth() {
 }
 
 export function useUser() {
-    return useSdkworkModule((c) => c.profile);
+    return useSdkworkModule((c) => c.user);
 }
 
 export function useAssets() {
@@ -143,7 +159,7 @@ export function useSearch() {
 }
 
 export function useModel() {
-    return useSdkworkModule((c) => c.models);
+    return useSdkworkModule((c) => c.model);
 }
 
 export function usePrompt() {
@@ -164,8 +180,4 @@ export function useAnalytics() {
 
 export function useCategory() {
     return useSdkworkModule((c) => c.category);
-}
-
-export function useAddress() {
-    return useSdkworkModule((c) => c.address);
 }

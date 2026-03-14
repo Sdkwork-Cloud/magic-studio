@@ -1,9 +1,8 @@
 import {
-  assetBusinessFacade,
-  assetCenterService,
-  resolveAssetUrlByAssetIdFirst,
-  mapUnifiedAssetToAnyAsset,
-  readWorkspaceScope
+  importAssetBySdk,
+  importAssetFromUrlBySdk,
+  resolveAssetPrimaryUrlBySdk,
+  resolveAssetUrlByAssetIdFirst
 } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 import type { Asset } from '@sdkwork/react-commons';
@@ -15,37 +14,37 @@ export interface ImportedFilmAssetRef {
   url: string;
 }
 
-const resolveFilmScope = (): { workspaceId: string; projectId?: string } => {
-  const scope = readWorkspaceScope();
-  return {
-    workspaceId: scope.workspaceId,
-    projectId: scope.projectId
-  };
-};
-
 export const importFilmAssetFromUrl = async (
   sourceUrl: string,
   name: string,
   type: FilmImportType,
-  metadata: Record<string, unknown>
+  _metadata: Record<string, unknown>
 ): Promise<ImportedFilmAssetRef> => {
   const inlineData = await inlineDataService.tryExtractInlineData(sourceUrl);
-  const imported = await assetBusinessFacade.importFilmAsset({
-    scope: resolveFilmScope(),
-    type,
-    name,
-    data: inlineData,
-    remoteUrl: inlineData ? undefined : sourceUrl,
-    metadata
-  });
-  const mapped = mapUnifiedAssetToAnyAsset(imported.asset);
+  const uploaded = inlineData
+    ? await importAssetBySdk(
+      {
+        name,
+        data: inlineData
+      },
+      type,
+      { domain: 'film' }
+    )
+    : await importAssetFromUrlBySdk(
+      sourceUrl,
+      type,
+      {
+        name,
+        domain: 'film'
+      }
+    );
   const resolvedUrl =
-    mapped?.url ||
-    mapped?.path ||
-    (await assetCenterService.resolvePrimaryUrl(imported.asset.assetId));
+    (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+    uploaded.path ||
+    sourceUrl;
 
   return {
-    assetId: imported.asset.assetId,
+    assetId: uploaded.id,
     url: resolvedUrl
   };
 };
@@ -53,24 +52,24 @@ export const importFilmAssetFromUrl = async (
 export const importFilmAssetFromFile = async (
   file: File,
   type: FilmImportType,
-  metadata: Record<string, unknown>
+  _metadata: Record<string, unknown>
 ): Promise<ImportedFilmAssetRef> => {
   const data = new Uint8Array(await file.arrayBuffer());
-  const imported = await assetBusinessFacade.importFilmAsset({
-    scope: resolveFilmScope(),
+  const uploaded = await importAssetBySdk(
+    {
+      name: file.name,
+      data
+    },
     type,
-    name: file.name,
-    data,
-    metadata
-  });
-  const mapped = mapUnifiedAssetToAnyAsset(imported.asset);
+    { domain: 'film' }
+  );
   const resolvedUrl =
-    mapped?.url ||
-    mapped?.path ||
-    (await assetCenterService.resolvePrimaryUrl(imported.asset.assetId));
+    (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+    uploaded.path ||
+    '';
 
   return {
-    assetId: imported.asset.assetId,
+    assetId: uploaded.id,
     url: resolvedUrl
   };
 };

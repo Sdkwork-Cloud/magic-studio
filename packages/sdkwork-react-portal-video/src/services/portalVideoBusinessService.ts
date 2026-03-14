@@ -1,12 +1,9 @@
 import { createServiceAdapterController } from '@sdkwork/react-commons';
+import { portalVideoService } from './portalVideoService';
 
-export interface PortalVideoBusinessAdapter {}
+export type PortalVideoBusinessAdapter = typeof portalVideoService;
 
-const localPortalVideoAdapter: PortalVideoBusinessAdapter = {};
-
-const controller = createServiceAdapterController<PortalVideoBusinessAdapter>(
-  localPortalVideoAdapter
-);
+const controller = createServiceAdapterController<PortalVideoBusinessAdapter>(portalVideoService);
 
 export const portalVideoBusinessService: PortalVideoBusinessAdapter =
   controller.service;

@@ -112,12 +112,12 @@ const LazyPageWrapper = (LazyComponent: React.LazyExoticComponent<React.Componen
     </Suspense>
 );
 
-export type LayoutType = 'main' | 'none' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
+export type LayoutType = 'main' | 'none' | 'blank' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
 
 export interface RouteDefinition {
     path: RoutePath;
     component: React.ComponentType<any>;
-    layout: LayoutType;
+    layout?: LayoutType;
     leftPane?: React.ComponentType<any>;
     provider?: React.ComponentType<any>;
 }
@@ -136,7 +136,7 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
         provider: AssetStoreProvider
     },
     { path: ROUTES.SETTINGS, component: LazyPageWrapper(SettingsPage), layout: 'none' },
-    { path: ROUTES.PROFILE, component: LazyPageWrapper(ProfilePageLazy), layout: 'main' },
+    { path: ROUTES.PROFILE, component: LazyPageWrapper(ProfilePageLazy), layout: 'blank' },
     { path: ROUTES.VIP, component: PricingPage, layout: 'main' },
     
     // --- Specific Tool Layouts ---

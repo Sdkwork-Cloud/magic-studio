@@ -28,6 +28,7 @@
                          "@sdkwork/react-commons":  "workspace:*",
                          "@sdkwork/react-core":  "workspace:*",
                          "@sdkwork/react-fs":  "workspace:*",
+                         "@sdkwork/react-assets":  "workspace:*",
                          "@sdkwork/react-settings":  "workspace:*"
                      },
     "devDependencies":  {

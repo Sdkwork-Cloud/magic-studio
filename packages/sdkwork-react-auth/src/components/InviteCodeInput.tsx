@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { Gift, Check, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 
 interface InviteCodeInputProps {
     value: string;
     onChange: (value: string) => void;
-    onValidate?: (isValid: boolean, data?: any) => void;
+    onValidate?: (isValid: boolean, data?: unknown) => void;
     error?: string;
     className?: string;
 }
@@ -28,7 +28,6 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [localValue, setLocalValue] = useState(value.split('').concat(Array(6 - value.length).fill('')));
 
-    // Sync with external value
     useEffect(() => {
         const chars = value.split('').concat(Array(6 - value.length).fill(''));
         setLocalValue(chars);
@@ -45,14 +44,12 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
         const codeString = newValue.join('').replace(/\s/g, '');
         onChange(codeString);
 
-        // Auto-focus next input
-        if (index < 5 && newChar) {
+        if (index < 5) {
             inputRefs.current[index + 1]?.focus();
         }
 
-        // Validate when complete
         if (codeString.length === 6) {
-            validateCode(codeString);
+            void validateCode(codeString);
         } else {
             setValidation({ status: 'idle' });
         }
@@ -62,20 +59,23 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
         if (e.key === 'Backspace') {
             e.preventDefault();
             const newValue = [...localValue];
-            
             if (localValue[index]) {
                 newValue[index] = '';
                 setLocalValue(newValue);
                 onChange(newValue.join('').replace(/\s/g, ''));
                 setValidation({ status: 'idle' });
-            } else if (index > 0) {
+                return;
+            }
+            if (index > 0) {
                 inputRefs.current[index - 1]?.focus();
                 newValue[index - 1] = '';
                 setLocalValue(newValue);
                 onChange(newValue.join('').replace(/\s/g, ''));
                 setValidation({ status: 'idle' });
             }
-        } else if (e.key === 'ArrowLeft' && index > 0) {
+            return;
+        }
+        if (e.key === 'ArrowLeft' && index > 0) {
             inputRefs.current[index - 1]?.focus();
         } else if (e.key === 'ArrowRight' && index < 5) {
             inputRefs.current[index + 1]?.focus();
@@ -85,48 +85,44 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
     const handlePaste = (e: React.ClipboardEvent) => {
         e.preventDefault();
         const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-        
+
         const newValue = pasted.split('').concat(Array(6 - pasted.length).fill(''));
         setLocalValue(newValue);
         onChange(pasted);
 
         if (pasted.length === 6) {
-            validateCode(pasted);
+            void validateCode(pasted);
         }
 
-        // Focus the appropriate input
         const focusIndex = Math.min(pasted.length, 5);
         inputRefs.current[focusIndex]?.focus();
     };
 
     const validateCode = async (code: string) => {
         setValidation({ status: 'validating' });
-        
-        // Simulate API validation
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Mock validation - codes starting with 'VIP' or having specific pattern are valid
-        const isValid = code.length === 6 && (code.startsWith('VIP') || /^[A-Z0-9]{6}$/.test(code));
-        
+        await new Promise((resolve) => setTimeout(resolve, 700));
+
+        const isValid = code.length === 6 && /^[A-Z0-9]{6}$/.test(code);
         if (isValid) {
             const mockData = {
-                inviter: '用户' + Math.floor(Math.random() * 10000),
-                reward: '7天高级会�?,
+                inviter: `User${Math.floor(Math.random() * 10000)}`,
+                reward: '7-day VIP',
             };
             setValidation({
                 status: 'valid',
-                message: '邀请码有效',
+                message: 'Invite code is valid.',
                 inviter: mockData.inviter,
                 reward: mockData.reward,
             });
             onValidate?.(true, mockData);
-        } else {
-            setValidation({
-                status: 'invalid',
-                message: '邀请码无效或已过期',
-            });
-            onValidate?.(false);
+            return;
         }
+
+        setValidation({
+            status: 'invalid',
+            message: 'Invite code is invalid or expired.',
+        });
+        onValidate?.(false);
     };
 
     const clearCode = () => {
@@ -145,7 +141,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-dashed border-[#333] bg-[#111]/50 text-gray-400 hover:text-gray-300 hover:border-[#444] hover:bg-[#18181b] transition-all group"
                 >
                     <Gift size={18} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm">有邀请码？点击输入领取奖�?/span>
+                    <span className="text-sm">Have an invite code? Enter to claim rewards</span>
                     <Sparkles size={14} className="text-yellow-500/70" />
                 </button>
             </div>
@@ -157,11 +153,12 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
             <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-gray-400 flex items-center gap-2">
                     <Gift size={14} className="text-yellow-500" />
-                    邀请码
+                    Invite code
                     {validation.status === 'valid' && (
                         <span className="flex items-center gap-1 text-green-400">
                             <Check size={12} />
-                            已验�?                        </span>
+                            Verified
+                        </span>
                     )}
                 </label>
                 <button
@@ -172,16 +169,17 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                     }}
                     className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
                 >
-                    跳过
+                    Skip
                 </button>
             </div>
 
-            {/* Code Input Boxes */}
             <div className="flex items-center gap-2">
                 {localValue.map((char, index) => (
                     <React.Fragment key={index}>
                         <input
-                            ref={el => inputRefs.current[index] = el}
+                            ref={(el) => {
+                                inputRefs.current[index] = el;
+                            }}
                             type="text"
                             maxLength={1}
                             value={char}
@@ -190,13 +188,13 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                             onPaste={handlePaste}
                             disabled={validation.status === 'validating'}
                             className={`
-                                w-12 h-14 text-center text-lg font-bold uppercase rounded-xl border-2 
+                                w-12 h-14 text-center text-lg font-bold uppercase rounded-xl border-2
                                 bg-[#111] transition-all duration-200 outline-none
-                                ${validation.status === 'valid' 
-                                    ? 'border-green-500/50 text-green-400 bg-green-500/10' 
+                                ${validation.status === 'valid'
+                                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
                                     : validation.status === 'invalid'
                                     ? 'border-red-500/50 text-red-400 bg-red-500/10'
-                                    : char 
+                                    : char
                                         ? 'border-blue-500/50 text-white bg-blue-500/10'
                                         : 'border-[#2a2a2a] text-white focus:border-blue-500/50 focus:bg-blue-500/5'
                                 }
@@ -210,11 +208,10 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                 ))}
             </div>
 
-            {/* Validation Status */}
             {validation.status === 'validating' && (
                 <div className="flex items-center gap-2 text-sm text-blue-400">
                     <Loader2 size={14} className="animate-spin" />
-                    <span>正在验证邀请码...</span>
+                    <span>Validating invite code...</span>
                 </div>
             )}
 
@@ -222,13 +219,13 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                 <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20">
                     <div className="flex items-center gap-2 text-green-400 text-sm mb-1">
                         <Check size={16} />
-                        <span className="font-medium">邀请码有效</span>
+                        <span className="font-medium">Invite code verified</span>
                     </div>
                     <p className="text-xs text-gray-400">
-                        邀请人�?span className="text-gray-300">{validation.inviter}</span>
+                        Inviter: <span className="text-gray-300">{validation.inviter}</span>
                     </p>
                     <p className="text-xs text-green-400/80 mt-1">
-                        注册成功后将获得�?span className="font-medium">{validation.reward}</span>
+                        Reward after sign-up: <span className="font-medium">{validation.reward}</span>
                     </p>
                 </div>
             )}

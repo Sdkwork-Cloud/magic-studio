@@ -1,5 +1,5 @@
 
-import { platform } from '../../platform';
+import { getPlatformRuntime } from '../../platform';
 import { logger } from '@sdkwork/react-commons';
 
 export interface MediaDimensions {
@@ -66,8 +66,8 @@ class AspectRatioService {
             } else {
                 url = source;
                 // Handle Tauri paths
-                if (platform.getPlatform() === 'desktop' && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
-                    try { url = platform.convertFileSrc(url); } catch(e) {
+                if (getPlatformRuntime().system.kind() === 'desktop' && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
+                    try { url = getPlatformRuntime().fileSystem.convertFileSrc(url); } catch(e) {
                         logger.warn('[AspectRatioService] convertFileSrc failed', e);
                     }
                 }
@@ -111,8 +111,8 @@ class AspectRatioService {
             } else {
                 url = source;
                 // Handle Tauri paths
-                if (platform.getPlatform() === 'desktop' && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
-                    try { url = platform.convertFileSrc(url); } catch(e) {
+                if (getPlatformRuntime().system.kind() === 'desktop' && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
+                    try { url = getPlatformRuntime().fileSystem.convertFileSrc(url); } catch(e) {
                         logger.warn('[AspectRatioService] convertFileSrc failed', e);
                     }
                 }

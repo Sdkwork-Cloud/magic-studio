@@ -2,7 +2,7 @@
 import React, { ReactNode } from 'react';
 
 // Define LayoutType
-type LayoutType = 'main' | 'none' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
+type LayoutType = 'main' | 'none' | 'blank' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
 
 interface PageContainerProps {
   children: ReactNode;

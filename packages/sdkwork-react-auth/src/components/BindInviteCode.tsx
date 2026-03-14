@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Gift, Check, AlertCircle, Loader2, Sparkles, X, Users, Coins, Crown } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { Gift, Check, Loader2, Sparkles, X, Users, Coins, Crown } from 'lucide-react';
 import { Button } from '@sdkwork/react-commons';
 import { InviteCodeInput } from './InviteCodeInput';
 
 interface BindInviteCodeProps {
-    onBind?: (code: string, data: any) => void;
+    onBind?: (code: string, data: unknown) => void;
     onClose?: () => void;
     className?: string;
 }
@@ -22,14 +22,14 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
 }) => {
     const [inviteCode, setInviteCode] = useState('');
     const [isValid, setIsValid] = useState(false);
-    const [inviteData, setInviteData] = useState<any>(null);
+    const [inviteData, setInviteData] = useState<unknown>(null);
     const [isBinding, setIsBinding] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState('');
 
-    const handleValidate = (valid: boolean, data?: any) => {
+    const handleValidate = (valid: boolean, data?: unknown) => {
         setIsValid(valid);
-        setInviteData(data);
+        setInviteData(data ?? null);
         setError('');
     };
 
@@ -40,22 +40,20 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
         setError('');
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // Mock success
+            await new Promise((resolve) => setTimeout(resolve, 1200));
             setIsSuccess(true);
             onBind?.(inviteCode, inviteData);
-        } catch (e: any) {
-            setError(e.message || '绑定失败，请重试');
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'Bind invite code failed, please retry.';
+            setError(message);
         } finally {
             setIsBinding(false);
         }
     };
 
     const rewards: BindReward[] = [
-        { type: 'points', value: '+500', icon: <Coins size={18} className="text-yellow-500" /> },
-        { type: 'vip_days', value: '7天高级会�?, icon: <Crown size={18} className="text-purple-500" /> },
+        { type: 'points', value: '+500 points', icon: <Coins size={18} className="text-yellow-500" /> },
+        { type: 'vip_days', value: '7-day VIP', icon: <Crown size={18} className="text-purple-500" /> },
     ];
 
     if (isSuccess) {
@@ -64,14 +62,14 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
                     <Check size={40} className="text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">绑定成功�?/h3>
+                <h3 className="text-xl font-bold text-white mb-2">Invite code bound</h3>
                 <p className="text-gray-400 text-sm mb-6">
-                    您已成功绑定邀请码，奖励已发放到您的账�?                </p>
-                
-                {/* Rewards Display */}
+                    The invite reward has been sent to your account.
+                </p>
+
                 <div className="flex justify-center gap-3 mb-6">
                     {rewards.map((reward, index) => (
-                        <div 
+                        <div
                             key={index}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a]"
                         >
@@ -85,7 +83,7 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                     onClick={onClose}
                     className="w-full h-11 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0"
                 >
-                    完成
+                    Done
                 </Button>
             </div>
         );
@@ -93,15 +91,14 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
 
     return (
         <div className={`p-6 ${className}`}>
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
                         <Gift size={20} className="text-yellow-500" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white">绑定邀请码</h3>
-                        <p className="text-gray-500 text-xs">输入好友的邀请码，双方都有奖�?/p>
+                        <h3 className="text-lg font-bold text-white">Bind invite code</h3>
+                        <p className="text-gray-500 text-xs">Enter your friend&apos;s invite code and claim rewards.</p>
                     </div>
                 </div>
                 {onClose && (
@@ -114,14 +111,14 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 )}
             </div>
 
-            {/* Rewards Preview */}
             <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
                 <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
                     <Sparkles size={14} className="text-yellow-500" />
-                    绑定成功后您将获�?                </p>
+                    Rewards after successful bind:
+                </p>
                 <div className="flex gap-3">
                     {rewards.map((reward, index) => (
-                        <div 
+                        <div
                             key={index}
                             className="flex-1 flex items-center gap-2 p-3 rounded-lg bg-[#111]/50"
                         >
@@ -132,7 +129,6 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 </div>
             </div>
 
-            {/* Invite Code Input */}
             <div className="mb-6">
                 <InviteCodeInput
                     value={inviteCode}
@@ -142,19 +138,17 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 />
             </div>
 
-            {/* Benefits Info */}
             <div className="mb-6 space-y-2">
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Users size={14} className="text-blue-400" />
-                    <span>邀请好友注册，双方均可获得奖励</span>
+                    <span>Both users get rewards after registration.</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Check size={14} className="text-green-400" />
-                    <span>每个账户只能绑定一次邀请码</span>
+                    <span>Each account can bind one invite code only.</span>
                 </div>
             </div>
 
-            {/* Bind Button */}
             <Button
                 onClick={handleBind}
                 disabled={!isValid || isBinding}
@@ -163,21 +157,20 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 {isBinding ? (
                     <span className="flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin" />
-                        绑定�?..
+                        Binding...
                     </span>
                 ) : (
-                    '立即绑定'
+                    'Bind now'
                 )}
             </Button>
         </div>
     );
 };
 
-// Modal version for easy use
 interface BindInviteCodeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onBind?: (code: string, data: any) => void;
+    onBind?: (code: string, data: unknown) => void;
 }
 
 export const BindInviteCodeModal: React.FC<BindInviteCodeModalProps> = ({

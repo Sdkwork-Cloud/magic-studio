@@ -1,7 +1,7 @@
 
 import { PlanTier, Subscription } from '../entities'
 import { vipBusinessService } from '../services'
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useState, ReactNode } from 'react';
 
 interface VipStoreContextType {
   currentSubscription: Subscription | null;
@@ -19,17 +19,18 @@ export const VipStoreProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const subscribe = async (planId: PlanTier, billingCycle: 'month' | 'year' | 'onetime' = 'month') => {
+  const subscribe = useCallback(async (planId: PlanTier, billingCycle: 'month' | 'year' | 'onetime' = 'month') => {
     setIsProcessing(true);
     try {
       const sub = await vipBusinessService.subscribe(planId, billingCycle);
       setCurrentSubscription(sub);
     } catch (e) {
       console.error('Subscription failed', e);
+      throw e;
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, []);
 
   return (
     <VipStoreContext.Provider value={{ currentSubscription, subscribe, isProcessing }}>

@@ -24,6 +24,7 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        '@sdkwork/react-auth',
         'sdkwork-react-commons',
         'sdkwork-react-core'
       ],
@@ -32,6 +33,7 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          '@sdkwork/react-auth': 'SdkworkReactAuth',
           'sdkwork-react-commons': 'SdkworkReactCommons',
           'sdkwork-react-core': 'SdkworkReactCore'
         }

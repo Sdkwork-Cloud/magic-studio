@@ -11,13 +11,14 @@ import { genAIService, inlineDataService, uploadHelper } from '@sdkwork/react-co
 import { CanvasElement, CanvasMediaResource } from '../entities';
 import { Popover, AspectRatioSelector } from '@sdkwork/react-commons';
 import {
-    assetBusinessFacade,
     assetService,
     CreationChatInput,
     InputFooterButton,
     InputAttachment,
-    type AssetMutationResult,
-    readWorkspaceScope
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    resolveAssetPrimaryUrlBySdk,
+    type Asset
 } from '@sdkwork/react-assets';
 import { ImageModelSelector } from '@sdkwork/react-image';
 import { VideoModelSelector } from '@sdkwork/react-video';
@@ -64,42 +65,33 @@ const toPositiveNumber = (value: unknown): number | undefined => {
     return parsed;
 };
 
-const resolveCanvasScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
-};
-
-const toCanvasResource = (
-    result: AssetMutationResult,
+const toCanvasResource = async (
+    uploaded: Asset,
     fallbackType: 'image' | 'video'
-): CanvasMediaResource => {
-    const primary = result.asset.payload[result.asset.primaryType] || result.asset.payload.assets[0];
-    const primaryMeta = (primary || {}) as {
-        size?: unknown;
-        duration?: unknown;
-        width?: unknown;
-        height?: unknown;
-        metadata?: Record<string, unknown>;
-    };
-    const metadata = {
-        ...(primaryMeta.metadata || {}),
-        ...(result.asset.metadata || {})
-    };
-    const isVideo = result.asset.primaryType === 'video';
+): Promise<CanvasMediaResource> => {
+    const metadata = (uploaded.metadata || {}) as Record<string, unknown>;
+    const resolvedUrl =
+        (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+        uploaded.path ||
+        '';
+    const resolvedType =
+        uploaded.type === 'video'
+            ? 'video'
+            : uploaded.type === 'image'
+                ? 'image'
+                : fallbackType;
+
     return {
-        id: result.asset.assetId,
-        uuid: result.asset.uuid,
-        name: result.asset.title,
-        type: isVideo ? 'video' : (result.asset.primaryType === 'image' ? 'image' : fallbackType),
-        url: result.primaryLocator.uri,
-        path: result.primaryLocator.uri,
-        size: toPositiveNumber(primaryMeta.size),
-        duration: toPositiveNumber(primaryMeta.duration ?? metadata.duration),
-        width: toPositiveNumber(primaryMeta.width ?? metadata.width),
-        height: toPositiveNumber(primaryMeta.height ?? metadata.height),
+        id: uploaded.id,
+        uuid: uploaded.uuid,
+        name: uploaded.name,
+        type: resolvedType,
+        url: resolvedUrl,
+        path: resolvedUrl,
+        size: toPositiveNumber(uploaded.size) ?? toPositiveNumber(metadata.size),
+        duration: toPositiveNumber(metadata.duration),
+        width: toPositiveNumber(metadata.width),
+        height: toPositiveNumber(metadata.height),
         thumbnailUrl: (metadata.thumbnailUrl as string) || (metadata.thumbnailPath as string) || undefined,
         metadata
     };
@@ -373,20 +365,26 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
 
              if (!resultUrl) throw new Error("Generation returned empty URL");
 
+             const fileName = `canvas_gen_${type}_${Date.now()}${assetType === 'video' ? '.mp4' : '.png'}`;
              const inlineData = await inlineDataService.tryExtractInlineData(resultUrl);
-             const imported = await assetBusinessFacade.importCanvasAsset({
-                 scope: resolveCanvasScope(),
-                 type: assetType,
-                 name: `canvas_gen_${type}_${Date.now()}${assetType === 'video' ? '.mp4' : '.png'}`,
-                 data: inlineData,
-                 remoteUrl: inlineData ? undefined : resultUrl,
-                 metadata: {
-                     prompt,
-                     origin: 'ai',
-                     source: 'canvas-generate'
-                 }
-             });
-             const newResource = toCanvasResource(imported, assetType);
+             const uploaded = inlineData
+                ? await importAssetBySdk(
+                    {
+                        name: fileName,
+                        data: inlineData
+                    },
+                    assetType,
+                    { domain: 'canvas' }
+                )
+                : await importAssetFromUrlBySdk(
+                    resultUrl,
+                    assetType,
+                    {
+                        name: fileName,
+                        domain: 'canvas'
+                    }
+                );
+             const newResource = await toCanvasResource(uploaded, assetType);
              
              let newWidth = width;
              let newHeight = height;
@@ -444,18 +442,15 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
             const files = await uploadHelper.pickFiles(true, accept);
             if (files.length > 0) {
                 const file = files[0];
-                const saved = await assetBusinessFacade.importCanvasAsset({
-                    scope: resolveCanvasScope(),
-                    type: type as 'image' | 'video',
-                    name: file.name,
-                    data: file.data,
-                    sourcePath: file.path,
-                    metadata: {
-                        origin: 'upload',
-                        source: 'canvas-upload'
-                    }
-                });
-                const newResource = toCanvasResource(saved, type as 'image' | 'video');
+                const uploaded = await importAssetBySdk(
+                    {
+                        name: file.name,
+                        data: file.data
+                    },
+                    type as 'image' | 'video',
+                    { domain: 'canvas' }
+                );
+                const newResource = await toCanvasResource(uploaded, type as 'image' | 'video');
                 
                 let newWidth = element.width;
                 let newHeight = element.height;

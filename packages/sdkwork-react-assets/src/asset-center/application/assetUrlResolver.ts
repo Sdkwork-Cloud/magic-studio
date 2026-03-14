@@ -1,4 +1,5 @@
 import { assetCenterService } from '../assetCenter';
+import { assetBusinessService } from '../../services';
 
 type SourceObject = {
   id?: unknown;
@@ -177,7 +178,7 @@ export const resolveAssetUrlByAssetIdFirst = async (
   const candidates = getAssetIdCandidates(source);
   for (const assetId of candidates) {
     try {
-      const resolved = await assetCenterService.resolvePrimaryUrl(assetId);
+      const resolved = await assetBusinessService.resolveAssetPrimaryUrlBySdk(assetId);
       if (resolved) {
         return resolved;
       }

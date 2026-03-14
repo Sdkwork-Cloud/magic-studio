@@ -64,6 +64,22 @@ class PersistentStore {
 export const createDesktopPlatform = (): PlatformAPI => {
   return {
   getPlatform: () => 'desktop',
+  invoke: async <T = unknown>(command: string, payload?: Record<string, unknown>): Promise<T> => {
+      const { tauriInvoke } = await loadTauriModules();
+      return tauriInvoke(command, payload);
+  },
+  listen: async <T = unknown>(
+      event: string,
+      callback: (payload: T) => void
+  ): Promise<() => void> => {
+      const { tauriListen } = await loadTauriModules();
+      const unlisten = await tauriListen(event, (evt: { payload: T }) => {
+          callback(evt.payload);
+      });
+      return (): void => {
+          unlisten();
+      };
+  },
   
   getOsType: async () => {
       const { osType } = await loadTauriModules();

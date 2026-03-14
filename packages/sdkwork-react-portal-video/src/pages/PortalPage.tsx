@@ -18,42 +18,12 @@ import { PortalHeader } from '../components/PortalHeader';
 import { ToolsGrid } from '../components/ToolsGrid';
 import { CommunityGallery } from '../components/CommunityGallery';
 import { StickyHeroBar } from '../components/StickyHeroBar';
-import { GalleryCard, GalleryItem, ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from '@sdkwork/react-commons';
-import { GenerationPreview } from '@sdkwork/react-image';
+import { ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from '@sdkwork/react-commons';
 import {
     importPortalAttachmentFromLocalFile,
     resolvePortalAttachmentFromAsset,
     type PortalAttachment
 } from '../utils/portalAttachmentImport';
-
-const MOCK_SHORTS: GalleryItem[] = [
-    {
-        id: '1',
-        title: 'AI Spring Gala Highlights',
-        type: 'short',
-        url: 'https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '16:10',
-        author: { id: 'u1', name: 'CCTV_AI', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cctv' },
-        stats: { likes: 1200, views: 10000 },
-        prompt: '',
-        model: '',
-        createdAt: Date.now().toString(),
-        badges: [{ text: 'Lunar New Year', color: 'bg-red-600' }]
-    },
-    {
-        id: '2',
-        title: 'Staying Home This Winter',
-        type: 'short',
-        url: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop',
-        aspectRatio: '16:10',
-        author: { id: 'u2', name: 'Director_Li', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li' },
-        stats: { likes: 856, views: 5000 },
-        prompt: '',
-        model: '',
-        createdAt: Date.now().toString(),
-        badges: [{ text: 'Warm Holiday Story', color: 'bg-orange-500' }]
-    }
-];
 
 const ACTIVE_USERS = [
     { name: 'StoryCrafter', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=feng' },
@@ -356,8 +326,6 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     const [isHeroVisible, setIsHeroVisible] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
     const heroSectionRef = useRef<HTMLDivElement>(null);
-    
-    const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
     // Listen for tab switch events from footer controls.
     useEffect(() => {
@@ -721,15 +689,6 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
 
                         <div className="w-full mt-16 pb-20 border-t border-white/5 pt-12">
                             <CommunityGallery />
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6">
-                                {MOCK_SHORTS.map(item => (
-                                    <GalleryCard 
-                                        key={item.id} 
-                                        item={item} 
-                                        onClick={(it) => setSelectedItem(it)}
-                                    />
-                                ))}
-                            </div>
                         </div>
 
                     </div>
@@ -776,15 +735,6 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
                                 />
                             </div>
                         </div>
-                    )}
-
-                    {selectedItem && (
-                        <GenerationPreview
-                            mode="view"
-                            galleryItem={selectedItem}
-                            relatedItems={MOCK_SHORTS}
-                            onClose={() => setSelectedItem(null)}
-                        />
                     )}
 
                     <ChooseAssetModal

@@ -50,11 +50,16 @@ export class VideoHistoryService {
                 id: task.id,
                 uuid: task.uuid || generateUUID(),
                 config: task.config!,
+                generationRequest: task.generationRequest,
                 status: task.status || 'pending',
                 results: task.results,
                 error: task.error,
                 progress: task.progress,
                 isFavorite: task.isFavorite || false,
+                stage: task.stage,
+                taskType: task.taskType,
+                provider: task.provider,
+                remoteTaskId: task.remoteTaskId,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };

@@ -7,6 +7,8 @@ import { BaseEntity } from '@sdkwork/react-commons';
 export type VoiceGender = 'male' | 'female' | 'neutral';
 export type VoiceStyle = 'neutral' | 'expressive' | 'news' | 'story' | 'whisper';
 export type VoiceProvider = 'gemini-tts' | 'eleven-labs-v2' | 'openai-tts-1' | 'azure-tts' | 'custom';
+export type VoiceGenerationMode = 'design' | 'clone';
+export type VoiceReferenceInputMethod = 'upload' | 'mic';
 
 export interface VoiceSpeaker extends BaseEntity {
   type: 'VOICE_SPEAKER';
@@ -69,6 +71,8 @@ export interface VoiceConfig {
   name?: string;
   avatarUrl?: string;
   previewText?: string;
+  mode?: VoiceGenerationMode;
+  inputMethod?: VoiceReferenceInputMethod;
   model: VoiceModelType;
   speed: number;
   pitch: number;

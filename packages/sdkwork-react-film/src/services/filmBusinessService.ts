@@ -15,6 +15,14 @@ const localFilmAdapter: FilmBusinessAdapter = {
 const controller = createServiceAdapterController<FilmBusinessAdapter>(localFilmAdapter);
 
 export const filmBusinessService: FilmBusinessAdapter = controller.service;
-export const setFilmBusinessAdapter = controller.setAdapter;
-export const getFilmBusinessAdapter = controller.getAdapter;
-export const resetFilmBusinessAdapter = controller.resetAdapter;
+export const setFilmBusinessAdapter = (adapter: FilmBusinessAdapter): void => {
+  controller.setAdapter(adapter);
+};
+
+export const getFilmBusinessAdapter = (): FilmBusinessAdapter => {
+  return controller.getAdapter();
+};
+
+export const resetFilmBusinessAdapter = (): void => {
+  controller.resetAdapter();
+};

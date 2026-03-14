@@ -23,7 +23,9 @@
     "zip": "node scripts/zip-project.js",
     "zip:code": "node scripts/zip-project.js --code --report",
     "zip:report": "node scripts/zip-project.js --report",
-    "zip:tgz": "node scripts/zip-project.js --format=tgz"
+    "zip:tgz": "node scripts/zip-project.js --format=tgz",
+    "check:sdk-standard": "node ../scripts/check-sdk-compliance.mjs --strict && node ../scripts/check-auth-standard.mjs && node ../scripts/check-user-center-standard.mjs && node ../scripts/check-vip-standard.mjs && node ../scripts/check-contacts-standard.mjs && node ../scripts/check-product-standard.mjs && node ../scripts/check-drive-standard.mjs && node ../scripts/check-notification-standard.mjs && node ../scripts/check-trade-standard.mjs",
+    "check:sdk-standard:quick": "node ../scripts/check-auth-standard.mjs && node ../scripts/check-user-center-standard.mjs && node ../scripts/check-vip-standard.mjs && node ../scripts/check-contacts-standard.mjs && node ../scripts/check-product-standard.mjs && node ../scripts/check-drive-standard.mjs && node ../scripts/check-notification-standard.mjs && node ../scripts/check-trade-standard.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",

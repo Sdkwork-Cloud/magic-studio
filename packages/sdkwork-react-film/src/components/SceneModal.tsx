@@ -83,16 +83,6 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
         }
     }, [isOpen, initialData]);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!isOpen) return;
-            if (e.key === 'Escape') onClose();
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, summary, locationUuid, moodTags, visualPrompt, selectedCharIds, selectedPropIds]);
-
     const handleSave = useCallback(() => {
         const data: Partial<FilmScene> = {
             summary,
@@ -104,7 +94,26 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
         };
         onSave(data);
         onClose();
-    }, [summary, locationUuid, moodTags, visualPrompt, selectedCharIds, selectedPropIds]);
+    }, [
+        summary,
+        locationUuid,
+        moodTags,
+        visualPrompt,
+        selectedCharIds,
+        selectedPropIds,
+        onSave,
+        onClose,
+    ]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isOpen) return;
+            if (e.key === 'Escape') onClose();
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, handleSave, onClose]);
 
     const toggleSelection = (id: string, list: string[], setList: (l: string[]) => void) => {
         if (list.includes(id)) {
@@ -144,11 +153,6 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
         }
     };
 
-    if (!isOpen) return null;
-
-    const TimeIcon = getTimeIcon(selectedLocation?.timeOfDay);
-    const displayChars = showAllChars ? project.characters : project.characters.slice(0, 4);
-    const displayProps = showAllProps ? project.props : project.props.slice(0, 4);
     const locationPreviewSource = selectedLocation
         ? (
             selectedLocation.refAssets?.find(
@@ -162,6 +166,12 @@ export const SceneModal: React.FC<SceneModalProps> = ({ isOpen, onClose, onSave,
     const { url: locationPreviewUrl } = useAssetUrl(toFilmUseAssetSource(locationPreviewSource), {
         resolver: resolveFilmAssetUrlByAssetIdFirst
     });
+
+    if (!isOpen) return null;
+
+    const TimeIcon = getTimeIcon(selectedLocation?.timeOfDay);
+    const displayChars = showAllChars ? project.characters : project.characters.slice(0, 4);
+    const displayProps = showAllProps ? project.props : project.props.slice(0, 4);
 
     return createPortal(
         <>

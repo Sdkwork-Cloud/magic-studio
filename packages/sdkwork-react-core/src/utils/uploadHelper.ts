@@ -1,4 +1,4 @@
-import { platform } from '../platform';
+import { getPlatformRuntime } from '../platform';
 
 export interface UploadFile {
   name: string;
@@ -25,7 +25,8 @@ export const uploadHelper = {
   },
 
   pickFiles: async (multiple: boolean = true, accept: string = '*', readData: boolean = true): Promise<UploadFile[]> => {
-    const isDesktop = platform.getPlatform() === 'desktop';
+    const runtime = getPlatformRuntime();
+    const isDesktop = runtime.system.kind() === 'desktop';
 
     if (isDesktop) {
       let extensions: string[] | undefined;
@@ -39,14 +40,16 @@ export const uploadHelper = {
           }
       }
 
-      const paths = await platform.selectFile({ multiple, extensions });
+      const paths = await runtime.fileSystem.selectFile({ multiple, extensions });
       const results: UploadFile[] = [];
       
       for (const p of paths) {
         let data = new Uint8Array(0);
         if (readData) {
             try {
-                data = new Uint8Array(await platform.readFileBinary(p));
+                const binary = await runtime.fileSystem.readBinary(p);
+                data = new Uint8Array(binary.byteLength);
+                data.set(binary);
             } catch (e) {
                 console.error(`Failed to read file: ${p}`, e);
             }

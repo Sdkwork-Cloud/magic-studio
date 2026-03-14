@@ -7,9 +7,10 @@ import {
     ArrowRightLeft, MoveHorizontal, GitBranch, Eraser
 } from 'lucide-react';
 import {
-    assetBusinessFacade,
-    mapUnifiedAssetToAnyAsset,
-    readWorkspaceScope
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    resolveAssetPrimaryUrlBySdk,
+    type Asset
 } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 import { useMagicCutStore } from '../../store/magicCutStore';
@@ -21,7 +22,7 @@ import { AudioGeneratorModal } from '@sdkwork/react-audio';
 import { SfxGeneratorModal } from '@sdkwork/react-sfx';
 import { MusicGeneratorModal } from '@sdkwork/react-music';
 import { TIMELINE_CONSTANTS } from '../../constants';
-import type { AnyMediaResource } from '@sdkwork/react-commons';
+import { MediaResourceType, type AnyMediaResource } from '@sdkwork/react-commons';
 import type { AssetContentKey } from '@sdkwork/react-types';
 import { normalizeResourceForTimeline } from '../../utils/assetReferenceNormalization';
 
@@ -44,12 +45,21 @@ const sliderToZoom = (val: number) => {
     return Math.exp(logZoom);
 };
 
-const resolveMagiccutScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
+const mapAssetTypeToMediaResourceType = (type: Asset['type']): MediaResourceType => {
+    if (type === 'image') return MediaResourceType.IMAGE;
+    if (type === 'video') return MediaResourceType.VIDEO;
+    if (type === 'audio') return MediaResourceType.AUDIO;
+    if (type === 'music') return MediaResourceType.MUSIC;
+    if (type === 'voice') return MediaResourceType.VOICE;
+    if (type === 'text') return MediaResourceType.TEXT;
+    if (type === 'subtitle') return MediaResourceType.SUBTITLE;
+    if (type === 'character') return MediaResourceType.CHARACTER;
+    if (type === 'effect') return MediaResourceType.EFFECT;
+    if (type === 'transition') return MediaResourceType.TRANSITION;
+    if (type === 'lottie') return MediaResourceType.LOTTIE;
+    if (type === 'model3d') return MediaResourceType.MODEL_3D;
+    if (type === 'sfx') return MediaResourceType.AUDIO;
+    return MediaResourceType.FILE;
 };
 
 const toMagiccutImportedResource = async (
@@ -59,19 +69,41 @@ const toMagiccutImportedResource = async (
     metadata: Record<string, unknown>
 ): Promise<AnyMediaResource> => {
     const inlineData = await inlineDataService.tryExtractInlineData(url);
-    const imported = await assetBusinessFacade.importMagiccutAsset({
-        scope: resolveMagiccutScope(),
-        type,
-        name,
-        data: inlineData,
-        remoteUrl: inlineData ? undefined : url,
-        metadata
-    });
-    const mapped = mapUnifiedAssetToAnyAsset(imported.asset);
-    if (!mapped) {
-        throw new Error('Failed to map imported asset to timeline resource.');
-    }
-    return normalizeResourceForTimeline(mapped as AnyMediaResource);
+    void metadata;
+    const uploaded = inlineData
+        ? await importAssetBySdk(
+            {
+                name,
+                data: inlineData
+            },
+            type,
+            { domain: 'magiccut' }
+        )
+        : await importAssetFromUrlBySdk(
+            url,
+            type,
+            {
+                name,
+                domain: 'magiccut'
+            }
+        );
+    const resolvedUrl =
+        (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+        uploaded.path ||
+        url;
+    return normalizeResourceForTimeline({
+        id: uploaded.id,
+        uuid: uploaded.uuid,
+        name: uploaded.name,
+        type: mapAssetTypeToMediaResourceType(uploaded.type),
+        url: resolvedUrl,
+        path: resolvedUrl,
+        size: Number(uploaded.size || 0),
+        origin: uploaded.origin,
+        metadata: uploaded.metadata || {},
+        createdAt: uploaded.createdAt,
+        updatedAt: uploaded.updatedAt
+    } as AnyMediaResource);
 };
 
 // --- Custom High-Performance Zoom Control ---

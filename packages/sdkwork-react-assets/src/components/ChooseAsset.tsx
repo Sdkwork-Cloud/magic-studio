@@ -8,19 +8,16 @@ import {
     LayoutGrid, FileText, Sparkles, Upload, Loader2
 } from 'lucide-react';
 import { useAssetUrl } from '../hooks/useAssetUrl';
-import {
-    assetBusinessFacade,
+import { 
     detectAssetTypeByFilename,
-    mapUnifiedAssetToAsset,
-    readWorkspaceScope,
     resolveAcceptExtensionsByTypes,
     resolveDomainAssetTypes,
-    resolveAssetUrlByAssetIdFirst,
-    toContentKey
+    resolveAssetUrlByAssetIdFirst
 } from '../asset-center';
 import type { Asset, AssetType } from '../entities/asset.entity';
 import { generateUUID } from '@sdkwork/react-commons';
 import type { AssetBusinessDomain } from '@sdkwork/react-types';
+import { assetBusinessService } from '../services';
 
 interface AIGeneratorProps {
     contextText?: string;
@@ -106,39 +103,8 @@ export const ChooseAsset: React.FC<ChooseAssetProps> = ({
                     candidates: effectiveCandidates,
                     fallback: effectiveCandidates.includes('file') ? 'file' : effectiveCandidates[0] || 'file'
                 });
-                const scope = readWorkspaceScope();
-                const sourcePath = typeof file.path === 'string' && file.path.trim().length > 0
-                    ? file.path
-                    : undefined;
-
-                const imported = await assetBusinessFacade.importByDomain(domain, {
-                    scope,
-                    type: toContentKey(detectedType),
-                    name: file.name,
-                    data: sourcePath ? undefined : file.data,
-                    sourcePath,
-                    metadata: {
-                        origin: 'upload',
-                        source: 'choose-asset-upload'
-                    }
-                });
-                const mapped = mapUnifiedAssetToAsset(imported.asset);
-                if (mapped) {
-                    onChange(mapped);
-                } else {
-                    onChange({
-                        id: imported.asset.assetId,
-                        uuid: imported.asset.uuid,
-                        name: imported.asset.title,
-                        type: detectedType,
-                        path: imported.primaryLocator.uri,
-                        size: 0,
-                        createdAt: imported.asset.createdAt,
-                        updatedAt: imported.asset.updatedAt,
-                        origin: 'upload',
-                        metadata: {}
-                    });
-                }
+                const imported = await assetBusinessService.importAssetBySdk(file, detectedType, { domain });
+                onChange(imported);
             }
         } catch (err) {
             console.error("Local upload failed", err);

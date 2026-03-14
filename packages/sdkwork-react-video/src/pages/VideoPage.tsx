@@ -110,6 +110,7 @@ const VideoPage: React.FC = () => {
             createdAt: data.createdAt,
             updatedAt: data.createdAt,
             status: 'completed',
+            taskType: 'generation',
             config: {
                 mode: 'text',
                 prompt: data.prompt,

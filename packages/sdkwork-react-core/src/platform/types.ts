@@ -39,6 +39,11 @@ export type SystemTheme = 'dark' | 'light';
 
 export interface PlatformAPI {
   getPlatform(): 'web' | 'desktop';
+  invoke?<T = unknown>(command: string, payload?: Record<string, unknown>): Promise<T>;
+  listen?<T = unknown>(
+    event: string,
+    callback: (payload: T) => void
+  ): Promise<() => void>;
   getOsType(): Promise<'linux' | 'macos' | 'windows' | 'android' | 'ios' | 'unknown'>;
   getDeviceId(): Promise<string>;
   getAppMetadata(): Promise<AppMetadata>;

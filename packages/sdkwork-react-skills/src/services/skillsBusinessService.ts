@@ -1,11 +1,10 @@
 import { createServiceAdapterController } from '@sdkwork/react-commons';
+import { skillsService, type SkillsService } from './skillsService';
 
-export interface SkillsBusinessAdapter {}
-
-const localSkillsAdapter: SkillsBusinessAdapter = {};
+export type SkillsBusinessAdapter = SkillsService;
 
 const controller = createServiceAdapterController<SkillsBusinessAdapter>(
-  localSkillsAdapter
+  skillsService
 );
 
 export const skillsBusinessService: SkillsBusinessAdapter = controller.service;

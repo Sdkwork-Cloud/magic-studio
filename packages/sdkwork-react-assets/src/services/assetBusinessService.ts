@@ -1,6 +1,14 @@
-import { createServiceAdapterController } from '@sdkwork/react-commons';
 import { ASSET_CATEGORIES, assetService, setMediaAnalysisAdapter } from './assetService';
 import { assetServiceRegistry } from './AssetServiceRegistry';
+import {
+  deleteAssetBySdk,
+  importAssetBySdk,
+  importAssetFromUrlBySdk,
+  queryAssetsBySdk,
+  renameAssetBySdk,
+  resolveAssetPrimaryUrlBySdk,
+  type AssetSdkQueryCategory
+} from './assetSdkQueryService';
 import {
   getAssetService,
   getRegisteredCategories,
@@ -17,6 +25,12 @@ export interface AssetBusinessAdapter {
   getAssetService: typeof getAssetService;
   hasAssetService: typeof hasAssetService;
   getRegisteredCategories: typeof getRegisteredCategories;
+  queryAssetsBySdk: typeof queryAssetsBySdk;
+  importAssetBySdk: typeof importAssetBySdk;
+  importAssetFromUrlBySdk: typeof importAssetFromUrlBySdk;
+  renameAssetBySdk: typeof renameAssetBySdk;
+  deleteAssetBySdk: typeof deleteAssetBySdk;
+  resolveAssetPrimaryUrlBySdk: typeof resolveAssetPrimaryUrlBySdk;
 }
 
 const localAssetAdapter: AssetBusinessAdapter = {
@@ -27,12 +41,15 @@ const localAssetAdapter: AssetBusinessAdapter = {
   initializeAssetServices,
   getAssetService,
   hasAssetService,
-  getRegisteredCategories
+  getRegisteredCategories,
+  queryAssetsBySdk,
+  importAssetBySdk,
+  importAssetFromUrlBySdk,
+  renameAssetBySdk,
+  deleteAssetBySdk,
+  resolveAssetPrimaryUrlBySdk
 };
 
-const controller = createServiceAdapterController<AssetBusinessAdapter>(localAssetAdapter);
+export const assetBusinessService: AssetBusinessAdapter = localAssetAdapter;
 
-export const assetBusinessService: AssetBusinessAdapter = controller.service;
-export const setAssetBusinessAdapter = controller.setAdapter;
-export const getAssetBusinessAdapter = controller.getAdapter;
-export const resetAssetBusinessAdapter = controller.resetAdapter;
+export type { AssetSdkQueryCategory };

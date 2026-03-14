@@ -1,9 +1,10 @@
 import {
-    assetBusinessFacade,
-    readWorkspaceScope,
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    queryAssetsBySdk,
+    resolveAssetPrimaryUrlBySdk,
     resolveAssetUrlByAssetIdFirst,
-    type Asset,
-    type AssetMutationResult
+    type Asset
 } from '@sdkwork/react-assets';
 import { hasSdkworkClient, sdk } from '@sdkwork/react-core';
 import type { GeneratedVoiceResult, VoiceProfile } from '../entities';
@@ -17,19 +18,6 @@ export interface UploadedVoiceReferenceInput {
     data: Uint8Array | File;
     name: string;
     path?: string;
-}
-
-interface UnifiedAssetLike {
-    assetId: string;
-    title?: string;
-    createdAt?: number;
-    metadata?: Record<string, unknown>;
-    storage?: {
-        primary?: {
-            uri?: string;
-            url?: string;
-        };
-    };
 }
 
 interface ApiEnvelope<T> {
@@ -91,15 +79,6 @@ interface SdkVoiceSpeakerListPage {
 interface SdkGenerationTaskLike {
     taskId?: string | number;
 }
-
-const resolveVoiceScope = (): { workspaceId: string; projectId?: string; collectionId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId,
-        collectionId: scope.collectionId
-    };
-};
 
 const safeString = (value: unknown, fallback = ''): string => {
     if (typeof value === 'string' && value.trim().length > 0) {
@@ -228,39 +207,51 @@ const dedupeVoices = (voices: IVoice[]): IVoice[] => {
     return Array.from(map.values());
 };
 
-const mapMutationToAsset = (result: AssetMutationResult, fallbackName: string): Asset =>
-    ({
-        id: result.asset.assetId || fallbackName,
-        uuid: result.asset.uuid || String(Date.now()),
-        name: result.asset.title || fallbackName,
-        type: 'voice',
-        path: result.primaryLocator.uri || result.primaryLocator.url || result.asset.assetId || '',
-        size: 0,
-        createdAt: result.asset.createdAt || Date.now(),
-        updatedAt: result.asset.updatedAt || Date.now(),
-        origin: 'upload',
-        metadata: {}
-    } as Asset);
+const toUploadBytes = async (input: Uint8Array | Blob | File): Promise<Uint8Array> => {
+    if (input instanceof Uint8Array) {
+        const copied = new Uint8Array(input.byteLength);
+        copied.set(input);
+        return copied;
+    }
+    const buffer = await input.arrayBuffer();
+    return new Uint8Array(buffer);
+};
 
-const mapAssetToWorkspaceVoice = async (asset: UnifiedAssetLike): Promise<IVoice | null> => {
-    if (!asset.assetId) {
+const resolveUploadedVoiceAsset = async (
+    uploaded: Asset,
+    fallbackName: string,
+    fallbackUrl = ''
+): Promise<Asset> => {
+    const resolvedUrl =
+        (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+        uploaded.path ||
+        fallbackUrl;
+    return {
+        ...uploaded,
+        name: safeString(uploaded.name, fallbackName),
+        path: resolvedUrl
+    };
+};
+
+const mapAssetToWorkspaceVoice = async (asset: Asset): Promise<IVoice | null> => {
+    if (!asset.id) {
         return null;
     }
 
-    const metadata = asset.metadata || {};
-    const sourceLocator = safeString(asset.storage?.primary?.uri, safeString(asset.storage?.primary?.url, asset.assetId));
+    const metadata = (asset.metadata || {}) as Record<string, unknown>;
+    const sourceLocator = safeString(asset.path, asset.id);
 
     const previewUrl =
         (await resolveAssetUrlByAssetIdFirst({
-            id: asset.assetId,
-            assetId: asset.assetId,
+            id: asset.id,
+            assetId: asset.id,
             path: sourceLocator,
             url: sourceLocator
         } as any)) || sourceLocator;
 
     const voice: IVoice = {
-        id: asset.assetId,
-        name: safeString(asset.title, `Voice ${asset.assetId.slice(0, 8)}`),
+        id: asset.id,
+        name: safeString(asset.name, `Voice ${asset.id.slice(0, 8)}`),
         gender: safeGender(metadata.gender ?? metadata.voiceGender ?? metadata.speakerGender),
         style: safeString(metadata.style ?? metadata.voiceStyle, 'neutral'),
         language: safeString(metadata.language ?? metadata.locale ?? metadata.voiceLocale, 'en-US'),
@@ -270,7 +261,7 @@ const mapAssetToWorkspaceVoice = async (asset: UnifiedAssetLike): Promise<IVoice
         source: 'workspace',
         description: safeString(metadata.description ?? metadata.text, ''),
         tags: Array.isArray(metadata.tags) ? (metadata.tags as string[]) : ['workspace'],
-        createdAt: typeof asset.createdAt === 'number' ? asset.createdAt : Date.now()
+        createdAt: parseTimestamp(asset.createdAt) || Date.now()
     };
 
     return normalizeVoice(voice, 'workspace');
@@ -436,14 +427,17 @@ export const voiceSpeakerService = {
     },
 
     async getWorkspaceVoices(): Promise<IVoice[]> {
-        const page = await assetBusinessFacade.queryVoiceSpeaker({
-            page: 0,
-            size: 100,
-            sort: ['createdAt,DESC'],
-            scope: readWorkspaceScope()
+        const page = await queryAssetsBySdk({
+            category: 'voice',
+            pageRequest: {
+                page: 0,
+                size: 100,
+                sort: ['createdAt,DESC']
+            },
+            allowedTypes: ['voice']
         });
 
-        const mapped = await Promise.all((page.content as UnifiedAssetLike[]).map((asset) => mapAssetToWorkspaceVoice(asset)));
+        const mapped = await Promise.all(page.content.map((asset) => mapAssetToWorkspaceVoice(asset)));
         const normalized = mapped.filter((voice): voice is IVoice => !!voice);
         return dedupeVoices(normalized);
     },
@@ -511,19 +505,16 @@ export const voiceSpeakerService = {
         file: UploadedVoiceReferenceInput,
         source: string
     ): Promise<Asset> {
-        const imported = await assetBusinessFacade.importVoiceSpeakerAsset({
-            scope: resolveVoiceScope(),
-            type: 'voice',
-            name: file.name,
-            data: file.path ? undefined : file.data,
-            sourcePath: file.path,
-            metadata: {
-                origin: 'upload',
-                source
-            }
-        });
-
-        return mapMutationToAsset(imported, file.name);
+        const uploadBytes = await toUploadBytes(file.data);
+        const uploaded = await importAssetBySdk(
+            {
+                name: file.name,
+                data: uploadBytes
+            },
+            'voice',
+            { domain: 'voice-speaker' }
+        );
+        return resolveUploadedVoiceAsset(uploaded, file.name, source);
     },
 
     async importReferenceAudioFromBlob(
@@ -531,18 +522,16 @@ export const voiceSpeakerService = {
         fileName: string,
         source: string
     ): Promise<Asset> {
-        const imported = await assetBusinessFacade.importVoiceSpeakerAsset({
-            scope: resolveVoiceScope(),
-            type: 'voice',
-            name: fileName,
-            data: blob,
-            metadata: {
-                origin: 'upload',
-                source
-            }
-        });
-
-        return mapMutationToAsset(imported, fileName);
+        const uploadBytes = await toUploadBytes(blob);
+        const uploaded = await importAssetBySdk(
+            {
+                name: fileName,
+                data: uploadBytes
+            },
+            'voice',
+            { domain: 'voice-speaker' }
+        );
+        return resolveUploadedVoiceAsset(uploaded, fileName, source);
     },
 
     async persistGeneratedVoiceResult(input: {
@@ -552,23 +541,30 @@ export const voiceSpeakerService = {
         inlineData?: Uint8Array | Blob;
     }): Promise<GeneratedVoiceResult> {
         const { taskId, index, result, inlineData } = input;
+        const fileName = `voice_gen_${taskId}_${index + 1}.wav`;
+        const uploaded = inlineData
+            ? await importAssetBySdk(
+                {
+                    name: fileName,
+                    data: await toUploadBytes(inlineData)
+                },
+                'voice',
+                { domain: 'voice-speaker' }
+            )
+            : await importAssetFromUrlBySdk(
+                result.url,
+                'voice',
+                {
+                    name: fileName,
+                    domain: 'voice-speaker'
+                }
+            );
 
-        const persisted = await assetBusinessFacade.importVoiceSpeakerAsset({
-            scope: resolveVoiceScope(),
-            type: 'voice',
-            name: `voice_gen_${taskId}_${index + 1}.wav`,
-            data: inlineData,
-            remoteUrl: inlineData ? undefined : result.url,
-            metadata: {
-                origin: 'ai',
-                source: 'voice-speaker-generate',
-                text: result.text,
-                speakerName: result.speakerName,
-                duration: result.duration
-            }
-        });
-
-        const mappedAsset = mapMutationToAsset(persisted, result.speakerName || `voice-${index + 1}`);
+        const mappedAsset = await resolveUploadedVoiceAsset(
+            uploaded,
+            result.speakerName || `voice-${index + 1}`,
+            result.url
+        );
         return {
             ...result,
             url: resolveImportedVoiceUrl(mappedAsset)

@@ -1,3 +1,11 @@
-
-pub mod pty_commands;
+pub mod browser_commands;
 pub mod compression_commands;
+pub mod database_commands;
+pub mod filesystem_commands;
+pub mod job_commands;
+pub mod media_commands;
+pub mod migration_commands;
+pub mod policy_commands;
+pub mod pty_commands;
+pub mod system_commands;
+pub mod toolkit_commands;

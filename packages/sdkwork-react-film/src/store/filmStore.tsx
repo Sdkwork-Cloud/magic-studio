@@ -14,8 +14,11 @@ import {
     generateUUID
 } from '@sdkwork/react-commons';
 import { filmService, filmProjectService } from '../services';
-import { genAIService, inlineDataService } from '@sdkwork/react-core';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { genAIService } from '@sdkwork/react-core';
+import {
+    importAssetFromUrlBySdk,
+    resolveAssetPrimaryUrlBySdk
+} from '@sdkwork/react-assets';
 import { createFilmAssetMediaResource } from '../utils/filmAssetFactories';
 
 type FilmImportType = 'image' | 'video' | 'audio';
@@ -187,30 +190,25 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [showSubtitles, setShowSubtitles] = useState(true);
     const [isMuted, setIsMuted] = useState(false);
 
-    const resolveFilmScope = (): { workspaceId: string; projectId?: string } => {
-        const scope = readWorkspaceScope();
-        return {
-            workspaceId: scope.workspaceId,
-            projectId: project.uuid || scope.projectId
-        };
-    };
-
     const importGeneratedAssetToFilmCenter = async (
         sourceUrl: string,
         type: FilmImportType,
         name: string,
         metadata: Record<string, unknown>
-    ): Promise<string> => {
-        const inlineData = await inlineDataService.tryExtractInlineData(sourceUrl);
-        const result = await assetBusinessFacade.importFilmAsset({
-            scope: resolveFilmScope(),
-            type,
+    ): Promise<{ assetId: string; url: string }> => {
+        void metadata;
+        const uploaded = await importAssetFromUrlBySdk(sourceUrl, type, {
             name,
-            data: inlineData,
-            remoteUrl: inlineData ? undefined : sourceUrl,
-            metadata
+            domain: 'film'
         });
-        return result.asset.assetId;
+        const persistedUrl =
+            (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+            uploaded.path ||
+            sourceUrl;
+        return {
+            assetId: uploaded.id,
+            url: persistedUrl
+        };
     };
 
     // Initial Load
@@ -437,7 +435,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         try {
             const prompt = resolveGenerationPrompt(shot);
             const url = await filmService.generateImage(prompt, project.settings.aspect);
-            const assetId = await importGeneratedAssetToFilmCenter(
+            const persisted = await importGeneratedAssetToFilmCenter(
                 url,
                 'image',
                 `film_shot_${shot.index || 0}_image_${Date.now()}.png`,
@@ -450,9 +448,9 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                 }
             );
             const newAsset = createGeneratedShotAsset({
-                assetId,
+                assetId: persisted.assetId,
                 type: 'image',
-                url,
+                url: persisted.url,
                 name: 'Gen Result'
             });
             const generationAssets = appendGeneratedAsset(shot, newAsset);
@@ -465,7 +463,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                 },
                 assets: [newAsset]
             });
-        } catch (e) {
+        } catch {
             updateShot(sceneUuid, shotUuid, { 
                 generation: { ...shot.generation, status: 'FAILED' } 
             });
@@ -483,7 +481,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
          try {
              const prompt = resolveGenerationPrompt(shot, shot.description || 'Cinematic shot');
              const url = await filmService.generateVideo(prompt);
-             const assetId = await importGeneratedAssetToFilmCenter(
+             const persisted = await importGeneratedAssetToFilmCenter(
                  url,
                  'video',
                  `film_shot_${shot.index || 0}_video_${Date.now()}.mp4`,
@@ -496,9 +494,9 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                  }
              );
              const videoAsset = createGeneratedShotAsset({
-                 assetId,
+                 assetId: persisted.assetId,
                  type: 'video',
-                 url,
+                 url: persisted.url,
                  name: 'Gen Video'
              });
              const generationAssets = appendGeneratedAsset(shot, videoAsset);
@@ -508,15 +506,15 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                     ...shot.generation, 
                     status: 'SUCCESS',
                     video: { 
-                        url,
-                        thumbnailUrl: url,
+                        url: persisted.url,
+                        thumbnailUrl: persisted.url,
                         duration: 5
                     },
                     assets: generationAssets
                 },
                 assets: [...(shot.assets || []), videoAsset]
             });
-         } catch (e) {
+         } catch {
              updateShot(sceneUuid, shotUuid, { 
                  generation: { ...shot.generation, status: 'FAILED' } 
              });
@@ -528,7 +526,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (!shot || !shot.dialogue?.items?.length) return;
         
         const text = shot.dialogue.items.map(d => d.text).join(' ');
-        let voice = 'Kore'; 
+        const voice = 'Kore'; 
 
         updateShot(sceneUuid, shotUuid, {
             generation: { ...shot.generation, status: 'GENERATING' }
@@ -536,7 +534,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         
         try {
              const audioUrl = await genAIService.generateSpeech(text, voice);
-             const assetId = await importGeneratedAssetToFilmCenter(
+             const persisted = await importGeneratedAssetToFilmCenter(
                  audioUrl,
                  'audio',
                  `film_shot_${shot.index || 0}_audio_${Date.now()}.wav`,
@@ -550,9 +548,9 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
                  }
              );
              const audioAsset = createGeneratedShotAsset({
-                 assetId,
+                 assetId: persisted.assetId,
                  type: 'audio',
-                 url: audioUrl,
+                 url: persisted.url,
                  name: 'Dialogue Audio'
              });
              const generationAssets = appendGeneratedAsset(shot, audioAsset);
@@ -736,6 +734,7 @@ export const FilmStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useFilmStore = () => {
     const context = useContext(FilmStoreContext);
     if (!context) throw new Error("useFilmStore must be used within FilmStoreProvider");

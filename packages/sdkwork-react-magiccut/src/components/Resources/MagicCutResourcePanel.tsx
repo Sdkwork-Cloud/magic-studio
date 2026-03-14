@@ -2,10 +2,15 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Search, Grid, List, UploadCloud, Heart, Sparkles, FolderUp, LayoutGrid, Save, Box } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
-import { DEFAULT_PAGE_SIZE, AssetType } from '@sdkwork/react-commons';
-import { AnyAsset, assetCenterService, mapUnifiedAssetToAnyAsset, readWorkspaceScope } from '@sdkwork/react-assets';
+import { DEFAULT_PAGE_SIZE, AssetType, MediaResourceType } from '@sdkwork/react-commons';
+import {
+    AnyAsset,
+    type Asset,
+    mapContentKeyToMediaType,
+    queryAssetsBySdk,
+    type AssetSdkQueryCategory
+} from '@sdkwork/react-assets';
 import { CutTemplate, TemplateMetadata } from '../../entities/magicCut.entity';
-import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../../constants';
 import { assetService } from '@sdkwork/react-assets';
 import { useMagicCutEvent, useMagicCutBus } from '../../providers/MagicCutEventProvider';
@@ -73,6 +78,42 @@ const resolveMagiccutTypes = (category: string): Array<'video' | 'image' | 'audi
             return undefined;
     }
 };
+
+const resolveMagiccutQueryCategory = (category: string): AssetSdkQueryCategory => {
+    if (category === 'effects') return 'effects';
+    if (category === 'transitions') return 'transitions';
+
+    const assetCategories = new Set([
+        'video',
+        'image',
+        'audio',
+        'music',
+        'voice',
+        'text',
+        'sfx'
+    ]);
+
+    if (assetCategories.has(category)) {
+        return category as AssetSdkQueryCategory;
+    }
+    return 'media';
+};
+
+const toAnyAsset = (asset: Asset): AnyAsset => ({
+    id: asset.id,
+    uuid: asset.uuid,
+    createdAt: asset.createdAt,
+    updatedAt: asset.updatedAt,
+    name: asset.name,
+    type: mapContentKeyToMediaType(asset.type),
+    path: asset.path,
+    url: typeof asset.metadata?.primaryUrl === 'string' ? asset.metadata.primaryUrl : asset.path,
+    mimeType: typeof asset.metadata?.mimeType === 'string' ? asset.metadata.mimeType : undefined,
+    size: asset.size,
+    origin: asset.origin,
+    metadata: asset.metadata,
+    isFavorite: asset.isFavorite
+});
 
 export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ activeTab }) => {
     
@@ -231,23 +272,19 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         const requestId = ++loadRequestIdRef.current;
         if (reset) setLoading(true);
         try {
-            const scope = readWorkspaceScope();
-            const result = await assetCenterService.query({
-                page: pageNum, 
-                size: DEFAULT_PAGE_SIZE,
-                keyword: _filters.query,
-                sort: ['updatedAt,desc'],
-                scope: {
-                    workspaceId: scope.workspaceId,
-                    projectId: scope.projectId,
-                    domain: 'magiccut'
+            const result = await queryAssetsBySdk({
+                category: resolveMagiccutQueryCategory(category),
+                pageRequest: {
+                    page: pageNum,
+                    size: DEFAULT_PAGE_SIZE,
+                    keyword: _filters.query,
+                    sort: ['updatedAt,desc']
                 },
-                types: resolveMagiccutTypes(category)
+                allowedTypes: resolveMagiccutTypes(category)
             });
 
             const fetchedContent: AnyAsset[] = (Array.isArray(result?.content) ? result.content : [])
-                .map((item) => mapUnifiedAssetToAnyAsset(item))
-                .filter((asset: AnyAsset | null): asset is AnyAsset => asset !== null);
+                .map((item) => toAnyAsset(item));
             
             let localContent: AnyAsset[] = [];
             if (pageNum === 0 && !isEffectTab && !isTextTab) {

@@ -1,9 +1,7 @@
 import {
-  assetBusinessFacade,
-  assetCenterService,
+  importAssetBySdk,
+  resolveAssetPrimaryUrlBySdk,
   resolveAssetUrlByAssetIdFirst,
-  mapUnifiedAssetToAnyAsset,
-  readWorkspaceScope,
   type InputAttachment,
   type PortalTab
 } from '@sdkwork/react-assets';
@@ -30,14 +28,6 @@ const SCRIPT_EXTS = new Set(['txt', 'md', 'markdown', 'fountain', 'rtf', 'doc', 
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'svg', 'bmp', 'gif']);
 const VIDEO_EXTS = new Set(['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v']);
 const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma']);
-
-const resolvePortalScope = (): { workspaceId: string; projectId?: string } => {
-  const scope = readWorkspaceScope();
-  return {
-    workspaceId: scope.workspaceId,
-    projectId: scope.projectId
-  };
-};
 
 const readExt = (fileName: string): string => {
   return fileName.split('.').pop()?.toLowerCase() || '';
@@ -101,27 +91,22 @@ export const importPortalAttachmentFromLocalFile = async (
   const fileName = file.name || `portal-attachment-${Date.now()}`;
   const bytes = file.data instanceof Uint8Array ? file.data : new Uint8Array(file.data);
   const classified = classifyAttachment(fileName);
-  const imported = await assetBusinessFacade.importPortalVideoAsset({
-    scope: resolvePortalScope(),
-    type: classified.assetType,
-    name: fileName,
-    data: bytes,
-    metadata: {
-      origin: 'upload',
-      source: 'portal-video-local-upload',
-      tab,
-      attachmentType: classified.attachmentType
-    }
-  });
-  const mapped = mapUnifiedAssetToAnyAsset(imported.asset);
+  const imported = await importAssetBySdk(
+    {
+      name: fileName,
+      data: bytes
+    },
+    classified.assetType,
+    { domain: 'portal-video' }
+  );
   const url =
-    mapped?.url ||
-    mapped?.path ||
-    (await assetCenterService.resolvePrimaryUrl(imported.asset.assetId));
+    (await resolveAssetPrimaryUrlBySdk(imported.id)) ||
+    imported.path ||
+    '';
 
   return {
-    id: imported.asset.assetId,
-    assetId: imported.asset.assetId,
+    id: imported.id,
+    assetId: imported.id,
     name: fileName,
     type: classified.attachmentType,
     url,

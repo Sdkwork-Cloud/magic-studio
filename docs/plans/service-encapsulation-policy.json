@@ -11,6 +11,9 @@
   ],
   "allowedOutsideServicePatterns": [
     "packages\\/sdkwork-react-core\\/src\\/platform\\/web\\.ts$",
+    "packages\\/sdkwork-react-core\\/src\\/platform\\/platform\\.ts$",
+    "packages\\/sdkwork-react-core\\/src\\/platform\\/runtime\\/manager\\.ts$",
+    "packages\\/sdkwork-react-core\\/src\\/sdk\\/useAppSdkClient\\.ts$",
     "packages\\/sdkwork-react-core\\/src\\/ai\\/genAIService\\.ts$",
     "packages\\/sdkwork-app-sdk-typescript\\/"
   ],

@@ -24,20 +24,26 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        '@sdkwork/react-audio',
         '@sdkwork/react-commons',
         '@sdkwork/react-core',
         '@sdkwork/react-assets',
-        '@sdkwork/react-i18n'
+        '@sdkwork/react-i18n',
+        '@sdkwork/react-image',
+        '@sdkwork/react-settings'
       ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          '@sdkwork/react-audio': 'SdkworkReactAudio',
           '@sdkwork/react-commons': 'SdkworkReactCommons',
           '@sdkwork/react-core': 'SdkworkReactCore',
           '@sdkwork/react-assets': 'SdkworkReactAssets',
-          '@sdkwork/react-i18n': 'SdkworkReactI18n'
+          '@sdkwork/react-i18n': 'SdkworkReactI18n',
+          '@sdkwork/react-image': 'SdkworkReactImage',
+          '@sdkwork/react-settings': 'SdkworkReactSettings'
         }
       }
     },

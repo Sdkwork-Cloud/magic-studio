@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { RefreshCw, MessageCircle, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
-import { authBusinessService } from '../services';
+import { appAuthService } from '../services';
+import { useAuthStore } from '../store/authStore';
 
 interface QrCodeLoginProps {
     onLoginSuccess?: () => void;
@@ -9,6 +10,8 @@ interface QrCodeLoginProps {
 }
 
 type QrStatus = 'loading' | 'pending' | 'scanned' | 'confirmed' | 'expired' | 'error';
+const QR_POLL_INTERVAL_MS = 2000;
+const QR_MIN_POLL_GAP_MS = 1500;
 
 // Generate QR code data URL from content using canvas
 const generateQrDataUrl = (content: string, size: number = 200): string => {
@@ -61,25 +64,70 @@ const generateQrDataUrl = (content: string, size: number = 200): string => {
 
 export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess, size = 'md' }) => {
     const { t } = useTranslation();
+    const { syncCurrentSession } = useAuthStore();
     const [qrUrl, setQrUrl] = useState<string>('');
     const [qrContent, setQrContent] = useState<string>('');
     const [qrKey, setQrKey] = useState<string>('');
     const [status, setStatus] = useState<QrStatus>('loading');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [countdown, setCountdown] = useState<number>(300); // 5 minutes
+    const tRef = useRef(t);
+    const statusRef = useRef<QrStatus>('loading');
+    const qrKeyRef = useRef('');
+    const onLoginSuccessRef = useRef(onLoginSuccess);
+    const syncCurrentSessionRef = useRef(syncCurrentSession);
+    const isPollingRef = useRef(false);
+    const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pollVersionRef = useRef(0);
+    const generateVersionRef = useRef(0);
+    const lastPollAtRef = useRef(0);
 
     const qrSize = size === 'lg' ? 208 : 176;
     const qrContainerClass = size === 'lg' ? 'w-52 h-52' : 'w-44 h-44';
 
+    useEffect(() => {
+        tRef.current = t;
+    }, [t]);
+    useEffect(() => {
+        statusRef.current = status;
+    }, [status]);
+    useEffect(() => {
+        qrKeyRef.current = qrKey;
+    }, [qrKey]);
+    useEffect(() => {
+        onLoginSuccessRef.current = onLoginSuccess;
+    }, [onLoginSuccess]);
+    useEffect(() => {
+        syncCurrentSessionRef.current = syncCurrentSession;
+    }, [syncCurrentSession]);
+
+    const clearPollTimer = useCallback(() => {
+        if (pollTimerRef.current) {
+            clearTimeout(pollTimerRef.current);
+            pollTimerRef.current = null;
+        }
+    }, []);
+
     const generateQrCode = useCallback(async () => {
+        generateVersionRef.current += 1;
+        const currentVersion = generateVersionRef.current;
+        clearPollTimer();
+        pollVersionRef.current += 1;
+        isPollingRef.current = false;
+        lastPollAtRef.current = 0;
         setStatus('loading');
         setErrorMessage('');
         setCountdown(300);
+        setQrUrl('');
+        setQrKey('');
         
-        const result = await authBusinessService.generateQrCode();
-        if (result.success && result.data) {
-            const { qrUrl: url, qrContent: content, qrKey: key } = result.data;
-            
+        try {
+            const result = await appAuthService.generateQrCode();
+            if (currentVersion !== generateVersionRef.current) {
+                return;
+            }
+            const { qrUrl: url, qrContent: content, qrKey: key } = result;
+
             // Determine how to render the QR code
             if (url) {
                 // Server provided image URL
@@ -92,52 +140,134 @@ export const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess, size =
                 setQrContent(content);
             } else {
                 setStatus('error');
-                setErrorMessage(t('auth.error.invalid_qr_data'));
+                setErrorMessage(tRef.current('auth.error.invalid_qr_data'));
                 return;
             }
-            
+            if (!key) {
+                setStatus('error');
+                setErrorMessage(tRef.current('auth.error.invalid_qr_data'));
+                return;
+            }
+
             setQrKey(key);
             setStatus('pending');
-        } else {
+        } catch (error) {
+            if (currentVersion !== generateVersionRef.current) {
+                return;
+            }
             setStatus('error');
-            setErrorMessage(result.message || t('auth.error.generate_qr_failed'));
+            const message = error instanceof Error && error.message
+                ? error.message
+                : tRef.current('auth.error.generate_qr_failed');
+            setErrorMessage(message);
         }
-    }, [qrSize, t]);
+    }, [clearPollTimer, qrSize]);
 
     useEffect(() => {
         generateQrCode();
-    }, [generateQrCode]);
+        return () => {
+            generateVersionRef.current += 1;
+            pollVersionRef.current += 1;
+            clearPollTimer();
+            isPollingRef.current = false;
+        };
+    }, [clearPollTimer, generateQrCode]);
 
     // Poll QR code status
     useEffect(() => {
         if (!qrKey || status === 'confirmed' || status === 'expired' || status === 'error') {
+            pollVersionRef.current += 1;
+            clearPollTimer();
             return;
         }
 
-        const pollInterval = setInterval(async () => {
-            const result = await authBusinessService.checkQrCodeStatus(qrKey);
-            if (result.success && result.data) {
-                const response = result.data;
-                
-                switch (response.status) {
+        pollVersionRef.current += 1;
+        const currentPollVersion = pollVersionRef.current;
+
+        const scheduleNextPoll = (delayMs: number) => {
+            if (currentPollVersion !== pollVersionRef.current) {
+                return;
+            }
+            clearPollTimer();
+            pollTimerRef.current = setTimeout(() => {
+                void pollOnce();
+            }, delayMs);
+        };
+
+        const pollOnce = async () => {
+            if (currentPollVersion !== pollVersionRef.current) {
+                return;
+            }
+            const currentStatus = statusRef.current;
+            if (!qrKeyRef.current || currentStatus === 'confirmed' || currentStatus === 'expired' || currentStatus === 'error') {
+                clearPollTimer();
+                return;
+            }
+            if (isPollingRef.current) {
+                scheduleNextPoll(300);
+                return;
+            }
+
+            const now = Date.now();
+            const sinceLastPoll = now - lastPollAtRef.current;
+            if (sinceLastPoll < QR_MIN_POLL_GAP_MS) {
+                scheduleNextPoll(QR_MIN_POLL_GAP_MS - sinceLastPoll);
+                return;
+            }
+
+            lastPollAtRef.current = now;
+            isPollingRef.current = true;
+            let shouldContinuePolling = false;
+            try {
+                const result = await appAuthService.checkQrCodeStatus(qrKeyRef.current);
+                if (currentPollVersion !== pollVersionRef.current) {
+                    return;
+                }
+                switch (result.status) {
                     case 'scanned':
                         setStatus('scanned');
+                        shouldContinuePolling = true;
                         break;
                     case 'confirmed':
                         setStatus('confirmed');
-                        if (onLoginSuccess) {
-                            onLoginSuccess();
+                        await syncCurrentSessionRef.current();
+                        if (onLoginSuccessRef.current) {
+                            onLoginSuccessRef.current();
                         }
                         break;
                     case 'expired':
                         setStatus('expired');
                         break;
+                    default:
+                        setStatus('pending');
+                        shouldContinuePolling = true;
                 }
+            } catch (error) {
+                if (currentPollVersion !== pollVersionRef.current) {
+                    return;
+                }
+                setStatus('error');
+                const message = error instanceof Error && error.message
+                    ? error.message
+                    : tRef.current('auth.error.check_qr_status_failed');
+                setErrorMessage(message);
+            } finally {
+                isPollingRef.current = false;
             }
-        }, 2000);
 
-        return () => clearInterval(pollInterval);
-    }, [qrKey, status, onLoginSuccess]);
+            if (shouldContinuePolling) {
+                scheduleNextPoll(QR_POLL_INTERVAL_MS);
+            } else {
+                clearPollTimer();
+            }
+        };
+
+        scheduleNextPoll(0);
+
+        return () => {
+            clearPollTimer();
+        };
+    }, [clearPollTimer, qrKey, status]);
 
     // Countdown timer
     useEffect(() => {

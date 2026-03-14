@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { MusicTask, MusicConfig } from '../entities';
 import { musicBusinessService } from '../services';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { importAssetBySdk, importAssetFromUrlBySdk, resolveAssetPrimaryUrlBySdk } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 
 export type { MusicTask, MusicConfig }; // Re-export entity types
@@ -24,14 +24,6 @@ const MusicStoreContext = createContext<MusicStoreContextType | undefined>(undef
 export interface AssetServiceAdapter {
     saveGeneratedAsset: (data: any, type: string, metadata: any, filename: string) => Promise<{ path: string }>;
 }
-
-const resolveMusicScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
-};
 
 export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [history, setHistory] = useState<MusicTask[]>([]);
@@ -85,25 +77,32 @@ export const MusicStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         try {
             const result = await musicBusinessService.musicService.generateMusic(config);
             const inlineData = await inlineDataService.tryExtractInlineData(result.url);
-            const persisted = await assetBusinessFacade.importMusicAsset({
-                scope: resolveMusicScope(),
-                type: 'music',
-                name: `music_gen_${taskId}.mp3`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : result.url,
-                metadata: {
-                    origin: 'ai',
-                    source: 'music-studio-generate',
-                    prompt: config.prompt,
-                    title: result.title,
-                    duration: result.duration,
-                    style: result.style
-                }
-            });
+            const uploaded = inlineData
+                ? await importAssetBySdk(
+                    {
+                        name: `music_gen_${taskId}.mp3`,
+                        data: inlineData
+                    },
+                    'music',
+                    { domain: 'music' }
+                )
+                : await importAssetFromUrlBySdk(
+                    result.url,
+                    'music',
+                    {
+                        name: `music_gen_${taskId}.mp3`,
+                        domain: 'music'
+                    }
+                );
+
+            const persistedMusicUrl =
+                (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                uploaded.path ||
+                result.url;
 
             const persistedResult = {
                 ...result,
-                url: persisted.primaryLocator.uri
+                url: persistedMusicUrl
             };
             
             const completedTask: MusicTask = { 

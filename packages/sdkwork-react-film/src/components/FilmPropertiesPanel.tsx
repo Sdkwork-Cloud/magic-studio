@@ -73,7 +73,7 @@ export const FilmPropertiesPanel: React.FC = () => {
             <div className="p-6 space-y-6">
                 <h3 className="text-lg font-bold text-white mb-4">Scene {scene.index}</h3>
                 <SettingsSection title="Setting">
-                    <SettingInput label="Location" value={location?.name || ''} onChange={(v) => {
+                    <SettingInput label="Location" value={location?.name || ''} onChange={(_value) => {
                         // Location name is read-only for now, would need to update location entity
                     }} fullWidth disabled />
                     <div className="grid grid-cols-2 gap-4">

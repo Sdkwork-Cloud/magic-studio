@@ -1,43 +1,81 @@
-import type { LoginVO } from '@sdkwork/app-sdk';
 import type { User } from '../entities/user.entity';
+import {
+    APP_SDK_AUTH_TOKEN_STORAGE_KEY,
+    APP_SDK_REFRESH_TOKEN_STORAGE_KEY,
+} from './useAppSdkClient';
 
 const USER_KEY = 'sdkwork_user';
-const TOKEN_KEY = 'sdkwork_auth_token';
-const REFRESH_TOKEN_KEY = 'sdkwork_refresh_token';
+const TOKEN_KEY = APP_SDK_AUTH_TOKEN_STORAGE_KEY;
+const REFRESH_TOKEN_KEY = APP_SDK_REFRESH_TOKEN_STORAGE_KEY;
 
 export interface AuthSessionSnapshot {
     user: User | null;
-    accessToken: string | null;
+    authToken: string | null;
     refreshToken: string | null;
 }
 
 class AuthSessionService {
+    private normalizeAuthToken(value: string | null): string | null {
+        const normalized = (value || '').trim();
+        if (!normalized) {
+            return null;
+        }
+        if (normalized.toLowerCase().startsWith('bearer ')) {
+            const token = normalized.slice(7).trim();
+            return token || null;
+        }
+        return normalized;
+    }
+
+    private readAuthTokenFromStorage(): string | null {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+        return this.normalizeAuthToken(window.localStorage.getItem(TOKEN_KEY));
+    }
+
+    private writeAuthTokenToStorage(authToken: string): void {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const normalized = this.normalizeAuthToken(authToken) || '';
+        if (normalized) {
+            window.localStorage.setItem(TOKEN_KEY, normalized);
+        } else {
+            window.localStorage.removeItem(TOKEN_KEY);
+        }
+    }
+
     readSession(): AuthSessionSnapshot {
         if (typeof window === 'undefined') {
-            return { user: null, accessToken: null, refreshToken: null };
+            return { user: null, authToken: null, refreshToken: null };
         }
 
         try {
             const storedUser = window.localStorage.getItem(USER_KEY);
+            const authToken = this.readAuthTokenFromStorage();
+            if (!authToken) {
+                return { user: null, authToken: null, refreshToken: null };
+            }
             return {
                 user: storedUser ? (JSON.parse(storedUser) as User) : null,
-                accessToken: window.localStorage.getItem(TOKEN_KEY),
+                authToken,
                 refreshToken: window.localStorage.getItem(REFRESH_TOKEN_KEY)
             };
         } catch (error) {
             console.warn('[AuthSessionService] Failed to read auth session', error);
-            return { user: null, accessToken: null, refreshToken: null };
+            return { user: null, authToken: null, refreshToken: null };
         }
     }
 
-    saveSession(user: User, loginVO: LoginVO): void {
+    saveSession(user: User, tokens: { authToken: string; refreshToken?: string | null }): void {
         if (typeof window === 'undefined') {
             return;
         }
         window.localStorage.setItem(USER_KEY, JSON.stringify(user));
-        window.localStorage.setItem(TOKEN_KEY, loginVO.accessToken);
-        if (loginVO.refreshToken) {
-            window.localStorage.setItem(REFRESH_TOKEN_KEY, loginVO.refreshToken);
+        this.writeAuthTokenToStorage(tokens.authToken);
+        if (tokens.refreshToken) {
+            window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
         } else {
             window.localStorage.removeItem(REFRESH_TOKEN_KEY);
         }
@@ -50,11 +88,11 @@ class AuthSessionService {
         window.localStorage.setItem(USER_KEY, JSON.stringify(user));
     }
 
-    saveTokens(accessToken: string, refreshToken?: string | null): void {
+    saveTokens(authToken: string, refreshToken?: string | null): void {
         if (typeof window === 'undefined') {
             return;
         }
-        window.localStorage.setItem(TOKEN_KEY, accessToken);
+        this.writeAuthTokenToStorage(authToken);
         if (refreshToken) {
             window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
         } else {

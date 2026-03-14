@@ -21,7 +21,7 @@ export interface IChatService extends LocalStorageService<ChatSession> {
     ): Promise<void>;
 }
 
-class ChatService extends LocalStorageService<ChatSession> implements IChatService {
+export class ChatService extends LocalStorageService<ChatSession> implements IChatService {
     private _rootPath: string | null = null;
     private _searchEngine: TextSearchEngine<ChatSession>;
     private _initializedSearch = false;
@@ -44,7 +44,11 @@ class ChatService extends LocalStorageService<ChatSession> implements IChatServi
             this._rootPath = pathUtils.join(docs, CHATS_DIR);
         }
         
-        try { await vfs.createDir(this._rootPath); } catch {}
+        try {
+            await vfs.createDir(this._rootPath);
+        } catch {
+            // Directory may already exist.
+        }
         return this._rootPath;
     }
 
@@ -153,8 +157,9 @@ class ChatService extends LocalStorageService<ChatSession> implements IChatServi
             const content = await vfs.readFile(path);
             const transcript = JSON.parse(content) as ChatTranscript;
             return Result.success(transcript);
-        } catch (e: any) {
-            return Result.error(`Failed to load transcript: ${e.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown transcript read error';
+            return Result.error(`Failed to load transcript: ${message}`);
         }
     }
 
@@ -169,8 +174,9 @@ class ChatService extends LocalStorageService<ChatSession> implements IChatServi
             await this.save({ id: sessionId, messageCount: messages.length });
             
             return Result.success(undefined);
-        } catch (e: any) {
-            return Result.error(`Failed to save transcript: ${e.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown transcript write error';
+            return Result.error(`Failed to save transcript: ${message}`);
         }
     }
 
@@ -215,4 +221,4 @@ class ChatService extends LocalStorageService<ChatSession> implements IChatServi
     }
 }
 
-export const chatService = new ChatService();
+export const chatService: ChatService = new ChatService();

@@ -1,8 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { VideoTask, VideoConfig, VideoGenerationMode } from '../entities';
-import { videoBusinessService } from '../services';
-import { VIDEO_MODELS, VIDEO_STYLES } from '../constants';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { GeneratedVideoResult, VideoTask, VideoConfig, VideoGenerationMode } from '../entities';
+import { buildUnifiedVideoGenerationRequest, videoBusinessService } from '../services';
+import {
+    getNearestSupportedDurationByModelMode,
+    getSupportedModesByModel,
+    VIDEO_MODELS
+} from '../constants';
+import { importAssetBySdk, importAssetFromUrlBySdk, resolveAssetPrimaryUrlBySdk } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 
 interface VideoStoreContextType {
@@ -22,12 +26,47 @@ interface VideoStoreContextType {
 
 const VideoStoreContext = createContext<VideoStoreContextType | undefined>(undefined);
 
-const resolveVideoScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
+const sleep = async (ms: number): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+const getErrorCode = (error: unknown): string | undefined => {
+    if (!error || typeof error !== 'object') {
+        return undefined;
+    }
+    const maybeCode = (error as { code?: unknown }).code;
+    return typeof maybeCode === 'string' ? maybeCode : undefined;
+};
+
+const mapVideoErrorMessage = (error: unknown): string => {
+    const code = getErrorCode(error);
+    switch (code) {
+        case 'LIPSYNC_INPUT_INVALID':
+            return 'Lip Sync requires source media and audio/text driver.';
+        case 'LIPSYNC_VIDEO_UNSUPPORTED_CODEC':
+            return 'Video codec is unsupported. Please convert to H.264 + AAC.';
+        case 'LIPSYNC_AUDIO_UNSUPPORTED_FORMAT':
+            return 'Audio format is unsupported. Please upload MP3/WAV.';
+        case 'LIPSYNC_DURATION_EXCEEDED':
+            return 'Duration exceeds the current model limit.';
+        case 'LIPSYNC_PROVIDER_RATE_LIMIT':
+            return 'Provider rate limit reached. Please retry later.';
+        case 'LIPSYNC_PROVIDER_UNAVAILABLE':
+            return 'Lip Sync provider is temporarily unavailable.';
+        case 'LIPSYNC_TASK_NOT_FOUND':
+            return 'Lip Sync task not found or expired.';
+        case 'LIPSYNC_PERMISSION_DENIED':
+            return 'Permission denied for Lip Sync task.';
+        case 'LIPSYNC_CANCELED':
+            return 'Lip Sync task canceled.';
+        default:
+            break;
+    }
+
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return 'Unknown error';
 };
 
 export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -35,7 +74,7 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
     const [isGenerating, setIsGenerating] = useState(false);
     
     const [config, setConfigState] = useState<VideoConfig>({
-        mode: 'start_end',
+        mode: 'smart_reference',
         prompt: '',
         negativePrompt: '',
         styleId: 'none', // Default to none
@@ -49,6 +88,22 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         mediaType: 'video',
         referenceImages: [],
         batchSize: 1,
+        shotType: 'single-shot',
+        promptExtend: true,
+        watermark: true,
+        generateAudio: false,
+        cameraFixed: false,
+        lipSyncDriverType: 'audio',
+        lipSyncSourceType: 'video',
+        lipSyncSyncMode: 'standard',
+        lipSyncPreset: 'dialogue',
+        lipSyncLipStrength: 70,
+        lipSyncExpressionStrength: 50,
+        lipSyncPreserveHeadMotion: true,
+        lipSyncDenoise: true,
+        lipSyncTrimSilence: true,
+        lipSyncTargetLufs: -16,
+        lipSyncKeepOriginalBgm: false
     });
 
     // Load History
@@ -68,20 +123,103 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         setConfig({ mode });
     };
 
+    const upsertTask = async (taskId: string, patch: Partial<VideoTask>): Promise<void> => {
+        setHistory((prev) =>
+            prev.map((task) => (task.id === taskId ? { ...task, ...patch, updatedAt: Date.now() } : task))
+        );
+        await videoBusinessService.videoHistoryService.save({
+            id: taskId,
+            ...patch,
+            updatedAt: Date.now()
+        } as Partial<VideoTask> & { id: string });
+    };
+
+    const persistGeneratedResult = async (
+        taskId: string,
+        result: GeneratedVideoResult
+    ): Promise<GeneratedVideoResult> => {
+        const videoInlineData = await inlineDataService.tryExtractInlineData(result.url);
+        const uploaded = videoInlineData
+            ? await importAssetBySdk(
+                {
+                    name: `video_gen_${taskId}.mp4`,
+                    data: videoInlineData
+                },
+                'video',
+                { domain: 'video-studio' }
+            )
+            : await importAssetFromUrlBySdk(
+                result.url,
+                'video',
+                {
+                    name: `video_gen_${taskId}.mp4`,
+                    domain: 'video-studio'
+                }
+            );
+
+        const persistedVideoUrl =
+            (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+            uploaded.path ||
+            result.url;
+
+        return {
+            ...result,
+            url: persistedVideoUrl,
+            mp4Url: persistedVideoUrl
+        };
+    };
+
     const generate = async () => {
-        if (!config.prompt.trim() && !config.image) return;
+        const supportedModes = getSupportedModesByModel(config.model);
+        if (!supportedModes.includes(config.mode)) {
+            return;
+        }
+
+        const normalizedDuration = getNearestSupportedDurationByModelMode(
+            config.model,
+            config.mode,
+            config.duration
+        );
+        const effectiveConfig: VideoConfig = normalizedDuration === config.duration
+            ? config
+            : { ...config, duration: normalizedDuration };
+        if (normalizedDuration !== config.duration) {
+            setConfig({ duration: normalizedDuration });
+        }
+
+        const isLipSyncMode = effectiveConfig.mode === 'lip-sync';
+        const lipSyncSourceType = effectiveConfig.lipSyncSourceType || 'video';
+        const lipDriverType = effectiveConfig.lipSyncDriverType || 'audio';
+        const hasLipSyncSource = lipSyncSourceType === 'image'
+            ? !!effectiveConfig.targetImage
+            : !!effectiveConfig.targetVideo;
+        const hasLipSyncDriver = lipDriverType === 'tts'
+            ? !!effectiveConfig.prompt.trim()
+            : !!effectiveConfig.driverAudio;
+        const canRunLipSync = hasLipSyncSource && hasLipSyncDriver;
+        const canRunStandardGenerate = !!effectiveConfig.prompt.trim() || !!effectiveConfig.image;
+
+        if ((isLipSyncMode && !canRunLipSync) || (!isLipSyncMode && !canRunStandardGenerate)) {
+            return;
+        }
         if (isGenerating) return;
         
         setIsGenerating(true);
         
-        const taskId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const taskId = `${isLipSyncMode ? 'lipsync' : 'video'}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+        const taskType = isLipSyncMode ? 'lip_sync' : 'generation';
+        const generationRequest = buildUnifiedVideoGenerationRequest(effectiveConfig);
         const newTask: VideoTask = {
             id: taskId,
             uuid: taskId,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            config: { ...config },
+            config: { ...effectiveConfig },
+            generationRequest,
             status: 'pending',
+            stage: isLipSyncMode ? 'validating' : undefined,
+            taskType,
+            provider: isLipSyncMode ? 'mock-kling' : undefined,
             results: [],
             isFavorite: false
         };
@@ -90,51 +228,82 @@ export const VideoStoreProvider: React.FC<{ children: ReactNode }> = ({ children
         await videoBusinessService.videoHistoryService.save(newTask);
 
         try {
-            // Apply style prompt
-            const style = VIDEO_STYLES.find(s => s.id === config.styleId);
-            const styleSuffix = style ? (style.prompt || '') : '';
-            const finalConfig = {
-                ...config,
-                prompt: config.prompt + styleSuffix
-            };
+            if (isLipSyncMode) {
+                const created = await videoBusinessService.videoService.createLipSyncTask(generationRequest);
+                await upsertTask(taskId, {
+                    stage: created.stage,
+                    provider: created.provider,
+                    remoteTaskId: created.taskId,
+                    progress: 5
+                });
 
-            const result = await videoBusinessService.videoService.generateVideo(finalConfig);
-            const videoInlineData = await inlineDataService.tryExtractInlineData(result.url);
-            const persistedVideo = await assetBusinessFacade.importVideoStudioAsset({
-                scope: resolveVideoScope(),
-                type: 'video',
-                name: `video_gen_${taskId}.mp4`,
-                data: videoInlineData,
-                remoteUrl: videoInlineData ? undefined : result.url,
-                metadata: {
-                    origin: 'ai',
-                    source: 'video-studio-generate',
-                    model: finalConfig.model,
-                    prompt: finalConfig.prompt
+                let remoteResult: GeneratedVideoResult | undefined;
+                const maxPollCount = 120;
+                for (let i = 0; i < maxPollCount; i += 1) {
+                    const state = await videoBusinessService.videoService.queryLipSyncTask(created.taskId);
+                    await upsertTask(taskId, {
+                        status: 'pending',
+                        stage: state.stage,
+                        progress: state.progress || 0
+                    });
+
+                    if (state.status === 'succeeded' && state.result) {
+                        remoteResult = state.result;
+                        break;
+                    }
+                    if (state.status === 'failed' || state.status === 'canceled') {
+                        const taskError = new Error(state.error?.message || 'Lip Sync failed');
+                        (taskError as Error & { code?: string }).code = state.error?.code;
+                        throw taskError;
+                    }
+                    await sleep(1200);
                 }
-            });
 
-            const persistedResult = {
-                ...result,
-                url: persistedVideo.primaryLocator.uri,
-                mp4Url: persistedVideo.primaryLocator.uri
-            };
-            
-            const completedTask: VideoTask = { 
-                ...newTask, 
-                status: 'completed', 
-                results: [persistedResult],
-                updatedAt: Date.now()
-            };
+                if (!remoteResult) {
+                    const timeoutError = new Error('Lip Sync processing timeout');
+                    (timeoutError as Error & { code?: string }).code = 'LIPSYNC_TIMEOUT';
+                    throw timeoutError;
+                }
 
-            setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
-            await videoBusinessService.videoHistoryService.save(completedTask);
+                const persistedResult = await persistGeneratedResult(taskId, remoteResult);
+                const completedTask: VideoTask = {
+                    ...newTask,
+                    status: 'completed',
+                    stage: 'succeeded',
+                    progress: 100,
+                    provider: created.provider,
+                    remoteTaskId: created.taskId,
+                    results: [persistedResult],
+                    updatedAt: Date.now()
+                };
+                setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
+                await videoBusinessService.videoHistoryService.save(completedTask);
+            } else {
+                const requestWithStylePrompt = {
+                    ...generationRequest,
+                    prompt: `${generationRequest.prompt}${generationRequest.videoStyle.prompt || ''}`
+                };
+                const result = await videoBusinessService.videoService.generateVideo(requestWithStylePrompt);
+                const persistedResult = await persistGeneratedResult(taskId, result);
 
-        } catch (e: any) {
+                const completedTask: VideoTask = {
+                    ...newTask,
+                    status: 'completed',
+                    progress: 100,
+                    results: [persistedResult],
+                    updatedAt: Date.now()
+                };
+
+                setHistory(prev => prev.map(t => t.id === taskId ? completedTask : t));
+                await videoBusinessService.videoHistoryService.save(completedTask);
+            }
+
+        } catch (e: unknown) {
             const failedTask: VideoTask = {
                 ...newTask,
                 status: 'failed',
-                error: e.message || 'Unknown error',
+                stage: isLipSyncMode ? 'failed' : undefined,
+                error: mapVideoErrorMessage(e),
                 updatedAt: Date.now()
             };
             setHistory(prev => prev.map(t => t.id === taskId ? failedTask : t));

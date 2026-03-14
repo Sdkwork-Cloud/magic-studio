@@ -11,7 +11,7 @@ export type VideoAspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '3:4' | '21:9';
 
 export type VideoResolution = '720p' | '1080p' | '4k';
 
-export type VideoDuration = '5s' | '10s' | '60s';
+export type VideoDuration = `${number}s`;
 
 // ============================================================================
 // Video Generation Mode
@@ -31,6 +31,47 @@ export type VideoGenerationMode =
   | 'text-to-video'
   | 'image-to-video'
   | 'video-to-video';
+
+export type LipSyncDriverType = 'audio' | 'tts';
+
+export type LipSyncSourceType = 'video' | 'image';
+
+export type LipSyncStage =
+  | 'draft'
+  | 'validating'
+  | 'queued'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'canceled';
+
+export type VideoTaskType = 'generation' | 'lip_sync';
+
+export type VideoGenerationAssetType = 'image' | 'video' | 'audio' | 'text';
+
+export interface VideoGenerationAsset {
+  role: string;
+  type: VideoGenerationAssetType;
+  value: string;
+}
+
+export interface VideoStyleSelection {
+  id: string;
+  prompt: string;
+}
+
+export interface UnifiedVideoGenerationRequest {
+  generationType: VideoGenerationMode;
+  assets: VideoGenerationAsset[];
+  prompt: string;
+  negativePrompt: string;
+  duration: VideoDuration;
+  resolution: VideoResolution;
+  aspectRatio: VideoAspectRatio;
+  model: string;
+  videoStyle: VideoStyleSelection;
+  options?: Record<string, unknown>;
+}
 
 // ============================================================================
 // Video Model
@@ -92,8 +133,32 @@ export interface VideoConfig {
   characterImage?: string;
   voiceId?: string;
   targetVideo?: string;
+  targetImage?: string;
   driverAudio?: string;
   motionVideo?: string;
+  audioUrl?: string;
+  referenceVideos?: string[];
+
+  // Shared advanced controls
+  shotType?: 'single-shot' | 'multi-shot';
+  promptExtend?: boolean;
+  watermark?: boolean;
+  generateAudio?: boolean;
+  cameraFixed?: boolean;
+  seed?: number;
+
+  // Lip Sync extended options
+  lipSyncSourceType?: LipSyncSourceType;
+  lipSyncDriverType?: LipSyncDriverType;
+  lipSyncSyncMode?: 'standard' | 'pro';
+  lipSyncPreset?: 'dialogue' | 'speech' | 'emotion';
+  lipSyncLipStrength?: number;
+  lipSyncExpressionStrength?: number;
+  lipSyncPreserveHeadMotion?: boolean;
+  lipSyncDenoise?: boolean;
+  lipSyncTrimSilence?: boolean;
+  lipSyncTargetLufs?: number;
+  lipSyncKeepOriginalBgm?: boolean;
 }
 
 // ============================================================================
@@ -114,11 +179,16 @@ export interface GeneratedVideoResult {
 
 export interface VideoTask extends BaseEntity {
   config: VideoConfig;
+  generationRequest?: UnifiedVideoGenerationRequest;
   status: 'pending' | 'completed' | 'failed';
   results?: GeneratedVideoResult[];
   error?: string;
   progress?: number;
   isFavorite?: boolean;
+  stage?: LipSyncStage;
+  taskType?: VideoTaskType;
+  provider?: string;
+  remoteTaskId?: string;
 }
 
 // ============================================================================

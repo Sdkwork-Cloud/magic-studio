@@ -71,5 +71,3 @@ export const SKILL_TAGS = [
     { id: 'analysis', label: '分析', color: 'teal' },
     { id: 'translation', label: '翻译', color: 'emerald' },
 ];
-
-export { AGENT_SKILLS } from './data/skills';

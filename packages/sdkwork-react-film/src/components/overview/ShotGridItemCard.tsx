@@ -14,7 +14,12 @@ export interface ShotGridItemCardProps {
     onDelete?: () => void;
 }
 
-export const ShotGridItemCard: React.FC<ShotGridItemCardProps> = ({ shot, onClick, onGenerate, onDelete }) => {
+export const ShotGridItemCard: React.FC<ShotGridItemCardProps> = ({
+    shot,
+    onClick,
+    onGenerate: _onGenerate,
+    onDelete
+}) => {
     const [showDelete, setShowDelete] = useState(false);
     const hasVideo = hasFilmAssetReference(shot.generation?.video || null);
     const primaryImageAsset =

@@ -116,6 +116,12 @@ export const PropModal: React.FC<PropModalProps> = ({ isOpen, onClose, onSave, i
         }
     }, [isOpen, initialData]);
 
+    const handleSave = useCallback(() => {
+        if (!name.trim()) return;
+        onSave({ name, description, faceImage, threeViewImage, gridViewImage });
+        onClose();
+    }, [name, description, faceImage, threeViewImage, gridViewImage, onSave, onClose]);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!isOpen) return;
@@ -124,13 +130,7 @@ export const PropModal: React.FC<PropModalProps> = ({ isOpen, onClose, onSave, i
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, name, description, faceImage, threeViewImage, gridViewImage]);
-
-    const handleSave = useCallback(() => {
-        if (!name.trim()) return;
-        onSave({ name, description, faceImage, threeViewImage, gridViewImage });
-        onClose();
-    }, [name, description, faceImage, threeViewImage, gridViewImage]);
+    }, [isOpen, handleSave, onClose]);
 
     const handleEnhanceDescription = async (text: string) => {
         setIsEnhancing(true);

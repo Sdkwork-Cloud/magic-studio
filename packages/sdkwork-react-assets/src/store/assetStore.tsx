@@ -10,20 +10,19 @@ import React, {
 } from 'react';
 import { uploadHelper } from '@sdkwork/react-core';
 import type { Page } from '@sdkwork/react-commons';
-import type { AssetBusinessDomain, AssetContentKey } from '@sdkwork/react-types';
+import type { AssetBusinessDomain } from '@sdkwork/react-types';
 import type { Asset, AssetType, AssetOrigin } from '../entities';
 import { createSpringPage } from '../services/impl/springPage';
 import { assetUiStateService } from '../services/assetUiStateService';
 import {
-  assetBusinessFacade,
-  assetCenterService,
+  assetBusinessService,
+  type AssetSdkQueryCategory
+} from '../services';
+import {
   detectAssetTypeByFilename,
-  mapUnifiedPageToAssetPage,
   normalizeSpringPageRequest,
-  readWorkspaceScope,
   resolveAcceptExtensionsByTypes,
-  resolveDomainAssetTypes,
-  toContentKey
+  resolveDomainAssetTypes
 } from '../asset-center';
 
 interface AssetStoreContextType {
@@ -81,17 +80,13 @@ const FILTER_ORIGIN_CANDIDATES: Array<AssetOrigin | 'all'> = [
   'system'
 ];
 
-const resolveQueryContentKeys = (
-  filterType: AssetType | 'all',
+const resolveSdkQueryCategory = (
   allowedTypes?: AssetType[]
-): AssetContentKey[] | undefined => {
-  if (filterType !== 'all') {
-    return [toContentKey(filterType)];
+): AssetSdkQueryCategory => {
+  if (allowedTypes && allowedTypes.length === 1) {
+    return allowedTypes[0];
   }
-  if (allowedTypes && allowedTypes.length > 0) {
-    return allowedTypes.map((item) => toContentKey(item));
-  }
-  return undefined;
+  return 'media';
 };
 
 export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
@@ -157,8 +152,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         keyword: searchQuery,
         sort: ['updatedAt,desc']
       });
-      const scope = readWorkspaceScope();
-      await assetCenterService.initialize();
 
       if (requestId !== requestSequenceRef.current) {
         return;
@@ -171,25 +164,18 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         return;
       }
 
-      const centerPage = await assetBusinessFacade.queryByDomain(domain, {
-        page: normalized.page,
-        size: normalized.size,
-        keyword: normalized.keyword,
-        sort: normalized.sort,
-        scope,
-        // Keep server query broad inside current domain; apply UI filters client-side.
-        types: resolveQueryContentKeys('all', allowedTypes),
-        origins: undefined,
-        includeDeleted: false
+      const sdkPage = await assetBusinessService.queryAssetsBySdk({
+        category: resolveSdkQueryCategory(allowedTypes),
+        pageRequest: normalized,
+        allowedTypes
       });
 
       if (requestId !== requestSequenceRef.current) {
         return;
       }
 
-      const mappedPage = mapUnifiedPageToAssetPage(centerPage);
-      const content = mappedPage.content;
-      setPageData(mappedPage);
+      const content = sdkPage.content;
+      setPageData(sdkPage);
       if (page === 0) {
         setAssets(content);
       } else {
@@ -247,7 +233,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
       }
 
       setIsLoading(true);
-      const scope = readWorkspaceScope();
       for (const file of files) {
         const detected = detectAssetTypeByFilename(file.name, {
           preferred: filterType === 'all' ? undefined : filterType,
@@ -263,21 +248,7 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         ) {
           continue;
         }
-
-        const sourcePath = typeof file.path === 'string' && file.path.trim().length > 0
-          ? file.path
-          : undefined;
-        await assetBusinessFacade.importByDomain(domain, {
-          scope,
-          type: toContentKey(detected),
-          name: file.name,
-          data: sourcePath ? undefined : file.data,
-          sourcePath,
-          metadata: {
-            origin: 'upload',
-            source: 'asset-center-import'
-          }
-        });
+        await assetBusinessService.importAssetBySdk(file, detected, { domain });
       }
       await load(0);
     } catch (e) {
@@ -290,7 +261,7 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
 
   const deleteAsset = async (asset: Asset) => {
     try {
-      await assetCenterService.deleteById(asset.id);
+      await assetBusinessService.deleteAssetBySdk(asset.id);
       setAssets((prev) => prev.filter((item) => item.id !== asset.id));
       if (selectedAsset?.id === asset.id) {
         setSelectedAsset(null);
@@ -303,7 +274,7 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
 
   const renameAsset = async (asset: Asset, newName: string) => {
     try {
-      await assetCenterService.renameAsset(asset.id, newName);
+      await assetBusinessService.renameAssetBySdk(asset.id, newName);
       await refresh();
     } catch (e) {
       console.error(e);

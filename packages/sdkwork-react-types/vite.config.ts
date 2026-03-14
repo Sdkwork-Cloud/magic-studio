@@ -21,7 +21,7 @@ export default defineConfig({
       exclude: ['src/**/*.test.ts'],
       rollupTypes: false,
       entryRoot: 'src',
-      outDir: 'dist',
+      outDir: 'dist/src',
     }),
   ],
 });

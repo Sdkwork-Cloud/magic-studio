@@ -1,12 +1,11 @@
-
-use tauri::{State, Window};
-use crate::pty::PtyState;
 use std::collections::HashMap;
-use std::process::Command;
+use tauri::{State, Window};
+
+use crate::framework::{run_blocking, AppContext};
 
 #[tauri::command]
 pub async fn create_pty(
-    state: State<'_, PtyState>,
+    context: State<'_, AppContext>,
     window: Window,
     shell: String,
     cols: u16,
@@ -14,87 +13,76 @@ pub async fn create_pty(
     env: Option<HashMap<String, String>>,
     initial_command: Option<String>,
 ) -> Result<String, String> {
-    state.create(window, shell, cols, rows, env, initial_command)
+    let pty_service = context.pty();
+    pty_service
+        .create(window, shell, cols, rows, env, initial_command)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn start_pty(
-    state: State<'_, PtyState>,
+    context: State<'_, AppContext>,
     window: Window,
-    pid: String
+    pid: String,
 ) -> Result<(), String> {
-    state.start(&pid, window)
+    let pty_service = context.pty();
+    pty_service
+        .start(pid, window)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn write_pty(
-    state: State<'_, PtyState>,
+    context: State<'_, AppContext>,
     pid: String,
-    data: String
+    data: String,
 ) -> Result<(), String> {
-    state.write(&pid, &data)
+    let pty_service = context.pty();
+    pty_service
+        .write(pid, data)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn resize_pty(
-    state: State<'_, PtyState>,
+    context: State<'_, AppContext>,
     pid: String,
     cols: u16,
-    rows: u16
+    rows: u16,
 ) -> Result<(), String> {
-    state.resize(&pid, cols, rows)
+    let pty_service = context.pty();
+    pty_service
+        .resize(pid, cols, rows)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub async fn kill_pty(
-    state: State<'_, PtyState>,
-    pid: String
-) -> Result<(), String> {
-    state.kill(&pid)
+pub async fn kill_pty(context: State<'_, AppContext>, pid: String) -> Result<(), String> {
+    let pty_service = context.pty();
+    pty_service.kill(pid).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn sync_pty_sessions(
-    state: State<'_, PtyState>,
+    context: State<'_, AppContext>,
     window: Window,
-    active_ids: Vec<String>
+    active_ids: Vec<String>,
 ) -> Result<(), String> {
-    state.sync(window.label(), active_ids)
+    let pty_service = context.pty();
+    pty_service
+        .sync(window.label().to_string(), active_ids)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub async fn check_executable(name: String) -> bool {
-    tauri::async_runtime::spawn_blocking(move || {
-        if cfg!(target_os = "windows") {
-            // Try exact match first
-            let output = Command::new("where").arg(&name).output();
-            if let Ok(o) = output {
-                if o.status.success() { return true; }
-            }
-    
-            // Try common extensions if not present
-            if !name.ends_with(".exe") && !name.ends_with(".cmd") && !name.ends_with(".bat") && !name.ends_with(".ps1") {
-                let extensions = [".exe", ".cmd", ".bat", ".ps1"];
-                for ext in extensions {
-                    let with_ext = format!("{}{}", name, ext);
-                    let output = Command::new("where").arg(&with_ext).output();
-                    if let Ok(o) = output {
-                        if o.status.success() { return true; }
-                    }
-                }
-            }
-            false
-        } else {
-            // Use a login shell to ensure PATH is loaded correctly (e.g. nvm, homebrew, cargo)
-            // 'command -v' is more portable than 'which'
-            let output = Command::new("sh")
-                .args(["-l", "-c", &format!("command -v '{}'", name)])
-                .output();
-    
-            match output {
-                Ok(o) => o.status.success(),
-                Err(_) => false,
-            }
-        }
-    }).await.unwrap_or(false)
+pub async fn check_executable(
+    context: State<'_, AppContext>,
+    name: String,
+) -> Result<bool, String> {
+    let pty_service = context.pty();
+    run_blocking("check_executable", move || {
+        pty_service.check_executable(name)
+    })
+    .await
+    .map_err(|error| error.to_string())
 }

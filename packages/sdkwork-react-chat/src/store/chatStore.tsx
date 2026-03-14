@@ -33,6 +33,24 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const selectSession = useCallback(async (id: string) => {
+    setActiveSessionId(id);
+    
+    const meta = sessions.find(s => s.id === id);
+    if (!meta) return;
+
+    const transcriptRes = await chatBusinessService.getTranscript(id);
+    if (transcriptRes.success && transcriptRes.data) {
+        setActiveSession({
+            ...meta,
+            messages: transcriptRes.data.messages
+        });
+    } else {
+        setActiveSession({ ...meta, messages: [] });
+    }
+    setIsLoading(false);
+  }, [sessions]);
+
   useEffect(() => {
     const init = async () => {
         setIsLoading(true);
@@ -51,7 +69,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         }
     };
     init();
-  }, []);
+  }, [selectSession]);
 
   const createSession = useCallback(async (modelId: string = 'gpt-4o') => {
     const res = await chatBusinessService.createSession(modelId);
@@ -79,25 +97,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
         }
         return remaining;
     });
-  }, [activeSessionId]);
-
-  const selectSession = useCallback(async (id: string) => {
-    setActiveSessionId(id);
-    
-    const meta = sessions.find(s => s.id === id);
-    if (!meta) return;
-
-    const transcriptRes = await chatBusinessService.getTranscript(id);
-    if (transcriptRes.success && transcriptRes.data) {
-        setActiveSession({
-            ...meta,
-            messages: transcriptRes.data.messages
-        });
-    } else {
-        setActiveSession({ ...meta, messages: [] });
-    }
-    setIsLoading(false);
-  }, [sessions]);
+  }, [activeSessionId, selectSession]);
 
   const updateSessionTitle = useCallback((id: string, title: string) => {
       setSessions(prev => prev.map(s => s.id === id ? { ...s, title, updatedAt: Date.now() } : s));
@@ -175,12 +175,13 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
               return { ...prev, messages: finalMessages };
           });
 
-      } catch (error: any) {
+      } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to generate.';
           setActiveSession(prev => {
               if (!prev) return null;
               const finalMessages = prev.messages.map(m => 
                   m.id === aiMsg.id 
-                  ? { ...m, status: 'error' as const, error: error.message || 'Failed to generate.' } 
+                  ? { ...m, status: 'error' as const, error: errorMessage } 
                   : m
               );
               chatBusinessService.saveTranscript(activeSessionId, finalMessages);
@@ -219,6 +220,7 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChatStore = () => {
   const context = useContext(ChatStoreContext);
   if (!context) throw new Error('useChatStore must be used within a ChatStoreProvider');

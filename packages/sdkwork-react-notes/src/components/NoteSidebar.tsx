@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNoteStore } from '../store/noteStore';
-import { TreeItem, NoteType, logger } from '@sdkwork/react-commons';
+import { Confirm, TreeItem, NoteType, logger, useConfirm } from '@sdkwork/react-commons';
 import { 
     Plus, Search, ChevronRight, Trash2, FileText, 
     Folder, FolderOpen, FilePlus, FolderPlus, Edit2, Star, Clock,
@@ -444,9 +444,17 @@ export const NoteSidebar: React.FC = () => {
         treeData, activeNoteId, setActiveNoteId, 
         createNote, createFolder, deleteItem, updateNote, renameFolder,
         toggleFolderExpand, moveItem, favoriteNotes, toggleFavorite, expandedFolders,
-        folders, notes, recentNotes, trashedNotes, restoreFromTrash, deletePermanently, clearTrash
+        folders, notes, recentNotes, trashedNotes, restoreFromTrash, deletePermanently, clearTrash,
+        operationError, clearOperationError
     } = useNoteStore();
     const { t } = useTranslation();
+    const {
+        isOpen: isConfirmOpen,
+        options: confirmOptions,
+        handleConfirm,
+        handleCancel,
+        confirm: requestConfirm
+    } = useConfirm();
 
     // Local UI State
     const [search, setSearch] = useState('');
@@ -456,17 +464,53 @@ export const NoteSidebar: React.FC = () => {
     const [creationState, setCreationState] = useState<{ type: 'folder' | 'note', subType?: NoteType, parentId: string | null } | null>(null);
 
     const [dragOverId, setDragOverId] = useState<string | null>(null);
+    const [isRootDragOver, setIsRootDragOver] = useState(false);
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, item: TreeItem } | null>(null);
     const [isTrashView, setIsTrashView] = useState(false);
     const [trashSelection, setTrashSelection] = useState<Set<string>>(new Set());
+    const [feedbackNotice, setFeedbackNotice] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const itemRef = useRef<HTMLDivElement>(null);
+    const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Sync selection with active note
     useEffect(() => {
         if (activeNoteId) setSelectedId(activeNoteId);
     }, [activeNoteId]);
+
+    const dismissFeedbackNotice = useCallback(() => {
+        if (successTimerRef.current) {
+            clearTimeout(successTimerRef.current);
+            successTimerRef.current = null;
+        }
+        setFeedbackNotice(null);
+    }, []);
+
+    const pushFeedbackNotice = useCallback((message: string, tone: 'success' | 'warning' = 'success') => {
+        const normalized = message.trim();
+        if (!normalized) {
+            return;
+        }
+        if (successTimerRef.current) {
+            clearTimeout(successTimerRef.current);
+            successTimerRef.current = null;
+        }
+        setFeedbackNotice({ message: normalized, tone });
+        successTimerRef.current = setTimeout(() => {
+            setFeedbackNotice(null);
+            successTimerRef.current = null;
+        }, 2500);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (successTimerRef.current) {
+                clearTimeout(successTimerRef.current);
+                successTimerRef.current = null;
+            }
+        };
+    }, []);
 
     // Sections
     const [showFavorites, setShowFavorites] = useState(true);
@@ -620,10 +664,36 @@ export const NoteSidebar: React.FC = () => {
         return visible;
     }, [treeData, expandedFolders, normalizedSearch]);
 
+    const confirmDeleteItem = useCallback(async (itemName: string) => {
+        const displayName = itemName.trim() || t('notes.sidebar.untitled_page');
+        return requestConfirm({
+            title: t('notes.sidebar.actions.delete'),
+            message: t('notes.sidebar.confirm.delete_item', { name: displayName }),
+            type: 'warning',
+            confirmText: t('common.actions.delete'),
+            cancelText: t('common.actions.cancel'),
+            confirmVariant: 'danger'
+        });
+    }, [requestConfirm, t]);
+
+    const confirmPermanentDelete = useCallback(async (message: string) => {
+        return requestConfirm({
+            title: t('notes.sidebar.actions.delete_permanently'),
+            message,
+            type: 'danger',
+            confirmText: t('notes.sidebar.actions.delete_permanently'),
+            cancelText: t('common.actions.cancel'),
+            confirmVariant: 'danger'
+        });
+    }, [requestConfirm, t]);
+
     const handleDelete = async (item: TreeItem) => {
-        if (confirm(`${t('common.actions.delete')} "${item.kind === 'folder' ? item.name : item.title}"?`)) {
-            await deleteItem(item.id, item.kind);
-            if (selectedId === item.id) {
+        const itemName = item.kind === 'folder' ? item.name : item.title;
+        const confirmed = await confirmDeleteItem(itemName);
+        if (confirmed) {
+            clearOperationError();
+            const deleted = await deleteItem(item.id, item.kind);
+            if (deleted && selectedId === item.id) {
                 setSelectedId(null);
             }
         }
@@ -661,25 +731,127 @@ export const NoteSidebar: React.FC = () => {
         if (selectedTrashedNotes.length === 0) {
             return;
         }
+        dismissFeedbackNotice();
+        clearOperationError();
         const selectedIds = selectedTrashedNotes.map((note) => note.id);
+        const failedIds: string[] = [];
         for (const id of selectedIds) {
-            await restoreFromTrash(id);
+            const restored = await restoreFromTrash(id);
+            if (!restored) {
+                failedIds.push(id);
+            }
         }
-        setTrashSelection(new Set());
+        const failedCount = failedIds.length;
+        const successCount = selectedIds.length - failedCount;
+        if (failedCount === 0) {
+            clearOperationError();
+            pushFeedbackNotice(t('notes.sidebar.feedback.batch_restore_success', { count: String(selectedIds.length) }), 'success');
+        } else if (successCount > 0) {
+            clearOperationError();
+            pushFeedbackNotice(
+                t('notes.sidebar.feedback.batch_restore_partial', {
+                    success: String(successCount),
+                    failed: String(failedCount)
+                }),
+                'warning'
+            );
+        }
+        setTrashSelection(new Set(failedIds));
     };
 
     const handleBatchDeletePermanently = async () => {
         if (selectedTrashedNotes.length === 0) {
             return;
         }
-        if (!confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
+        const confirmed = await confirmPermanentDelete(
+            t('notes.sidebar.confirm.delete_batch', { count: String(selectedTrashedNotes.length) })
+        );
+        if (!confirmed) {
             return;
         }
+        dismissFeedbackNotice();
+        clearOperationError();
         const selectedIds = selectedTrashedNotes.map((note) => note.id);
+        const failedIds: string[] = [];
         for (const id of selectedIds) {
-            await deletePermanently(id);
+            const deleted = await deletePermanently(id);
+            if (!deleted) {
+                failedIds.push(id);
+            }
         }
-        setTrashSelection(new Set());
+        const failedCount = failedIds.length;
+        const successCount = selectedIds.length - failedCount;
+        if (failedCount === 0) {
+            clearOperationError();
+            pushFeedbackNotice(t('notes.sidebar.feedback.batch_delete_success', { count: String(selectedIds.length) }), 'success');
+        } else if (successCount > 0) {
+            clearOperationError();
+            pushFeedbackNotice(
+                t('notes.sidebar.feedback.batch_delete_partial', {
+                    success: String(successCount),
+                    failed: String(failedCount)
+                }),
+                'warning'
+            );
+        }
+        setTrashSelection(new Set(failedIds));
+    };
+
+    const handleClearTrashWithConfirm = async () => {
+        const confirmed = await confirmPermanentDelete(t('notes.sidebar.confirm.clear_trash'));
+        if (!confirmed) {
+            return;
+        }
+        await handleClearTrash();
+    };
+
+    const handleClearTrash = async () => {
+        dismissFeedbackNotice();
+        clearOperationError();
+        const cleared = await clearTrash();
+        if (cleared) {
+            pushFeedbackNotice(t('notes.sidebar.feedback.clear_trash_success'), 'success');
+        }
+    };
+
+    const handleRestoreSingle = async (id: string) => {
+        dismissFeedbackNotice();
+        clearOperationError();
+        const restored = await restoreFromTrash(id);
+        if (!restored) {
+            return;
+        }
+        setTrashSelection((prev) => {
+            if (!prev.has(id)) {
+                return prev;
+            }
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+        pushFeedbackNotice(t('notes.sidebar.feedback.restore_success'), 'success');
+    };
+
+    const handleDeleteSinglePermanently = async (id: string) => {
+        const confirmed = await confirmPermanentDelete(t('notes.sidebar.confirm.delete_single'));
+        if (!confirmed) {
+            return;
+        }
+        dismissFeedbackNotice();
+        clearOperationError();
+        const deleted = await deletePermanently(id);
+        if (!deleted) {
+            return;
+        }
+        setTrashSelection((prev) => {
+            if (!prev.has(id)) {
+                return prev;
+            }
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+        pushFeedbackNotice(t('notes.sidebar.feedback.delete_success'), 'success');
     };
 
     // Keyboard Handler
@@ -819,8 +991,12 @@ export const NoteSidebar: React.FC = () => {
             } else {
                 newId = await createNote(name, subType || 'doc', parentId);
             }
-            setSelectedId(newId);
-            if (type === 'note') setActiveNoteId(newId);
+            if (newId) {
+                setSelectedId(newId);
+                if (type === 'note') {
+                    setActiveNoteId(newId);
+                }
+            }
             
         } catch (e) {
             console.error("Creation failed", e);
@@ -875,31 +1051,84 @@ export const NoteSidebar: React.FC = () => {
         setContextMenu({ x: e.clientX, y: e.clientY, item });
     };
 
+    const parseDragPayload = (event: React.DragEvent): DragPayload | null => {
+        try {
+            const data = event.dataTransfer.getData('application/json');
+            if (!data) {
+                return null;
+            }
+            const parsed: unknown = JSON.parse(data);
+            return isDragPayload(parsed) ? parsed : null;
+        } catch {
+            return null;
+        }
+    };
+
     const handleDragStart = (e: React.DragEvent, item: TreeItem) => {
         if (renamingId || creationState) { e.preventDefault(); return; }
         const dragPayload: DragPayload = { id: item.id, kind: item.kind };
         e.dataTransfer.setData('application/json', JSON.stringify(dragPayload));
+        e.dataTransfer.effectAllowed = 'move';
     };
     const handleDragOver = (e: React.DragEvent, item: TreeItem) => {
         e.preventDefault();
-        if (item.kind === 'folder' && item.id !== selectedId) {
+        e.stopPropagation();
+        const payload = parseDragPayload(e);
+        if (payload && item.kind === 'folder' && payload.id !== item.id) {
             setDragOverId(item.id);
+            setIsRootDragOver(false);
             e.dataTransfer.dropEffect = 'move';
         }
     };
     const handleDrop = (e: React.DragEvent, targetId: string) => {
         e.preventDefault();
+        e.stopPropagation();
         setDragOverId(null);
+        setIsRootDragOver(false);
         try {
-            const data = e.dataTransfer.getData('application/json');
-            if (data) {
-                const parsed: unknown = JSON.parse(data);
-                if (isDragPayload(parsed) && parsed.id !== targetId) {
-                    moveItem(parsed.id, parsed.kind, targetId);
-                }
+            const payload = parseDragPayload(e);
+            if (payload && payload.id !== targetId) {
+                void moveItem(payload.id, payload.kind, targetId);
             }
         } catch (err) {
             logger.warn('[NoteSidebar] Drag drop parse failed', err);
+        }
+    };
+
+    const handleRootDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        if (renamingId || creationState) {
+            return;
+        }
+        const payload = parseDragPayload(e);
+        if (!payload) {
+            return;
+        }
+        setDragOverId(null);
+        setIsRootDragOver(true);
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleRootDragLeave = (e: React.DragEvent) => {
+        const related = e.relatedTarget as Node | null;
+        if (related && e.currentTarget.contains(related)) {
+            return;
+        }
+        setIsRootDragOver(false);
+    };
+
+    const handleRootDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverId(null);
+        setIsRootDragOver(false);
+        try {
+            const payload = parseDragPayload(e);
+            if (payload) {
+                void moveItem(payload.id, payload.kind, null);
+            }
+        } catch (err) {
+            logger.warn('[NoteSidebar] Root drag drop parse failed', err);
         }
     };
 
@@ -1049,6 +1278,58 @@ export const NoteSidebar: React.FC = () => {
                 )}
             </div>
 
+            {operationError && (
+                <div
+                    className="mx-3 mt-2 rounded-md border border-red-500/40 bg-red-500/10 px-2 py-1.5 text-[11px] text-red-200"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex items-start gap-2">
+                        <span className="min-w-0 flex-1 leading-4">{operationError}</span>
+                        <button
+                            type="button"
+                            className="shrink-0 rounded p-0.5 text-red-200/80 hover:bg-red-500/20 hover:text-red-100"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                clearOperationError();
+                            }}
+                            aria-label={t('common.actions.close')}
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {feedbackNotice && (
+                <div
+                    className={`mx-3 mt-2 rounded-md border px-2 py-1.5 text-[11px] ${
+                        feedbackNotice.tone === 'warning'
+                            ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                            : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex items-start gap-2">
+                        <span className="min-w-0 flex-1 leading-4">{feedbackNotice.message}</span>
+                        <button
+                            type="button"
+                            className={`shrink-0 rounded p-0.5 ${
+                                feedbackNotice.tone === 'warning'
+                                    ? 'text-amber-200/80 hover:bg-amber-500/20 hover:text-amber-100'
+                                    : 'text-emerald-200/80 hover:bg-emerald-500/20 hover:text-emerald-100'
+                            }`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                dismissFeedbackNotice();
+                            }}
+                            aria-label={t('common.actions.close')}
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* 2. Scrollable Content */}
             <div 
                 className="flex-1 overflow-y-auto custom-scrollbar py-2"
@@ -1085,18 +1366,16 @@ export const NoteSidebar: React.FC = () => {
                                                 ? 'border-blue-500/60 text-blue-300 bg-blue-500/10'
                                                 : 'border-[#3b3b40] text-gray-400 hover:text-gray-200 hover:border-[#4a4a52]'
                                         }`}
-                                        title={allVisibleTrashedSelected ? 'Deselect all' : 'Select all'}
+                                        title={allVisibleTrashedSelected ? t('notes.sidebar.selection.deselect_all') : t('notes.sidebar.selection.select_all')}
                                     >
-                                        ALL
+                                        {t('notes.sidebar.selection.all')}
                                     </button>
                                 )}
                                 {sortedTrashedNotes.length > 0 && (
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
-                                                void clearTrash();
-                                            }
+                                            void handleClearTrashWithConfirm();
                                         }}
                                         className="inline-flex items-center justify-center p-1 rounded text-red-400 hover:bg-red-500/10"
                                         title={t('notes.sidebar.actions.delete_permanently')}
@@ -1108,7 +1387,9 @@ export const NoteSidebar: React.FC = () => {
                         </div>
                         {selectedTrashedNotes.length > 0 && (
                             <div className="px-2 pb-2 flex items-center gap-1.5">
-                                <span className="text-[10px] text-gray-500">{selectedTrashedNotes.length} selected</span>
+                                <span className="text-[10px] text-gray-500">
+                                    {t('notes.sidebar.selection.selected_count', { count: String(selectedTrashedNotes.length) })}
+                                </span>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -1159,7 +1440,7 @@ export const NoteSidebar: React.FC = () => {
                                                         ? 'border-blue-400 bg-blue-500/20'
                                                         : 'border-gray-600 bg-transparent'
                                                 }`}
-                                                aria-label="Select"
+                                                aria-label={t('notes.sidebar.selection.select_item')}
                                             >
                                                 {trashSelection.has(note.id) && <span className="h-2 w-2 rounded-[2px] bg-blue-300" />}
                                             </button>
@@ -1185,7 +1466,7 @@ export const NoteSidebar: React.FC = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        void restoreFromTrash(note.id);
+                                                        void handleRestoreSingle(note.id);
                                                     }}
                                                     className="p-1.5 rounded text-emerald-400 hover:bg-emerald-500/10"
                                                     title={t('notes.sidebar.actions.restore')}
@@ -1195,9 +1476,7 @@ export const NoteSidebar: React.FC = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (confirm(`${t('notes.sidebar.actions.delete_permanently')}?`)) {
-                                                            void deletePermanently(note.id);
-                                                        }
+                                                        void handleDeleteSinglePermanently(note.id);
                                                     }}
                                                     className="p-1.5 rounded text-red-400 hover:bg-red-500/10"
                                                     title={t('notes.sidebar.actions.delete_permanently')}
@@ -1328,7 +1607,22 @@ export const NoteSidebar: React.FC = () => {
                                     <SectionHeader title={t('notes.notebooks')} isOpen={showNotebooks} onToggle={() => setShowNotebooks(!showNotebooks)} />
                                 )}
                                 {showNotebooks && (
-                                    <div className="mt-0.5 pb-8">
+                                    <div
+                                        className="mt-0.5 pb-8"
+                                        onDragOver={handleRootDragOver}
+                                        onDragLeave={handleRootDragLeave}
+                                        onDrop={handleRootDrop}
+                                    >
+                                        <div
+                                            className={`mx-2 mb-1 flex items-center gap-2 rounded-md border px-2 py-1 text-[10px] transition-colors ${
+                                                isRootDragOver
+                                                    ? 'border-blue-500/60 bg-blue-500/10 text-blue-300'
+                                                    : 'border-[#2b2b2f] text-gray-500'
+                                            }`}
+                                        >
+                                            <FolderOpen size={12} />
+                                            <span>{t('notes.sidebar.drop_to_root')}</span>
+                                        </div>
                                         {renderTreeNodes(treeData, 0, null)}
                                     </div>
                                 )}
@@ -1374,6 +1668,21 @@ export const NoteSidebar: React.FC = () => {
                     }}
                     onToggleFavorite={() => { toggleFavorite(contextMenu.item.id); setContextMenu(null); }}
                     t={t}
+                />
+            )}
+
+            {isConfirmOpen && confirmOptions && (
+                <Confirm
+                    isOpen={isConfirmOpen}
+                    title={confirmOptions.title}
+                    message={confirmOptions.message}
+                    type={confirmOptions.type || 'confirm'}
+                    confirmText={confirmOptions.confirmText}
+                    cancelText={confirmOptions.cancelText}
+                    confirmVariant={confirmOptions.confirmVariant || 'primary'}
+                    showCancel={confirmOptions.showCancel}
+                    onConfirm={handleConfirm}
+                    onCancel={handleCancel}
                 />
             )}
         </div>

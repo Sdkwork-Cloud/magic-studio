@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { AudioTask, AudioGenerationParams } from '../entities';
 import { audioBusinessService } from '../services';
-import { assetBusinessFacade, readWorkspaceScope } from '@sdkwork/react-assets';
+import { importAssetBySdk, importAssetFromUrlBySdk, resolveAssetPrimaryUrlBySdk } from '@sdkwork/react-assets';
 import { inlineDataService } from '@sdkwork/react-core';
 
 interface AudioStoreContextType {
@@ -23,14 +23,6 @@ const DEFAULT_CONFIG: AudioGenerationParams = {
     model: 'gemini-2.5-flash-tts',
     voice: 'Kore',
     duration: 10,
-};
-
-const resolveAudioScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
 };
 
 export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -64,19 +56,28 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 generated.url ||
                 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
             const inlineData = await inlineDataService.tryExtractInlineData(candidateUrl);
-            const persisted = await assetBusinessFacade.importAudioStudioAsset({
-                scope: resolveAudioScope(),
-                type: 'audio',
-                name: `audio_gen_${Date.now()}.wav`,
-                data: inlineData,
-                remoteUrl: inlineData ? undefined : candidateUrl,
-                metadata: {
-                    origin: 'ai',
-                    source: 'audio-studio-generate',
-                    prompt: config.prompt,
-                    duration: config.duration
-                }
-            });
+            const uploaded = inlineData
+                ? await importAssetBySdk(
+                    {
+                        name: `audio_gen_${Date.now()}.wav`,
+                        data: inlineData
+                    },
+                    'audio',
+                    { domain: 'audio-studio' }
+                )
+                : await importAssetFromUrlBySdk(
+                    candidateUrl,
+                    'audio',
+                    {
+                        name: `audio_gen_${Date.now()}.wav`,
+                        domain: 'audio-studio'
+                    }
+                );
+
+            const persistedAudioUrl =
+                (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+                uploaded.path ||
+                candidateUrl;
 
             const newTask: AudioTask = {
                 id: crypto.randomUUID(),
@@ -87,7 +88,7 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
                 prompt: config.prompt,
                 config: config,
                 results: [{
-                    url: persisted.primaryLocator.uri,
+                    url: persistedAudioUrl,
                     duration: config.duration || 10
                 }]
             };

@@ -218,6 +218,10 @@ const mockSessions = new Map<string, MockSession>();
 
 export const webPlatform: PlatformAPI = {
   getPlatform: () => 'web',
+  listen: async <T = unknown>(
+    _event: string,
+    _callback: (payload: T) => void
+  ): Promise<() => void> => () => {},
   getOsType: async () => 'unknown',
   getDeviceId: async () => 'web-device-id',
   getAppMetadata: async () => ({

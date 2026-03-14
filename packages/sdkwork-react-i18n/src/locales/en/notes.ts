@@ -142,6 +142,29 @@ export const notes = {
         empty_folder: "Empty",
         recent: "RECENT",
         untitled_page: "Untitled",
+        drop_to_root: "Drop here to move to root",
+        selection: {
+            all: "ALL",
+            select_all: "Select all",
+            deselect_all: "Deselect all",
+            selected_count: "{count} selected",
+            select_item: "Select note"
+        },
+        confirm: {
+            delete_item: "Delete \"{name}\"?",
+            delete_single: "Permanently delete this note? This action cannot be undone.",
+            delete_batch: "Permanently delete {count} selected notes? This action cannot be undone.",
+            clear_trash: "Permanently delete all notes in Trash? This action cannot be undone."
+        },
+        feedback: {
+            restore_success: "Note restored",
+            delete_success: "Note permanently deleted",
+            batch_restore_success: "Restored {count} notes",
+            batch_restore_partial: "Restored {success} notes, {failed} failed",
+            batch_delete_success: "Permanently deleted {count} notes",
+            batch_delete_partial: "Permanently deleted {success} notes, {failed} failed",
+            clear_trash_success: "Trash cleared"
+        },
         search_placeholder: "Search notes...",
         search_empty: "No matching pages"
     }

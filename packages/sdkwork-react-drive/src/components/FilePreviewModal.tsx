@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { X, Download, AlertCircle } from 'lucide-react';
 import { vfs } from '@sdkwork/react-fs';
@@ -20,12 +19,21 @@ const ensureResultSuccess = (result: ServiceResult<unknown>, operation: string):
     }
 };
 
+const getResultDataOrThrow = <T,>(result: ServiceResult<T>, operation: string): T => {
+    if (!result.success) {
+        throw new Error(result.message || `${operation} failed.`);
+    }
+    if (result.data === undefined || result.data === null) {
+        throw new Error(`${operation} returned no data.`);
+    }
+    return result.data;
+};
+
 export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClose }) => {
     const [url, setUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    
-    // We use a callback ref to ensure we capture the DOM element once it's mounted
+
     const [headerElement, setHeaderElement] = useState<HTMLElement | null>(null);
     const headerRef = useCallback((node: HTMLElement | null) => {
         if (node !== null) {
@@ -33,85 +41,86 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
         }
     }, []);
 
-    // Resolve Viewer Component
     const ViewerComponent = viewerRegistry.getViewer(item);
 
     useEffect(() => {
+        let createdObjectUrl: string | null = null;
+
         const loadContent = async () => {
             setLoading(true);
             setError(null);
-            
+
+            const resolvedPath = item.path || item.id;
+
             try {
-                // Unified Resolution Strategy:
-                // Treat the DriveItem ID (which is the path) as an asset path.
-                // assetService handles the logic for Desktop (convertFileSrc) vs Web (VFS read -> Blob).
-                
-                // 1. Determine if we can use the Asset Service pipeline
-                // For known media types, this is efficient. For code/text, we might want raw text.
-                const isMedia = item.mimeType?.startsWith('video/') || 
-                                item.mimeType?.startsWith('audio/') || 
-                                item.mimeType?.startsWith('image/') ||
-                                /\.(mp4|mov|webm|mp3|wav|png|jpg|jpeg|gif|webp|svg)$/i.test(item.name) ||
-                                item.name.endsWith('.pdf');
+                const isMedia = item.mimeType?.startsWith('video/') ||
+                    item.mimeType?.startsWith('audio/') ||
+                    item.mimeType?.startsWith('image/') ||
+                    /\.(mp4|mov|webm|mkv|mp3|wav|ogg|flac|png|jpg|jpeg|gif|webp|svg|pdf)$/i.test(item.name);
 
                 if (isMedia) {
-                    // Use standard asset resolution
-                    // We need to ensure the path is treated as an absolute path or virtual path correctly
-                    // DriveItem.id is typically the absolute path (Desktop) or VFS path (Web)
-                    let resolvePath = item.id;
-                    
-                    // Call the service to resolve the URL. This handles `assets://` resolution if needed,
-                    // as well as converting local file paths to viewable URLs on desktop.
-                    const resolvedUrl = await assetService.resolveAssetUrl({ path: resolvePath });
-                    if (resolvedUrl) {
-                        setUrl(resolvedUrl);
-                    } else {
-                        throw new Error("Could not resolve asset URL");
+                    if (item.previewUrl) {
+                        setUrl(item.previewUrl);
+                        return;
                     }
-                } else {
-                    // Text/Code/Unknown - Read content directly
-                    // This allows the CodeViewer/DocViewer to handle the raw data or text
-                    const binary = await vfs.readFileBinary(item.id);
-                    
+
+                    const resolvedUrl = await assetService.resolveAssetUrl({ path: resolvedPath });
+                    if (!resolvedUrl) {
+                        throw new Error('Could not resolve preview URL');
+                    }
+                    setUrl(resolvedUrl);
+                    return;
+                }
+
+                const contentResult = await driveBusinessService.getFileContent(item.id);
+                const textContent = getResultDataOrThrow(contentResult, 'Load file content');
+                const mime = item.mimeType || (item.name.endsWith('.md') ? 'text/markdown' : 'text/plain');
+                const blob = new Blob([textContent], { type: mime });
+                createdObjectUrl = URL.createObjectURL(blob);
+                setUrl(createdObjectUrl);
+            } catch (sdkError) {
+                // Local fallback for local provider compatibility.
+                try {
+                    const binary = await vfs.readFileBinary(resolvedPath);
                     let mime = item.mimeType || 'application/octet-stream';
                     if (!item.mimeType) {
                         if (item.name.endsWith('.txt')) mime = 'text/plain';
                         else if (item.name.endsWith('.json')) mime = 'application/json';
                         else if (item.name.endsWith('.md')) mime = 'text/markdown';
                     }
-
-                    const blob = new Blob([binary] as any, { type: mime });
-                    const objectUrl = URL.createObjectURL(blob);
-                    setUrl(objectUrl);
+                    const blob = new Blob([binary] as BlobPart[], { type: mime });
+                    createdObjectUrl = URL.createObjectURL(blob);
+                    setUrl(createdObjectUrl);
+                } catch (localError) {
+                    console.error('[FilePreview] Load failed', sdkError, localError);
+                    setError('Unable to load file content.');
                 }
-
-            } catch (e) {
-                console.error("[FilePreview] Load failed", e);
-                setError('Unable to load file content.');
             } finally {
                 setLoading(false);
             }
         };
 
         loadContent();
-        
+
         return () => {
-             // Cleanup Blob URLs (Asset URLs from convertFileSrc don't need revocation, but Blobs do)
-             if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
-        }
-    }, [item.id, item.mimeType, item.name]);
+            if (createdObjectUrl) {
+                URL.revokeObjectURL(createdObjectUrl);
+            }
+        };
+    }, [item.id, item.path, item.previewUrl, item.mimeType, item.name]);
 
     const handleSave = async (content: string | Uint8Array) => {
         try {
-            const parent = pathUtils.dirname(item.id);
             if (typeof content === 'string') {
-                await vfs.writeFile(item.id, content);
-            } else {
-                const uploadResult = await driveBusinessService.uploadFile(parent, item.name, content);
-                ensureResultSuccess(uploadResult, 'Save file');
+                const updateResult = await driveBusinessService.updateFileContent(item.id, content);
+                ensureResultSuccess(updateResult, 'Save file content');
+                return;
             }
+            const parentPath = pathUtils.dirname(item.path || item.id);
+            const uploadResult = await driveBusinessService.uploadFile(parentPath, item.name, content);
+            ensureResultSuccess(uploadResult, 'Save file');
         } catch (e) {
-            console.error("Save failed", e);
+            console.error('Save failed', e);
             throw e;
         }
     };
@@ -121,28 +130,24 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
     };
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={handleBackdropClick}
         >
             <div className="relative w-[85vw] h-[85vh] bg-[#1e1e1e] border border-[#333] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-                
-                {/* Unified Header */}
+
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#333] bg-[#252526] z-10 h-14 flex-none select-none">
-                    {/* Left: Title & Info */}
                     <div className="flex items-center gap-3 overflow-hidden">
-                         <div className="p-2 bg-[#333] rounded-lg">
-                             <FileIcon name={item.name} isDirectory={false} expanded={false} />
-                         </div>
-                         <div className="flex flex-col min-w-0">
-                             <h3 className="text-gray-200 font-bold text-sm truncate">{item.name}</h3>
-                             <p className="text-[10px] text-gray-500 font-mono opacity-70 truncate">{item.id}</p>
-                         </div>
+                        <div className="p-2 bg-[#333] rounded-lg">
+                            <FileIcon name={item.name} isDirectory={false} expanded={false} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <h3 className="text-gray-200 font-bold text-sm truncate">{item.name}</h3>
+                            <p className="text-[10px] text-gray-500 font-mono opacity-70 truncate">{item.path || item.id}</p>
+                        </div>
                     </div>
 
-                    {/* Right: Viewer Actions (Portal) + Standard Actions */}
                     <div className="flex items-center gap-3">
-                        {/* The Viewer will inject controls (Save, etc) here */}
                         <div ref={headerRef} className="flex items-center gap-2" />
 
                         <div className="h-4 w-[1px] bg-[#444]" />
@@ -154,8 +159,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                                 </button>
                             </a>
                         )}
-                        <button 
-                            onClick={onClose} 
+                        <button
+                            onClick={onClose}
                             className="p-2 text-gray-400 hover:text-white hover:bg-[#c42b1c] rounded-lg transition-colors"
                             title="Close Preview"
                         >
@@ -164,12 +169,11 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                     </div>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-hidden relative bg-[#111]">
                     {loading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-3">
-                             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                             <span className="text-xs">Loading content...</span>
+                            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs">Loading content...</span>
                         </div>
                     ) : error ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
@@ -178,17 +182,17 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                         </div>
                     ) : (
                         ViewerComponent && url ? (
-                            <ViewerComponent 
-                                item={item} 
-                                url={url} 
-                                onClose={onClose} 
+                            <ViewerComponent
+                                item={item}
+                                url={url}
+                                onClose={onClose}
                                 onSave={handleSave}
                                 headerElement={headerElement}
                             />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
-                                 <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
-                                 <p>No preview available for this file type.</p>
+                                <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
+                                <p>No preview available for this file type.</p>
                             </div>
                         )
                     )}

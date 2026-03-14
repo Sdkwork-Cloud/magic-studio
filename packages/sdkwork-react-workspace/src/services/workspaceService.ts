@@ -1,6 +1,6 @@
 import { storageConfig, APP_ROOT_DIR, DIR_NAMES } from '@sdkwork/react-fs';
 import { vfs } from '@sdkwork/react-fs';
-import { platform, hasSdkworkClient, sdk } from '@sdkwork/react-core';
+import { platform, getAppSdkClientWithSession } from '@sdkwork/react-core';
 import {
   StudioWorkspace,
   StudioProject,
@@ -90,18 +90,11 @@ interface SdkWorkspacesApiLike {
   deleteProject?: (workspaceId: string | number, projectId: string | number) => Promise<unknown>;
 }
 
-interface SdkProjectsApiLike {
-  listProjects?: (params?: Record<string, unknown>) => Promise<unknown>;
-  createProject?: (body: SdkProjectCreateForm) => Promise<unknown>;
-  deleteProject?: (projectId: string | number) => Promise<unknown>;
-}
-
 interface SdkClientLike {
   workspaces?: SdkWorkspacesApiLike;
-  projects?: SdkProjectsApiLike;
 }
 
-class WorkspaceService implements IBaseService<StudioWorkspace> {
+export class WorkspaceService implements IBaseService<StudioWorkspace> {
   private readonly PROJECT_TYPE_SET: ReadonlySet<ProjectType> = new Set<ProjectType>([
     'APP',
     'VIDEO',
@@ -219,11 +212,8 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
     };
   }
 
-  private getSdkClient(): SdkClientLike | null {
-    if (!hasSdkworkClient()) {
-      return null;
-    }
-    return sdk.client as unknown as SdkClientLike;
+  private getSdkClient(): SdkClientLike {
+    return getAppSdkClientWithSession() as unknown as SdkClientLike;
   }
 
   private buildCoverImageResource(iconUrl?: string): ImageMediaResource | undefined {
@@ -285,39 +275,25 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
     sdkClient: SdkClientLike
   ): Promise<StudioProject[]> {
     const workspaceApi = sdkClient.workspaces;
-    if (workspaceApi && typeof workspaceApi.listProjects === 'function') {
-      const response = await workspaceApi.listProjects(workspaceId, {
+    if (!workspaceApi || typeof workspaceApi.listProjects !== 'function') {
+      return [];
+    }
+
+    const response = await workspaceApi.listProjects(workspaceId, {
         page: 0,
         size: 200,
         sort: ['updatedAt,DESC']
       });
-      const pageData = this.unwrapApiData<SdkProjectPage>(response);
-      const content = Array.isArray(pageData?.content) ? pageData.content : [];
-      return content.map((item) => this.mapProjectVo(item, workspaceId));
-    }
-
-    const projectsApi = sdkClient.projects;
-    if (projectsApi && typeof projectsApi.listProjects === 'function') {
-      const response = await projectsApi.listProjects({
-        page: 0,
-        size: 200,
-        workspaceId
-      });
-      const pageData = this.unwrapApiData<SdkProjectPage>(response);
-      const content = Array.isArray(pageData?.content) ? pageData.content : [];
-      return content
-        .map((item) => this.mapProjectVo(item, workspaceId))
-        .filter((project) => project.workspaceId === workspaceId);
-    }
-
-    return [];
+    const pageData = this.unwrapApiData<SdkProjectPage>(response);
+    const content = Array.isArray(pageData?.content) ? pageData.content : [];
+    return content.map((item) => this.mapProjectVo(item, workspaceId));
   }
 
   private async findAllFromSdk(pageRequest?: PageRequest): Promise<ServiceResult<Page<StudioWorkspace>>> {
     const sdkClient = this.getSdkClient();
     const workspaceApi = sdkClient?.workspaces;
 
-    if (!sdkClient || !workspaceApi || typeof workspaceApi.listWorkspaces !== 'function') {
+    if (!workspaceApi || typeof workspaceApi.listWorkspaces !== 'function') {
       return Result.error('SDK workspace API is unavailable');
     }
 
@@ -353,7 +329,7 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
     const sdkClient = this.getSdkClient();
     const workspaceApi = sdkClient?.workspaces;
 
-    if (!sdkClient || !workspaceApi) {
+    if (!workspaceApi) {
       return Result.error('SDK workspace API is unavailable');
     }
 
@@ -455,22 +431,6 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
       return Result.success(this.mapProjectVo(projectVo, workspaceId));
     }
 
-    const projectsApi = sdkClient?.projects;
-    if (projectsApi && typeof projectsApi.createProject === 'function') {
-      const response = await projectsApi.createProject({
-        workspaceId,
-        projectName: name,
-        projectDescription: description,
-        projectType: type,
-        projectIcon: projectIconName
-      });
-      const projectVo = this.unwrapApiData<SdkProjectVO>(response);
-      if (!projectVo) {
-        return Result.error('SDK returned empty project create result');
-      }
-      return Result.success(this.mapProjectVo(projectVo, workspaceId));
-    }
-
     return Result.error('SDK project create API is unavailable');
   }
 
@@ -491,12 +451,6 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
 
     if (workspaceApi && typeof workspaceApi.deleteProject === 'function') {
       await workspaceApi.deleteProject(workspaceId, projectId);
-      return Result.success(undefined);
-    }
-
-    const projectsApi = sdkClient?.projects;
-    if (projectsApi && typeof projectsApi.deleteProject === 'function') {
-      await projectsApi.deleteProject(projectId);
       return Result.success(undefined);
     }
 
@@ -720,37 +674,21 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
   }
 
   async findAll(pageRequest?: PageRequest): Promise<ServiceResult<Page<StudioWorkspace>>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.listWorkspaces) {
-      try {
-        return await this.findAllFromSdk(pageRequest);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to query workspace list from SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.findAllFromLocal(pageRequest);
+      return await this.findAllFromSdk(pageRequest);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to load local workspace list');
+      const message = error instanceof Error ? error.message : 'Failed to query workspace list from SDK';
+      return Result.error(message);
     }
   }
 
   async findById(id: string): Promise<ServiceResult<StudioWorkspace | null>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.getWorkspaceDetail || sdkClient?.workspaces?.listWorkspaces) {
-      try {
-        return await this.findWorkspaceByIdFromSdk(id);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load workspace detail from SDK';
-        return Result.error(message);
-      }
+    try {
+      return await this.findWorkspaceByIdFromSdk(id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load workspace detail from SDK';
+      return Result.error(message);
     }
-
-    const all = await this.findAll();
-    const workspace = all.data?.content.find((item) => item.uuid === id || item.id === id) || null;
-    return Result.success(workspace);
   }
 
   async existsById(id: string): Promise<boolean> {
@@ -759,24 +697,14 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
   }
 
   async save(entity: Partial<StudioWorkspace>): Promise<ServiceResult<StudioWorkspace>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.updateWorkspace) {
-      try {
-        return await this.saveWorkspaceToSdk(entity);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to update workspace through SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.saveWorkspaceToLocal(entity);
+      return await this.saveWorkspaceToSdk(entity);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to update local workspace');
+      const message = error instanceof Error ? error.message : 'Failed to update workspace through SDK';
+      return Result.error(message);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async saveAll(_entities: Partial<StudioWorkspace>[]): Promise<ServiceResult<StudioWorkspace[]>> {
     throw new Error('Batch save not supported');
   }
@@ -808,20 +736,11 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
   }
 
   async createWorkspace(name: string, description?: string, icon?: string): Promise<ServiceResult<StudioWorkspace>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.createWorkspace) {
-      try {
-        return await this.createWorkspaceToSdk(name, description, icon);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to create workspace through SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.createWorkspaceLocal(name, description, icon);
+      return await this.createWorkspaceToSdk(name, description, icon);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to create local workspace');
+      const message = error instanceof Error ? error.message : 'Failed to create workspace through SDK';
+      return Result.error(message);
     }
   }
 
@@ -832,56 +751,29 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
     description: string,
     coverImage?: { data: Uint8Array; name: string }
   ): Promise<ServiceResult<StudioProject>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.createProject || sdkClient?.projects?.createProject) {
-      try {
-        return await this.createProjectToSdk(workspaceId, name, type, description, coverImage);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to create project through SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.createProjectLocal(workspaceId, name, type, description, coverImage);
+      return await this.createProjectToSdk(workspaceId, name, type, description, coverImage);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to create local project');
+      const message = error instanceof Error ? error.message : 'Failed to create project through SDK';
+      return Result.error(message);
     }
   }
 
   async deleteWorkspace(workspaceId: string): Promise<ServiceResult<void>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.deleteWorkspace) {
-      try {
-        return await this.deleteWorkspaceFromSdk(workspaceId);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to delete workspace through SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.deleteWorkspaceFromLocal(workspaceId);
+      return await this.deleteWorkspaceFromSdk(workspaceId);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to delete local workspace');
+      const message = error instanceof Error ? error.message : 'Failed to delete workspace through SDK';
+      return Result.error(message);
     }
   }
 
   async deleteProject(workspaceId: string, projectId: string): Promise<ServiceResult<void>> {
-    const sdkClient = this.getSdkClient();
-    if (sdkClient?.workspaces?.deleteProject || sdkClient?.projects?.deleteProject) {
-      try {
-        return await this.deleteProjectFromSdk(workspaceId, projectId);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to delete project through SDK';
-        return Result.error(message);
-      }
-    }
-
     try {
-      return await this.deleteProjectFromLocal(workspaceId, projectId);
+      return await this.deleteProjectFromSdk(workspaceId, projectId);
     } catch (error) {
-      return Result.error(error instanceof Error ? error.message : 'Failed to delete local project');
+      const message = error instanceof Error ? error.message : 'Failed to delete project through SDK';
+      return Result.error(message);
     }
   }
 
@@ -907,6 +799,6 @@ class WorkspaceService implements IBaseService<StudioWorkspace> {
   }
 }
 
-export const workspaceService = new WorkspaceService();
+export const workspaceService: WorkspaceService = new WorkspaceService();
 
 export const getWorkspaces = workspaceService.findAll.bind(workspaceService);

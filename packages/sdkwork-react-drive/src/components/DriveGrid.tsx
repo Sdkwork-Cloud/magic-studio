@@ -76,7 +76,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
                 const id = Array.from(selection)[0];
                 const item = items.find(i => i.id === id);
                 if (item) {
-                    if (item.type === 'folder') navigateTo(item.id);
+                    if (item.type === 'folder') navigateTo(item.path || item.id);
                     else onPreview(item);
                 }
             }
@@ -163,7 +163,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
         if (selection.size > 0) {
             const ids = Array.from(selection);
             if (ids.includes(targetFolder.id)) return;
-            await moveItems(ids, targetFolder.id);
+            await moveItems(ids, targetFolder.path || targetFolder.id);
         }
     };
 
@@ -176,7 +176,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
         e.stopPropagation();
         if (renamingId) return;
         if (item.type === 'folder') {
-            if (!item.trashedAt) navigateTo(item.id);
+            if (!item.trashedAt) navigateTo(item.path || item.id);
         } else {
             if (!item.trashedAt) onPreview(item);
         }

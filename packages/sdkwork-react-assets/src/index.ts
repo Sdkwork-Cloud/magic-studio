@@ -30,8 +30,19 @@ export { useAssetCenterShortcuts } from './hooks/useAssetCenterShortcuts';
 
 export { useAssetStore, AssetStoreProvider } from './store/assetStore';
 
-export { assetBusinessService, assetService, ASSET_CATEGORIES, setMediaAnalysisAdapter } from './services';
-export type { MediaAnalysisAdapter, MediaAnalysisResult } from './services';
+export {
+    assetBusinessService,
+    assetService,
+    ASSET_CATEGORIES,
+    setMediaAnalysisAdapter,
+    queryAssetsBySdk,
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    renameAssetBySdk,
+    deleteAssetBySdk,
+    resolveAssetPrimaryUrlBySdk
+} from './services';
+export type { MediaAnalysisAdapter, MediaAnalysisResult, AssetSdkQueryCategory } from './services';
 
 // Enhanced asset services
 export { assetServiceRegistry, initializeAssetServices, getAssetService, hasAssetService, getRegisteredCategories } from './services';

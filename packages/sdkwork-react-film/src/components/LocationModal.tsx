@@ -121,16 +121,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
         }
     }, [isOpen, initialData]);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!isOpen) return;
-            if (e.key === 'Escape') onClose();
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, name, description, faceImage, threeViewImage, gridViewImage, tags]);
-
     const handleSave = useCallback(() => {
         if (!name.trim()) return;
         onSave({ 
@@ -142,7 +132,17 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
             gridViewImage 
         });
         onClose();
-    }, [name, description, faceImage, threeViewImage, gridViewImage, tags]);
+    }, [name, description, faceImage, threeViewImage, gridViewImage, tags, onSave, onClose]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isOpen) return;
+            if (e.key === 'Escape') onClose();
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSave();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, handleSave, onClose]);
 
     const handleEnhanceDescription = async (text: string) => {
         setIsEnhancing(true);

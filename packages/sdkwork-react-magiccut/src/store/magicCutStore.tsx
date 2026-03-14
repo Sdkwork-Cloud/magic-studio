@@ -1,9 +1,9 @@
 
 import {
-    assetBusinessFacade,
-    mapUnifiedAssetToAnyAsset,
-    readWorkspaceScope,
-    type AssetMutationResult
+    importAssetBySdk,
+    importAssetFromUrlBySdk,
+    resolveAssetPrimaryUrlBySdk,
+    type Asset
 } from '@sdkwork/react-assets';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { produce, enableMapSet, enablePatches, applyPatches, Patch } from 'immer';
@@ -19,9 +19,8 @@ import { TrackFactory, magicCutBusinessService } from '../services';
 ;
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
-import { inlineDataService, uploadHelper, platform } from '@sdkwork/react-core';
+import { inlineDataService, uploadHelper } from '@sdkwork/react-core';
 import type { AssetContentKey } from '@sdkwork/react-types';
-import { storageConfig } from '@sdkwork/react-fs';
 import { textRenderer, DEFAULT_TEXT_STYLE } from '../engine/text/TextRenderer';
 import {
     normalizeProjectAssetReferences,
@@ -38,7 +37,6 @@ export type PasteMode = 'normal' | 'insert' | 'overwrite';
 
 type AssetImportSource = {
     data?: Uint8Array;
-    sourcePath?: string;
     remoteUrl?: string;
 };
 
@@ -47,8 +45,6 @@ const {
     magicCutProjectService,
     templateService
 } = magicCutBusinessService;
-
-const ASSET_PROTOCOL_PREFIX = 'assets://';
 
 // Re-export types for consumers
 export * from './types';
@@ -66,49 +62,62 @@ function updateTrackOrders(draft: NormalizedState, timelineId: string) {
     });
 }
 
-const resolveMagiccutScope = (): { workspaceId: string; projectId?: string } => {
-    const scope = readWorkspaceScope();
-    return {
-        workspaceId: scope.workspaceId,
-        projectId: scope.projectId
-    };
+const mapAssetTypeToMediaResourceType = (type: Asset['type']): MediaResourceType => {
+    if (type === 'image') return MediaResourceType.IMAGE;
+    if (type === 'video') return MediaResourceType.VIDEO;
+    if (type === 'audio') return MediaResourceType.AUDIO;
+    if (type === 'music') return MediaResourceType.MUSIC;
+    if (type === 'voice') return MediaResourceType.VOICE;
+    if (type === 'text') return MediaResourceType.TEXT;
+    if (type === 'subtitle') return MediaResourceType.SUBTITLE;
+    if (type === 'character') return MediaResourceType.CHARACTER;
+    if (type === 'effect') return MediaResourceType.EFFECT;
+    if (type === 'transition') return MediaResourceType.TRANSITION;
+    if (type === 'lottie') return MediaResourceType.LOTTIE;
+    if (type === 'model3d') return MediaResourceType.MODEL_3D;
+    if (type === 'sfx') return MediaResourceType.AUDIO;
+    return MediaResourceType.FILE;
 };
 
-const toMagiccutResource = (result: AssetMutationResult): AnyMediaResource => {
-    const resource = mapUnifiedAssetToAnyAsset(result.asset);
-    if (!resource) {
-        throw new Error('Invalid asset payload: primary media resource is missing.');
-    }
-    return normalizeResourceForTimeline(resource as AnyMediaResource);
-};
-
-const isAbsoluteFsPath = (value: string): boolean => {
-    return /^[a-zA-Z]:\\/.test(value) || value.startsWith('/');
-};
-
-const toAbsoluteAssetPath = async (path: string): Promise<string> => {
-    if (!path.startsWith(ASSET_PROTOCOL_PREFIX)) {
-        return path;
-    }
-    const documentsDir = await platform.getPath('documents');
-    const libraryRoot = pathUtils.join(documentsDir, storageConfig.library.root);
-    const relativePath = path.slice(ASSET_PROTOCOL_PREFIX.length);
-    return pathUtils.join(libraryRoot, relativePath);
+const toMagiccutResource = async (uploaded: Asset): Promise<AnyMediaResource> => {
+    const metadata = (uploaded.metadata || {}) as Record<string, unknown>;
+    const resolvedUrl =
+        (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
+        uploaded.path ||
+        `assets://${uploaded.id}`;
+    const resource = {
+        id: uploaded.id,
+        uuid: uploaded.uuid,
+        name: uploaded.name,
+        type: mapAssetTypeToMediaResourceType(uploaded.type),
+        path: resolvedUrl,
+        url: resolvedUrl,
+        size: Number(uploaded.size || 0),
+        duration: Number(metadata.duration || 0) || undefined,
+        width: Number(metadata.width || 0) || undefined,
+        height: Number(metadata.height || 0) || undefined,
+        origin: uploaded.origin,
+        metadata,
+        createdAt: uploaded.createdAt,
+        updatedAt: uploaded.updatedAt
+    } as AnyMediaResource;
+    return normalizeResourceForTimeline(resource);
 };
 
 const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<AssetImportSource> => {
+    if (resource?.id) {
+        const fromAssetId = await resolveAssetPrimaryUrlBySdk(resource.id);
+        if (fromAssetId) {
+            return { remoteUrl: fromAssetId };
+        }
+    }
+
     const candidates = [resource.path, resource.url]
         .filter((item): item is string => typeof item === 'string' && item.length > 0);
 
     for (const source of candidates) {
         if (source.startsWith('http://') || source.startsWith('https://')) {
             return { remoteUrl: source };
-        }
-        if (source.startsWith(ASSET_PROTOCOL_PREFIX)) {
-            return { sourcePath: await toAbsoluteAssetPath(source) };
-        }
-        if (isAbsoluteFsPath(source)) {
-            return { sourcePath: source };
         }
         const inlineData = await inlineDataService.tryExtractInlineData(source);
         if (inlineData) {
@@ -1234,18 +1243,25 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             ? resource.name.slice(0, Math.max(0, resource.name.length - extension.length))
             : (resource.name || 'audio');
         const source = await resolveResourceImportSource(resource);
-        const imported = await assetBusinessFacade.importMagiccutAsset({
-            scope: resolveMagiccutScope(),
-            type: 'audio',
-            name: `${baseName}_audio${extension}`,
-            ...source,
-            metadata: {
-                ...(resource.metadata || {}),
-                origin: 'system',
-                source: `derived:${resource.id}`
-            }
-        });
-        const audioResource = toMagiccutResource(imported);
+        const fileName = `${baseName}_audio${extension}`;
+        const uploaded = source.data
+            ? await importAssetBySdk(
+                {
+                    name: fileName,
+                    data: source.data
+                },
+                'audio',
+                { domain: 'magiccut' }
+            )
+            : await importAssetFromUrlBySdk(
+                String(source.remoteUrl || ''),
+                'audio',
+                {
+                    name: fileName,
+                    domain: 'magiccut'
+                }
+            );
+        const audioResource = await toMagiccutResource(uploaded);
 
         const result = timelineOperationService.calculateDetachAudio(state, clipId, audioResource.id);
         
@@ -1473,19 +1489,15 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             else if (typeStr.startsWith('audio')) type = 'audio';
             else if (typeStr.startsWith('image')) type = 'image';
             else if (typeStr.startsWith('text')) type = 'text';
-            const sourcePath = (file as any).path;
-            const imported = await assetBusinessFacade.importMagiccutAsset({
-                scope: resolveMagiccutScope(),
+            const uploaded = await importAssetBySdk(
+                {
+                    name: file.name,
+                    data: buffer
+                },
                 type,
-                name: file.name,
-                data: buffer,
-                sourcePath: sourcePath ? await toAbsoluteAssetPath(sourcePath) : undefined,
-                metadata: {
-                    origin: 'upload',
-                    source: 'magiccut-dnd-import'
-                }
-            });
-            const resource = toMagiccutResource(imported);
+                { domain: 'magiccut' }
+            );
+            const resource = await toMagiccutResource(uploaded);
             resources.push(resource);
             updateState(draft => {
                 draft.resources[resource.id] = resource;
@@ -1507,18 +1519,15 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                     if (['mp4', 'mov', 'webm', 'mkv', 'avi'].includes(ext || '')) type = 'video';
                     else if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext || '')) type = 'audio';
                 }
-                const imported = await assetBusinessFacade.importMagiccutAsset({
-                    scope: resolveMagiccutScope(),
+                const uploaded = await importAssetBySdk(
+                    {
+                        name: f.name,
+                        data: f.data
+                    },
                     type,
-                    name: f.name,
-                    data: f.data,
-                    sourcePath: f.path ? await toAbsoluteAssetPath(f.path) : undefined,
-                    metadata: {
-                        origin: 'upload',
-                        source: 'magiccut-picker-import'
-                    }
-                });
-                const resource = toMagiccutResource(imported);
+                    { domain: 'magiccut' }
+                );
+                const resource = await toMagiccutResource(uploaded);
                 importedResources.push(resource);
                 updateState(draft => {
                     draft.resources[resource.id] = resource;

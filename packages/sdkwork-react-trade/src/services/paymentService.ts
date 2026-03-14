@@ -1,3 +1,4 @@
+import { getSdkworkClient } from '@sdkwork/react-core';
 import type {
   Payment,
   PaymentMethod,
@@ -7,9 +8,18 @@ import type {
   Wallet,
   Transaction,
 } from '../entities';
-import { PaymentMethod as PaymentMethodEnum, PaymentStatus as PaymentStatusEnum, OrderStatus as OrderStatusEnum } from '../entities';
-import { orderService } from './orderService';
-import { generateUUID } from '@sdkwork/react-commons';
+import { PaymentMethod as PaymentMethodEnum, PaymentStatus as PaymentStatusEnum } from '../entities';
+
+type AnyRecord = Record<string, unknown>;
+
+interface ApiEnvelope<T> {
+  code?: string | number;
+  data?: T;
+  msg?: string;
+  message?: string;
+}
+
+const SUCCESS_CODE = '2000';
 
 /**
  * 发起支付参数
@@ -47,7 +57,7 @@ export interface PaymentResult {
 export interface RefundParams {
   /** 支付 UUID */
   paymentUuid: string;
-  /** 退款金额 (分) */
+  /** 退款金额(分) */
   amount?: number;
   /** 退款原因 */
   reason: string;
@@ -57,7 +67,7 @@ export interface RefundParams {
  * 充值参数
  */
 export interface RechargeParams {
-  /** 充值金额 (分) */
+  /** 充值金额(分) */
   amount: number;
   /** 支付方式 */
   method: PaymentMethod;
@@ -69,494 +79,457 @@ export interface RechargeParams {
  * 支付服务接口
  */
 export interface IPaymentService {
-  /**
-   * 发起支付
-   */
   initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult>;
-
-  /**
-   * 查询支付状态
-   */
   queryPaymentStatus(paymentUuid: string): Promise<PaymentStatus>;
-
-  /**
-   * 根据 UUID 获取支付详情
-   */
   getPaymentById(uuid: string): Promise<Payment | null>;
-
-  /**
-   * 获取支付列表 (分页)
-   */
   getPaymentList(params: TradePageRequest): Promise<TradePageResponse<Payment>>;
-
-  /**
-   * 获取我的支付列表 (分页)
-   */
   getMyPaymentList(params: TradePageRequest): Promise<TradePageResponse<Payment>>;
-
-  /**
-   * 申请退款
-   */
   requestRefund(params: RefundParams): Promise<Payment>;
-
-  /**
-   * 发起充值
-   */
   initiateRecharge(params: RechargeParams): Promise<PaymentResult>;
-
-  /**
-   * 获取钱包信息
-   */
   getWallet(): Promise<Wallet>;
-
-  /**
-   * 获取交易流水列表
-   */
   getTransactionList(params: TradePageRequest): Promise<TradePageResponse<Transaction>>;
-
-  /**
-   * 模拟支付回调 (用于测试)
-   */
   simulatePaymentCallback(paymentUuid: string, success: boolean): Promise<void>;
 }
 
+function normalizeText(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
+function toId(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') {
+    return value.trim() || fallback;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  return fallback;
+}
+
+function unwrapApiData<T>(payload: T | ApiEnvelope<T>, fallbackMessage: string): T {
+  if (payload && typeof payload === 'object') {
+    const envelope = payload as ApiEnvelope<T>;
+    if ('code' in envelope) {
+      const code = String(envelope.code ?? '').trim();
+      if (code && code !== SUCCESS_CODE && !code.startsWith('2')) {
+        throw new Error(normalizeText(envelope.msg) || normalizeText(envelope.message) || fallbackMessage);
+      }
+    }
+    if ('data' in envelope && envelope.data !== undefined) {
+      return envelope.data as T;
+    }
+  }
+  return payload as T;
+}
+
+function mapPaymentMethod(value: unknown, fallback: PaymentMethod = PaymentMethodEnum.ALIPAY): PaymentMethod {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+  const map: Record<string, PaymentMethod> = {
+    ALIPAY: PaymentMethodEnum.ALIPAY,
+    WECHAT_PAY: PaymentMethodEnum.WECHAT_PAY,
+    CREDIT_CARD: PaymentMethodEnum.CREDIT_CARD,
+    BALANCE: PaymentMethodEnum.BALANCE,
+    POINTS: PaymentMethodEnum.POINTS,
+    MIXED: PaymentMethodEnum.MIXED,
+  };
+  return map[normalized] || fallback;
+}
+
+function toSdkPaymentMethod(value: PaymentMethod): string {
+  const map: Record<PaymentMethod, string> = {
+    [PaymentMethodEnum.ALIPAY]: 'ALIPAY',
+    [PaymentMethodEnum.WECHAT_PAY]: 'WECHAT_PAY',
+    [PaymentMethodEnum.CREDIT_CARD]: 'CREDIT_CARD',
+    [PaymentMethodEnum.BALANCE]: 'BALANCE',
+    [PaymentMethodEnum.POINTS]: 'POINTS',
+    [PaymentMethodEnum.MIXED]: 'MIXED',
+  };
+  return map[value] || 'ALIPAY';
+}
+
+function mapPaymentStatus(value: unknown): PaymentStatus {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+  if (!normalized || normalized === 'PENDING' || normalized === 'UNPAID') {
+    return PaymentStatusEnum.PENDING;
+  }
+  if (normalized === 'PROCESSING') {
+    return PaymentStatusEnum.PROCESSING;
+  }
+  if (normalized === 'SUCCESS' || normalized === 'PAID' || normalized === 'COMPLETED') {
+    return PaymentStatusEnum.SUCCESS;
+  }
+  if (normalized === 'REFUNDING') {
+    return PaymentStatusEnum.REFUNDING;
+  }
+  if (normalized === 'REFUNDED') {
+    return PaymentStatusEnum.REFUNDED;
+  }
+  return PaymentStatusEnum.FAILED;
+}
+
+function resolveRedirectUrl(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') {
+    return undefined;
+  }
+  const source = data as AnyRecord;
+  const direct = [
+    source.payUrl,
+    source.paymentUrl,
+    source.url,
+    source.qrCodeUrl,
+    source.qrCode,
+  ];
+  for (const value of direct) {
+    const text = normalizeText(value);
+    if (text) {
+      return text;
+    }
+  }
+
+  if (source.paymentParams && typeof source.paymentParams === 'object') {
+    const nested = source.paymentParams as AnyRecord;
+    const nestedCandidates = [
+      nested.payUrl,
+      nested.paymentUrl,
+      nested.url,
+      nested.qrCodeUrl,
+      nested.qrCode,
+    ];
+    for (const value of nestedCandidates) {
+      const text = normalizeText(value);
+      if (text) {
+        return text;
+      }
+    }
+  }
+  return undefined;
+}
+
+function mapPaymentRecord(raw: AnyRecord, fallback?: Partial<Payment>): Payment {
+  const nowIso = new Date().toISOString();
+  const uuid = toId(raw.paymentId, toId(raw.paymentOrderId, fallback?.uuid || `payment-${Date.now()}`));
+  const paymentNo = toId(raw.paymentSn, toId(raw.paymentOrderId, toId(raw.outTradeNo, uuid)));
+  const orderUuid = toId(raw.orderId, fallback?.orderUuid || '');
+  const orderNo = toId(raw.merchantOrderId, toId(raw.outTradeNo, fallback?.orderNo || orderUuid));
+  const amount = toNumber(raw.amount, fallback?.amount || 0);
+  const method = mapPaymentMethod(raw.paymentMethod, fallback?.method || PaymentMethodEnum.ALIPAY);
+  const status = mapPaymentStatus(raw.status);
+
+  return {
+    uuid,
+    paymentNo,
+    orderUuid,
+    orderNo,
+    amount,
+    method,
+    status,
+    userUuid: fallback?.userUuid || '',
+    transactionId: normalizeText(raw.transactionId) || fallback?.transactionId,
+    channel: normalizeText(raw.paymentProvider) || fallback?.channel,
+    errorMessage: fallback?.errorMessage,
+    paidAt: normalizeText(raw.successTime) || fallback?.paidAt,
+    refundedAt: fallback?.refundedAt,
+    refundAmount: fallback?.refundAmount,
+    refundReason: fallback?.refundReason,
+    receiptUrl: resolveRedirectUrl(raw) || fallback?.receiptUrl,
+    metadata: (raw.paymentParams as Record<string, unknown> | undefined) || fallback?.metadata,
+    createdAt: normalizeText(raw.createdAt) || fallback?.createdAt || nowIso,
+    updatedAt: normalizeText(raw.updatedAt) || fallback?.updatedAt || nowIso,
+  };
+}
+
+function mapHistoryType(value: unknown): Transaction['type'] {
+  const normalized = normalizeText(value).replace(/[\s-]+/g, '_').toUpperCase();
+  if (normalized === 'RECHARGE') return 'RECHARGE';
+  if (normalized === 'WITHDRAW') return 'WITHDRAW';
+  if (normalized === 'TRANSFER_IN' || normalized === 'TRANSFER_OUT') return 'TRANSFER';
+  if (normalized === 'REFUND') return 'REFUND';
+  if (normalized === 'REWARD') return 'REWARD';
+  return 'CONSUME';
+}
+
+function mapHistoryTransaction(raw: AnyRecord): Transaction {
+  const nowIso = new Date().toISOString();
+  return {
+    uuid: toId(raw.historyId, `history-${Date.now()}`),
+    transactionNo: toId(raw.transactionId, toId(raw.historyId, `TXN-${Date.now()}`)),
+    type: mapHistoryType(raw.transactionType),
+    amount: toNumber(raw.amount, 0),
+    balanceBefore: toNumber(raw.balanceBefore, 0),
+    balanceAfter: toNumber(raw.balanceAfter, 0),
+    pointsChange: toNumber(raw.points, 0),
+    orderUuid: toId(raw.relatedId),
+    paymentUuid: toId(raw.transactionId),
+    userUuid: toId(raw.userId),
+    description: normalizeText(raw.remarks) || normalizeText(raw.transactionTypeName) || 'Transaction',
+    remark: normalizeText(raw.remarks) || undefined,
+    metadata: undefined,
+    createdAt: normalizeText(raw.createdAt) || nowIso,
+    updatedAt: normalizeText(raw.updatedAt) || nowIso,
+  };
+}
+
 /**
- * 支付服务实现 (本地存储版本)
+ * 支付服务实现（SDK-only）
  */
 export class PaymentService implements IPaymentService {
-  private readonly PAYMENT_STORAGE_KEY = 'trade_payments';
-  private readonly WALLET_STORAGE_KEY = 'trade_wallet';
-  private readonly TRANSACTION_STORAGE_KEY = 'trade_transactions';
-
-  private generatePaymentNo(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `PAY${timestamp}${random}`;
-  }
-
-  private generateTransactionNo(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `TXN${timestamp}${random}`;
-  }
-
-  private async getPayments(): Promise<Payment[]> {
-    const data = localStorage.getItem(this.PAYMENT_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private async savePayments(payments: Payment[]): Promise<void> {
-    localStorage.setItem(this.PAYMENT_STORAGE_KEY, JSON.stringify(payments));
-  }
-
-  private async getWalletData(): Promise<Wallet> {
-    const data = localStorage.getItem(this.WALLET_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-    // 初始化默认钱包
-    const defaultWallet: Wallet = {
-      uuid: generateUUID(),
-      userUuid: 'current-user',
-      balance: 100000, // 默认 1000 元体验金
-      frozenBalance: 0,
-      points: 10000, // 默认 10000 积分
-      totalRecharged: 100000,
-      totalSpent: 0,
-      totalEarnedPoints: 10000,
-      totalUsedPoints: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    await this.saveWalletData(defaultWallet);
-    return defaultWallet;
-  }
-
-  private async saveWalletData(wallet: Wallet): Promise<void> {
-    localStorage.setItem(this.WALLET_STORAGE_KEY, JSON.stringify(wallet));
-  }
-
-  private async getTransactions(): Promise<Transaction[]> {
-    const data = localStorage.getItem(this.TRANSACTION_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private async saveTransactions(transactions: Transaction[]): Promise<void> {
-    localStorage.setItem(this.TRANSACTION_STORAGE_KEY, JSON.stringify(transactions));
-  }
-
-  private async createTransaction(
-    type: Transaction['type'],
-    amount: number,
-    balanceBefore: number,
-    balanceAfter: number,
-    pointsChange: number,
-    description: string,
-    orderUuid?: string,
-    paymentUuid?: string
-  ): Promise<Transaction> {
-    const transactions = await this.getTransactions();
-    const now = new Date().toISOString();
-
-    const transaction: Transaction = {
-      uuid: generateUUID(),
-      transactionNo: this.generateTransactionNo(),
-      type,
-      amount,
-      balanceBefore,
-      balanceAfter,
-      pointsChange,
-      userUuid: 'current-user',
-      description,
-      orderUuid,
-      paymentUuid,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    transactions.push(transaction);
-    await this.saveTransactions(transactions);
-    return transaction;
-  }
-
   async initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult> {
     try {
-      // 获取订单
-      const order = await orderService.getOrderById(params.orderUuid);
-      if (!order) {
-        return {
-          success: false,
-          errorMessage: '订单不存在',
-        };
-      }
+      const client = getSdkworkClient();
+      const response = await client.orders.payOrder(params.orderUuid, {
+        orderId: params.orderUuid,
+        paymentMethod: toSdkPaymentMethod(params.method),
+      });
+      const payData = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to initiate payment');
 
-      if (order.status !== 'PENDING_PAYMENT') {
-        return {
-          success: false,
-          errorMessage: '订单状态不支持支付',
-        };
-      }
-
-      const payments = await this.getPayments();
-      const wallet = await this.getWalletData();
-      const now = new Date().toISOString();
-
-      // 计算支付金额
-      let remainingAmount = order.amount;
-      let useBalance = params.useBalance || 0;
-      let usePoints = params.usePoints || 0;
-
-      // 积分抵扣 (假设 100 积分 = 1 元)
-      if (usePoints > 0) {
-        const pointsValue = Math.floor(usePoints / 100);
-        remainingAmount -= pointsValue;
-      }
-
-      // 余额抵扣
-      if (useBalance > 0) {
-        useBalance = Math.min(useBalance, remainingAmount, wallet.balance);
-        remainingAmount -= useBalance;
-      }
-
-      // 创建支付记录
-      const payment: Payment = {
-        uuid: generateUUID(),
-        paymentNo: this.generatePaymentNo(),
-        orderUuid: order.uuid,
-        orderNo: order.orderNo,
-        amount: order.amount,
+      const fallbackPayment: Payment = {
+        uuid: toId(payData.paymentId, toId(payData.orderId, `payment-${Date.now()}`)),
+        paymentNo: toId(payData.outTradeNo, toId(payData.paymentId, `PAY-${Date.now()}`)),
+        orderUuid: params.orderUuid,
+        orderNo: toId(payData.orderNo, params.orderUuid),
+        amount: toNumber(payData.amount, 0),
         method: params.method,
-        status: PaymentStatusEnum.PENDING,
-        userUuid: 'current-user',
+        status: mapPaymentStatus(payData.status || 'PROCESSING'),
+        userUuid: '',
+        transactionId: toId(payData.transactionId),
+        channel: normalizeText(payData.paymentMethod) || undefined,
         metadata: {
-          useBalance,
-          usePoints,
-          remainingAmount,
+          paymentParams: payData.paymentParams,
+          useBalance: params.useBalance,
+          usePoints: params.usePoints,
         },
-        createdAt: now,
-        updatedAt: now,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      payments.push(payment);
-      await this.savePayments(payments);
-
-      // 如果是余额/积分支付，直接完成
-      if (params.method === PaymentMethodEnum.BALANCE || params.method === PaymentMethodEnum.POINTS) {
-        return await this.completePayment(payment.uuid, useBalance, usePoints);
-      }
-
-      // 第三方支付，返回跳转 URL (模拟)
-      const redirectUrl = this.getThirdPartyRedirectUrl(params.method, payment.paymentNo);
+      const paymentId = toId(payData.paymentId);
+      const latest = paymentId ? await this.getPaymentById(paymentId) : null;
+      const payment = latest || fallbackPayment;
+      const redirectUrl = resolveRedirectUrl(payData);
 
       return {
         success: true,
         payment,
         redirectUrl,
+        transactionId: payment.transactionId,
       };
     } catch (error) {
       return {
         success: false,
-        errorMessage: error instanceof Error ? error.message : '支付失败',
+        errorMessage: error instanceof Error ? error.message : 'Payment failed',
       };
     }
-  }
-
-  private getThirdPartyRedirectUrl(method: PaymentMethod, paymentNo: string): string {
-    // 模拟第三方支付跳转 URL
-    const baseUrl = 'https://payment.example.com/pay';
-    return `${baseUrl}?no=${paymentNo}&method=${method}`;
-  }
-
-  private async completePayment(
-    paymentUuid: string,
-    useBalance: number,
-    usePoints: number
-  ): Promise<PaymentResult> {
-    const payments = await this.getPayments();
-    const paymentIndex = payments.findIndex((p) => p.uuid === paymentUuid);
-
-    if (paymentIndex === -1) {
-      return {
-        success: false,
-        errorMessage: '支付记录不存在',
-      };
-    }
-
-    const payment = payments[paymentIndex];
-    const wallet = await this.getWalletData();
-    const order = await orderService.getOrderById(payment.orderUuid);
-
-    if (!order) {
-      return {
-        success: false,
-        errorMessage: '订单不存在',
-      };
-    }
-
-    const now = new Date().toISOString();
-    const balanceBefore = wallet.balance;
-
-    // 更新支付记录
-    payment.status = PaymentStatusEnum.SUCCESS;
-    payment.paidAt = now;
-    payment.updatedAt = now;
-
-    // 更新钱包
-    wallet.balance -= useBalance;
-    wallet.points -= usePoints;
-    wallet.totalSpent += payment.amount;
-    wallet.updatedAt = now;
-
-    // 更新订单状态
-    await orderService.updateOrderStatus(order.uuid, OrderStatusEnum.PAID);
-
-    // 创建交易记录
-    await this.createTransaction(
-      'CONSUME',
-      payment.amount,
-      balanceBefore,
-      wallet.balance,
-      -usePoints,
-      `支付订单 ${order.orderNo}`,
-      order.uuid,
-      payment.uuid
-    );
-
-    payments[paymentIndex] = payment;
-    await this.savePayments(payments);
-    await this.saveWalletData(wallet);
-
-    return {
-      success: true,
-      payment,
-    };
   }
 
   async queryPaymentStatus(paymentUuid: string): Promise<PaymentStatus> {
-    const payments = await this.getPayments();
-    const payment = payments.find((p) => p.uuid === paymentUuid);
+    const payment = await this.getPaymentById(paymentUuid);
     return payment?.status || PaymentStatusEnum.FAILED;
   }
 
   async getPaymentById(uuid: string): Promise<Payment | null> {
-    const payments = await this.getPayments();
-    return payments.find((p) => p.uuid === uuid) || null;
+    const paymentId = toId(uuid);
+    if (!paymentId) {
+      return null;
+    }
+
+    const client = getSdkworkClient();
+    const candidates: Array<() => Promise<unknown>> = [
+      () => client.payments.getPaymentDetail(paymentId),
+      () => client.payments.getPaymentStatus(paymentId),
+      () => client.payments.getPaymentStatusByOutTradeNo(paymentId),
+    ];
+
+    for (const candidate of candidates) {
+      try {
+        const response = await candidate();
+        const data = unwrapApiData<AnyRecord>(response as ApiEnvelope<AnyRecord>, 'Failed to load payment detail');
+        return mapPaymentRecord(data);
+      } catch {
+        // try next candidate
+      }
+    }
+
+    return null;
   }
 
   async getPaymentList(params: TradePageRequest): Promise<TradePageResponse<Payment>> {
-    const payments = await this.getPayments();
-    return this.paginatePayments(payments, params);
+    const page = Math.max(1, toNumber(params.page, 1));
+    const pageSize = Math.max(1, toNumber(params.pageSize, 10));
+    const client = getSdkworkClient();
+    const response = await client.payments.listPaymentRecords({
+      page,
+      pageNo: page,
+      pageSize,
+      size: pageSize,
+      status: normalizeText(params.status) || undefined,
+      keyword: params.keyword,
+      startDate: params.startTime,
+      endDate: params.endTime,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+    });
+    const pageData = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to load payment list');
+    const list = Array.isArray(pageData.content) ? pageData.content as AnyRecord[] : [];
+    const items = list.map((item) => mapPaymentRecord(item));
+    const total = toNumber(pageData.totalElements, items.length);
+    const pageRaw = toNumber(pageData.number, page - 1);
+    const currentPage = pageRaw + 1;
+    const totalPages = Math.max(1, toNumber(pageData.totalPages, Math.ceil(total / Math.max(1, pageSize))));
+
+    return {
+      items,
+      total,
+      totalPages,
+      currentPage,
+      pageSize,
+    };
   }
 
   async getMyPaymentList(params: TradePageRequest): Promise<TradePageResponse<Payment>> {
-    const payments = await this.getPayments();
-    const myPayments = payments.filter((p) => p.userUuid === 'current-user');
-    return this.paginatePayments(myPayments, params);
-  }
-
-  private paginatePayments(
-    payments: Payment[],
-    params: TradePageRequest
-  ): TradePageResponse<Payment> {
-    let filtered = [...payments];
-
-    if (params.status) {
-      filtered = filtered.filter((p) => p.status === params.status);
-    }
-    if (params.keyword) {
-      const keyword = params.keyword.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.paymentNo.toLowerCase().includes(keyword) ||
-          p.orderNo.toLowerCase().includes(keyword)
-      );
-    }
-
-    filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
-    const page = params.page || 1;
-    const pageSize = params.pageSize || 10;
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / pageSize);
-    const start = (page - 1) * pageSize;
-    const items = filtered.slice(start, start + pageSize);
-
-    return {
-      items,
-      total,
-      totalPages,
-      currentPage: page,
-      pageSize,
-    };
+    return this.getPaymentList(params);
   }
 
   async requestRefund(params: RefundParams): Promise<Payment> {
-    const payments = await this.getPayments();
-    const index = payments.findIndex((p) => p.uuid === params.paymentUuid);
-
-    if (index === -1) {
-      throw new Error('支付记录不存在');
+    const existing = await this.getPaymentById(params.paymentUuid);
+    if (!existing || !existing.orderUuid) {
+      throw new Error('Cannot resolve related order for refund');
     }
 
-    const payment = payments[index];
-    if (payment.status !== PaymentStatusEnum.SUCCESS) {
-      throw new Error('只有成功的支付才能退款');
+    const client = getSdkworkClient();
+    await client.orders.applyRefund(existing.orderUuid, {
+      reason: normalizeText(params.reason) || 'user_refund_request',
+    });
+
+    const latest = await this.getPaymentById(params.paymentUuid);
+    if (latest) {
+      return {
+        ...latest,
+        status: latest.status === PaymentStatusEnum.SUCCESS ? PaymentStatusEnum.REFUNDING : latest.status,
+      };
     }
 
-    const now = new Date().toISOString();
-    payment.status = PaymentStatusEnum.REFUNDING;
-    payment.refundReason = params.reason;
-    payment.refundAmount = params.amount || payment.amount;
-    payment.updatedAt = now;
-
-    payments[index] = payment;
-    await this.savePayments(payments);
-
-    // TODO: 实际场景中需要调用支付平台退款接口
-    return payment;
+    return {
+      ...existing,
+      status: PaymentStatusEnum.REFUNDING,
+      refundAmount: params.amount || existing.amount,
+      refundReason: normalizeText(params.reason) || undefined,
+      updatedAt: new Date().toISOString(),
+    };
   }
 
   async initiateRecharge(params: RechargeParams): Promise<PaymentResult> {
-    const payments = await this.getPayments();
-    const now = new Date().toISOString();
+    try {
+      const client = getSdkworkClient();
+      const response = await client.account.recharge({
+        amount: params.amount,
+        paymentMethod: toSdkPaymentMethod(params.method),
+        remarks: params.remark,
+      });
+      const data = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to initiate recharge');
+      const nowIso = new Date().toISOString();
 
-    const payment: Payment = {
-      uuid: generateUUID(),
-      paymentNo: this.generatePaymentNo(),
-      orderUuid: '',
-      orderNo: '',
-      amount: params.amount,
-      method: params.method,
-      status: PaymentStatusEnum.PENDING,
-      userUuid: 'current-user',
-      metadata: {
-        type: 'RECHARGE',
-        remark: params.remark,
-      },
-      createdAt: now,
-      updatedAt: now,
-    };
+      const payment: Payment = {
+        uuid: toId(data.transactionId, `recharge-${Date.now()}`),
+        paymentNo: toId(data.transactionId, `RECHARGE-${Date.now()}`),
+        orderUuid: '',
+        orderNo: '',
+        amount: toNumber(data.amount, params.amount),
+        method: mapPaymentMethod(data.paymentMethod, params.method),
+        status: mapPaymentStatus(data.status || 'PROCESSING'),
+        userUuid: toId(data.userId),
+        transactionId: toId(data.transactionId),
+        channel: normalizeText(data.paymentMethod) || undefined,
+        createdAt: normalizeText(data.createdAt) || nowIso,
+        updatedAt: normalizeText(data.updatedAt) || nowIso,
+      };
 
-    payments.push(payment);
-    await this.savePayments(payments);
-
-    // 模拟第三方支付
-    const redirectUrl = this.getThirdPartyRedirectUrl(params.method, payment.paymentNo);
-
-    return {
-      success: true,
-      payment,
-      redirectUrl,
-    };
+      return {
+        success: true,
+        payment,
+        redirectUrl: resolveRedirectUrl(data),
+        transactionId: payment.transactionId,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Recharge failed',
+      };
+    }
   }
 
   async getWallet(): Promise<Wallet> {
-    return this.getWalletData();
+    const client = getSdkworkClient();
+    const [cashResponse, pointsResponse] = await Promise.all([
+      client.account.getCash(),
+      client.account.getPoints().catch(() => ({ data: {} })),
+    ]);
+
+    const cashData = unwrapApiData<AnyRecord>(cashResponse as unknown as ApiEnvelope<AnyRecord>, 'Failed to load cash account');
+    const pointsData = unwrapApiData<AnyRecord>(pointsResponse as unknown as ApiEnvelope<AnyRecord>, 'Failed to load points account');
+    const nowIso = new Date().toISOString();
+
+    return {
+      uuid: toId(cashData.accountId, `wallet-${Date.now()}`),
+      userUuid: toId(cashData.userId, toId(pointsData.userId)),
+      balance: toNumber(cashData.availableBalance, toNumber(cashData.totalBalance, 0)),
+      frozenBalance: toNumber(cashData.frozenBalance, 0),
+      points: toNumber(pointsData.availablePoints, toNumber(pointsData.totalPoints, 0)),
+      totalRecharged: toNumber(cashData.totalRecharged, 0),
+      totalSpent: toNumber(cashData.totalSpent, 0),
+      totalEarnedPoints: toNumber(pointsData.totalEarned, 0),
+      totalUsedPoints: toNumber(pointsData.totalSpent, 0),
+      createdAt: normalizeText(cashData.createdAt) || nowIso,
+      updatedAt: normalizeText(cashData.updatedAt) || nowIso,
+    };
   }
 
   async getTransactionList(params: TradePageRequest): Promise<TradePageResponse<Transaction>> {
-    const transactions = await this.getTransactions();
-    let filtered = [...transactions];
-
-    if (params.type) {
-      filtered = filtered.filter((t) => t.type === params.type);
-    }
-    if (params.keyword) {
-      const keyword = params.keyword.toLowerCase();
-      filtered = filtered.filter(
-        (t) =>
-          t.transactionNo.toLowerCase().includes(keyword) ||
-          t.description.toLowerCase().includes(keyword)
-      );
-    }
-
-    filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
-    const page = params.page || 1;
-    const pageSize = params.pageSize || 10;
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / pageSize);
-    const start = (page - 1) * pageSize;
-    const items = filtered.slice(start, start + pageSize);
+    const page = Math.max(1, toNumber(params.page, 1));
+    const pageSize = Math.max(1, toNumber(params.pageSize, 10));
+    const client = getSdkworkClient();
+    const response = await client.account.getHistoryCash({
+      page,
+      pageNo: page,
+      pageSize,
+      size: pageSize,
+      type: normalizeText(params.type) || undefined,
+      keyword: params.keyword,
+      startTime: params.startTime,
+      endTime: params.endTime,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+    });
+    const pageData = unwrapApiData<AnyRecord>(response as unknown as ApiEnvelope<AnyRecord>, 'Failed to load transaction list');
+    const list = Array.isArray(pageData.content) ? pageData.content as AnyRecord[] : [];
+    const items = list.map((item) => mapHistoryTransaction(item));
+    const total = toNumber(pageData.totalElements, items.length);
+    const pageRaw = toNumber(pageData.number, page - 1);
+    const currentPage = pageRaw + 1;
+    const totalPages = Math.max(1, toNumber(pageData.totalPages, Math.ceil(total / Math.max(1, pageSize))));
 
     return {
       items,
       total,
       totalPages,
-      currentPage: page,
+      currentPage,
       pageSize,
     };
   }
 
-  async simulatePaymentCallback(paymentUuid: string, success: boolean): Promise<void> {
-    const payments = await this.getPayments();
-    const index = payments.findIndex((p) => p.uuid === paymentUuid);
-
-    if (index === -1) {
-      throw new Error('支付记录不存在');
-    }
-
-    const payment = payments[index];
-    const now = new Date().toISOString();
-
-    if (success) {
-      payment.status = PaymentStatusEnum.SUCCESS;
-      payment.paidAt = now;
-      payment.transactionId = `TXN${Date.now()}`;
-
-      // 更新订单状态
-      const order = await orderService.getOrderById(payment.orderUuid);
-      if (order) {
-        await orderService.updateOrderStatus(order.uuid, OrderStatusEnum.PAID);
-      }
-    } else {
-      payment.status = PaymentStatusEnum.FAILED;
-      payment.errorMessage = '支付失败';
-    }
-
-    payment.updatedAt = now;
-    payments[index] = payment;
-    await this.savePayments(payments);
+  async simulatePaymentCallback(paymentUuid: string, _success: boolean): Promise<void> {
+    await this.queryPaymentStatus(paymentUuid);
   }
 }
 

@@ -11,8 +11,6 @@ import type {
   PromptType
 } from '../types';
 
-const PROMPT_ENHANCE_ENDPOINT = '/app/v3/api/generation/prompt/enhance';
-
 interface PromptEnhanceApiRequest {
   prompt: string;
   generationType: 'IMAGE' | 'VIDEO';
@@ -208,9 +206,12 @@ const localPromptAdapter: PromptBusinessAdapter = {
     try {
       const payload = buildApiRequest(config, originalInput);
       const generationV2 = sdk.generation as unknown as GenerationModuleV2;
-      const responsePayload = typeof generationV2.enhanceGenerationPrompt === 'function'
-        ? await generationV2.enhanceGenerationPrompt(payload)
-        : await sdk.client.http.post<PromptEnhanceApiData>(PROMPT_ENHANCE_ENDPOINT, payload);
+      if (typeof generationV2.enhanceGenerationPrompt !== 'function') {
+        return Result.error<PromptOptimizationResult>(
+          '[SDK gap] Missing generation.enhanceGenerationPrompt. Please add upgrade contract and regenerate SDK.'
+        );
+      }
+      const responsePayload = await generationV2.enhanceGenerationPrompt(payload);
       const response = normalizeEnhanceResponse(responsePayload);
       const optimizedPrompt = extractOptimizedPrompt(response, fallbackPrompt);
       const suggestions = response.suggestions && response.suggestions.length > 0

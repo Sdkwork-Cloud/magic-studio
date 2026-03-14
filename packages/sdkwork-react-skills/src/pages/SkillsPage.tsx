@@ -1,396 +1,558 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-    Search, Star, Users, TrendingUp, Sparkles,
-    ArrowRight, Plus, Download, Award, CheckCircle, Heart,
-    Github, Globe, Shield, Layers, Package, ExternalLink
+  AlertCircle,
+  ArrowRight,
+  Award,
+  CheckCircle,
+  Download,
+  Github,
+  Heart,
+  Layers,
+  Loader2,
+  Package,
+  Search,
+  Shield,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
-import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { type LucideIcon } from 'lucide-react';
+import { ROUTES, useRouter } from '@sdkwork/react-core';
 import { PortalHeader, PortalSidebar } from '@sdkwork/react-portal-video';
-import { SKILL_CATEGORIES } from '../constants';
-import { AGENT_SKILLS } from '../data/skills';
+import { SKILL_CATEGORIES, type AgentSkill } from '../constants';
+import {
+  skillsBusinessService,
+  type SkillCategoryOption,
+  type SkillMarketTab,
+} from '../services';
 
 interface SkillsPageProps {
-    onSkillSelect?: (skillId: string) => void;
+  onSkillSelect?: (skillId: string) => void;
+}
+
+interface SkillTabOption {
+  id: SkillMarketTab;
+  label: string;
+  icon: LucideIcon;
+}
+
+const SKILL_TABS: SkillTabOption[] = [
+  { id: 'featured', label: 'Featured', icon: Award },
+  { id: 'trending', label: 'Trending', icon: TrendingUp },
+  { id: 'opensource', label: 'Open Source', icon: Github },
+  { id: 'new', label: 'New', icon: Sparkles },
+  { id: 'premium', label: 'Premium', icon: Star },
+  { id: 'free', label: 'Free', icon: Shield },
+];
+
+function normalizeText(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function sortByNewest(skills: AgentSkill[]): AgentSkill[] {
+  return [...skills].sort(
+    (left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt),
+  );
+}
+
+function sortByTrending(skills: AgentSkill[]): AgentSkill[] {
+  return [...skills].sort((left, right) => right.users - left.users);
+}
+
+function applyLocalFilters(
+  skills: AgentSkill[],
+  activeTab: SkillMarketTab,
+  activeCategory: string,
+  keyword: string,
+): AgentSkill[] {
+  let items = [...skills];
+
+  if (activeCategory !== 'all') {
+    items = items.filter((skill) => skill.category === activeCategory);
+  }
+
+  if (keyword) {
+    items = items.filter((skill) => {
+      const searchable = [
+        skill.name,
+        skill.description,
+        ...skill.tags,
+        ...skill.capabilities,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return searchable.includes(keyword);
+    });
+  }
+
+  if (activeTab === 'featured') {
+    return items.filter((skill) => skill.featured);
+  }
+  if (activeTab === 'premium') {
+    return items.filter((skill) => skill.premium);
+  }
+  if (activeTab === 'free') {
+    return items.filter((skill) => !skill.premium);
+  }
+  if (activeTab === 'opensource') {
+    return items.filter((skill) => !skill.premium && skill.author.verified);
+  }
+  if (activeTab === 'trending') {
+    return sortByTrending(items);
+  }
+  if (activeTab === 'new') {
+    return sortByNewest(items);
+  }
+  return items;
 }
 
 const SkillsPage: React.FC<SkillsPageProps> = ({ onSkillSelect }) => {
-    const { navigate } = useRouter();
-    const [activeCategory, setActiveCategory] = useState('all');
-    const [activeTab, setActiveTab] = useState('featured');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [bookmarkedSkills, setBookmarkedSkills] = useState<Set<string>>(new Set());
+  const { navigate } = useRouter();
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<SkillMarketTab>('featured');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [effectiveKeyword, setEffectiveKeyword] = useState<string>('');
+  const [bookmarkedSkills, setBookmarkedSkills] = useState<Set<string>>(new Set());
+  const [categories, setCategories] = useState<SkillCategoryOption[]>(
+    SKILL_CATEGORIES.map((category) => ({ ...category })),
+  );
+  const [skills, setSkills] = useState<AgentSkill[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string>('');
 
-    const handleSkillClick = (skillId: string) => {
-        if (onSkillSelect) {
-            onSkillSelect(skillId);
-        } else {
-            navigate(`${ROUTES.PORTAL_SKILLS}/${skillId}`);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setEffectiveKeyword(normalizeText(searchQuery));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    let active = true;
+    const loadCategories = async (): Promise<void> => {
+      try {
+        const result = await skillsBusinessService.listCategories();
+        if (!active) {
+          return;
         }
+        if (result.length > 0) {
+          setCategories(result);
+        }
+      } catch (error) {
+        if (active) {
+          console.warn('[SkillsPage] Failed to load categories:', error);
+        }
+      }
     };
 
-    const filteredSkills = useMemo(() => {
-        let skills = [...AGENT_SKILLS];
+    void loadCategories();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-        if (activeTab === 'featured') {
-            skills = skills.filter(s => s.featured);
-        } else if (activeTab === 'trending') {
-            skills = skills.sort((a, b) => b.users - a.users);
-        } else if (activeTab === 'new') {
-            skills = skills.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-        } else if (activeTab === 'premium') {
-            skills = skills.filter(s => s.premium);
-        } else if (activeTab === 'free') {
-            skills = skills.filter(s => !s.premium);
-        } else if (activeTab === 'opensource') {
-            skills = skills.filter(s => !s.premium && s.author.verified);
-        }
-
-        if (activeCategory !== 'all') {
-            skills = skills.filter(s => s.category === activeCategory);
-        }
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            skills = skills.filter(s =>
-                s.name.toLowerCase().includes(query) ||
-                s.description.toLowerCase().includes(query) ||
-                s.tags.some((t: string) => t.toLowerCase().includes(query)) ||
-                s.capabilities.some((c: string) => c.toLowerCase().includes(query))
-            );
-        }
-
-        return skills;
-    }, [activeTab, activeCategory, searchQuery]);
-
-    const toggleBookmark = (skillId: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setBookmarkedSkills(prev => {
-            const next = new Set(prev);
-            if (next.has(skillId)) {
-                next.delete(skillId);
-            } else {
-                next.add(skillId);
-            }
-            return next;
+  useEffect(() => {
+    let active = true;
+    const loadSkills = async (): Promise<void> => {
+      setIsLoading(true);
+      setLoadError('');
+      try {
+        const result = await skillsBusinessService.listSkills({
+          tab: activeTab,
+          category: activeCategory,
+          keyword: effectiveKeyword,
+          page: 1,
+          size: 120,
         });
+        if (!active) {
+          return;
+        }
+        setSkills(result.items);
+        setTotal(result.total);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setSkills([]);
+        setTotal(0);
+        setLoadError(
+          error instanceof Error ? error.message : 'Failed to load skills.',
+        );
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
     };
 
-    const getCategoryInfo = (categoryId: string) => {
-        return SKILL_CATEGORIES.find(c => c.id === categoryId) || SKILL_CATEGORIES[0];
+    void loadSkills();
+    return () => {
+      active = false;
     };
+  }, [activeTab, activeCategory, effectiveKeyword]);
 
+  const filteredSkills = useMemo(
+    () => applyLocalFilters(skills, activeTab, activeCategory, effectiveKeyword),
+    [skills, activeTab, activeCategory, effectiveKeyword],
+  );
+
+  const openSourceCount = useMemo(
+    () => skills.filter((skill) => !skill.premium && skill.author.verified).length,
+    [skills],
+  );
+
+  const totalUsers = useMemo(
+    () => skills.reduce((sum, skill) => sum + skill.users, 0),
+    [skills],
+  );
+
+  const verifiedCount = useMemo(
+    () => skills.filter((skill) => skill.author.verified).length,
+    [skills],
+  );
+
+  const handleSkillClick = (skillId: string): void => {
+    if (onSkillSelect) {
+      onSkillSelect(skillId);
+      return;
+    }
+    navigate(`${ROUTES.PORTAL_SKILLS}/${skillId}`);
+  };
+
+  const toggleBookmark = (skillId: string, event: React.MouseEvent): void => {
+    event.stopPropagation();
+    setBookmarkedSkills((previous) => {
+      const next = new Set(previous);
+      if (next.has(skillId)) {
+        next.delete(skillId);
+      } else {
+        next.add(skillId);
+      }
+      return next;
+    });
+  };
+
+  const getCategoryInfo = (categoryId: string): SkillCategoryOption => {
     return (
-        <div className="flex h-full bg-[#0a0a0a]">
-            <PortalSidebar />
-            
-            <div className="flex-1 flex flex-col min-w-0">
-                <PortalHeader />
-                
-                <div className="flex-1 overflow-y-auto">
-                    <div className="relative overflow-hidden bg-gradient-to-b from-emerald-900/30 via-teal-900/20 to-[#0a0a0f] border-b border-white/5">
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-                            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
-                        </div>
-
-                        <div className="relative max-w-7xl mx-auto px-6 py-12">
-                            <div className="text-center mb-10">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full border border-white/10 mb-6">
-                                    <Package size={16} className="text-emerald-400" />
-                                    <span className="text-xs text-gray-300">Open Source Agent Skills Marketplace</span>
-                                </div>
-                                <h1 className="text-4xl font-bold text-white mb-3">
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">技能市场</span> - 发现开源 AI 技能
-                                </h1>
-                                <p className="text-gray-400 max-w-2xl mx-auto">
-                                    探索 {AGENT_SKILLS.length}+ 个遵循开源标准的 Agent Skills，扩展你的 AI 助手能力边界
-                                </p>
-                            </div>
-
-                            <div className="max-w-2xl mx-auto">
-                                <div className="relative">
-                                    <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="搜索技能名称、功能、标签或作者..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl pl-12 pr-6 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
-                        <div className="max-w-7xl mx-auto px-6">
-                            <div className="flex items-center justify-between py-4">
-                                <div className="flex items-center gap-1">
-                                    {[
-                                        { id: 'featured', label: '精选推荐', icon: Award },
-                                        { id: 'trending', label: '热门流行', icon: TrendingUp },
-                                        { id: 'opensource', label: '开源免费', icon: Github },
-                                        { id: 'new', label: '最新上架', icon: Sparkles },
-                                        { id: 'premium', label: '专业版', icon: Star },
-                                    ].map((tab) => {
-                                        const Icon = tab.icon;
-                                        return (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => setActiveTab(tab.id)}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                                    activeTab === tab.id
-                                                        ? 'bg-white/10 text-white'
-                                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                                }`}
-                                            >
-                                                <Icon size={16} />
-                                                {tab.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <select
-                                        value={activeCategory}
-                                        onChange={(e) => setActiveCategory(e.target.value)}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-emerald-500/50"
-                                    >
-                                        {SKILL_CATEGORIES.map((cat) => (
-                                            <option key={cat.id} value={cat.id}>
-                                                {cat.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="max-w-7xl mx-auto px-6 py-8">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                        <Package size={20} className="text-emerald-400" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-white">{AGENT_SKILLS.length}</div>
-                                        <div className="text-xs text-gray-400">总技能数</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                        <Github size={20} className="text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-white">
-                                            {AGENT_SKILLS.filter(s => !s.premium && s.author.verified).length}
-                                        </div>
-                                        <div className="text-xs text-gray-400">开源技能</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                        <Users size={20} className="text-purple-400" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-white">
-                                            {(AGENT_SKILLS.reduce((sum, s) => sum + s.users, 0) / 1000).toFixed(0)}k
-                                        </div>
-                                        <div className="text-xs text-gray-400">总用户</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                                        <Award size={20} className="text-yellow-400" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-white">
-                                            {AGENT_SKILLS.filter(s => s.author.verified).length}
-                                        </div>
-                                        <div className="text-xs text-gray-400">认证作者</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between mb-6">
-                            <p className="text-sm text-gray-400">
-                                显示 <span className="text-white font-medium">{filteredSkills.length}</span> 个技能
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <Shield size={12} />
-                                <span>所有技能均遵循开源 Agent Skills 标准</span>
-                            </div>
-                        </div>
-
-                        {filteredSkills.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {filteredSkills.map((skill) => {
-                                    const Icon = skill.icon;
-                                    const isBookmarked = bookmarkedSkills.has(skill.id);
-                                    const categoryInfo = getCategoryInfo(skill.category);
-
-                                    return (
-                                        <div
-                                            key={skill.id}
-                                            onClick={() => handleSkillClick(skill.id)}
-                                            className="group relative bg-gradient-to-b from-white/[0.06] to-white/[0.02] rounded-xl overflow-hidden border border-white/5 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10"
-                                        >
-                                            {skill.featured && (
-                                                <div className="absolute top-3 left-3 z-10">
-                                                    <span className="px-2 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1">
-                                                        <Award size={10} />
-                                                        精选
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            {!skill.premium && skill.author.verified && (
-                                                <div className="absolute top-3 left-3 z-10">
-                                                    <span className="px-2 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1">
-                                                        <Github size={10} />
-                                                        开源
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <button
-                                                onClick={(e) => toggleBookmark(skill.id, e)}
-                                                className={`absolute top-3 right-3 p-2 rounded-lg transition-all z-10 ${
-                                                    isBookmarked
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-red-400 opacity-0 group-hover:opacity-100'
-                                                }`}
-                                            >
-                                                <Heart size={14} className={isBookmarked ? 'fill-white' : ''} />
-                                            </button>
-
-                                            <div className="p-5">
-                                                <div className="flex items-start gap-3 mb-3">
-                                                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 group-hover:scale-105 transition-transform">
-                                                        <Icon size={20} className="text-emerald-400" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="text-sm font-semibold text-white truncate group-hover:text-emerald-300 transition-colors">
-                                                            {skill.name}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                            <span className="text-xs text-gray-500">{skill.author.name}</span>
-                                                            {skill.author.verified && (
-                                                                <CheckCircle size={10} className="text-emerald-400" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <p className="text-xs text-gray-400 mb-3 line-clamp-2">
-                                                    {skill.description}
-                                                </p>
-
-                                                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                                    <span className="px-2 py-0.5 bg-white/5 text-gray-400 text-[10px] rounded flex items-center gap-1">
-                                                        {categoryInfo && <categoryInfo.icon size={10} />}
-                                                        {categoryInfo?.label || skill.category}
-                                                    </span>
-                                                    {skill.premium && (
-                                                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px] font-medium rounded">
-                                                            Pro
-                                                        </span>
-                                                    )}
-                                                    {!skill.premium && (
-                                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-medium rounded">
-                                                            Free
-                                                        </span>
-                                                    )}
-                                                    {skill.capabilities.slice(0, 2).map((cap: string, idx: number) => (
-                                                        <span key={idx} className="px-2 py-0.5 bg-white/5 text-gray-500 text-[10px] rounded">
-                                                            {cap}
-                                                        </span>
-                                                    ))}
-                                                </div>
-
-                                                <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                                                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                                                        <span className="flex items-center gap-1">
-                                                            <Users size={11} />
-                                                            {(skill.users / 1000).toFixed(0)}k
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Star size={11} className="fill-yellow-500 text-yellow-500" />
-                                                            {skill.rating}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Download size={11} />
-                                                            {(skill.downloads / 1000).toFixed(0)}k
-                                                        </span>
-                                                    </div>
-                                                    <ArrowRight size={14} className="text-gray-600 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="text-center py-20">
-                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
-                                    <Search size={32} className="text-gray-600" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-white mb-2">未找到匹配的技能</h3>
-                                <p className="text-gray-400 text-sm mb-6">尝试调整搜索条件或浏览其他分类</p>
-                                <button
-                                    onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
-                                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    清除筛选
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="border-t border-white/5 mt-16">
-                        <div className="max-w-7xl mx-auto px-6 py-12">
-                            <div className="bg-gradient-to-r from-emerald-900/30 via-teal-900/30 to-cyan-900/30 rounded-2xl p-8 border border-white/10">
-                                <div className="text-center">
-                                    <div className="flex items-center justify-center gap-2 mb-4">
-                                        <Layers size={24} className="text-emerald-400" />
-                                        <h2 className="text-xl font-bold text-white">贡献你的开源技能</h2>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mb-6 max-w-2xl mx-auto">
-                                        遵循开源 Agent Skills 标准，将你的 AI 技能发布到市场，与全球开发者分享创新成果
-                                    </p>
-                                    <div className="flex items-center justify-center gap-4">
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-                                            <Plus size={16} />
-                                            创建技能
-                                        </button>
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors">
-                                            <Github size={16} />
-                                            查看标准
-                                        </button>
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors">
-                                            <Globe size={16} />
-                                            <ExternalLink size={14} />
-                                            开源社区
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      categories.find((category) => category.id === categoryId) ||
+      categories[0] ||
+      ({ ...SKILL_CATEGORIES[0] } as SkillCategoryOption)
     );
+  };
+
+  return (
+    <div className="flex h-full bg-[#0a0a0a]">
+      <PortalSidebar />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <PortalHeader />
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="relative overflow-hidden border-b border-white/5 bg-gradient-to-b from-emerald-900/30 via-teal-900/20 to-[#0a0a0f]">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-emerald-500/20 blur-3xl" />
+              <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl" />
+            </div>
+
+            <div className="relative mx-auto max-w-7xl px-6 py-12">
+              <div className="mb-10 text-center">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+                  <Package size={16} className="text-emerald-400" />
+                  <span className="text-xs text-gray-300">Agent Skills Marketplace</span>
+                </div>
+                <h1 className="mb-3 text-4xl font-bold text-white">
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                    Build Faster With Reusable Skills
+                  </span>
+                </h1>
+                <p className="mx-auto max-w-2xl text-gray-400">
+                  Browse curated and community-contributed skills. Data is loaded directly
+                  from SDK APIs and reflects your current environment.
+                </p>
+              </div>
+
+              <div className="mx-auto max-w-2xl">
+                <div className="relative">
+                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, tags, or capabilities"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-12 pr-6 text-white placeholder-gray-500 transition-all focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sticky top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
+            <div className="mx-auto max-w-7xl px-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div className="flex flex-wrap items-center gap-1">
+                  {SKILL_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                          activeTab === tab.id
+                            ? 'bg-white/10 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <Icon size={16} />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <select
+                  value={activeCategory}
+                  onChange={(event) => setActiveCategory(event.target.value)}
+                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300 focus:border-emerald-500/50 focus:outline-none"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-7xl px-6 py-8">
+            <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20">
+                    <Package size={20} className="text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{total || skills.length}</div>
+                    <div className="text-xs text-gray-400">Available</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20">
+                    <Github size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{openSourceCount}</div>
+                    <div className="text-xs text-gray-400">Open Source</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20">
+                    <Users size={20} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{Math.max(0, Math.round(totalUsers / 1000))}k</div>
+                    <div className="text-xs text-gray-400">Installs</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-500/20">
+                    <Award size={20} className="text-yellow-400" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{verifiedCount}</div>
+                    <div className="text-xs text-gray-400">Verified Authors</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-sm text-gray-400">
+                Showing <span className="font-medium text-white">{filteredSkills.length}</span> skills
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Shield size={12} />
+                <span>Service layer calls SDK only</span>
+              </div>
+            </div>
+
+            {loadError ? (
+              <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                  <span>{loadError}</span>
+                </div>
+              </div>
+            ) : null}
+
+            {isLoading ? (
+              <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03]">
+                <div className="flex items-center gap-3 text-sm text-gray-300">
+                  <Loader2 size={18} className="animate-spin text-emerald-400" />
+                  Loading skills...
+                </div>
+              </div>
+            ) : filteredSkills.length > 0 ? (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {filteredSkills.map((skill) => {
+                  const Icon = skill.icon;
+                  const isBookmarked = bookmarkedSkills.has(skill.id);
+                  const categoryInfo = getCategoryInfo(skill.category);
+
+                  return (
+                    <div
+                      key={skill.id}
+                      onClick={() => handleSkillClick(skill.id)}
+                      className="group relative cursor-pointer overflow-hidden rounded-xl border border-white/5 bg-gradient-to-b from-white/[0.06] to-white/[0.02] transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
+                    >
+                      {skill.featured ? (
+                        <div className="absolute left-3 top-3 z-10">
+                          <span className="flex items-center gap-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 px-2 py-1 text-[10px] font-bold text-white">
+                            <Award size={10} />
+                            Featured
+                          </span>
+                        </div>
+                      ) : null}
+
+                      <button
+                        onClick={(event) => toggleBookmark(skill.id, event)}
+                        className={`absolute right-3 top-3 z-10 rounded-lg p-2 transition-all ${
+                          isBookmarked
+                            ? 'bg-red-600 text-white'
+                            : 'bg-white/5 text-gray-400 opacity-0 hover:bg-white/10 hover:text-red-400 group-hover:opacity-100'
+                        }`}
+                      >
+                        <Heart size={14} className={isBookmarked ? 'fill-white' : ''} />
+                      </button>
+
+                      <div className="p-5">
+                        <div className="mb-3 flex items-start gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 transition-transform group-hover:scale-105">
+                            <Icon size={20} className="text-emerald-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-sm font-semibold text-white transition-colors group-hover:text-emerald-300">
+                              {skill.name}
+                            </h3>
+                            <div className="mt-0.5 flex items-center gap-2">
+                              <span className="text-xs text-gray-500">{skill.author.name}</span>
+                              {skill.author.verified ? (
+                                <CheckCircle size={10} className="text-emerald-400" />
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="mb-3 line-clamp-2 text-xs text-gray-400">{skill.description}</p>
+
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          <span className="flex items-center gap-1 rounded bg-white/5 px-2 py-0.5 text-[10px] text-gray-400">
+                            <categoryInfo.icon size={10} />
+                            {categoryInfo.label}
+                          </span>
+                          {skill.premium ? (
+                            <span className="rounded bg-yellow-500/20 px-2 py-0.5 text-[10px] font-medium text-yellow-400">
+                              Pro
+                            </span>
+                          ) : (
+                            <span className="rounded bg-green-500/20 px-2 py-0.5 text-[10px] font-medium text-green-400">
+                              Free
+                            </span>
+                          )}
+                          {skill.capabilities.slice(0, 2).map((capability, index) => (
+                            <span
+                              key={`${skill.id}-capability-${index}`}
+                              className="rounded bg-white/5 px-2 py-0.5 text-[10px] text-gray-500"
+                            >
+                              {capability}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Users size={11} />
+                              {Math.max(0, Math.round(skill.users / 1000))}k
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Star size={11} className="fill-yellow-500 text-yellow-500" />
+                              {skill.rating.toFixed(1)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Download size={11} />
+                              {Math.max(0, Math.round(skill.downloads / 1000))}k
+                            </span>
+                          </div>
+                          <ArrowRight size={14} className="text-gray-600 transition-all group-hover:translate-x-1 group-hover:text-emerald-400" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-20 text-center">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
+                  <Search size={32} className="text-gray-600" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-white">No skills found</h3>
+                <p className="mb-6 text-sm text-gray-400">
+                  The API returned no skills for the current filter.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setActiveCategory('all');
+                    setActiveTab('featured');
+                  }}
+                  className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+
+            <div className="mt-16 border-t border-white/5">
+              <div className="mx-auto max-w-7xl px-0 py-12">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-900/30 via-teal-900/30 to-cyan-900/30 p-8">
+                  <div className="text-center">
+                    <div className="mb-4 flex items-center justify-center gap-2">
+                      <Layers size={24} className="text-emerald-400" />
+                      <h2 className="text-xl font-bold text-white">Build your own skill</h2>
+                    </div>
+                    <p className="mx-auto mb-6 max-w-2xl text-sm text-gray-400">
+                      Publish your capability through backend skill APIs, then consume it
+                      through the generated SDK to keep architecture consistent.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-4">
+                      <button className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-200">
+                        Submit Skill
+                      </button>
+                      <button className="rounded-xl bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20">
+                        Documentation
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default SkillsPage;
