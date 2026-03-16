@@ -4,7 +4,7 @@ import {
     Scissors, Trash2, MousePointer2, Magnet, ScanLine,
     Undo, Redo, ArrowLeftToLine, ArrowRightToLine, MapPin, Minimize2, ZoomIn, ZoomOut,
     Sparkles, Film, Mic, AudioWaveform, Music,
-    ArrowRightLeft, MoveHorizontal, GitBranch, Eraser
+    ArrowRightLeft, MoveHorizontal, GitBranch, Eraser, Slice, Link2
 } from 'lucide-react';
 import {
     importAssetBySdk,
@@ -292,6 +292,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
     const zoomLevel = useTransientState(s => s.zoomLevel);
     const editMode = useTransientState(s => s.editMode);
     const setEditTool = store.getState().setEditTool;
+    const toggleLinkedSelection = store.getState().toggleLinkedSelection;
 
     const hasSelection = !!selectedClipId;
 
@@ -550,6 +551,12 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                             title="Slide Tool (U)"
                             isActive={editMode.currentTool === 'slide'}
                         />
+                        <ToolbarButton
+                            onClick={() => setEditTool('razor')}
+                            icon={Slice}
+                            title="Razor Tool (C)"
+                            isActive={editMode.currentTool === 'razor'}
+                        />
                     </div>
 
                     <div className="w-[1px] h-4 bg-[#27272a]" />
@@ -575,6 +582,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                             title="Skimming (S)"
                             isActive={isSkimmingEnabled}
                             activeColor="text-pink-400 bg-pink-500/10"
+                        />
+                        <ToolbarButton
+                            onClick={toggleLinkedSelection}
+                            icon={Link2}
+                            title="Linked Selection (Shift+L)"
+                            isActive={editMode.linkedSelection}
+                            activeColor="text-emerald-400 bg-emerald-500/10"
                         />
                     </div>
                 </div>

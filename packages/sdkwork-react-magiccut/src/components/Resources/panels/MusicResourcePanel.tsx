@@ -8,7 +8,7 @@ interface MusicResourcePanelProps {
     assets: AnyAsset[];
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
-    onPreview: (item: AnyAsset) => void;
+    onPreview: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
 }
 
@@ -21,10 +21,11 @@ export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(
 }) => {
     const [playingId, setPlayingId] = useState<string | null>(null);
 
-    const handlePlayToggle = (e: React.MouseEvent, id: string) => {
+    const handlePlayToggle = (e: React.MouseEvent, item: AnyAsset) => {
         e.stopPropagation();
-        setPlayingId(playingId === id ? null : id);
-        // In a real app, integrate with an audio player service here
+        const nextPlayingId = playingId === item.id ? null : item.id;
+        setPlayingId(nextPlayingId);
+        onPreview(nextPlayingId ? item : null);
     };
 
     return (
@@ -47,7 +48,7 @@ export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(
 const MusicCard: React.FC<{
     item: AnyAsset;
     isPlaying: boolean;
-    onPlayToggle: (e: React.MouseEvent, id: string) => void;
+    onPlayToggle: (e: React.MouseEvent, item: AnyAsset) => void;
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     onDelete?: (item: AnyAsset) => void;
@@ -67,7 +68,7 @@ const MusicCard: React.FC<{
                 ${isPlaying ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-[#27272a] hover:border-[#444]'}
                 bg-[#18181b]
             `}
-            onClick={(e) => onPlayToggle(e, item.id)}
+            onClick={(e) => onPlayToggle(e, item)}
             title={item.name}
         >
             {/* Background / Cover */}

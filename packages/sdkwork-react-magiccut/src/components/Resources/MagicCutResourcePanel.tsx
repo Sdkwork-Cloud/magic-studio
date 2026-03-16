@@ -17,6 +17,7 @@ import { useMagicCutEvent, useMagicCutBus } from '../../providers/MagicCutEventP
 import { MagicCutEvents } from '../../events';
 import { LoadTemplateConfirmModal } from '../LoadTemplateConfirmModal';
 import { magicCutBusinessService } from '../../services';
+import { SaveTemplateModal } from '../SaveTemplateModal';
 import { TemplateResourceGrid } from './grid/TemplateResourceGrid';
 import { TextResourcePanel } from './panels/TextResourcePanel';
 import { TransitionResourcePanel } from './panels/TransitionResourcePanel';
@@ -27,6 +28,8 @@ import { VideoResourcePanel } from './panels/VideoResourcePanel';
 import { ImageResourcePanel } from './panels/ImageResourcePanel';
 import { FilterTab, LoadingSpinner, EmptyState } from '../common/UIComponents';
 import { platform } from '@sdkwork/react-core';
+import { getProtectedAssetDeleteMessage } from '../../domain/assets/assetDeleteGuard';
+import { playerPreviewService } from '../../services';
 
 interface MagicCutResourcePanelProps {
     activeTab: string;
@@ -127,13 +130,14 @@ export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ ac
 // --- 1. Template View Component (Independent) ---
 
 const TemplateCategoryView: React.FC = () => {
-    const { saveAsTemplate, loadTemplate } = useMagicCutStore();
+    const { project, saveAsTemplate, loadTemplate } = useMagicCutStore();
     const bus = useMagicCutBus();
     
     const [templates, setTemplates] = useState<CutTemplate[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [templateToLoad, setTemplateToLoad] = useState<CutTemplate | null>(null);
+    const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
 
     const loadTemplates = useCallback(async () => {
         setLoading(true);
@@ -160,13 +164,14 @@ const TemplateCategoryView: React.FC = () => {
         return templates.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [templates, searchQuery]);
 
-    const handleSaveTemplate = useCallback(async () => {
-        const name = prompt("Enter template name:");
-        if (name) {
-            const metadata: TemplateMetadata = { name };
-            await saveAsTemplate(metadata);
-            bus.emit(MagicCutEvents.TEMPLATE_SAVED);
-        }
+    const handleSaveTemplate = useCallback(() => {
+        setShowSaveTemplateModal(true);
+    }, []);
+
+    const handleSaveTemplateConfirm = useCallback(async (metadata: TemplateMetadata) => {
+        await saveAsTemplate(metadata);
+        bus.emit(MagicCutEvents.TEMPLATE_SAVED);
+        setShowSaveTemplateModal(false);
     }, [saveAsTemplate, bus]);
 
     const confirmLoadTemplate = useCallback(async () => {
@@ -230,6 +235,13 @@ const TemplateCategoryView: React.FC = () => {
                 onClose={() => setTemplateToLoad(null)}
                 onConfirm={confirmLoadTemplate}
             />
+
+            <SaveTemplateModal
+                isOpen={showSaveTemplateModal}
+                onClose={() => setShowSaveTemplateModal(false)}
+                onConfirm={handleSaveTemplateConfirm}
+                initialName={project.name}
+            />
         </div>
     );
 };
@@ -250,7 +262,8 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         previewEffect,
         setPreviewEffect,
         setInteraction,
-        useTransientState
+        useTransientState,
+        playerController
     } = useMagicCutStore();
     
     const zoomLevel = useTransientState(s => s.zoomLevel);
@@ -388,8 +401,9 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     }, []);
     
     const handleDeleteAsset = useCallback(async (asset: AnyAsset) => {
-        if (asset.origin === 'stock' || asset.origin === 'system') {
-            alert("Cannot delete system assets");
+        const protectedDeleteMessage = getProtectedAssetDeleteMessage(asset.origin);
+        if (protectedDeleteMessage) {
+            await platform.notify('Delete unavailable', protectedDeleteMessage);
             return;
         }
         
@@ -403,7 +417,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     const handleDragStart = useCallback((e: React.DragEvent, item: AnyAsset) => {
         let duration = (item as any).duration || ((item.metadata as any)?.duration) || 5; 
         
-        if (item.type === MediaResourceType.TRANSITION) duration = 1;
+        if (item.type === MediaResourceType.TRANSITION) duration = 0.5;
         if (item.type === MediaResourceType.EFFECT) duration = 5; 
         if (item.type === MediaResourceType.TEXT) duration = 5;
         if (item.type === MediaResourceType.IMAGE) duration = 5;
@@ -415,7 +429,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
             clipId: null, 
             initialX: 0, initialY: 0, initialStartTime: 0, initialDuration: 0, initialTrackId: '', initialOffset: 0,
             currentTrackId: null, currentTime: 0, 
-            isSnapping: false, snapLines: [], validDrop: true, hasCollision: false, insertTrackIndex: null
+            isSnapping: false, snapLines: [], validDrop: true, hasCollision: false, insertTrackIndex: null, dropPreview: undefined
         });
 
         setDragOperation({
@@ -436,9 +450,30 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         setDragOperation(null);
     }, [setDragOperation]);
 
-    const handleDoubleClick = useCallback((item: AnyAsset) => {
+    const handlePreviewToggle = useCallback((item: AnyAsset | null) => {
+        playerController.pause();
+        setPreviewEffect(null);
+
+        if (!item) {
+            setPreviewSource(null);
+            playerPreviewService.clearPreview();
+            return;
+        }
+
+        const isAudioOnly = item.type === MediaResourceType.AUDIO
+            || item.type === MediaResourceType.MUSIC
+            || item.type === MediaResourceType.VOICE
+            || item.type === MediaResourceType.SPEECH;
+
+        if (isAudioOnly) {
+            setPreviewSource(null);
+            playerPreviewService.previewResource(item, 0);
+            return;
+        }
+
+        playerPreviewService.clearPreview();
         setPreviewSource(item);
-    }, [setPreviewSource]);
+    }, [playerController, setPreviewEffect, setPreviewSource]);
 
     const getAcceptTypes = (cat: string) => {
         switch(cat) {
@@ -501,23 +536,23 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     const renderPanelContent = () => {
         switch (category) {
             case 'video':
-                return <VideoResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handleDoubleClick} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <VideoResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
             case 'image':
-                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handleDoubleClick} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
             case 'text':
                 return <TextResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} />;
             case 'music':
-                 return <MusicResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handleDoubleClick} onDelete={handleDeleteAsset} />;
+                 return <MusicResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} />;
             case 'audio':
             case 'voice':
             case 'sfx':
-                return <AudioResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handleDoubleClick} onDelete={handleDeleteAsset} />;
+                return <AudioResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} />;
             case 'transitions':
                 return <TransitionResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} />;
             case 'effects':
                 return <EffectResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} previewEffect={previewEffect} setPreviewEffect={setPreviewEffect} />;
             default:
-                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handleDoubleClick} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
         }
     };
 

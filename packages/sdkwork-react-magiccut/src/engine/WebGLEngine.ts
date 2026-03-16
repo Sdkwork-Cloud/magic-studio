@@ -8,11 +8,14 @@ import { EffectSystem } from './renderer/EffectSystem';
 import { Compositor } from './gl/Compositor';
 import { TimelineRenderer } from './renderer/TimelineRenderer';
 import { RenderMatrices } from './config/RenderConfig';
+import { resolveRenderRuntimeProfile } from './config/renderProfile';
+import { buildIncomingTransitionLeadIns, clampTimelineTimeToClipStart, resolveClipActivationStart } from '../domain/playback/transitionPlayback';
 
 // Export types for consumers
 export type { RenderData, RenderOverrideClip };
 
 export class WebGLEngine {
+    private readonly renderProfile = resolveRenderRuntimeProfile();
     private canvas: HTMLCanvasElement | null = null;
     private gl: WebGL2RenderingContext | null = null;
     private onContextLost?: (e: Event) => void;
@@ -63,8 +66,8 @@ export class WebGLEngine {
             premultipliedAlpha: true,
             preserveDrawingBuffer: false,
             antialias: false,
-            powerPreference: "high-performance",
-            desynchronized: true
+            powerPreference: this.renderProfile.powerPreference,
+            desynchronized: this.renderProfile.desynchronizedCanvas
         });
 
         if (!gl) throw new Error("WebGL2 not supported");
@@ -274,7 +277,7 @@ export class WebGLEngine {
         const ctx = this.cachedContext;
 
         if (timeline) {
-            this.syncVideoState(time, timeline, resources, tracks, clips, isPlaying);
+            this.syncVideoState(time, timeline, resources, tracks, clips, layersMap, isPlaying);
 
             this.timelineRenderer!.renderTimeline(
                 ctx, timeline, resources, tracks, clips, layersMap, overrideClip, time, isPlaying, this.fboMain, hiddenClipIds
@@ -399,7 +402,7 @@ export class WebGLEngine {
             volume: 1,
             layers: [],
             createdAt: 0, updatedAt: 0,
-            transform: { x: 0, y: 0, width: this.projectW, height: this.projectH, rotation: 0, scale: 1, opacity: 1 },
+            transform: { x: 0, y: 0, width: this.projectW, height: this.projectH, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 },
             content: (resource.type === MediaResourceType.TEXT || resource.type === MediaResourceType.SUBTITLE)
                 ? (resource.metadata?.text || resource.name)
                 : undefined
@@ -423,6 +426,7 @@ export class WebGLEngine {
         resources: Record<string, AnyMediaResource>,
         tracks: Record<string, CutTrack>,
         clips: Record<string, CutClip>,
+        layersMap: Record<string, CutLayer>,
         isPlaying: boolean
     ) {
         const activeClipIds = new Set<string>();
@@ -433,11 +437,23 @@ export class WebGLEngine {
             timeline.tracks.forEach(tr => {
                 const track = tracks[tr.id];
                 if (!track || track.visible === false) return;
+                const incomingTransitionLeadIns = buildIncomingTransitionLeadIns({
+                    track,
+                    clips,
+                    layers: layersMap
+                });
                 track.clips.forEach(cr => {
                     const clip = clips[cr.id];
+                    const activationStart = clip
+                        ? resolveClipActivationStart({
+                            clipStart: clip.start,
+                            incomingTransitionLeadIn: incomingTransitionLeadIns.get(clip.id) ?? 0,
+                            defaultLookahead: LOOKAHEAD
+                        })
+                        : 0;
                     // Check if clip is active OR about to be active
                     if (clip &&
-                        time >= clip.start - LOOKAHEAD &&
+                        time >= activationStart &&
                         time < clip.start + clip.duration) {
 
                         activeClipIds.add(clip.id);
@@ -513,16 +529,29 @@ export class WebGLEngine {
         timeline.tracks.forEach(tr => {
             const track = tracks[tr.id];
             if (!track || track.muted || track.visible === false) return;
+            const incomingTransitionLeadIns = buildIncomingTransitionLeadIns({
+                track,
+                clips,
+                layers: layersMap
+            });
             track.clips.forEach(cr => {
                 const clip = clips[cr.id];
-                if (clip && time >= clip.start && time < clip.start + clip.duration) {
+                const activationStart = clip
+                    ? resolveClipActivationStart({
+                        clipStart: clip.start,
+                        incomingTransitionLeadIn: incomingTransitionLeadIns.get(clip.id) ?? 0,
+                        defaultLookahead: 0
+                    })
+                    : 0;
+                if (clip && time >= activationStart && time < clip.start + clip.duration) {
                     const resource = resources[clip.resource.id];
                     if (resource && resource.type === MediaResourceType.VIDEO) {
                         const url = this.resourceManager.resolveResourceUrl(resource);
                         if (url) {
                             const video = this.resourceManager.getVideoElement(clip.id, url);
                             const speed = clip.speed || 1.0;
-                            const timeInClip = time - clip.start;
+                            const effectiveTimelineTime = clampTimelineTimeToClipStart(time, clip.start);
+                            const timeInClip = effectiveTimelineTime - clip.start;
                             const resourceTime = (timeInClip * speed) + (clip.offset || 0);
 
                             if (Math.abs(video.currentTime - resourceTime) > 0.05) {

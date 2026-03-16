@@ -45,8 +45,10 @@ export interface DropdownProps {
 export interface ActionButtonProps {
     label: string;
     icon: React.ReactNode;
-    onClick: () => void;
+    onClick?: () => void;
     isLoading?: boolean;
+    disabled?: boolean;
+    title?: string;
     variant?: 'primary' | 'secondary' | 'danger';
     className?: string;
 }
@@ -307,7 +309,16 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onCha
     );
 };
 
-export const ActionButton: React.FC<ActionButtonProps> = ({ label, icon, onClick, isLoading, variant = 'secondary', className }) => {
+export const ActionButton: React.FC<ActionButtonProps> = ({
+    label,
+    icon,
+    onClick,
+    isLoading,
+    disabled,
+    title,
+    variant = 'secondary',
+    className
+}) => {
     let bgClass = "bg-[#252526] hover:bg-[#333] border-[#333] text-gray-300 hover:text-white";
     if (variant === 'primary') bgClass = "bg-blue-600 hover:bg-blue-500 border-blue-500 text-white shadow-sm";
     if (variant === 'danger') bgClass = "bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-400";
@@ -315,9 +326,10 @@ export const ActionButton: React.FC<ActionButtonProps> = ({ label, icon, onClick
     return (
         <button 
             onClick={onClick}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
+            title={title}
             className={`
-                flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none
+                flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed
                 ${bgClass}
                 ${className}
             `}

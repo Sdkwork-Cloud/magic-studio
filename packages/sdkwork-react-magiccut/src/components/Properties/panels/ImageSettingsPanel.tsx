@@ -2,11 +2,15 @@
 import { CutClip, CutClipTransform, BlendMode } from '../../../entities/magicCut.entity'
 import React from 'react';
 import { 
-    Wand2, Scissors, Maximize, Palette, Layers, Sliders, Eraser
+    Wand2, Scissors, Maximize, Eraser
 } from 'lucide-react';
 import { PropertySection, SliderRow, ActionButton } from '../widgets/PropertyWidgets';
 ;
 import { VisualTransformPanel } from './VisualTransformPanel';
+import {
+    resolveImageToolAvailability,
+    type ImageToolId
+} from '../../../domain/image/imageToolAvailability';
 
 interface ImageSettingsPanelProps {
     clip: CutClip;
@@ -17,6 +21,8 @@ interface ImageSettingsPanelProps {
 export const ImageSettingsPanel: React.FC<ImageSettingsPanelProps> = ({ 
     clip, onUpdate, onUpdateTransform 
 }) => {
+    const aiTools = resolveImageToolAvailability();
+
     // Helper to access style safely
     const getStyle = (key: string, def: number) => (clip.style?.[key] as number) ?? def;
     
@@ -24,7 +30,17 @@ export const ImageSettingsPanel: React.FC<ImageSettingsPanelProps> = ({
         onUpdate({ style: { ...clip.style, [key]: val } });
     };
 
-    const handleAITool = (tool: string) => {
+    const getToolIcon = (toolId: ImageToolId) => {
+        switch (toolId) {
+            case 'remove-bg':
+                return <Scissors />;
+            case 'upscale':
+                return <Maximize />;
+            case 'erase':
+                return <Eraser />;
+            case 'remix':
+                return <Wand2 />;
+        }
     };
 
     return (
@@ -32,27 +48,29 @@ export const ImageSettingsPanel: React.FC<ImageSettingsPanelProps> = ({
             {/* 1. AI Toolbox (Top) */}
             <PropertySection title="AI Toolbox" defaultOpen>
                 <div className="grid grid-cols-2 gap-2">
-                    <ActionButton 
-                        label="Remove BG" 
-                        icon={<Scissors />} 
-                        onClick={() => handleAITool('remove-bg')} 
-                    />
-                    <ActionButton 
-                        label="Upscale 4K" 
-                        icon={<Maximize />} 
-                        onClick={() => handleAITool('upscale')} 
-                    />
-                    <ActionButton 
-                        label="Magic Eraser" 
-                        icon={<Eraser />} 
-                        onClick={() => handleAITool('erase')} 
-                    />
-                    <ActionButton 
-                        label="Remix" 
-                        icon={<Wand2 />} 
-                        onClick={() => handleAITool('remix')} 
-                        variant="primary"
-                    />
+                    {aiTools.map((tool) => (
+                        <ActionButton 
+                            key={tool.id}
+                            label={tool.label} 
+                            icon={getToolIcon(tool.id)} 
+                            disabled={!tool.available}
+                            title={tool.reason}
+                            variant={tool.id === 'remix' ? 'primary' : 'secondary'}
+                        />
+                    ))}
+                </div>
+                <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-100">
+                        Asset workflow required
+                    </div>
+                    <div className="mt-2 space-y-2">
+                        {aiTools.map((tool) => (
+                            <div key={tool.id}>
+                                <div className="text-[11px] font-medium text-gray-100">{tool.label}</div>
+                                <p className="mt-0.5 text-[10px] leading-4 text-amber-100/75">{tool.reason}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </PropertySection>
 
@@ -66,7 +84,7 @@ export const ImageSettingsPanel: React.FC<ImageSettingsPanelProps> = ({
                 onChangeBlendMode={(k, v) => {
                     onUpdate({ blendMode: v });
                 }}
-                onReset={() => onUpdateTransform({ x:0, y:0, scale:1, rotation:0, opacity:1 })}
+                onReset={() => onUpdateTransform({ x:0, y:0, scale:1, scaleX: 1, scaleY: 1, rotation:0, opacity:1 })}
             />
 
             {/* 3. Color Adjustments */}

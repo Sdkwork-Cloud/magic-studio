@@ -52,6 +52,13 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
         usePreviewEffect,
         setSkimmingResource,
         setPreviewEffect,
+        setInPoint,
+        setOutPoint,
+        clearInOutPoints,
+        inPoint,
+        outPoint,
+        stepForward,
+        stepBackward,
         getClipResource,
         playerController,
         useTransientState,
@@ -371,12 +378,29 @@ export const MagicCutPlayer: React.FC = React.memo(() => {
                 viewScale={viewScale}
                 duration={totalDuration}
                 onSeek={handleSeek}
+                onStepBackward={stepBackward}
+                onStepForward={stepForward}
                 onTogglePlay={handleTogglePlay}
                 onRatioChange={handleAspectRatioSelect}
                 onViewScaleChange={setViewScale}
                 onFullscreen={toggleFullscreen}
                 disabled={!!skimmingResource}
                 onTimecodeRef={playerController.setTimecodeDOM}
+                inPoint={inPoint}
+                outPoint={outPoint}
+                onSetInPoint={() => setInPoint(playerController.getCurrentTime())}
+                onSetOutPoint={() => setOutPoint(playerController.getCurrentTime())}
+                onJumpToInPoint={() => {
+                    if (inPoint !== null) {
+                        handleSeek(inPoint);
+                    }
+                }}
+                onJumpToOutPoint={() => {
+                    if (outPoint !== null) {
+                        handleSeek(outPoint);
+                    }
+                }}
+                onClearRange={clearInOutPoints}
             />
         </div>
     );

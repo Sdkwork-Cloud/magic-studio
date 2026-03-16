@@ -2,33 +2,33 @@ export * from './hooks';
 export * from './uploadViaPresignedUrl';
 
 import {
-    SdkworkAppClient,
     type SdkworkAppConfig,
-    type GenerationApi,
-    type AssetsApi,
+    type AnalyticApi,
+    type AssetApi,
+    type AuthApi,
+    type CartApi,
+    type CategoryApi,
     type ChatApi,
+    type CouponApi,
+    type FavoriteApi,
+    type FeedbackApi,
+    type GenerationApi,
     type HistoryApi,
+    type NotificationApi,
+    type OrderApi,
+    type PaymentApi,
+    type ProjectApi,
+    type SearchApi,
+    type SettingApi,
+    type UserApi,
+    type ModelApi,
+    type SocialApi,
     type UploadApi,
     type VipApi,
-    type CartApi,
-    type FavoriteApi,
-    type SocialApi,
-    type NotificationApi,
-    type SettingsApi,
-    type SearchApi,
-    type FeedbackApi,
-    type AnalyticsApi,
-    type CategoryApi,
-    type UserApi,
-    type ProjectsApi,
-    type PaymentsApi,
-    type OrdersApi,
-    type CouponsApi,
-    type ModelApi,
-    type WorkspacesApi,
-    type AuthApi,
+    type WorkspaceApi,
 } from '@sdkwork/app-sdk';
 import {
+    type AppSdkClient,
     createAppSdkClientConfig,
     getAppSdkClientConfig,
     getAppSdkClientWithSession,
@@ -38,32 +38,32 @@ import {
 } from './useAppSdkClient';
 
 export type SdkworkConfig = SdkworkAppConfig;
-export type SdkworkClient = SdkworkAppClient;
+export type SdkworkClient = AppSdkClient;
 export type SdkworkClientInstance = SdkworkClient;
 export type AuthModule = AuthApi;
 
 export type GenerationModule = GenerationApi;
 export type UserModule = UserApi;
-export type AssetsModule = AssetsApi;
+export type AssetsModule = AssetApi;
 export type ChatModule = ChatApi;
-export type ProjectModule = ProjectsApi;
+export type ProjectModule = ProjectApi;
 export type HistoryModule = HistoryApi;
 export type UploadModule = UploadApi;
-export type PaymentModule = PaymentsApi;
+export type PaymentModule = PaymentApi;
 export type VipModule = VipApi;
-export type OrderModule = OrdersApi;
+export type OrderModule = OrderApi;
 export type CartModule = CartApi;
-export type CouponModule = CouponsApi;
+export type CouponModule = CouponApi;
 export type FavoriteModule = FavoriteApi;
 export type SocialModule = SocialApi;
 export type NotificationModule = NotificationApi;
-export type SettingsModule = SettingsApi;
+export type SettingsModule = SettingApi;
 export type SearchModule = SearchApi;
 export type ModelModule = ModelApi;
 export type PromptModule = GenerationApi;
 export type FeedbackModule = FeedbackApi;
-export type WorkspaceModule = WorkspacesApi;
-export type AnalyticsModule = AnalyticsApi;
+export type WorkspaceModule = WorkspaceApi;
+export type AnalyticsModule = AnalyticApi;
 export type CategoryModule = CategoryApi;
 
 export type Environment = 'development' | 'staging' | 'production' | 'test';

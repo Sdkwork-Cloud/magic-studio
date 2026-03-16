@@ -1,3 +1,4 @@
+import { createServiceAdapterController } from '@sdkwork/react-commons';
 import { browserService } from './browserService';
 import { browserHistoryService } from './browserHistoryService';
 import { browserBookmarkService } from './browserBookmarkService';
@@ -17,4 +18,17 @@ const localBrowserAdapter: BrowserBusinessAdapter = {
   browserDownloadService
 };
 
-export const browserBusinessService: BrowserBusinessAdapter = localBrowserAdapter;
+const controller = createServiceAdapterController<BrowserBusinessAdapter>(localBrowserAdapter);
+
+export const browserBusinessService: BrowserBusinessAdapter = controller.service;
+export const setBrowserBusinessAdapter = (adapter: BrowserBusinessAdapter): void => {
+  controller.setAdapter(adapter);
+};
+
+export const getBrowserBusinessAdapter = (): BrowserBusinessAdapter => {
+  return controller.getAdapter();
+};
+
+export const resetBrowserBusinessAdapter = (): void => {
+  controller.resetAdapter();
+};

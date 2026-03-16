@@ -8,7 +8,7 @@ interface MusicResourceListProps {
     assets: AnyAsset[];
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
-    onPreview: (item: AnyAsset) => void;
+    onPreview: (item: AnyAsset | null) => void;
 }
 
 export const MusicResourceList: React.FC<MusicResourceListProps> = React.memo(({
@@ -19,10 +19,11 @@ export const MusicResourceList: React.FC<MusicResourceListProps> = React.memo(({
 }) => {
     const [playingId, setPlayingId] = useState<string | null>(null);
 
-    const handlePlayToggle = (e: React.MouseEvent, id: string) => {
+    const handlePlayToggle = (e: React.MouseEvent, item: AnyAsset) => {
         e.stopPropagation();
-        setPlayingId(playingId === id ? null : id);
-        // Note: Actual audio preview logic would hook into a player service here
+        const nextPlayingId = playingId === item.id ? null : item.id;
+        setPlayingId(nextPlayingId);
+        onPreview(nextPlayingId ? item : null);
     };
 
     return (
@@ -54,7 +55,7 @@ export const MusicResourceList: React.FC<MusicResourceListProps> = React.memo(({
 const MusicItem: React.FC<{
     item: AnyAsset;
     isPlaying: boolean;
-    onPlayToggle: (e: React.MouseEvent, id: string) => void;
+    onPlayToggle: (e: React.MouseEvent, item: AnyAsset) => void;
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
 }> = ({ item, isPlaying, onPlayToggle, onDragStart, onToggleFavorite }) => {
@@ -88,7 +89,7 @@ const MusicItem: React.FC<{
                     relative w-12 h-12 rounded-lg flex-shrink-0 cursor-pointer overflow-hidden group/cover mt-0.5
                     ${!thumbnail ? 'bg-[#252526] flex items-center justify-center' : ''}
                 `}
-                onClick={(e) => onPlayToggle(e, item.id)}
+                onClick={(e) => onPlayToggle(e, item)}
             >
                     {thumbnail ? (
                         <img src={thumbnail} className={`w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-40' : 'opacity-100 group-hover/cover:opacity-60'}`} draggable={false} />

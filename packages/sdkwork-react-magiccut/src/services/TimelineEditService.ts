@@ -23,6 +23,77 @@ export interface EditOperationResult {
 }
 
 export class TimelineEditService {
+    private static readonly MIN_CLIP_DURATION = 0.1;
+
+    private static getSpeed(clip: CutClip): number {
+        return Math.max(clip.speed || 1, 0.01);
+    }
+
+    private static getTrackClips(clip: CutClip, state: NormalizedState): CutClip[] {
+        const track = state.tracks[clip.track.id];
+        if (!track) return [];
+
+        return track.clips
+            .map(ref => state.clips[ref.id])
+            .filter(Boolean)
+            .sort((a, b) => a.start - b.start);
+    }
+
+    private static getSourceDuration(clip: CutClip, state: NormalizedState): number | null {
+        const resource = state.resources[clip.resource.id] as { duration?: number; metadata?: { duration?: number } } | undefined;
+        const duration = resource?.duration ?? resource?.metadata?.duration;
+        return typeof duration === 'number' && Number.isFinite(duration) ? duration : null;
+    }
+
+    private static getClipEnd(clip: CutClip): number {
+        return clip.start + clip.duration;
+    }
+
+    private static getOffset(clip: CutClip): number {
+        return clip.offset || 0;
+    }
+
+    private static clamp(value: number, min: number, max: number): number {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    private static getTrimStartDelta(
+        clip: CutClip,
+        desiredDelta: number,
+        state: NormalizedState
+    ): number {
+        const maxForward = clip.duration - this.MIN_CLIP_DURATION;
+        const maxBackward = this.getOffset(clip) / this.getSpeed(clip);
+        return this.clamp(desiredDelta, -maxBackward, maxForward);
+    }
+
+    private static getTrimEndDelta(
+        clip: CutClip,
+        desiredDelta: number,
+        state: NormalizedState
+    ): number {
+        const maxBackward = clip.duration - this.MIN_CLIP_DURATION;
+        const speed = this.getSpeed(clip);
+        const sourceDuration = this.getSourceDuration(clip, state);
+        const usedSourceDuration = this.getOffset(clip) + (clip.duration * speed);
+        const remainingTail = sourceDuration === null
+            ? Number.POSITIVE_INFINITY
+            : Math.max(0, sourceDuration - usedSourceDuration) / speed;
+
+        return this.clamp(desiredDelta, -maxBackward, remainingTail);
+    }
+
+    private static getRippleStartUpdates(
+        clip: CutClip,
+        delta: number
+    ): Partial<CutClip> {
+        const speed = this.getSpeed(clip);
+        return {
+            start: clip.start,
+            duration: clip.duration - delta,
+            offset: this.getOffset(clip) + (delta * speed)
+        };
+    }
     
     static calculateRippleTrim(
         clip: CutClip,
@@ -31,29 +102,17 @@ export class TimelineEditService {
         state: NormalizedState
     ): EditOperationResult {
         const result: EditOperationResult = { clipsToUpdate: [] };
-        
-        const track = state.tracks[clip.track.id];
-        if (!track) return result;
-        
-        const trackClips = track.clips
-            .map(ref => state.clips[ref.id])
-            .filter(Boolean)
-            .sort((a, b) => a.start - b.start);
+        const trackClips = this.getTrackClips(clip, state);
+        if (trackClips.length === 0) return result;
         
         const clipIndex = trackClips.findIndex(c => c.id === clip.id);
         if (clipIndex === -1) return result;
-        
-        const delta = trimType === 'start' 
-            ? newTime - clip.start 
-            : (clip.start + clip.duration) - newTime;
-        
+
         if (trimType === 'start') {
-            const newStart = Math.max(0, newTime);
-            const newDuration = clip.duration + (clip.start - newStart);
-            
+            const delta = this.getTrimStartDelta(clip, newTime - clip.start, state);
             result.clipsToUpdate.push({
                 id: clip.id,
-                updates: { start: newStart, duration: newDuration, offset: (clip.offset || 0) + (clip.start - newStart) }
+                updates: this.getRippleStartUpdates(clip, delta)
             });
             
             trackClips.slice(clipIndex + 1).forEach(c => {
@@ -63,17 +122,16 @@ export class TimelineEditService {
                 });
             });
         } else {
-            const newDuration = newTime - clip.start;
-            
+            const delta = this.getTrimEndDelta(clip, newTime - this.getClipEnd(clip), state);
             result.clipsToUpdate.push({
                 id: clip.id,
-                updates: { duration: newDuration }
+                updates: { duration: clip.duration + delta }
             });
             
             trackClips.slice(clipIndex + 1).forEach(c => {
                 result.clipsToUpdate.push({
                     id: c.id,
-                    updates: { start: c.start - delta }
+                    updates: { start: c.start + delta }
                 });
             });
         }
@@ -88,14 +146,8 @@ export class TimelineEditService {
         state: NormalizedState
     ): EditOperationResult {
         const result: EditOperationResult = { clipsToUpdate: [] };
-        
-        const track = state.tracks[clip.track.id];
-        if (!track) return result;
-        
-        const trackClips = track.clips
-            .map(ref => state.clips[ref.id])
-            .filter(Boolean)
-            .sort((a, b) => a.start - b.start);
+        const trackClips = this.getTrackClips(clip, state);
+        if (trackClips.length === 0) return result;
         
         const clipIndex = trackClips.findIndex(c => c.id === clip.id);
         if (clipIndex === -1) return result;
@@ -104,36 +156,53 @@ export class TimelineEditService {
             const prevClip = clipIndex > 0 ? trackClips[clipIndex - 1] : null;
             
             if (prevClip) {
-                const newStart = Math.max(prevClip.start + 0.1, newTime);
-                const newDuration = clip.duration + (clip.start - newStart);
-                const prevNewDuration = newStart - prevClip.start;
+                const desiredDelta = newTime - clip.start;
+                const minDelta = Math.max(
+                    this.MIN_CLIP_DURATION - prevClip.duration,
+                    -(this.getOffset(clip) / this.getSpeed(clip))
+                );
+                const maxDelta = clip.duration - this.MIN_CLIP_DURATION;
+                const delta = this.clamp(desiredDelta, minDelta, maxDelta);
                 
                 result.clipsToUpdate.push({
                     id: clip.id,
-                    updates: { start: newStart, duration: newDuration, offset: (clip.offset || 0) + (clip.start - newStart) }
+                    updates: {
+                        start: clip.start + delta,
+                        duration: clip.duration - delta,
+                        offset: this.getOffset(clip) + (delta * this.getSpeed(clip))
+                    }
                 });
                 
                 result.clipsToUpdate.push({
                     id: prevClip.id,
-                    updates: { duration: prevNewDuration }
+                    updates: { duration: prevClip.duration + delta }
                 });
             }
         } else {
             const nextClip = clipIndex < trackClips.length - 1 ? trackClips[clipIndex + 1] : null;
             
             if (nextClip) {
-                const newDuration = newTime - clip.start;
-                const nextNewStart = newTime;
-                const nextNewDuration = (nextClip.start + nextClip.duration) - newTime;
+                const desiredDelta = newTime - this.getClipEnd(clip);
+                const currentTailDelta = this.getTrimEndDelta(clip, desiredDelta, state);
+                const minDelta = Math.max(
+                    this.MIN_CLIP_DURATION - clip.duration,
+                    -(this.getOffset(nextClip) / this.getSpeed(nextClip))
+                );
+                const maxDelta = nextClip.duration - this.MIN_CLIP_DURATION;
+                const delta = this.clamp(currentTailDelta, minDelta, maxDelta);
                 
                 result.clipsToUpdate.push({
                     id: clip.id,
-                    updates: { duration: newDuration }
+                    updates: { duration: clip.duration + delta }
                 });
                 
                 result.clipsToUpdate.push({
                     id: nextClip.id,
-                    updates: { start: nextNewStart, duration: nextNewDuration, offset: (nextClip.offset || 0) + (nextClip.start - nextNewStart) }
+                    updates: {
+                        start: nextClip.start + delta,
+                        duration: nextClip.duration - delta,
+                        offset: this.getOffset(nextClip) + (delta * this.getSpeed(nextClip))
+                    }
                 });
             }
         }
@@ -145,19 +214,24 @@ export class TimelineEditService {
         clip: CutClip,
         trimType: 'start' | 'end',
         newTime: number,
-        _state: NormalizedState
+        state: NormalizedState
     ): EditOperationResult {
         const result: EditOperationResult = { clipsToUpdate: [] };
-        
-        const delta = trimType === 'start' 
-            ? newTime - clip.start 
-            : (clip.start + clip.duration) - newTime;
-        
-        const newOffset = (clip.offset || 0) + delta;
-        
-        if (newOffset < 0) {
-            return result;
-        }
+        const desiredDelta = trimType === 'start'
+            ? newTime - clip.start
+            : newTime - this.getClipEnd(clip);
+        const speed = this.getSpeed(clip);
+        const sourceDuration = this.getSourceDuration(clip, state);
+        const maxOffset = sourceDuration === null
+            ? Number.POSITIVE_INFINITY
+            : Math.max(0, sourceDuration - (clip.duration * speed));
+        const currentOffset = this.getOffset(clip);
+        const minDelta = Number.isFinite(maxOffset)
+            ? (currentOffset - maxOffset) / speed
+            : Number.NEGATIVE_INFINITY;
+        const maxDelta = currentOffset / speed;
+        const delta = this.clamp(desiredDelta, minDelta, maxDelta);
+        const newOffset = currentOffset - (delta * speed);
         
         result.clipsToUpdate.push({
             id: clip.id,
@@ -174,60 +248,36 @@ export class TimelineEditService {
         state: NormalizedState
     ): EditOperationResult {
         const result: EditOperationResult = { clipsToUpdate: [] };
-        
-        const track = state.tracks[clip.track.id];
-        if (!track) return result;
-        
-        const trackClips = track.clips
-            .map(ref => state.clips[ref.id])
-            .filter(Boolean)
-            .sort((a, b) => a.start - b.start);
+        const trackClips = this.getTrackClips(clip, state);
+        if (trackClips.length === 0) return result;
         
         const clipIndex = trackClips.findIndex(c => c.id === clip.id);
         if (clipIndex === -1) return result;
-        
-        const delta = trimType === 'start' 
-            ? newTime - clip.start 
-            : newTime - (clip.start + clip.duration);
-        
-        if (trimType === 'start') {
-            const prevClip = clipIndex > 0 ? trackClips[clipIndex - 1] : null;
-            
-            if (prevClip) {
-                const newPrevDuration = prevClip.duration + delta;
-                
-                if (newPrevDuration > 0.1) {
-                    result.clipsToUpdate.push({
-                        id: prevClip.id,
-                        updates: { duration: newPrevDuration }
-                    });
-                    
-                    result.clipsToUpdate.push({
-                        id: clip.id,
-                        updates: { start: newTime }
-                    });
-                }
-            }
-        } else {
-            const nextClip = clipIndex < trackClips.length - 1 ? trackClips[clipIndex + 1] : null;
-            
-            if (nextClip) {
-                const newNextStart = newTime;
-                const newNextDuration = (nextClip.start + nextClip.duration) - newTime;
-                
-                if (newNextDuration > 0.1) {
-                    result.clipsToUpdate.push({
-                        id: clip.id,
-                        updates: { duration: newTime - clip.start }
-                    });
-                    
-                    result.clipsToUpdate.push({
-                        id: nextClip.id,
-                        updates: { start: newNextStart, duration: newNextDuration, offset: (nextClip.offset || 0) + (nextClip.start - newNextStart) }
-                    });
-                }
-            }
-        }
+        const prevClip = clipIndex > 0 ? trackClips[clipIndex - 1] : null;
+        const nextClip = clipIndex < trackClips.length - 1 ? trackClips[clipIndex + 1] : null;
+        if (!prevClip || !nextClip) return result;
+
+        const desiredDelta = trimType === 'start'
+            ? newTime - clip.start
+            : newTime - this.getClipEnd(clip);
+        const minDelta = this.MIN_CLIP_DURATION - prevClip.duration;
+        const maxDelta = nextClip.duration - this.MIN_CLIP_DURATION;
+        const delta = this.clamp(desiredDelta, minDelta, maxDelta);
+
+        result.clipsToUpdate.push({
+            id: prevClip.id,
+            updates: { duration: prevClip.duration + delta }
+        });
+
+        result.clipsToUpdate.push({
+            id: clip.id,
+            updates: { start: clip.start + delta, duration: clip.duration }
+        });
+
+        result.clipsToUpdate.push({
+            id: nextClip.id,
+            updates: { start: nextClip.start + delta, duration: nextClip.duration - delta }
+        });
         
         return result;
     }

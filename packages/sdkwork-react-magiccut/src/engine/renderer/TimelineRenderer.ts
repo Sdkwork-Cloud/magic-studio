@@ -6,6 +6,8 @@ import { TrackRenderer, TextureResult } from './TrackRenderer';
 import { TrackIntervalIndex,AnyMediaResource } from '@sdkwork/react-commons';
 import { Matrix3Ops, RenderMatrices } from '../config/RenderConfig';
 import { RenderSortUtils } from '../utils/RenderSortUtils';
+import { clampTimelineTimeToClipStart } from '../../domain/playback/transitionPlayback';
+import { normalizeClipTransform, resolveClipTransformScaleFactors } from '../../domain/transform/clipTransform';
 
 export class TimelineRenderer {
     private trackRenderer: TrackRenderer;
@@ -71,6 +73,7 @@ export class TimelineRenderer {
         for (const track of renderOrderTracks) {
             const tree = this.getTrackTree(track, clips);
             const visibleIntervals = tree.queryOverlapping(time, time + 0.01);
+            const consumedClipIds = new Set<string>();
 
             const activeClips: CutClip[] = visibleIntervals
                 .filter(i => i.id)
@@ -93,6 +96,7 @@ export class TimelineRenderer {
 
             for (const clip of activeClips) {
                 if (hiddenClipIds && hiddenClipIds.has(clip.id)) continue;
+                if (consumedClipIds.has(clip.id)) continue;
 
                 const resource = resources[clip.resource.id];
                 const clipTime = time - clip.start;
@@ -101,9 +105,25 @@ export class TimelineRenderer {
                     .map(ref => layers[ref.id])
                     .filter(l => l && l.enabled && l.layerType === 'filter').length;
                 const renderSize = this.getEffectRenderSize(ctx, tf, clip.id, filterCount);
-                const result = resource
-                    ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying, renderSize)
-                    : null;
+                const transitionResult = this.prepareTransitionTexture(
+                    ctx,
+                    clip,
+                    resources,
+                    clips,
+                    layers,
+                    time,
+                    isPlaying,
+                    renderSize
+                );
+                const result = transitionResult?.result || (
+                    resource
+                        ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying, renderSize)
+                        : null
+                );
+
+                if (transitionResult?.consumedClipId) {
+                    consumedClipIds.add(transitionResult.consumedClipId);
+                }
 
                 if (result) {
                     this.compositeClip(ctx, mainFBO, clip, time, result, tf);
@@ -129,12 +149,123 @@ export class TimelineRenderer {
                 const result = this.trackRenderer.prepareClipTexture(ctx, ghostClip, resource, {}, time, false, renderSize);
 
                 if (result) {
-                    const ghostTf = { ...(ghostClip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, opacity: 1 }) };
+                    const ghostTf = { ...(ghostClip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 }) };
                     ghostTf.opacity = (ghostTf.opacity || 1) * 0.6;
                     this.compositeClip(ctx, mainFBO, { ...ghostClip, transform: ghostTf }, time, result, ghostTf);
                 }
             }
         }
+    }
+
+    private prepareTransitionTexture(
+        ctx: RenderContext,
+        clip: CutClip,
+        resources: Record<string, AnyMediaResource>,
+        clips: Record<string, CutClip>,
+        layers: Record<string, CutLayer>,
+        time: number,
+        isPlaying: boolean,
+        renderSize: { width: number; height: number }
+    ): { result: TextureResult; consumedClipId: string } | null {
+        const transitionLayer = (clip.layers || [])
+            .map(ref => layers[ref.id])
+            .find(layer => layer && layer.enabled && (layer.layerType === 'transition' || layer.layerType === 'transition_out'));
+
+        if (!transitionLayer) {
+            return null;
+        }
+
+        const duration = Math.max(0.1, Number(transitionLayer.params.duration || 0.5));
+        const transitionStart = clip.start + clip.duration - duration;
+        const transitionEnd = clip.start + clip.duration;
+        if (time < transitionStart || time > transitionEnd) {
+            return null;
+        }
+
+        const nextClipId = typeof transitionLayer.params.nextClipId === 'string'
+            ? transitionLayer.params.nextClipId
+            : '';
+        const nextClip = clips[nextClipId];
+        const currentResource = resources[clip.resource.id];
+        const nextResource = nextClip ? resources[nextClip.resource.id] : undefined;
+        if (!nextClip || !currentResource || !nextResource) {
+            return null;
+        }
+
+        const fromTexture = this.trackRenderer.prepareClipTexture(
+            ctx,
+            clip,
+            currentResource,
+            layers,
+            time,
+            isPlaying,
+            renderSize
+        );
+        const toTexture = this.trackRenderer.prepareClipTexture(
+            ctx,
+            nextClip,
+            nextResource,
+            layers,
+            clampTimelineTimeToClipStart(time, nextClip.start),
+            false,
+            renderSize
+        );
+
+        if (!fromTexture || !toTexture) {
+            if (fromTexture?.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+            if (toTexture?.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+            return null;
+        }
+
+        const transitionShader = ctx.effectSystem.getTransitionShader(transitionLayer);
+        if (!transitionShader?.shader) {
+            if (fromTexture.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+            if (toTexture.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+            return null;
+        }
+
+        const { gl } = ctx;
+        const transitionFbo = ctx.compositor.requestFBO(renderSize.width, renderSize.height);
+        const progress = Math.max(0, Math.min(1, (time - transitionStart) / duration));
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, transitionFbo.fbo);
+        gl.viewport(0, 0, transitionFbo.width, transitionFbo.height);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.useProgram(transitionShader.shader.program);
+        gl.bindVertexArray(ctx.vaoQuad);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, toTexture.texture);
+        if (transitionShader.shader.uniforms.u_image) {
+            gl.uniform1i(transitionShader.shader.uniforms.u_image, 0);
+        }
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, fromTexture.texture);
+        if (transitionShader.shader.uniforms.u_backdrop) {
+            gl.uniform1i(transitionShader.shader.uniforms.u_backdrop, 1);
+        }
+
+        ctx.effectSystem.bindTransitionUniforms(
+            gl,
+            transitionShader.shader,
+            transitionShader.def,
+            transitionLayer,
+            progress,
+            { width: transitionFbo.width, height: transitionFbo.height }
+        );
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        if (fromTexture.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+        if (toTexture.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+
+        return {
+            result: { texture: transitionFbo.texture, isFBO: true, fbo: transitionFbo },
+            consumedClipId: nextClip.id
+        };
     }
 
     public prepareAndRenderSingleClip(
@@ -184,7 +315,7 @@ export class TimelineRenderer {
 
         const tempClip: CutClip = {
             ...clip,
-            transform: { x, y, width: finalW, height: finalH, rotation: 0, scale: 1, opacity: 1 }
+            transform: { x, y, width: finalW, height: finalH, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 }
         };
 
         const clipTime = time - tempClip.start;
@@ -201,13 +332,13 @@ export class TimelineRenderer {
     private compositeClip(ctx: RenderContext, targetFBO: FBO, clip: CutClip, time: number, result: TextureResult, resolvedTransform?: CutClipTransform) {
         const { gl, compositor } = ctx;
         const clipTime = time - clip.start;
-        const tf = resolvedTransform || this.resolveTransform(clip, clipTime);
+        const tf = normalizeClipTransform(resolvedTransform || this.resolveTransform(clip, clipTime));
         const opacity = tf.opacity ?? 1.0;
 
         const w = tf.width;
         const h = tf.height;
-        const scale = tf.scale || 1;
         const rotationDeg = tf.rotation || 0;
+        const { effectiveScaleX, effectiveScaleY } = resolveClipTransformScaleFactors(tf);
 
         this.modelMatrix.set(this.projectionMatrix);
 
@@ -216,7 +347,7 @@ export class TimelineRenderer {
 
         Matrix3Ops.translate(this.modelMatrix, this.modelMatrix, cx, cy);
         Matrix3Ops.rotate(this.modelMatrix, this.modelMatrix, rotationDeg * Math.PI / 180);
-        Matrix3Ops.scale(this.modelMatrix, this.modelMatrix, w * scale, h * scale);
+        Matrix3Ops.scale(this.modelMatrix, this.modelMatrix, w * effectiveScaleX, h * effectiveScaleY);
         Matrix3Ops.translate(this.modelMatrix, this.modelMatrix, -0.5, -0.5);
 
         // CRITICAL: Flip Y Correction
@@ -236,9 +367,9 @@ export class TimelineRenderer {
     }
 
     private getEffectRenderSize(ctx: RenderContext, tf: CutClipTransform, clipId?: string, filterCount: number = 0): { width: number; height: number } {
-        const scale = Math.max(0.01, Math.abs(tf.scale ?? 1));
-        const rawW = Math.max(2, Math.round((tf.width || 1) * scale));
-        const rawH = Math.max(2, Math.round((tf.height || 1) * scale));
+        const { effectiveScaleX, effectiveScaleY } = resolveClipTransformScaleFactors(tf);
+        const rawW = Math.max(2, Math.round((tf.width || 1) * Math.max(0.01, Math.abs(effectiveScaleX))));
+        const rawH = Math.max(2, Math.round((tf.height || 1) * Math.max(0.01, Math.abs(effectiveScaleY))));
 
         const area = rawW * rawH;
         let downscale = 1;
@@ -285,7 +416,7 @@ export class TimelineRenderer {
     }
 
     private resolveTransform(clip: CutClip, clipTime: number): CutClipTransform {
-        const base = clip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, opacity: 1 };
+        const base = normalizeClipTransform(clip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 });
 
         if (!clip.keyframes) return base;
 
@@ -296,6 +427,8 @@ export class TimelineRenderer {
             height: this.resolveAnimatedValue(clip.keyframes.height, clipTime, base.height),
             rotation: this.resolveAnimatedValue(clip.keyframes.rotation, clipTime, base.rotation),
             scale: this.resolveAnimatedValue(clip.keyframes.scale, clipTime, base.scale),
+            scaleX: base.scaleX,
+            scaleY: base.scaleY,
             opacity: this.resolveAnimatedValue(clip.keyframes.opacity, clipTime, base.opacity)
         };
     }

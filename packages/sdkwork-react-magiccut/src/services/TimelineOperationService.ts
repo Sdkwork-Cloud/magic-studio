@@ -32,6 +32,7 @@ class TimelineOperationService {
         if (!timelineId) return null;
         
         const timeline = state.timelines[timelineId];
+        const linkGroupId = generateUUID();
         
         // 1. Prepare New Audio Clip Object
         const newAudioClip: CutClip = {
@@ -46,6 +47,8 @@ class TimelineOperationService {
             speed: videoClip.speed,
             volume: 1.0,
             layers: [],
+            linkedClipId: videoClip.id,
+            linkGroupId,
             createdAt: Date.now(),
             updatedAt: Date.now()
         };
@@ -82,7 +85,11 @@ class TimelineOperationService {
         }
 
         return {
-            updatedVideoClip: { muted: true },
+            updatedVideoClip: {
+                muted: true,
+                linkedClipId: newAudioClip.id,
+                linkGroupId
+            },
             newAudioClip,
             targetTrackId,
             shouldCreateNewTrack

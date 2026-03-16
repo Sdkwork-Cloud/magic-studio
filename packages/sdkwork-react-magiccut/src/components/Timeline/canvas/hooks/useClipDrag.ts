@@ -5,21 +5,26 @@ import { AnyMediaResource, TrackIntervalIndex } from '@sdkwork/react-commons';
 import { CutTrack, CutClip, CutTrackType } from '../../../../entities/magicCut.entity';
 import { DragContext, DragInput, IPlacementStrategy } from '../../dnd/types';
 import { ClipMoveStrategy } from '../../dnd/strategies/ClipMoveStrategy';
+import type { NormalizedState } from '../../../../store/types';
+import type { LinkedClipMove } from '../../../../domain/timeline/linkedMove';
+import { resolveLinkedClipMovePlan } from '../../../../domain/timeline/linkedMove';
 
 interface UseClipDragOptions {
     containerRef: React.RefObject<HTMLDivElement | null>;
     pixelsPerSecond: number;
+    state: NormalizedState;
     tracks: CutTrack[];
     trackLayouts: { id: string; top: number; height: number }[];
     clipsMap: Record<string, CutClip>;
+    linkedSelectionEnabled: boolean;
     getResource: (id: string) => AnyMediaResource | undefined;
     calculateSnap: (rawTime: number, duration: number, ignoreClipId?: string | null) => { time: number; lines: number[] };
     prepareSnapPoints: (ignoreClipId?: string | null) => void;
     validateTrackDrop: (trackId: string, resourceType: string) => boolean;
     checkCollision: (trackId: string, start: number, duration: number, exclude: Set<string>) => boolean;
     setInteraction: (interaction: InteractionState | ((prev: InteractionState) => InteractionState)) => void;
-    moveClip: (clipId: string, newTrackId: string, newStart: number) => void;
-    insertTrackAndMoveClip: (clipId: string, insertIndex: number, newStart: number, trackType?: CutTrackType) => void;
+    applyClipMoves: (moves: LinkedClipMove[]) => void;
+    insertTrackAndMoveClipGroup: (clipId: string, insertIndex: number, newStart: number, linkedMoves?: LinkedClipMove[], trackType?: CutTrackType) => void;
     playerController: any;
     autoScrollSpeed: React.MutableRefObject<number>;
 }
@@ -30,9 +35,9 @@ const DRAG_THRESHOLD_PX = 5;
 
 export const useClipDrag = (options: UseClipDragOptions) => {
     const {
-        containerRef, pixelsPerSecond, trackLayouts, clipsMap,
+        containerRef, pixelsPerSecond, state, trackLayouts, clipsMap, linkedSelectionEnabled,
         getResource, calculateSnap, validateTrackDrop, checkCollision, // Fallback collision
-        setInteraction, moveClip, insertTrackAndMoveClip, autoScrollSpeed,
+        setInteraction, applyClipMoves, insertTrackAndMoveClipGroup, autoScrollSpeed,
         prepareSnapPoints
     } = options;
 
@@ -88,6 +93,24 @@ export const useClipDrag = (options: UseClipDragOptions) => {
         });
     };
 
+    const resolveMovePlan = useCallback((
+        clipId: string,
+        targetTrackId: string,
+        newStart: number,
+        insertMode: boolean,
+        context: DragContext
+    ) => {
+        return resolveLinkedClipMovePlan({
+            state,
+            primaryClipId: clipId,
+            targetTrackId,
+            newStart,
+            linkedSelectionEnabled,
+            skipCollisionForClipIds: insertMode ? new Set([clipId]) : undefined,
+            checkCollision: context.checkCollision
+        });
+    }, [state, linkedSelectionEnabled]);
+
     const processDragFrame = useCallback((clientX: number, clientY: number) => {
         if (!containerRef.current || !strategyRef.current) return;
 
@@ -116,17 +139,32 @@ export const useClipDrag = (options: UseClipDragOptions) => {
             pixelsPerSecond
         };
 
-        const result = strategyRef.current.calculate(input, buildContext());
+        const context = buildContext();
+        const result = strategyRef.current.calculate(input, context);
+        const activeClipId = dragStateRef.current.clipId;
+        const activeClip = activeClipId ? clipsMap[activeClipId] : null;
+        const movePlan = activeClip && (result.trackId || result.insertIndex !== null)
+            ? resolveMovePlan(
+                activeClip.id,
+                result.trackId || activeClip.track.id,
+                result.time,
+                result.insertIndex !== null,
+                context
+            )
+            : null;
 
         setInteraction(prev => ({
             ...prev,
             type: 'move',
-            currentTime: result.time,
+            currentTime: movePlan?.primaryStart ?? result.time,
             currentTrackId: result.trackId,
             insertTrackIndex: result.insertIndex,
             validDrop: result.isValid,
-            hasCollision: result.hasCollision,
-            snapLines: result.snapLines
+            hasCollision: result.insertIndex !== null
+                ? (movePlan?.hasCollision ?? false)
+                : (result.hasCollision || (movePlan?.hasCollision ?? false)),
+            snapLines: result.snapLines,
+            linkedMoves: movePlan?.moves
         }));
 
         if (!rafRef.current) {
@@ -134,7 +172,7 @@ export const useClipDrag = (options: UseClipDragOptions) => {
                 rafRef.current = null;
             });
         }
-    }, [containerRef, pixelsPerSecond, autoScrollSpeed, buildContext, setInteraction]);
+    }, [containerRef, pixelsPerSecond, autoScrollSpeed, buildContext, clipsMap, resolveMovePlan, setInteraction]);
 
     const startDrag = useCallback((clipId: string, clientX: number, clientY: number) => {
         const clip = clipsMap[clipId];
@@ -184,7 +222,8 @@ export const useClipDrag = (options: UseClipDragOptions) => {
                         initialStartTime: clip.start,
                         initialTrackId: clip.track.id,
                         initialOffset: clip.offset || 0,
-                        isSnapping: false
+                        isSnapping: false,
+                        linkedMoves: [{ clipId, targetTrackId: clip.track.id, newStart: clip.start }]
                     });
                 }
             }
@@ -216,17 +255,36 @@ export const useClipDrag = (options: UseClipDragOptions) => {
                         pixelsPerSecond
                     };
                     
-                    const result = strategyRef.current.calculate(input, buildContext());
+                    const context = buildContext();
+                    const result = strategyRef.current.calculate(input, context);
                     const cId = dragStateRef.current.clipId!;
+                    const clip = clipsMap[cId];
+                    const movePlan = clip && (result.trackId || result.insertIndex !== null)
+                        ? resolveMovePlan(
+                            cId,
+                            result.trackId || clip.track.id,
+                            result.time,
+                            result.insertIndex !== null,
+                            context
+                        )
+                        : null;
 
-                    if (result.trackId && !result.hasCollision && result.isValid) {
-                         moveClip(cId, result.trackId, result.time);
+                    if (result.trackId && result.isValid && movePlan && !result.hasCollision && !movePlan.hasCollision) {
+                         applyClipMoves(movePlan.moves);
                     } else if (result.insertIndex !== null) {
-                         insertTrackAndMoveClip(cId, result.insertIndex, result.time, result.suggestedTrackType);
+                         if (movePlan && !movePlan.hasCollision) {
+                            insertTrackAndMoveClipGroup(
+                                cId,
+                                result.insertIndex,
+                                movePlan.primaryStart,
+                                movePlan.moves.filter((move) => move.clipId !== cId),
+                                result.suggestedTrackType
+                            );
+                         }
                     }
                 }
                 
-                setInteraction(prev => ({ ...prev, type: 'idle', clipId: null, snapLines: [] }));
+                setInteraction(prev => ({ ...prev, type: 'idle', clipId: null, snapLines: [], linkedMoves: undefined }));
             }
 
             strategyRef.current = null;
@@ -239,7 +297,7 @@ export const useClipDrag = (options: UseClipDragOptions) => {
 
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
-    }, [clipsMap, containerRef, pixelsPerSecond, prepareSnapPoints, setInteraction, processDragFrame, moveClip, insertTrackAndMoveClip, buildContext, autoScrollSpeed]);
+    }, [clipsMap, containerRef, pixelsPerSecond, prepareSnapPoints, setInteraction, processDragFrame, applyClipMoves, insertTrackAndMoveClipGroup, buildContext, autoScrollSpeed, resolveMovePlan]);
 
     return { startDrag };
 };

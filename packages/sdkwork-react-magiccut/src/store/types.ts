@@ -1,9 +1,15 @@
 
 import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
+import type { UnifiedDigitalAsset } from '@sdkwork/react-types';
+import type { ResourceDropPreview } from '../domain/dnd/dropPreview';
+import type { LinkedClipMove } from '../domain/timeline/linkedMove';
+import type { MagicCutTimelineResourceView } from '../domain/assets/magicCutAssetState';
 ;
 
 export interface NormalizedState {
+    assets: Record<string, UnifiedDigitalAsset>;
+    resourceViews: Record<string, MagicCutTimelineResourceView>;
     resources: Record<string, AnyMediaResource>;
     timelines: Record<string, CutTimeline>;
     tracks: Record<string, CutTrack>;
@@ -46,6 +52,9 @@ export interface InteractionState {
     marquee?: MarqueeState;
     editTool?: EditTool;
     razorTime?: number;
+    trimEdge?: 'start' | 'end';
+    dropPreview?: ResourceDropPreview;
+    linkedMoves?: LinkedClipMove[];
 }
 
 export interface DragOperation {

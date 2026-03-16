@@ -3,6 +3,7 @@ import { AnyMediaResource } from '@sdkwork/react-commons';
 import { downloadService } from '@sdkwork/react-core';
 import { getRobustResourceUrl, isVfsPath } from '../../utils/resourceUtils';
 import { getAssetIdCandidate, resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
+import { resolveRenderRuntimeProfile } from '../config/renderProfile';
 
 
 const logger = {
@@ -12,6 +13,7 @@ const logger = {
 };
 
 export class ResourceManager {
+    private readonly renderProfile = resolveRenderRuntimeProfile();
     private videoCache = new Map<string, HTMLVideoElement>();
     private videoPlayPromises = new Map<string, Promise<void> | null>();
     private videoCacheAccessOrder: string[] = [];
@@ -27,15 +29,13 @@ export class ResourceManager {
     private pendingHydrations = new Set<string>();
     private pendingAssetResolves = new Map<string, Promise<void>>();
     private resolvedAssetUrls = new Map<string, string>();
-    private hiddenContainer: HTMLDivElement;
+    private hiddenContainer: HTMLDivElement | null = null;
 
     // Callbacks
     private onFrameReady?: () => void;
 
     constructor() {
-        this.hiddenContainer = document.createElement('div');
-        this.hiddenContainer.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0.001;pointer-events:none;overflow:hidden;";
-        document.body.appendChild(this.hiddenContainer);
+        this.ensureHiddenContainer();
     }
 
     public setRenderCallback(fn: () => void) {
@@ -66,6 +66,7 @@ export class ResourceManager {
         if (this.hiddenContainer && this.hiddenContainer.parentNode) {
             this.hiddenContainer.parentNode.removeChild(this.hiddenContainer);
         }
+        this.hiddenContainer = null;
     }
 
     public getVideoElement(id: string, url: string): HTMLVideoElement {
@@ -92,7 +93,7 @@ export class ResourceManager {
         video.volume = 0; 
         
         video.playsInline = true;
-        video.preload = 'auto'; 
+        video.preload = this.renderProfile.videoPreload;
         video.autoplay = false; 
         
         // Optimize for smoothness
@@ -121,7 +122,7 @@ export class ResourceManager {
         video.addEventListener('loadeddata', onReady);
         video.addEventListener('loadedmetadata', onReady); 
 
-        this.hiddenContainer.appendChild(video);
+        this.ensureHiddenContainer()?.appendChild(video);
         this.videoCache.set(id, video);
         this.videoCacheAccessOrder.push(id);
         
@@ -300,7 +301,7 @@ export class ResourceManager {
     }
     
     private evictLRUVideo() {
-        if (this.videoCache.size >= 15) {
+        if (this.videoCache.size >= this.renderProfile.maxVideoElements) {
             const lruId = this.videoCacheAccessOrder.shift();
             if (lruId) {
                 const video = this.videoCache.get(lruId);
@@ -316,5 +317,21 @@ export class ResourceManager {
                 this.isSeeking.delete(lruId);
             }
         }
+    }
+
+    private ensureHiddenContainer(): HTMLDivElement | null {
+        if (typeof document === 'undefined') {
+            return null;
+        }
+
+        if (this.hiddenContainer && this.hiddenContainer.isConnected) {
+            return this.hiddenContainer;
+        }
+
+        const container = document.createElement('div');
+        container.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0.001;pointer-events:none;overflow:hidden;contain:strict;";
+        (document.body || document.documentElement).appendChild(container);
+        this.hiddenContainer = container;
+        return container;
     }
 }

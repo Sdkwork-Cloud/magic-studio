@@ -391,7 +391,7 @@ export class OrderService implements IOrderService {
 
     const client = getSdkworkClient();
     if (status === OrderStatusEnum.CANCELLED) {
-      await client.orders.cancelOrder(orderId, { reason: 'user_cancelled' });
+      await client.orders.cancel(orderId, { reason: 'user_cancelled' });
       const detail = await this.getOrderById(orderId);
       if (!detail) {
         throw new Error('Order not found after cancel');
@@ -407,7 +407,7 @@ export class OrderService implements IOrderService {
       return detail;
     }
     if (status === OrderStatusEnum.PAID) {
-      await client.orders.payOrder(orderId, { paymentMethod: toSdkPaymentMethod(PaymentMethodEnum.ALIPAY) });
+      await client.orders.pay(orderId, { paymentMethod: toSdkPaymentMethod(PaymentMethodEnum.ALIPAY) });
       const detail = await this.getOrderById(orderId);
       if (!detail) {
         throw new Error('Order not found after pay');
@@ -432,7 +432,7 @@ export class OrderService implements IOrderService {
       throw new Error('Order uuid is required');
     }
     const client = getSdkworkClient();
-    await client.orders.cancelOrder(orderId, {
+    await client.orders.cancel(orderId, {
       reason: normalizeText(params.reason) || 'user_cancelled',
     });
     const detail = await this.getOrderById(orderId);

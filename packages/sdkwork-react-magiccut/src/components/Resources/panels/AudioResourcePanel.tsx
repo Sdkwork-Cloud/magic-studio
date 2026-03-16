@@ -8,7 +8,7 @@ interface AudioResourcePanelProps {
     assets: AnyAsset[];
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
-    onPreview: (item: AnyAsset) => void;
+    onPreview: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
 }
 
@@ -30,7 +30,9 @@ export const AudioResourcePanel: React.FC<AudioResourcePanelProps> = React.memo(
                     isPlaying={playingId === item.id}
                     onPlayToggle={(e) => {
                         e.stopPropagation();
-                        setPlayingId(playingId === item.id ? null : item.id);
+                        const nextPlayingId = playingId === item.id ? null : item.id;
+                        setPlayingId(nextPlayingId);
+                        onPreview(nextPlayingId ? item : null);
                     }}
                     onDragStart={onDragStart}
                     onToggleFavorite={onToggleFavorite}

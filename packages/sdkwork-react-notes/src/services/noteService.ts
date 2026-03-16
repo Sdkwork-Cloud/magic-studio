@@ -683,11 +683,11 @@ class NoteService implements IBaseService<NoteSummary> {
 
   private async toggleFavorite(id: string, enabled: boolean): Promise<void> {
     if (enabled) {
-      const response = await this.getClient().notes.favoriteNote(id);
+      const response = await this.getClient().notes.favorite(id);
       ensureApiSuccess(response as ApiEnvelope<unknown>, 'Failed to favorite note');
       return;
     }
-    const response = await this.getClient().notes.unfavoriteNote(id);
+    const response = await this.getClient().notes.unfavorite(id);
     ensureApiSuccess(response as ApiEnvelope<unknown>, 'Failed to unfavorite note');
   }
 
@@ -816,7 +816,7 @@ class NoteService implements IBaseService<NoteSummary> {
       }
 
       if (entity.parentId !== undefined) {
-        const moveResponse = await this.getClient().notes.moveNote(noteId, {
+        const moveResponse = await this.getClient().notes.move(noteId, {
           folderId: normalizeString(entity.parentId) || undefined,
         });
         ensureApiSuccess(moveResponse as ApiEnvelope<unknown>, 'Failed to move note');
@@ -831,7 +831,7 @@ class NoteService implements IBaseService<NoteSummary> {
           const deleteResponse = await this.getClient().notes.deleteNote(noteId);
           ensureApiSuccess(deleteResponse as ApiEnvelope<unknown>, 'Failed to move note to trash');
         } else {
-          const restoreResponse = await this.getClient().notes.restoreNote(noteId);
+          const restoreResponse = await this.getClient().notes.restore(noteId);
           ensureApiSuccess(restoreResponse as ApiEnvelope<unknown>, 'Failed to restore note');
         }
       }
@@ -850,7 +850,7 @@ class NoteService implements IBaseService<NoteSummary> {
     }
     try {
       const deletedByDedicatedMethod = await this.tryInvokeNotesMethod(
-        ['deleteNotePermanent', 'deleteNotePermanently', 'deletePermanentNote', 'permanentDeleteNote'],
+        ['permanentlyDelete', 'deleteNotePermanent', 'deleteNotePermanently', 'deletePermanentNote', 'permanentDeleteNote'],
         [noteId],
         'Failed to permanently delete note',
       );
@@ -889,7 +889,7 @@ class NoteService implements IBaseService<NoteSummary> {
       return Result.error('Note id is required');
     }
     try {
-      const response = await this.getClient().notes.restoreNote(noteId);
+      const response = await this.getClient().notes.restore(noteId);
       ensureApiSuccess(response as ApiEnvelope<unknown>, 'Failed to restore note');
       const summary = await this.loadSummaryById(noteId, false);
       return Result.success(summary);
@@ -1056,7 +1056,7 @@ class NoteService implements IBaseService<NoteSummary> {
       return Result.error('Note id is required');
     }
     try {
-      const response = await this.getClient().notes.moveNote(noteId, {
+      const response = await this.getClient().notes.move(noteId, {
         folderId: normalizeString(newParentId) || undefined,
       });
       ensureApiSuccess(response as ApiEnvelope<unknown>, 'Failed to move note');

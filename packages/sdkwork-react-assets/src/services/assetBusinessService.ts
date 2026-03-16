@@ -1,3 +1,4 @@
+import { createServiceAdapterController } from '@sdkwork/react-commons';
 import { ASSET_CATEGORIES, assetService, setMediaAnalysisAdapter } from './assetService';
 import { assetServiceRegistry } from './AssetServiceRegistry';
 import {
@@ -50,6 +51,19 @@ const localAssetAdapter: AssetBusinessAdapter = {
   resolveAssetPrimaryUrlBySdk
 };
 
-export const assetBusinessService: AssetBusinessAdapter = localAssetAdapter;
+const controller = createServiceAdapterController<AssetBusinessAdapter>(localAssetAdapter);
+
+export const assetBusinessService: AssetBusinessAdapter = controller.service;
+export const setAssetBusinessAdapter = (adapter: AssetBusinessAdapter): void => {
+  controller.setAdapter(adapter);
+};
+
+export const getAssetBusinessAdapter = (): AssetBusinessAdapter => {
+  return controller.getAdapter();
+};
+
+export const resetAssetBusinessAdapter = (): void => {
+  controller.resetAdapter();
+};
 
 export type { AssetSdkQueryCategory };

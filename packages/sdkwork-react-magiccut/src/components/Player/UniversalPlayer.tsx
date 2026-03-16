@@ -5,6 +5,7 @@ import { MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { playerPreviewService } from '../../services';
 import { Monitor } from 'lucide-react';
 import type { TimelineStore } from '../../store/transientStore';
+import { resolveCanvasBackingStoreSize, resolveRenderRuntimeProfile } from '../../engine/config/renderProfile';
 
 // Export RenderData for consumers (like MagicCutPlayer)
 export type { RenderData };
@@ -152,6 +153,8 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
         return { width: safeW, height: safeH, ratio };
     }, [projectResolution.width, projectResolution.height]);
 
+    const renderProfile = useMemo(() => resolveRenderRuntimeProfile(), []);
+
     const stageLayout = useMemo(() => {
         if (containerSize.width === 0 || containerSize.height === 0) return { width: 0, height: 0, scale: 1 };
 
@@ -179,16 +182,24 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
         return { width: displayW, height: displayH, scale };
     }, [containerSize, projectRes.ratio, projectRes.width, viewScale]);
 
+    const canvasBackingStore = useMemo(() => {
+        if (stageLayout.width === 0 || stageLayout.height === 0) {
+            return { width: 0, height: 0, devicePixelRatio: 1 };
+        }
+
+        return resolveCanvasBackingStoreSize({
+            cssWidth: stageLayout.width,
+            cssHeight: stageLayout.height,
+            devicePixelRatio: typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+            profile: renderProfile
+        });
+    }, [stageLayout.width, stageLayout.height, renderProfile]);
+
     useLayoutEffect(() => {
-        if (stageLayout.width === 0) return;
+        if (stageLayout.width === 0 || canvasBackingStore.width === 0 || canvasBackingStore.height === 0) return;
         engine.setProjectResolution(projectRes.width, projectRes.height);
-        
-        const dpr = window.devicePixelRatio || 1;
-        const canvasW = Math.floor(stageLayout.width * dpr);
-        const canvasH = Math.floor(stageLayout.height * dpr);
-        
-        engine.resize(canvasW, canvasH);
-    }, [stageLayout.width, stageLayout.height, projectRes.width, projectRes.height]);
+        engine.resize(canvasBackingStore.width, canvasBackingStore.height);
+    }, [stageLayout.width, canvasBackingStore.width, canvasBackingStore.height, projectRes.width, projectRes.height]);
 
     // --- Dynamic Override Logic (Direct Store Access) ---
     const getRenderOverride = (): RenderOverrideClip | null => {

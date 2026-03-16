@@ -1,13 +1,14 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 ;
 import { useAssetUrl, MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../entities/magicCut.entity';
 import { PlayerController } from '../../controllers/PlayerController';
-import { Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle, Lock } from 'lucide-react';
-import { InteractionState } from '../../store/types';
+import { Film, Image as ImageIcon, Music, Type, Sparkles, AlertCircle, Lock, Link2 } from 'lucide-react';
+import { EditTool, InteractionState } from '../../store/types';
 import { ClipFilmstrip } from './visuals/ClipFilmstrip';
 import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
+import { resolveClipToolInteraction } from '../../domain/timeline/clipInteraction';
 ;
 
 interface MagicCutClipProps {
@@ -18,6 +19,7 @@ interface MagicCutClipProps {
     resourceSource?: string | AnyMediaResource;
     resourceMetadata?: any; 
     pixelsPerSecond: number;
+    editTool: EditTool;
     isSelected: boolean;
     onSelect: (id: string, multi?: boolean) => void;
     trackHeight: number;
@@ -39,6 +41,7 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
     resourceSource,
     resourceMetadata,
     pixelsPerSecond,
+    editTool,
     isSelected,
     onSelect,
     trackHeight,
@@ -48,6 +51,7 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
     onDragStart,
     onContextMenu
 }) => {
+    const clipRef = useRef<HTMLDivElement>(null);
     const left = clip.start * pixelsPerSecond;
     const width = clip.duration * pixelsPerSecond;
 
@@ -110,24 +114,34 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
 
     const filmstripSource = resolvedUrl || '';
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (isLocked || isGhost) return;
-        e.stopPropagation(); 
-        
-        const isMultiSelect = e.shiftKey;
-        if (!isSelected || isMultiSelect) {
-            onSelect(clip.id, isMultiSelect);
-        }
-        if (onDragStart) onDragStart(e);
+    const resolvePointerTime = (clientX: number) => {
+        const rect = clipRef.current?.getBoundingClientRect();
+        if (!rect || rect.width <= 0) return clip.start;
+
+        const relativeX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+        return clip.start + (relativeX / pixelsPerSecond);
     };
 
-    const handleTrim = (e: React.MouseEvent, type: 'start' | 'end') => {
+    const beginInteraction = (e: React.MouseEvent, zone: 'body' | 'start-edge' | 'end-edge') => {
         if (isLocked || isGhost) return;
         e.stopPropagation();
         e.preventDefault();
-        
+
+        const interactionType = resolveClipToolInteraction({ tool: editTool, zone });
+        if (!interactionType) {
+            return;
+        }
+
+        const baseCurrentTime = zone === 'start-edge'
+            ? clip.start
+            : zone === 'end-edge'
+                ? clip.start + clip.duration
+                : interactionType === 'razor-cut'
+                    ? resolvePointerTime(e.clientX)
+                    : clip.start;
+
         setInteraction({
-            type: type === 'start' ? 'trim-start' : 'trim-end',
+            type: interactionType,
             clipId: clip.id,
             initialX: e.clientX,
             initialY: e.clientY,
@@ -136,16 +150,45 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
             initialTrackId: clip.track.id,
             initialOffset: clip.offset || 0,
             currentTrackId: clip.track.id,
-            currentTime: type === 'start' ? clip.start : clip.start + clip.duration,
+            currentTime: baseCurrentTime,
             isSnapping: true,
             snapLines: [],
             validDrop: true,
             hasCollision: false,
-            insertTrackIndex: null
+            insertTrackIndex: null,
+            editTool,
+            trimEdge: zone === 'start-edge' ? 'start' : zone === 'end-edge' ? 'end' : undefined,
+            razorTime: interactionType === 'razor-cut' ? baseCurrentTime : undefined
         });
     };
 
-    const showTrimHandles = isSelected && !isLocked && !isGhost && width > 24;
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (isLocked || isGhost) return;
+        e.stopPropagation();
+
+        const isMultiSelect = e.shiftKey;
+        if (!isSelected || isMultiSelect) {
+            onSelect(clip.id, isMultiSelect);
+        }
+
+        const interactionType = resolveClipToolInteraction({ tool: editTool, zone: 'body' });
+        if (interactionType && interactionType !== 'move') {
+            beginInteraction(e, 'body');
+            return;
+        }
+
+        if (interactionType === 'move' && onDragStart) {
+            onDragStart(e);
+        }
+    };
+
+    const showTrimHandles = !isLocked && !isGhost && width > 24 && (
+        isSelected ||
+        editTool === 'trim' ||
+        editTool === 'ripple' ||
+        editTool === 'roll' ||
+        editTool === 'slide'
+    );
     const isTiny = width < 30;
     const isShortTrack = trackHeight < 30; 
     const showHeader = !isShortTrack && !isTiny;
@@ -154,10 +197,25 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
 
     const hasVisuals = resourceType === MediaResourceType.VIDEO || resourceType === MediaResourceType.IMAGE;
 
+    const bodyCursor = editTool === 'razor'
+        ? 'cursor-crosshair'
+        : editTool === 'slip'
+            ? 'cursor-grab'
+            : editTool === 'slide'
+                ? 'cursor-move'
+                : editTool === 'select'
+                    ? 'cursor-grab'
+                    : 'cursor-default';
+
+    const trimCursorClass = editTool === 'razor'
+        ? 'cursor-crosshair'
+        : 'cursor-ew-resize';
+
     return (
         <div
+            ref={clipRef}
             className={`
-                absolute top-0 bottom-0 rounded-md overflow-hidden select-none group flex flex-col box-border
+                absolute top-0 bottom-0 rounded-md overflow-hidden select-none group flex flex-col box-border ${bodyCursor}
                 ${visualConfig.bg}
                 ${isSelected 
                     ? `ring-2 ring-white z-20 shadow-lg` 
@@ -189,6 +247,11 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
                     <span className={`text-[10px] font-semibold truncate tracking-wide flex-1 leading-none pt-0.5 ${visualConfig.headerText}`}>
                         {clip.content || resourceName || 'Unknown Clip'}
                     </span>
+                    {(clip.linkGroupId || clip.linkedClipId) && (
+                        <span className="flex items-center justify-center w-3 h-3 rounded bg-black/25 text-white/70 shrink-0" title="Linked clip">
+                            <Link2 size={8} />
+                        </span>
+                    )}
                     {isLocked && <Lock size={8} className="text-gray-400 shrink-0" />}
                 </div>
             )}
@@ -226,14 +289,14 @@ export const MagicCutClip: React.FC<MagicCutClipProps> = React.memo(({
             {showTrimHandles && (
                 <>
                     <div 
-                        className="absolute left-0 top-0 bottom-0 w-3 cursor-w-resize z-30 flex items-center justify-start group/trim pl-0.5"
-                        onMouseDown={(e) => handleTrim(e, 'start')}
+                        className={`absolute left-0 top-0 bottom-0 w-3 z-30 flex items-center justify-start group/trim pl-0.5 ${trimCursorClass}`}
+                        onMouseDown={(e) => beginInteraction(e, 'start-edge')}
                     >
                         <div className="w-[4px] h-full bg-white rounded-l-sm shadow-md group-hover/trim:bg-blue-400 transition-colors" />
                     </div>
                     <div 
-                        className="absolute right-0 top-0 bottom-0 w-3 cursor-e-resize z-30 flex items-center justify-end group/trim pr-0.5"
-                        onMouseDown={(e) => handleTrim(e, 'end')}
+                        className={`absolute right-0 top-0 bottom-0 w-3 z-30 flex items-center justify-end group/trim pr-0.5 ${trimCursorClass}`}
+                        onMouseDown={(e) => beginInteraction(e, 'end-edge')}
                     >
                         <div className="w-[4px] h-full bg-white rounded-r-sm shadow-md group-hover/trim:bg-blue-400 transition-colors" />
                     </div>

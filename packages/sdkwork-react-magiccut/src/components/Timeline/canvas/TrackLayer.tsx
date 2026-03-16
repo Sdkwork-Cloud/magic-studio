@@ -4,6 +4,7 @@ import React, { useCallback } from 'react';
 import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutTrack, CutClip } from '../../../entities/magicCut.entity';
 import { MagicCutTrack } from '../MagicCutTrack';
+import { EditTool } from '../../../store/types';
 
 interface TrackLayerProps {
     tracks: CutTrack[];
@@ -11,6 +12,7 @@ interface TrackLayerProps {
     clipsMap: Record<string, CutClip>;
     getResource: (id: string) => AnyMediaResource | undefined;
     pixelsPerSecond: number;
+    editTool: EditTool;
     selectedClipId: string | null;
     selectedClipIds: Set<string>;
     onClipSelect: (id: string | null, multi?: boolean) => void;
@@ -27,6 +29,7 @@ export const TrackLayer: React.FC<TrackLayerProps> = React.memo(({
     clipsMap,
     getResource,
     pixelsPerSecond,
+    editTool,
     selectedClipId,
     selectedClipIds,
     onClipSelect,
@@ -65,6 +68,7 @@ export const TrackLayer: React.FC<TrackLayerProps> = React.memo(({
                             clips={track.clips.map(ref => clipsMap[ref.id]).filter(Boolean)}
                             getResource={getResource}
                             pixelsPerSecond={pixelsPerSecond}
+                            editTool={editTool}
                             selectedClipId={selectedClipId}
                             selectedClipIds={selectedClipIds}
                             onClipSelect={handleClipSelect} 

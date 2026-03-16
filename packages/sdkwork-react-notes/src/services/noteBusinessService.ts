@@ -7,6 +7,7 @@ import {
   Result,
   ServiceResult
 } from '@sdkwork/react-commons';
+import { createServiceAdapterController } from '@sdkwork/react-commons';
 import { noteService } from './noteService';
 
 export interface NoteWorkspaceSnapshot {
@@ -124,4 +125,18 @@ class NoteBusinessService implements INoteBusinessService {
   }
 }
 
-export const noteBusinessService: INoteBusinessService = new NoteBusinessService();
+const localNoteBusinessService: INoteBusinessService = new NoteBusinessService();
+const controller = createServiceAdapterController<INoteBusinessService>(localNoteBusinessService);
+
+export const noteBusinessService: INoteBusinessService = controller.service;
+export const setNoteBusinessAdapter = (adapter: INoteBusinessService): void => {
+  controller.setAdapter(adapter);
+};
+
+export const getNoteBusinessAdapter = (): INoteBusinessService => {
+  return controller.getAdapter();
+};
+
+export const resetNoteBusinessAdapter = (): void => {
+  controller.resetAdapter();
+};

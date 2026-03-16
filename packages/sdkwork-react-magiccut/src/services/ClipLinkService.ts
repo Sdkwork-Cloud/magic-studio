@@ -3,6 +3,11 @@
 import { NormalizedState } from '../store/types';
 import { CutClip } from '../entities/magicCut.entity';
 import { generateUUID } from '@sdkwork/react-commons';
+import {
+    resolveLinkedClipMovePlan,
+    type LinkedMovePlan,
+    type ResolveLinkedMovePlanOptions
+} from '../domain/timeline/linkedMove';
 
 export interface ClipLinkGroup {
     id: string;
@@ -149,6 +154,12 @@ export class ClipLinkService {
                 newStart: Math.max(0, clip.start + deltaTime)
             };
         });
+    }
+
+    static resolveLinkedMovePlan(
+        options: ResolveLinkedMovePlanOptions
+    ): LinkedMovePlan {
+        return resolveLinkedClipMovePlan(options);
     }
     
     static calculateLinkedTrim(

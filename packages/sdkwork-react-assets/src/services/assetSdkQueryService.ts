@@ -436,7 +436,7 @@ export async function renameAssetBySdk(assetId: string, newName: string): Promis
   }
 
   const client = getAppSdkClientWithSession();
-  const response = await client.assets.renameAsset(assetId, {
+  const response = await client.assets.rename(assetId, {
     name: normalizedName
   }) as RawApiResultVoid;
   assertApiSuccess(response, 'Failed to rename asset.');

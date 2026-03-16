@@ -4,7 +4,7 @@ import {
     authSessionService,
     resolveAppSdkAccessToken,
 } from '../services';
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { i18nService } from '@sdkwork/react-i18n';
 
 interface AuthStoreContextType {
@@ -137,6 +137,16 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const refreshAccessToken = refreshAuthToken;
+
+    useEffect(() => {
+        if (!hasValidInitialSession) {
+            return;
+        }
+
+        void syncCurrentSession().catch(() => {
+            clearAuthData();
+        });
+    }, [clearAuthData, hasValidInitialSession]);
 
     return (
         <AuthStoreContext.Provider value={{

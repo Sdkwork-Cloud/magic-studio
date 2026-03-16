@@ -1,9 +1,12 @@
 
-import { CutTrack, CutClip } from '../../entities/magicCut.entity';
-import { TIMELINE_CONSTANTS } from '../../constants';
-import React, { useRef, useEffect, useState } from 'react';
-;
-;
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import type { CutClip, CutTrack } from '../../entities/magicCut.entity';
+import {
+    resolveMinimapScrollLeft,
+    resolveMinimapTimeX,
+    resolveMinimapViewport,
+} from '../../domain/timeline/minimap';
 
 interface TimelineMinimapProps {
     tracks: CutTrack[];
@@ -11,8 +14,22 @@ interface TimelineMinimapProps {
     totalDuration: number;
     containerWidth: number;
     scrollLeft: number;
+    pixelsPerSecond: number;
+    currentTime: number;
     onScroll: (newScrollLeft: number) => void;
 }
+
+const HEIGHT = 44;
+const MIN_WIDTH = 220;
+const MAX_WIDTH = 420;
+
+const resolveTrackColor = (trackType: CutTrack['trackType']) => {
+    if (trackType === 'video') return '#38bdf8';
+    if (trackType === 'audio') return '#34d399';
+    if (trackType === 'text') return '#fbbf24';
+    if (trackType === 'effect') return '#a78bfa';
+    return '#71717a';
+};
 
 export const TimelineMinimap: React.FC<TimelineMinimapProps> = ({
     tracks,
@@ -20,132 +37,162 @@ export const TimelineMinimap: React.FC<TimelineMinimapProps> = ({
     totalDuration,
     containerWidth,
     scrollLeft,
+    pixelsPerSecond,
+    currentTime,
     onScroll
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    
-    // Minimap Dimensions
-    const HEIGHT = 32;
-    // Dynamic width based on container, but capped
-    const WIDTH = 300; 
+    const dragOffsetRef = useRef<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
 
-    // --- Drawing Logic ---
+    const width = useMemo(
+        () => Math.round(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, containerWidth * 0.28 || MIN_WIDTH))),
+        [containerWidth]
+    );
+
+    const viewport = useMemo(
+        () =>
+            resolveMinimapViewport({
+                totalDuration,
+                pixelsPerSecond,
+                containerWidth,
+                scrollLeft,
+                minimapWidth: width,
+            }),
+        [totalDuration, pixelsPerSecond, containerWidth, scrollLeft, width]
+    );
+
+    const playheadX = useMemo(
+        () => resolveMinimapTimeX(currentTime, viewport.safeTotalDuration, width),
+        [currentTime, viewport.safeTotalDuration, width]
+    );
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        
-        // High DPI
-        const dpr = window.devicePixelRatio || 1;
-        if (canvas.width !== WIDTH * dpr) {
-            canvas.width = WIDTH * dpr;
-            canvas.height = HEIGHT * dpr;
-            canvas.style.width = `${WIDTH}px`;
-            canvas.style.height = `${HEIGHT}px`;
-            ctx.scale(dpr, dpr);
-        }
 
-        // 1. Background
-        ctx.fillStyle = '#121212';
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        
-        // Safety check
-        const safeTotalDuration = Math.max(totalDuration, 60);
-        
-        // 2. Tracks & Clips
-        // We compress all tracks into the mini height
-        const trackHeight = Math.max(2, HEIGHT / Math.max(1, tracks.length));
-        
-        // Mapping: Time -> Minimap X
-        // Scale = MinimapWidth / TotalDuration
-        const pixelsPerSecond = WIDTH / safeTotalDuration;
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas.width !== width * dpr || canvas.height !== HEIGHT * dpr) {
+            canvas.width = width * dpr;
+            canvas.height = HEIGHT * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${HEIGHT}px`;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        ctx.clearRect(0, 0, width, HEIGHT);
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(0, 0, width, HEIGHT);
+
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, width, HEIGHT * 0.45);
+
+        const trackHeight = Math.max(4, (HEIGHT - 10) / Math.max(1, tracks.length));
+        const topInset = 5;
 
         tracks.forEach((track, i) => {
-             const y = i * trackHeight;
-             const h = Math.max(1, trackHeight - 1);
-             
-             track.clips.forEach(ref => {
-                 const clip = clipsMap[ref.id];
-                 if (!clip) return;
-                 
-                 const x = clip.start * pixelsPerSecond;
-                 const w = Math.max(2, clip.duration * pixelsPerSecond);
-                 
-                 // Color coding
-                if (track.trackType === 'video') ctx.fillStyle = '#3b82f6'; // Blue
-                else if (track.trackType === 'audio') ctx.fillStyle = '#10b981'; // Green
-                else if (track.trackType === 'text') ctx.fillStyle = '#eab308'; // Yellow
-                else ctx.fillStyle = '#6b7280'; // Gray
-                 
-                 ctx.fillRect(x, y, w, h);
-             });
+            const y = topInset + i * trackHeight;
+            const h = Math.max(3, trackHeight - 2);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
+            ctx.fillRect(0, y, width, h);
+
+            track.clips.forEach((ref) => {
+                const clip = clipsMap[ref.id];
+                if (!clip) return;
+
+                const x = (clip.start / viewport.safeTotalDuration) * width;
+                const w = Math.max(2, (clip.duration / viewport.safeTotalDuration) * width);
+
+                ctx.fillStyle = resolveTrackColor(track.trackType);
+                ctx.fillRect(x, y, w, h);
+            });
         });
+    }, [tracks, clipsMap, viewport.safeTotalDuration, width]);
 
-        // 3. Viewport Box (The "Lens")
-        // Calculate the ratio of the Visible Window relative to Total Project
-        const totalTimelineWidthPx = safeTotalDuration * TIMELINE_CONSTANTS.DEFAULT_PIXELS_PER_SECOND; // We need actual timeline PPS here? 
-        // Wait, scrollLeft is in timeline pixels. We need to map Timeline Pixels -> Minimap Pixels.
-        // But Timeline Width is dynamic based on Zoom.
-        // Let's rely on Time ratio, which is invariant of zoom.
-        // visibleStartTime = scrollLeft / currentZoomPPS
-        // visibleDuration = containerWidth / currentZoomPPS
-        
-        // We don't have currentZoomPPS passed in props directly, but we can derive from scrollLeft? No.
-        // Let's assume standard mapping: 
-        // Minimap represents 0 to TotalDuration.
-        // We need to know what time range is currently visible.
-        // We can approximate if we assume the caller passes meaningful scroll info. 
-        // Better yet: passing visibleTimeStart / visibleTimeEnd is cleaner, but we have scrollLeft/containerWidth.
-        // We need 'pixelsPerSecond' (current zoom) to calculate visible time range correctly.
-        // For now, let's use a visual estimation based on the ratio of the scrollbar logic.
-        // Actually, without 'zoomLevel', we can't accurately draw the box width.
-        // Let's just draw a "current position" line if we can't determine width, 
-        // OR calculate width assuming the parent passes a ratio.
-        
-        // *Improvement*: Let's just render the content for now. 
-        // The Viewport Box logic requires 'pixelsPerSecond' (Zoom) to be accurate.
-        // I will add a simple progress indicator instead of a complex viewport box to avoid zoom-mismatch bugs until zoom is passed.
-        
-        // Draw a simple time indicator if we assume scrollLeft is somewhat correlated? No, that's risky.
-        // Let's just draw the content map. The user can click to jump.
-        
-    }, [tracks, clipsMap, totalDuration]);
-
-    // --- Interaction ---
-    const handleInteraction = (e: React.MouseEvent) => {
+    const applyPointerScroll = useCallback((clientX: number, dragOffsetX: number) => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
-        const relX = Math.max(0, Math.min(e.clientX - rect.left, WIDTH));
-        
-        // Click position (0.0 to 1.0)
-        const ratio = relX / WIDTH;
-        
-        // Target Time
-        const safeTotalDuration = Math.max(totalDuration, 60);
-        const targetTime = ratio * safeTotalDuration;
-        
-        // Convert Time -> Timeline Pixels (requires current PPS from store, which we don't have here directly)
-        // We emit a special event or callback that takes TIME, not pixels. 
-        // But the prop is `onScroll(pixels)`. 
-        // We need to know the current PPS to convert Time -> Pixels.
-        // Since we don't have it, we can't implement precise click-jump without refactoring props.
-        // However, this is just a visualization for now.
-    };
+        const pointerX = Math.max(0, Math.min(clientX - rect.left, width));
+
+        onScroll(resolveMinimapScrollLeft({
+            pointerX,
+            dragOffsetX,
+            totalDuration,
+            pixelsPerSecond,
+            containerWidth,
+            minimapWidth: width,
+        }));
+    }, [onScroll, totalDuration, pixelsPerSecond, containerWidth, width]);
+
+    const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        const pointerX = Math.max(0, Math.min(e.clientX - e.currentTarget.getBoundingClientRect().left, width));
+        const dragOffsetX =
+            pointerX >= viewport.x && pointerX <= viewport.x + viewport.width
+                ? pointerX - viewport.x
+                : viewport.width / 2;
+
+        dragOffsetRef.current = dragOffsetX;
+        setIsDragging(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        applyPointerScroll(e.clientX, dragOffsetX);
+    }, [applyPointerScroll, viewport.x, viewport.width, width]);
+
+    const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging || dragOffsetRef.current === null) return;
+        applyPointerScroll(e.clientX, dragOffsetRef.current);
+    }, [applyPointerScroll, isDragging]);
+
+    const endDrag = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
+        if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        dragOffsetRef.current = null;
+        setIsDragging(false);
+    }, []);
 
     if (tracks.length === 0) return null;
 
     return (
-        <div 
+        <div
             ref={containerRef}
-            className="bg-[#18181b] border border-[#333] rounded-md overflow-hidden shadow-lg select-none hover:border-[#555] transition-colors"
-            style={{ width: WIDTH, height: HEIGHT }}
-            // onClick={handleInteraction} // Disabled until we pass zoomLevel for accurate seeking
+            className={`relative overflow-hidden rounded-xl border shadow-2xl backdrop-blur-md select-none touch-none transition-all ${
+                isDragging ? 'border-cyan-300/70 bg-[#0b1220]/95' : 'border-white/10 bg-[#09090b]/90 hover:border-white/20'
+            }`}
+            style={{ width, height: HEIGHT }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onLostPointerCapture={endDrag}
         >
-            <canvas ref={canvasRef} className="block w-full h-full pointer-events-none opacity-80" />
+            <canvas ref={canvasRef} className="block w-full h-full pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.03] via-transparent to-transparent" />
+            <div
+                className="pointer-events-none absolute inset-y-0 left-0 bg-black/35"
+                style={{ width: viewport.x }}
+            />
+            <div
+                className="pointer-events-none absolute inset-y-0 bg-black/35"
+                style={{ left: viewport.x + viewport.width, width: Math.max(0, width - viewport.x - viewport.width) }}
+            />
+            <div
+                className={`pointer-events-none absolute top-[3px] bottom-[3px] rounded-lg border ${
+                    isDragging ? 'border-cyan-300/90 bg-cyan-300/15' : 'border-white/40 bg-white/10'
+                }`}
+                style={{ left: viewport.x, width: viewport.width }}
+            />
+            <div
+                className="pointer-events-none absolute top-0 bottom-0 w-px bg-red-400/80 shadow-[0_0_8px_rgba(248,113,113,0.45)]"
+                style={{ left: playheadX }}
+            />
+            <div className="pointer-events-none absolute left-2 top-1 text-[9px] font-semibold tracking-[0.22em] text-white/45">
+                OVERVIEW
+            </div>
         </div>
     );
 };
-

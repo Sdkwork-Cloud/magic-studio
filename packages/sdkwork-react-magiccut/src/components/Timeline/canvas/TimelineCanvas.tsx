@@ -15,13 +15,16 @@ import { useSnapPoints } from './hooks/useSnapPoints';
 import { useClipDrag } from './hooks/useClipDrag';
 import { TimelineMenuLayer } from '../menu/TimelineMenuLayer';
 import { MagicCutEvents } from '../../../events';
+import { EditTool, NormalizedState } from '../../../store/types';
 
 export interface TimelineCanvasProps {
     tracks: CutTrack[];
     trackLayouts: { id: string; top: number; height: number }[];
     clipsMap: Record<string, CutClip>;
+    state: NormalizedState;
     getResource: (id: string) => AnyMediaResource | undefined;
     pixelsPerSecond: number;
+    editTool: EditTool;
     selectedClipId: string | null;
     selectedClipIds: Set<string>;
     onClipSelect: (id: string | null, multi?: boolean) => void;
@@ -35,8 +38,10 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
     tracks,
     trackLayouts,
     clipsMap,
+    state,
     getResource,
     pixelsPerSecond,
+    editTool,
     selectedClipId,
     selectedClipIds,
     onClipSelect,
@@ -53,9 +58,11 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
         selectTrack,
         selectClip,
         setInteraction,
-        moveClip,
+        applyClipMoves,
         trimClip,
-        insertTrackAndMoveClip,
+        splitClipAt,
+        applyTimelineEditResult,
+        insertTrackAndMoveClipGroup,
         validateTrackDrop,
         checkCollision
     } = useMagicCutStore();
@@ -63,6 +70,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
     const dragOperation = useTransientState(s => s.dragOperation);
     const interaction = useTransientState(s => s.interaction);
     const scrollLeft = useTransientState(s => s.scrollLeft);
+    const linkedSelectionEnabled = useTransientState(s => s.editMode.linkedSelection);
 
     const { autoScrollSpeed } = useAutoScroll(containerRef, store);
     const { calculateSnap, prepareSnapPoints } = useSnapPoints({ pixelsPerSecond, isSnappingEnabled: true });
@@ -90,17 +98,19 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
     const { startDrag: startClipDrag } = useClipDrag({
         containerRef,
         pixelsPerSecond,
+        state,
         tracks,
         trackLayouts,
         clipsMap,
+        linkedSelectionEnabled,
         getResource,
         calculateSnap,
         prepareSnapPoints,
         validateTrackDrop,
         checkCollision,
         setInteraction,
-        moveClip,
-        insertTrackAndMoveClip,
+        applyClipMoves,
+        insertTrackAndMoveClipGroup,
         playerController,
         autoScrollSpeed
     });
@@ -145,6 +155,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     tracks={tracks}
                     trackLayouts={trackLayouts}
                     clipsMap={clipsMap}
+                    editTool={editTool}
                     getResource={getResource}
                     pixelsPerSecond={pixelsPerSecond}
                     selectedClipId={selectedClipId}
@@ -169,6 +180,7 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
 
                 <InteractionLayer
                     interaction={interaction}
+                    state={state}
                     containerRef={containerRef}
                     pixelsPerSecond={pixelsPerSecond}
                     trackLayouts={trackLayouts}
@@ -178,6 +190,8 @@ export const TimelineCanvas: React.FC<TimelineCanvasProps> = ({
                     prepareSnapPoints={prepareSnapPoints}
                     autoScrollSpeed={autoScrollSpeed}
                     trimClip={trimClip}
+                    splitClipAt={splitClipAt}
+                    applyTimelineEditResult={applyTimelineEditResult}
                     setInteraction={setInteraction}
                     validateTrackDrop={validateTrackDrop}
                     checkCollision={checkCollision}

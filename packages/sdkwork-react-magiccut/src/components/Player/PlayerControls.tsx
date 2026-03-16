@@ -1,6 +1,21 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Maximize, Ratio, ZoomIn, ZoomOut, Repeat } from 'lucide-react';
+import {
+    Play,
+    Pause,
+    SkipBack,
+    SkipForward,
+    Maximize,
+    Ratio,
+    ZoomIn,
+    ZoomOut,
+    Repeat,
+    ChevronLeft,
+    ChevronRight,
+    ArrowLeftToLine,
+    ArrowRightToLine,
+    X
+} from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { audioEngine } from '../../engine/AudioEngine';
 
@@ -15,6 +30,15 @@ interface PlayerControlsProps {
     duration: number;
     disabled?: boolean;
     onTimecodeRef: (el: HTMLElement | null) => void; 
+    inPoint: number | null;
+    outPoint: number | null;
+    onStepBackward: () => void;
+    onStepForward: () => void;
+    onSetInPoint: () => void;
+    onSetOutPoint: () => void;
+    onJumpToInPoint: () => void;
+    onJumpToOutPoint: () => void;
+    onClearRange: () => void;
 }
 
 const formatTimecode = (seconds: number) => {
@@ -91,7 +115,16 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
     onFullscreen,
     duration,
     disabled = false,
-    onTimecodeRef
+    onTimecodeRef,
+    inPoint,
+    outPoint,
+    onStepBackward,
+    onStepForward,
+    onSetInPoint,
+    onSetOutPoint,
+    onJumpToInPoint,
+    onJumpToOutPoint,
+    onClearRange
 }) => {
     const { isLooping, toggleLoop, useTransientState } = useMagicCutStore();
     const isPlaying = useTransientState(s => s.isPlaying);
@@ -115,6 +148,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showRatioMenu]);
 
+    const hasRange = inPoint !== null || outPoint !== null;
+
     return (
         <div className="h-12 bg-[#050505] border-t border-white/5 flex items-center justify-between px-4 z-30 flex-none relative select-none">
             {/* Left: Timecode */}
@@ -127,6 +162,29 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <div className="text-[10px] text-gray-600 font-mono">
                     / {formatTimecode(duration)}
                 </div>
+                {hasRange && (
+                    <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-md border border-blue-500/20 bg-blue-500/5 text-[10px] font-mono text-blue-200">
+                        <button
+                            onClick={onJumpToInPoint}
+                            disabled={disabled || inPoint === null}
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${inPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                            title="Jump to In Point"
+                        >
+                            <ArrowLeftToLine size={10} />
+                            <span>{inPoint === null ? '--:--.--' : formatTimecode(inPoint)}</span>
+                        </button>
+                        <div className="w-px h-3 bg-white/10" />
+                        <button
+                            onClick={onJumpToOutPoint}
+                            disabled={disabled || outPoint === null}
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${outPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                            title="Jump to Out Point"
+                        >
+                            <ArrowRightToLine size={10} />
+                            <span>{outPoint === null ? '--:--.--' : formatTimecode(outPoint)}</span>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Center: Transport & Meter */}
@@ -138,12 +196,28 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 >
                     <SkipBack size={16} fill="currentColor" />
                 </button>
+                <button
+                    onClick={onStepBackward}
+                    disabled={disabled}
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title="Step Back One Frame"
+                >
+                    <ChevronLeft size={16} />
+                </button>
                 <button 
                     onClick={onTogglePlay} 
                     disabled={disabled}
                     className={`w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-white/10 active:scale-95 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                </button>
+                <button
+                    onClick={onStepForward}
+                    disabled={disabled}
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title="Step Forward One Frame"
+                >
+                    <ChevronRight size={16} />
                 </button>
                 <button 
                     onClick={() => onSeek(duration)} 
@@ -170,6 +244,32 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             
             {/* Right: View Controls */}
             <div className="flex items-center justify-end gap-3 w-1/3">
+                <div className="hidden lg:flex items-center gap-1 rounded-lg border border-[#27272a] bg-[#121212] p-0.5">
+                    <button
+                        onClick={onSetInPoint}
+                        disabled={disabled}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${inPoint !== null ? 'bg-blue-500/15 text-blue-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        title="Set In Point (I)"
+                    >
+                        I
+                    </button>
+                    <button
+                        onClick={onSetOutPoint}
+                        disabled={disabled}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${outPoint !== null ? 'bg-orange-500/15 text-orange-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        title="Set Out Point (O)"
+                    >
+                        O
+                    </button>
+                    <button
+                        onClick={onClearRange}
+                        disabled={disabled || !hasRange}
+                        className={`p-1.5 rounded-md transition-colors ${hasRange ? 'text-gray-300 hover:text-white hover:bg-[#27272a]' : 'text-gray-600'} ${disabled || !hasRange ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        title="Clear In/Out Points"
+                    >
+                        <X size={12} />
+                    </button>
+                </div>
                 <div className="relative" ref={ratioMenuRef}>
                     <button onClick={() => setShowRatioMenu(!showRatioMenu)} className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5 rounded hover:bg-[#27272a] uppercase border border-transparent hover:border-[#333]">
                         <Ratio size={14} />

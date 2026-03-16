@@ -10,12 +10,14 @@ import { Film } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
+import { EditTool } from '../../store/types';
 
 interface MagicCutTrackProps {
     track: CutTrack;
     clips: CutClip[];
     getResource: (id: string) => AnyMediaResource | undefined;
     pixelsPerSecond: number;
+    editTool: EditTool;
     selectedClipId: string | null;
     selectedClipIds: Set<string>;
     onClipSelect: (id: string, multi?: boolean) => void;
@@ -27,7 +29,7 @@ interface MagicCutTrackProps {
 }
 
 export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
-    track, clips, getResource, pixelsPerSecond, selectedClipIds, onClipSelect,
+    track, clips, getResource, pixelsPerSecond, editTool, selectedClipIds, onClipSelect,
     visibleTimeStart, visibleTimeEnd, height,
     onTrackSelect, onClipDragStart
 }) => {
@@ -133,6 +135,7 @@ export const MagicCutTrack: React.FC<MagicCutTrackProps> = React.memo(({
                                 resourceName={resource?.name}
                                 resourceType={resource?.type}
                                 pixelsPerSecond={pixelsPerSecond}
+                                editTool={editTool}
                                 isSelected={isSelected}
                                 onSelect={(id, multi) => onClipSelect(id, multi)}
                                 trackHeight={height}

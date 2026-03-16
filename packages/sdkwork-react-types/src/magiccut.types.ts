@@ -2,6 +2,8 @@
 // All magiccut-related types are defined here to avoid circular dependencies
 
 import type { BaseEntity } from './base.types';
+import type { AssetBusinessDomain, AssetStorageMode } from './asset-center.types';
+import type { AssetContentKey } from './media.types';
 
 // ============================================================================
 // Cut Project Settings
@@ -41,6 +43,12 @@ export interface CutMediaResourceRef {
   type: 'MediaResource';
   id: string;
   uuid?: string;
+  assetId?: string;
+  resourceViewId?: string;
+  primaryResourceId?: string;
+  primaryType?: AssetContentKey;
+  storageMode?: AssetStorageMode;
+  scopeDomain?: AssetBusinessDomain;
 }
 
 // ============================================================================
@@ -163,6 +171,8 @@ export interface CutClipTransform {
   height: number;
   rotation: number;
   scale: number;
+  scaleX?: number;
+  scaleY?: number;
   opacity: number;
 }
 

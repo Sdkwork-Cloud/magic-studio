@@ -5,7 +5,7 @@ import { NormalizedState } from '../../store/types';
 
 export type ExportResolution = '480p' | '720p' | '1080p' | '2k' | '4k';
 export type ExportFrameRate = 24 | 25 | 30 | 50 | 60;
-export type ExportFormat = 'mp4' | 'webm' | 'mov' | 'txt';
+export type ExportFormat = 'mp4' | 'webm' | 'mov' | 'wav' | 'txt';
 export type ExportCodec = 'h264' | 'hevc' | 'vp9';
 export type ExportBitrate = 'lower' | 'recommended' | 'higher';
 

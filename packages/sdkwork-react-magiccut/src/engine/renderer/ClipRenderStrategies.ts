@@ -2,6 +2,7 @@ import { CutClip } from '../../entities/magicCut.entity';
 import { AnyMediaResource, MediaResourceType } from '@sdkwork/react-commons';
 import { RenderContext } from '../types';
 import { textRenderer, TextStyle, DEFAULT_TEXT_STYLE } from '../text/TextRenderer';
+import { resolveClipTransformScaleFactors } from '../../domain/transform/clipTransform';
 
 export interface IClipRenderStrategy {
     supports(type: MediaResourceType): boolean;
@@ -116,8 +117,8 @@ export class TextClipStrategy implements IClipRenderStrategy {
         const textContent = clip.content || resource.name || "Text";
         const baseMeta = (resource as any).metadata || {};
         const overrides = clip.style || {};
-        const transformScale = clip.transform?.scale || 1.0;
-        const RENDER_SCALE = Math.min(3.0, Math.max(1.0, transformScale * 1.5));
+        const { maxAbsScale } = resolveClipTransformScaleFactors(clip.transform);
+        const RENDER_SCALE = Math.min(3.0, Math.max(1.0, maxAbsScale * 1.5));
 
         const fontSize = (overrides.fontSize || baseMeta.fontSize || DEFAULT_TEXT_STYLE.fontSize) * RENDER_SCALE;
 

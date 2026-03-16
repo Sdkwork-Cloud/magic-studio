@@ -7,7 +7,7 @@ interface AudioResourceListProps {
     assets: AnyAsset[];
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
-    onPreview: (item: AnyAsset) => void;
+    onPreview: (item: AnyAsset | null) => void;
 }
 
 export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
@@ -18,10 +18,11 @@ export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
 }) => {
     const [playingId, setPlayingId] = useState<string | null>(null);
 
-    const handlePlayToggle = (e: React.MouseEvent, id: string) => {
+    const handlePlayToggle = (e: React.MouseEvent, item: AnyAsset) => {
         e.stopPropagation();
-        setPlayingId(playingId === id ? null : id);
-        // Actual audio preview logic would hook into a player service here
+        const nextPlayingId = playingId === item.id ? null : item.id;
+        setPlayingId(nextPlayingId);
+        onPreview(nextPlayingId ? item : null);
     };
 
     const formatTime = (seconds: number) => {
@@ -47,7 +48,7 @@ export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
                         <div className="flex justify-between items-start">
                              <div 
                                 className="w-8 h-8 rounded-md bg-[#1e1e1e] flex items-center justify-center text-emerald-500 cursor-pointer hover:bg-emerald-500 hover:text-white transition-colors border border-[#333]"
-                                onClick={(e) => handlePlayToggle(e, item.id)}
+                                onClick={(e) => handlePlayToggle(e, item)}
                              >
                                  {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                              </div>

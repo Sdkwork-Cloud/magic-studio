@@ -58,7 +58,6 @@ export class ClipTrimStrategy {
             // Formula: NewOffset = InitialOffset + (NewStart - InitialStart) * Speed
             // Constraint: NewOffset >= 0
             
-            // Simplified for 1.0 speed. TODO: Factor in speed.
             const speed = this.clip.speed || 1.0;
             const delta = finalTime - this.initialState.startTime;
             const offsetDelta = delta * speed;

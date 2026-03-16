@@ -2,7 +2,11 @@
 import { GoogleGenAI, Modality, Type, Content } from "@google/genai";
 import { audioUtils } from "../utils/audioUtils";
 
-const API_KEY = process.env.API_KEY || ''; 
+const API_KEY = (
+    (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.API_KEY
+    || (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_API_KEY
+    || ''
+);
 
 // Initialize client safely
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;

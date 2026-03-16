@@ -2,10 +2,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ChatSession, ChatMessage } from '../entities';
 import { chatBusinessService } from '../services';
+import { hydrateActiveChatSession, type HydratedChatSession } from './chatSessionHydration';
 
-export interface ActiveChatSession extends ChatSession {
-    messages: ChatMessage[];
-}
+export type ActiveChatSession = HydratedChatSession;
 
 interface ChatStoreContextType {
   sessions: ChatSession[];
@@ -33,23 +32,21 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const selectSession = useCallback(async (id: string) => {
+  const loadSession = useCallback(async (id: string, sessionList: ChatSession[]) => {
     setActiveSessionId(id);
-    
-    const meta = sessions.find(s => s.id === id);
-    if (!meta) return;
-
-    const transcriptRes = await chatBusinessService.getTranscript(id);
-    if (transcriptRes.success && transcriptRes.data) {
-        setActiveSession({
-            ...meta,
-            messages: transcriptRes.data.messages
-        });
-    } else {
-        setActiveSession({ ...meta, messages: [] });
-    }
+    const hydrated = await hydrateActiveChatSession(
+      id,
+      sessionList,
+      (sessionId) => chatBusinessService.getTranscript(sessionId)
+    );
+    setActiveSession(hydrated);
     setIsLoading(false);
-  }, [sessions]);
+  }, []);
+
+  const selectSession = useCallback(async (id: string) => {
+    setIsLoading(true);
+    await loadSession(id, sessions);
+  }, [loadSession, sessions]);
 
   useEffect(() => {
     const init = async () => {
@@ -60,16 +57,20 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
              setSessions(loaded);
              
              if (loaded.length > 0) {
-                 selectSession(loaded[0].id);
+                 await loadSession(loaded[0].id, loaded);
              } else {
+                 setActiveSessionId(null);
+                 setActiveSession(null);
                  setIsLoading(false);
              }
         } else {
+             setActiveSessionId(null);
+             setActiveSession(null);
              setIsLoading(false);
         }
     };
-    init();
-  }, [selectSession]);
+    void init();
+  }, [loadSession]);
 
   const createSession = useCallback(async (modelId: string = 'gpt-4o') => {
     const res = await chatBusinessService.createSession(modelId);
@@ -85,19 +86,20 @@ export const ChatStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const deleteSession = useCallback(async (id: string) => {
     await chatBusinessService.deleteById(id);
-    setSessions(prev => {
-        const remaining = prev.filter(s => s.id !== id);
-        if (activeSessionId === id) {
-            if (remaining.length > 0) {
-                selectSession(remaining[0].id);
-            } else {
-                setActiveSessionId(null);
-                setActiveSession(null);
-            }
-        }
-        return remaining;
-    });
-  }, [activeSessionId, selectSession]);
+    const remaining = sessions.filter((session) => session.id !== id);
+    setSessions(remaining);
+
+    if (activeSessionId === id) {
+      if (remaining.length > 0) {
+        setIsLoading(true);
+        await loadSession(remaining[0].id, remaining);
+      } else {
+        setActiveSessionId(null);
+        setActiveSession(null);
+        setIsLoading(false);
+      }
+    }
+  }, [activeSessionId, loadSession, sessions]);
 
   const updateSessionTitle = useCallback((id: string, title: string) => {
       setSessions(prev => prev.map(s => s.id === id ? { ...s, title, updatedAt: Date.now() } : s));

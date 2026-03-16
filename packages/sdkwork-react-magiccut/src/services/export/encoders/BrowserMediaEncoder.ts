@@ -1,5 +1,6 @@
 
 import { IMediaEncoder, ExportConfig } from '../types';
+import { resolveMediaRecorderMimeType } from '../../../domain/export/mediaRecorderMime';
 
 export class BrowserMediaEncoder implements IMediaEncoder {
     // MediaRecorder relies on real-time stream capture
@@ -14,6 +15,25 @@ export class BrowserMediaEncoder implements IMediaEncoder {
     private videoTrack: CanvasCaptureMediaStreamTrack | null = null;
     private config: ExportConfig | null = null;
     private audioBuffer: AudioBuffer | null = null;
+
+    static isSupported(): boolean {
+        return (
+            typeof MediaRecorder !== 'undefined' &&
+            typeof HTMLCanvasElement !== 'undefined' &&
+            typeof HTMLCanvasElement.prototype.captureStream === 'function'
+        );
+    }
+
+    static supportsFormat(format: 'mp4' | 'mov' | 'webm' | 'txt'): boolean {
+        if (!this.isSupported()) {
+            return false;
+        }
+
+        return resolveMediaRecorderMimeType(
+            format,
+            (candidate) => MediaRecorder.isTypeSupported(candidate)
+        ) !== '';
+    }
     
     async initialize(canvas: HTMLCanvasElement, audioBuffer: AudioBuffer | null, config: ExportConfig): Promise<void> {
         this.config = config;
@@ -136,22 +156,10 @@ export class BrowserMediaEncoder implements IMediaEncoder {
     }
 
     private getSupportedMimeType(format: string): string {
-        const codecs = [
-            'video/mp4;codecs=avc1,mp4a.40.2',
-            'video/mp4',
-            'video/webm;codecs=vp9,opus',
-            'video/webm;codecs=vp8,opus',
-            'video/webm'
-        ];
-
-        // Prefer exact match if possible
-        if (format === 'mp4') {
-            const mp4 = codecs.find(c => c.includes('mp4') && MediaRecorder.isTypeSupported(c));
-            if (mp4) return mp4;
-        }
-
-        // Fallback to whatever works
-        return codecs.find(c => MediaRecorder.isTypeSupported(c)) || '';
+        return resolveMediaRecorderMimeType(
+            format as 'mp4' | 'mov' | 'webm' | 'txt',
+            (candidate) => MediaRecorder.isTypeSupported(candidate)
+        );
     }
 
     private calculateBitrate(config: ExportConfig): number {

@@ -20,7 +20,7 @@ const getPlatformImpl = (): PlatformAPI => {
 export const platform = getPlatformImpl();
 
 if (typeof window !== 'undefined') {
-  const targetWindow = window as PlatformWindow;
+  const targetWindow = window as unknown as PlatformWindow;
   targetWindow.__sdkworkPlatform = platform;
 }
 

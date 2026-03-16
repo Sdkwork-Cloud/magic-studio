@@ -11,9 +11,10 @@ import { MagicCutPlayhead } from './MagicCutPlayhead';
 import { TimelineSkimmerLine } from './TimelineSkimmerLine';
 import { MagicCutTimelineToolbar } from './MagicCutTimelineToolbar';
 import { TimelineTabBar } from './TimelineTabBar';
+import { TimelineMinimap } from './TimelineMinimap';
 import { useTimeline } from './hooks/useTimeline';
 import { MagicCutTrackHeader } from './MagicCutTrackHeader';
-import { Plus, Video, Mic, Type, Sparkles } from 'lucide-react';
+import { Plus, Video, Mic, Type } from 'lucide-react';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
 import { MagicCutErrorBoundary } from '../ErrorBoundary/MagicCutErrorBoundary';
@@ -26,6 +27,7 @@ export interface MagicCutTimelineProps {
 export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, style }) => {
     const bus = useMagicCutBus();
     const {
+        state,
         totalDuration,
         selectedClipId, selectClip, selectedClipIds,
         getResource,
@@ -44,6 +46,8 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
     const interaction = useTransientState(s => s.interaction);
     const dragOperation = useTransientState(s => s.dragOperation);
     const isPlaying = useTransientState(s => s.isPlaying);
+    const currentTime = useTransientState(s => s.currentTime);
+    const editTool = useTransientState(s => s.editMode.currentTool);
 
     const tracksContainerRef = useRef<HTMLDivElement>(null);
     const headersContainerRef = useRef<HTMLDivElement>(null);
@@ -145,6 +149,7 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
         pixelsPerSecond,
         totalWidth,
         totalHeight,
+        displayDuration,
         visibleTimeStart,
         visibleTimeEnd,
         timelineTracks,
@@ -174,6 +179,16 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
         playerController.syncScroll(left);
         store.setState({ scrollLeft: left, scrollTop: top });
     }, [store, playerController]);
+
+    const handleMinimapScroll = useCallback((nextScrollLeft: number) => {
+        const clampedScrollLeft = Math.max(0, nextScrollLeft);
+        const tracks = tracksContainerRef.current;
+        if (tracks) {
+            tracks.scrollLeft = clampedScrollLeft;
+        }
+        playerController.syncScroll(clampedScrollLeft);
+        store.setState({ scrollLeft: clampedScrollLeft });
+    }, [playerController, store]);
 
     // Force sync scroll if store updates externally (e.g. Fit View)
     useEffect(() => {
@@ -231,7 +246,6 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                     <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video" />
                                     <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio" />
                                     <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text" />
-                                    <TrackMenuItem onClick={() => handleAddTrack('effect')} icon={<Sparkles size={12} />} label="Effect" />
                                 </div>
                             )}
                         </div>
@@ -302,7 +316,6 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                             <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video Track" />
                                             <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio Track" />
                                             <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text Track" />
-                                            <TrackMenuItem onClick={() => handleAddTrack('effect')} icon={<Sparkles size={12} />} label="Effect Track" />
                                         </div>
                                     )}
                                 </div>
@@ -313,7 +326,7 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                     {/* 3.4. Main Tracks Area */}
                     <div
                         ref={setTracksRef}
-                        className={`overflow-scroll relative custom-scrollbar bg-zinc-950 outline-none z-10`}
+                        className={`timeline-canvas-container overflow-scroll relative custom-scrollbar bg-zinc-950 outline-none z-10`}
                         onScroll={handleScroll}
                         onMouseDown={handleMouseDown}
                         onDragEnter={handleDragEnterEmpty}
@@ -327,8 +340,10 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                 tracks={timelineTracks}
                                 trackLayouts={trackLayouts}
                                 clipsMap={clipsMap}
+                                state={state}
                                 getResource={getResource}
                                 pixelsPerSecond={pixelsPerSecond}
+                                editTool={editTool}
                                 selectedClipId={selectedClipId}
                                 selectedClipIds={selectedClipIds}
                                 onClipSelect={selectClip}
@@ -348,6 +363,21 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                             />
                         </div>
                     </div>
+
+                    {timelineTracks.length > 0 && containerSize.width > 0 && (
+                        <div className="pointer-events-auto absolute bottom-3 right-3 z-30">
+                            <TimelineMinimap
+                                tracks={timelineTracks}
+                                clipsMap={clipsMap}
+                                totalDuration={displayDuration}
+                                containerWidth={Math.max(containerSize.width, 0)}
+                                scrollLeft={scrollLeft}
+                                pixelsPerSecond={pixelsPerSecond}
+                                currentTime={currentTime}
+                                onScroll={handleMinimapScroll}
+                            />
+                        </div>
+                    )}
                 </div>
             </MagicCutErrorBoundary>
         </div>

@@ -15,18 +15,15 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
+    "types": [],
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@sdkwork/app-sdk": ["../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"]
-    }
+    "baseUrl": "."
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/**/*.ts"
+    "src/**/*.tsx"
   ],
   "exclude": ["node_modules", "dist"],
   "references": [

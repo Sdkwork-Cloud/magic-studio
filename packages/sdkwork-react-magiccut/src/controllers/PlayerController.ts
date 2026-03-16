@@ -5,6 +5,7 @@ import { TimelineStore } from '../store/transientStore';
 import { NormalizedState } from '../store/magicCutStore';
 import { audioEngine } from '../engine/AudioEngine';
 import { TIMELINE_CONSTANTS } from '../constants';
+import { playerPreviewService } from '../services/PlayerPreviewService';
 
 export class PlayerController {
     private clock: MasterClock;
@@ -51,6 +52,7 @@ export class PlayerController {
     }
 
     public play = () => {
+        audioEngine.stopPreview();
         audioEngine.resume();
         this.clock.play();
     }
@@ -67,12 +69,14 @@ export class PlayerController {
     }
 
     public seek = (time: number) => {
+        audioEngine.stopPreview();
         this.clock.seek(time);
         this.store.setState({ currentTime: time });
         this.handleTick(time);
     }
 
     public scrub = (time: number) => {
+        audioEngine.stopPreview();
         if (this.clock.isActive) {
             this.pause();
         }
@@ -93,6 +97,7 @@ export class PlayerController {
     }
 
     public previewFrame = (time: number | null) => {
+        audioEngine.stopPreview();
         if (time !== null && this.engineRenderer) {
             this.engineRenderer(time);
         }
@@ -105,6 +110,11 @@ export class PlayerController {
 
     public setLooping = (loop: boolean) => {
         this.clock.setLooping(loop);
+    }
+
+    public setPlaybackRange = (inPoint: number | null, outPoint: number | null) => {
+        this.clock.setInOutPoints(inPoint, outPoint);
+        this.seek(this.clock.currentTime);
     }
 
     public setTotalDuration = (duration: number) => {
@@ -210,6 +220,8 @@ export class PlayerController {
     public getRenderTime = () => { return this.clock.currentTime; }
 
     private handleTick(time: number) {
+        playerPreviewService.syncTimelineTime(time);
+
         if (this.engineRenderer) {
             try { this.engineRenderer(time); }
             catch (e) { console.error(e); this.pause(); }

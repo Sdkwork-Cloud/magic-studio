@@ -218,10 +218,12 @@ const MagicCutEditorLayout: React.FC<{
 
         // Trim Start/End (Q/W)
         if (e.key.toLowerCase() === 'q' && !isCtrlOrCmd) {
+            e.preventDefault();
             bus.emit(MagicCutEvents.CLIP_TRIM_START);
             return;
         }
         if (e.key.toLowerCase() === 'w' && !isCtrlOrCmd) {
+            e.preventDefault();
             bus.emit(MagicCutEvents.CLIP_TRIM_END);
             return;
         }

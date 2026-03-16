@@ -191,6 +191,8 @@ class TemplateService {
         delete newProject.normalizedState;
 
         const newState: NormalizedState = {
+            assets: { ...(sourceState.assets || {}) },
+            resourceViews: { ...(sourceState.resourceViews || {}) },
             resources: newResources,
             timelines: newTimelines,
             tracks: newTracks,

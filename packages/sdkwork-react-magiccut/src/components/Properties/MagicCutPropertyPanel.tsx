@@ -176,7 +176,7 @@ export const MagicCutPropertyPanel: React.FC = () => {
                             updateClip(clip.id, { blendMode: v });
                         }}
                         onReset={() => {
-                            updateClipTransform(clip.id, { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1 }, true);
+                            updateClipTransform(clip.id, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1 }, true);
                             updateClip(clip.id, { blendMode: 'normal' });
                         }}
                     />
@@ -194,9 +194,7 @@ export const MagicCutPropertyPanel: React.FC = () => {
                 {activeTab === 'audio' && (
                     <AudioSettingsPanel 
                         clip={clip}
-                        resource={resource}
-                        onUpdate={(updates) => updateClip(clip.id, updates)}
-                        onUpdateResource={(updates) => updateResource(resource.id, updates)}
+                        onUpdate={(updates: Partial<CutClip>) => updateClip(clip.id, updates)}
                     />
                 )}
                 

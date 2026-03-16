@@ -12,7 +12,7 @@ const syncWindowPlatform = (api: PlatformAPI): void => {
   if (typeof window === 'undefined') {
     return;
   }
-  const targetWindow = window as PlatformWindow;
+  const targetWindow = window as unknown as PlatformWindow;
   targetWindow.__sdkworkPlatform = api;
   targetWindow.__sdkworkPlatformRuntime = currentPlatformRuntime;
 };

@@ -480,7 +480,7 @@ async function fetchSkillList(query: SkillListQuery = {}): Promise<SkillListResu
 async function fetchSkillDetail(skillId: string | number): Promise<AgentSkill | null> {
   const categories = await listCategoryOptions();
   const client = getAppSdkClientWithSession();
-  const response = await client.skill.get(skillId);
+  const response = await client.skill.detail(skillId);
   const data = unwrapData<unknown>(
     response as PlusApiResultMapStringObject,
     'Failed to load skill detail',

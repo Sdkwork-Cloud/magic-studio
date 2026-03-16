@@ -20,6 +20,7 @@
     "paths": {
       "@sdkwork/react-commons": ["../sdkwork-react-commons/src/index.ts"],
       "@sdkwork/react-core": ["../sdkwork-react-core/src/index.ts"],
+      "@sdkwork/app-sdk": ["../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"],
       "@sdkwork/react-assets": ["../sdkwork-react-assets/src/index.ts"],
       "@sdkwork/react-image": ["../sdkwork-react-image/src/index.ts"],
       "@sdkwork/react-video": ["../sdkwork-react-video/src/index.ts"],

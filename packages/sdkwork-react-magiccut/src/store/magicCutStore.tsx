@@ -1,7 +1,9 @@
 
 import {
+    assetCenterService,
     importAssetBySdk,
     importAssetFromUrlBySdk,
+    readWorkspaceScope,
     resolveAssetPrimaryUrlBySdk,
     type Asset
 } from '@sdkwork/react-assets';
@@ -16,6 +18,8 @@ import { PlayerController } from '../controllers/PlayerController';
 import { NormalizedState, InteractionState, DragOperation } from './types';
 import { TrackRulesFactory } from '../domain/dnd/TrackRulesFactory';
 import { TrackFactory, magicCutBusinessService } from '../services';
+import type { EditOperationResult } from '../services/TimelineEditService';
+import type { LinkedClipMove } from '../domain/timeline/linkedMove';
 ;
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
@@ -27,6 +31,14 @@ import {
     normalizeResourceForTimeline,
     normalizeStateAssetReferences
 } from '../utils/assetReferenceNormalization';
+import {
+    buildMagicCutAssetRef,
+    buildMagicCutAssetRegistrationInput,
+    buildMagicCutResourceView,
+    normalizeMagicCutAssetState
+} from '../domain/assets/magicCutAssetState';
+import { setPlaybackInPoint as resolvePlaybackInPoint, setPlaybackOutPoint as resolvePlaybackOutPoint } from '../domain/playback/playbackRange';
+import { resolveLinkedSelectionState } from '../domain/timeline/linkedSelection';
 ;
 ;
 
@@ -62,46 +74,115 @@ function updateTrackOrders(draft: NormalizedState, timelineId: string) {
     });
 }
 
-const mapAssetTypeToMediaResourceType = (type: Asset['type']): MediaResourceType => {
-    if (type === 'image') return MediaResourceType.IMAGE;
-    if (type === 'video') return MediaResourceType.VIDEO;
-    if (type === 'audio') return MediaResourceType.AUDIO;
-    if (type === 'music') return MediaResourceType.MUSIC;
-    if (type === 'voice') return MediaResourceType.VOICE;
-    if (type === 'text') return MediaResourceType.TEXT;
-    if (type === 'subtitle') return MediaResourceType.SUBTITLE;
-    if (type === 'character') return MediaResourceType.CHARACTER;
-    if (type === 'effect') return MediaResourceType.EFFECT;
-    if (type === 'transition') return MediaResourceType.TRANSITION;
-    if (type === 'lottie') return MediaResourceType.LOTTIE;
-    if (type === 'model3d') return MediaResourceType.MODEL_3D;
-    if (type === 'sfx') return MediaResourceType.AUDIO;
-    return MediaResourceType.FILE;
-};
+function sortTrackClips(draft: NormalizedState, trackId: string) {
+    const track = draft.tracks[trackId];
+    if (!track) return;
+
+    track.clips.sort((leftRef, rightRef) => {
+        const leftClip = draft.clips[leftRef.id];
+        const rightClip = draft.clips[rightRef.id];
+
+        if (!leftClip && !rightClip) return 0;
+        if (!leftClip) return 1;
+        if (!rightClip) return -1;
+        if (Math.abs(leftClip.start - rightClip.start) > 0.0001) {
+            return leftClip.start - rightClip.start;
+        }
+        return leftClip.id.localeCompare(rightClip.id);
+    });
+}
+
+function syncDraftResourceState(draft: NormalizedState, resource: AnyMediaResource): AnyMediaResource {
+    const normalizedResource = normalizeResourceForTimeline(resource);
+    const nextState = normalizeMagicCutAssetState({
+        assets: draft.assets,
+        resourceViews: draft.resourceViews,
+        resources: {
+            ...draft.resources,
+            [normalizedResource.id]: normalizedResource
+        }
+    });
+    draft.assets = nextState.assets;
+    draft.resourceViews = nextState.resourceViews;
+    draft.resources = nextState.resources;
+    return draft.resources[normalizedResource.id] || normalizedResource;
+}
+
+function applyClipMovesToDraft(
+    draft: NormalizedState,
+    moves: LinkedClipMove[],
+    activeTimelineId: string | null
+) {
+    const touchedTrackIds = new Set<string>();
+    let movedMaxEnd = 0;
+
+    moves.forEach(({ clipId, targetTrackId, newStart }) => {
+        const clip = draft.clips[clipId];
+        const targetTrack = draft.tracks[targetTrackId];
+        if (!clip || !targetTrack) return;
+
+        const previousTrackId = clip.track.id;
+        const previousTrack = draft.tracks[previousTrackId];
+
+        if (previousTrackId !== targetTrackId) {
+            if (previousTrack) {
+                previousTrack.clips = previousTrack.clips.filter((ref) => ref.id !== clipId);
+                previousTrack.updatedAt = Date.now();
+                touchedTrackIds.add(previousTrackId);
+            }
+
+            if (!targetTrack.clips.some((ref) => ref.id === clipId)) {
+                targetTrack.clips.push({ id: clipId, uuid: clip.uuid, type: 'CutClip' });
+            }
+
+            clip.track = { id: targetTrackId, uuid: targetTrack.uuid, type: 'CutTrack' };
+        }
+
+        clip.start = Math.max(0, newStart);
+        clip.updatedAt = Date.now();
+        targetTrack.updatedAt = Date.now();
+        touchedTrackIds.add(targetTrackId);
+        movedMaxEnd = Math.max(movedMaxEnd, clip.start + clip.duration);
+    });
+
+    touchedTrackIds.forEach((trackId) => sortTrackClips(draft, trackId));
+
+    if (activeTimelineId && movedMaxEnd > 0) {
+        const timeline = draft.timelines[activeTimelineId];
+        if (timeline) {
+            timeline.duration = Math.max(timeline.duration, movedMaxEnd + 5);
+        }
+    }
+}
 
 const toMagiccutResource = async (uploaded: Asset): Promise<AnyMediaResource> => {
-    const metadata = (uploaded.metadata || {}) as Record<string, unknown>;
     const resolvedUrl =
         (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
         uploaded.path ||
         `assets://${uploaded.id}`;
-    const resource = {
-        id: uploaded.id,
-        uuid: uploaded.uuid,
-        name: uploaded.name,
-        type: mapAssetTypeToMediaResourceType(uploaded.type),
-        path: resolvedUrl,
-        url: resolvedUrl,
-        size: Number(uploaded.size || 0),
-        duration: Number(metadata.duration || 0) || undefined,
-        width: Number(metadata.width || 0) || undefined,
-        height: Number(metadata.height || 0) || undefined,
-        origin: uploaded.origin,
-        metadata,
-        createdAt: uploaded.createdAt,
-        updatedAt: uploaded.updatedAt
-    } as AnyMediaResource;
-    return normalizeResourceForTimeline(resource);
+    await assetCenterService.initialize();
+    const existingAsset = await assetCenterService.findById(uploaded.id);
+    const unifiedAsset = existingAsset || await assetCenterService.registerExistingAsset(
+        buildMagicCutAssetRegistrationInput(
+            {
+                id: uploaded.id,
+                name: uploaded.name,
+                type: uploaded.type,
+                path: uploaded.path,
+                size: uploaded.size,
+                origin: uploaded.origin,
+                metadata: (uploaded.metadata || {}) as Record<string, unknown>,
+                createdAt: uploaded.createdAt,
+                updatedAt: uploaded.updatedAt
+            },
+            resolvedUrl,
+            {
+                ...readWorkspaceScope(),
+                domain: 'magiccut'
+            }
+        )
+    );
+    return buildMagicCutResourceView(unifiedAsset);
 };
 
 const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<AssetImportSource> => {
@@ -160,12 +241,14 @@ class ClipTransformFactory {
                 height: dims.height,
                 rotation: 0,
                 scale: 1,
+                scaleX: 1,
+                scaleY: 1,
                 opacity: 1
             };
         }
         
         if (!isVisual) {
-            return { x: 0, y: 0, width: 0, height: 0, rotation: 0, scale: 1, opacity: 1 };
+            return { x: 0, y: 0, width: 0, height: 0, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 };
         }
 
         let mediaW = 1000;
@@ -203,6 +286,8 @@ class ClipTransformFactory {
             height: Math.round(finalH),
             rotation: 0,
             scale: 1,
+            scaleX: 1,
+            scaleY: 1,
             opacity: 1
         };
     }
@@ -230,7 +315,9 @@ export interface MagicCutStoreContextType {
     updateClipTransform: (clipId: string, transform: Partial<CutClipTransform>, isFinal: boolean) => void;
     updateClipLayers: (clipId: string, layers: CutLayer[]) => void;
     moveClip: (clipId: string, targetTrackId: string, newStart: number) => void;
+    applyClipMoves: (moves: LinkedClipMove[]) => void;
     splitClip: (time?: number) => void;
+    splitClipAt: (clipId: string, time: number) => void;
     trimStart: (time?: number) => void;
     trimEnd: (time?: number) => void;
     trimClip: (clipId: string, start: number, duration: number, offset: number) => void;
@@ -239,16 +326,19 @@ export interface MagicCutStoreContextType {
     deleteSelected: (mode?: DeleteMode) => void;
     selectClip: (id: string | null, multi?: boolean) => void;
     detachAudio: (clipId: string) => Promise<void>;
+    applyTimelineEditResult: (result: EditOperationResult) => void;
 
     updateResource: (id: string, updates: Partial<AnyMediaResource>) => void;
     
     addEffectToClip: (clipId: string, effectId: string) => void;
+    addTransitionToClip: (clipId: string, transitionId: string, duration?: number) => void;
     
     addKeyframe: (clipId: string, property: string, value: number) => void;
     removeKeyframe: (clipId: string, property: string) => void;
 
     insertTrackAndMoveClip: (clipId: string, insertIndex: number, newStart: number, trackType?: CutTrackType) => void;
-    insertTrackAndAddClip: (resource: AnyMediaResource, insertIndex: number, start: number, duration: number, trackType?: CutTrackType) => void;
+    insertTrackAndMoveClipGroup: (primaryClipId: string, insertIndex: number, newStart: number, linkedMoves?: LinkedClipMove[], trackType?: CutTrackType) => void;
+    insertTrackAndAddClip: (resource: AnyMediaResource, insertIndex: number, start: number, duration: number, trackType?: CutTrackType) => string | undefined;
     
     play: () => void;
     pause: () => void;
@@ -437,6 +527,10 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         }
     }, [totalDuration]);
 
+    useEffect(() => {
+        playerControllerRef.current.setPlaybackRange(inPoint, outPoint);
+    }, [inPoint, outPoint]);
+
     const updateState = useCallback((recipe: (draft: NormalizedState) => void, isTransientChange = false) => {
         setState(current => {
             const safeRecipe = (draft: NormalizedState) => {
@@ -492,11 +586,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 ...project,
                 normalizedState,
                 timelines: Object.keys(normalizedState.timelines).map(id => ({ id, uuid: normalizedState.timelines[id].uuid, type: 'CutTimeline' })),
-                mediaResources: Object.keys(normalizedState.resources).map((id) => ({
-                    id,
-                    uuid: normalizedState.resources[id]?.uuid,
-                    type: 'MediaResource'
-                }))
+                mediaResources: Object.keys(normalizedState.resources).map((id) => buildMagicCutAssetRef(normalizedState.resources[id]))
             };
             if (onSave) onSave(updatedProject);
         }, 2000);
@@ -572,10 +662,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const track = draft.tracks[trackId];
             if (!track) return;
 
-            const normalizedResource = normalizeResourceForTimeline(resource);
-            if (!draft.resources[normalizedResource.id]) {
-                draft.resources[normalizedResource.id] = normalizedResource;
-            }
+            const normalizedResource = syncDraftResourceState(draft, resource);
             let finalDuration = duration;
             if (finalDuration === undefined || finalDuration <= 0) {
                 if (normalizedResource.metadata?.duration && typeof normalizedResource.metadata.duration === 'number') {
@@ -599,7 +686,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 uuid: generateUUID(),
                 type: 'CutClip',
                 track: { id: trackId, uuid: track.uuid, type: 'CutTrack' },
-                resource: { id: normalizedResource.id, uuid: normalizedResource.uuid, type: 'MediaResource' },
+                resource: buildMagicCutAssetRef(normalizedResource),
                 start: Math.max(0, start),
                 duration: finalDuration,
                 offset: 0,
@@ -656,23 +743,14 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     
     const moveClip = (clipId: string, targetTrackId: string, newStart: number) => {
         updateState(draft => {
-            const clip = draft.clips[clipId];
-            if (!clip) return;
-            const oldTrack = draft.tracks[clip.track.id];
-            const newTrack = draft.tracks[targetTrackId];
+            applyClipMovesToDraft(draft, [{ clipId, targetTrackId, newStart }], activeTimelineId);
+        });
+    };
 
-            oldTrack.clips = oldTrack.clips.filter(c => c.id !== clipId);
-            newTrack.clips.push({ id: clipId, uuid: clip.uuid, type: 'CutClip' });
-            clip.track = { id: targetTrackId, uuid: newTrack.uuid, type: 'CutTrack' };
-            clip.start = Math.max(0, newStart);
-
-            oldTrack.updatedAt = Date.now();
-            newTrack.updatedAt = Date.now();
-
-            if (activeTimelineId) {
-                const tl = draft.timelines[activeTimelineId];
-                if (tl) tl.duration = Math.max(tl.duration, clip.start + clip.duration + 5);
-            }
+    const applyClipMoves = (moves: LinkedClipMove[]) => {
+        if (moves.length === 0) return;
+        updateState(draft => {
+            applyClipMovesToDraft(draft, moves, activeTimelineId);
         });
     };
     
@@ -683,16 +761,19 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             clip.start = start;
             clip.duration = duration;
             clip.offset = offset;
-            if(draft.tracks[clip.track.id]) draft.tracks[clip.track.id].updatedAt = Date.now();
+            if(draft.tracks[clip.track.id]) {
+                draft.tracks[clip.track.id].updatedAt = Date.now();
+                sortTrackClips(draft, clip.track.id);
+            }
         });
     };
 
     const insertTrackAndAddClip = (resource: AnyMediaResource, insertIndex: number, start: number, duration: number, trackType: CutTrackType = 'video') => {
+        const trackId = generateUUID();
         updateState(draft => {
             if (!activeTimelineId) return;
             const tl = draft.timelines[activeTimelineId];
             if (!tl) return;
-            const trackId = generateUUID();
             const config = TrackFactory.getTrackConfig(trackType, false);
             const newTrack: CutTrack = {
                 id: trackId,
@@ -717,10 +798,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 tl.tracks.push({ id: trackId, uuid: newTrack.uuid, type: 'CutTrack' });
             }
             updateTrackOrders(draft, activeTimelineId);
-            const normalizedResource = normalizeResourceForTimeline(resource);
-            if (!draft.resources[normalizedResource.id]) {
-                draft.resources[normalizedResource.id] = normalizedResource;
-            }
+            const normalizedResource = syncDraftResourceState(draft, resource);
             const clipId = generateUUID();
             const transform: CutClipTransform = ClipTransformFactory.calculate(normalizedResource, project.settings.resolution);
             const newClip: CutClip = {
@@ -728,7 +806,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 uuid: generateUUID(),
                 type: 'CutClip',
                 track: { id: trackId, uuid: newTrack.uuid, type: 'CutTrack' },
-                resource: { id: normalizedResource.id, uuid: normalizedResource.uuid, type: 'MediaResource' },
+                resource: buildMagicCutAssetRef(normalizedResource),
                 start: Math.max(0, start),
                 duration: duration,
                 offset: 0,
@@ -745,9 +823,16 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             draft.clips[clipId] = newClip;
             newTrack.clips.push({ id: clipId, uuid: newClip.uuid, type: 'CutClip' });
         });
+        return trackId;
     };
     
-    const insertTrackAndMoveClip = (clipId: string, insertIndex: number, newStart: number, trackType: CutTrackType = 'video') => {
+    const insertTrackAndMoveClipGroup = (
+        primaryClipId: string,
+        insertIndex: number,
+        newStart: number,
+        linkedMoves: LinkedClipMove[] = [],
+        trackType: CutTrackType = 'video'
+    ) => {
         updateState(draft => {
             if (!activeTimelineId) return;
             const tl = draft.timelines[activeTimelineId];
@@ -776,22 +861,27 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 tl.tracks.push({ id: trackId, uuid: newTrack.uuid, type: 'CutTrack' });
             }
             updateTrackOrders(draft, activeTimelineId);
-            const clip = draft.clips[clipId];
-            if (!clip) return;
-            const oldTrack = draft.tracks[clip.track.id];
-            oldTrack.clips = oldTrack.clips.filter(c => c.id !== clipId);
-            newTrack.clips.push({ id: clipId, uuid: clip.uuid, type: 'CutClip' });
-            clip.track = { id: trackId, uuid: newTrack.uuid, type: 'CutTrack' };
-            clip.start = Math.max(0, newStart);
-            oldTrack.updatedAt = Date.now();
+
+            const dedupedLinkedMoves = linkedMoves.filter((move) => move.clipId !== primaryClipId);
+            applyClipMovesToDraft(
+                draft,
+                [
+                    { clipId: primaryClipId, targetTrackId: trackId, newStart },
+                    ...dedupedLinkedMoves
+                ],
+                activeTimelineId
+            );
         });
     };
+
+    const insertTrackAndMoveClip = (clipId: string, insertIndex: number, newStart: number, trackType: CutTrackType = 'video') => {
+        insertTrackAndMoveClipGroup(clipId, insertIndex, newStart, [], trackType);
+    };
     
-    const splitClip = (time?: number) => {
-        const t = time ?? storeRef.current.getState().currentTime;
-        if (!selectedClipId) return;
+    const splitClipAt = (clipId: string, time: number) => {
+        const t = Math.max(0, time);
         updateState(draft => {
-            const clip = draft.clips[selectedClipId];
+            const clip = draft.clips[clipId];
             if (!clip) return;
             if (t <= clip.start || t >= clip.start + clip.duration) return;
             const splitPoint = t - clip.start;
@@ -811,11 +901,24 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             };
             draft.clips[newId] = newClip;
             const track = draft.tracks[clip.track.id];
-            track.clips.push({ id: newId, uuid: newClip.uuid, type: 'CutClip' });
+            const clipIndex = track.clips.findIndex(ref => ref.id === clipId);
+            if (clipIndex === -1) {
+                track.clips.push({ id: newId, uuid: newClip.uuid, type: 'CutClip' });
+            } else {
+                track.clips.splice(clipIndex + 1, 0, { id: newId, uuid: newClip.uuid, type: 'CutClip' });
+            }
+            sortTrackClips(draft, clip.track.id);
             track.updatedAt = Date.now();
             setSelectedClipId(newId);
             setSelectedClipIds(new Set([newId]));
+            setSelectedTrackId(clip.track.id);
         });
+    };
+
+    const splitClip = (time?: number) => {
+        const t = time ?? storeRef.current.getState().currentTime;
+        if (!selectedClipId) return;
+        splitClipAt(selectedClipId, t);
     };
 
     const trimStart = (time?: number) => {
@@ -1267,9 +1370,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         
         if (result) {
             updateState(draft => {
-                if (!draft.resources[audioResource.id]) {
-                    draft.resources[audioResource.id] = audioResource;
-                }
+                syncDraftResourceState(draft, audioResource);
                 if (draft.clips[clipId]) {
                     Object.assign(draft.clips[clipId], result.updatedVideoClip);
                 }
@@ -1314,6 +1415,43 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
              });
          }
      };
+    const applyTimelineEditResult = (result: EditOperationResult) => {
+        updateState(draft => {
+            const touchedTrackIds = new Set<string>();
+
+            result.clipsToUpdate.forEach(({ id, updates }) => {
+                const clip = draft.clips[id];
+                if (!clip) return;
+
+                Object.assign(clip, updates);
+                clip.updatedAt = Date.now();
+                touchedTrackIds.add(clip.track.id);
+
+                const track = draft.tracks[clip.track.id];
+                if (track) {
+                    track.updatedAt = Date.now();
+                }
+            });
+
+            result.clipsToDelete?.forEach((clipId) => {
+                const clip = draft.clips[clipId];
+                if (!clip) return;
+
+                const track = draft.tracks[clip.track.id];
+                if (track) {
+                    track.clips = track.clips.filter(ref => ref.id !== clipId);
+                    track.updatedAt = Date.now();
+                    touchedTrackIds.add(track.id);
+                }
+
+                delete draft.clips[clipId];
+            });
+
+            touchedTrackIds.forEach((trackId) => {
+                sortTrackClips(draft, trackId);
+            });
+        });
+    };
     
     const selectClip = (id: string | null, multi = false) => {
         if (!id) {
@@ -1325,31 +1463,19 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
 
         const clip = state.clips[id];
         if (!clip) return;
-        setSelectedTrackId(clip.track.id);
 
-        if (!multi) {
-            setSelectedClipId(id);
-            setSelectedClipIds(new Set([id]));
-            return;
-        }
+        const nextSelection = resolveLinkedSelectionState({
+            clipId: id,
+            state,
+            linkedSelectionEnabled: storeRef.current.getState().editMode.linkedSelection,
+            multi,
+            selectedClipId,
+            selectedClipIds
+        });
 
-        const nextSelectedClipIds = new Set(selectedClipIds);
-        if (nextSelectedClipIds.has(id)) {
-            nextSelectedClipIds.delete(id);
-            if (nextSelectedClipIds.size === 0) {
-                setSelectedClipId(null);
-            } else if (selectedClipId === id) {
-                let fallbackId: string | null = null;
-                for (const candidateId of nextSelectedClipIds) {
-                    fallbackId = candidateId;
-                }
-                setSelectedClipId(fallbackId);
-            }
-        } else {
-            nextSelectedClipIds.add(id);
-            setSelectedClipId(id);
-        }
-        setSelectedClipIds(nextSelectedClipIds);
+        setSelectedTrackId(nextSelection.selectedTrackId);
+        setSelectedClipId(nextSelection.selectedClipId);
+        setSelectedClipIds(nextSelection.selectedClipIds);
     };
     const selectTrack = (id: string | null) => {
         setSelectedTrackId(id);
@@ -1360,7 +1486,15 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     const updateResource = (id: string, updates: Partial<AnyMediaResource>) => {
         updateState(draft => {
             if (draft.resources[id]) {
-                Object.assign(draft.resources[id], updates);
+                const nextResource = {
+                    ...draft.resources[id],
+                    ...updates,
+                    metadata: {
+                        ...(draft.resources[id].metadata || {}),
+                        ...(updates.metadata || {})
+                    }
+                } as AnyMediaResource;
+                syncDraftResourceState(draft, nextResource);
             }
         });
     };
@@ -1384,6 +1518,76 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             };
             draft.layers[id] = newLayer;
             clip.layers.push({ id, uuid: newLayer.uuid, type: 'CutLayer' });
+        });
+    };
+    const addTransitionToClip = (clipId: string, transitionId: string, duration: number = 0.5) => {
+        updateState(draft => {
+            const clip = draft.clips[clipId];
+            if (!clip) return;
+
+            const track = draft.tracks[clip.track.id];
+            if (!track) return;
+
+            const orderedClips = track.clips
+                .map(ref => draft.clips[ref.id])
+                .filter((candidate): candidate is CutClip => !!candidate)
+                .sort((a, b) => a.start - b.start);
+
+            const clipIndex = orderedClips.findIndex(candidate => candidate.id === clipId);
+            if (clipIndex === -1 || clipIndex >= orderedClips.length - 1) return;
+
+            const nextClip = orderedClips[clipIndex + 1];
+            const clipResource = draft.resources[clip.resource.id];
+            const nextResource = draft.resources[nextClip.resource.id];
+            const compatibleTypes = new Set([
+                MediaResourceType.VIDEO,
+                MediaResourceType.IMAGE,
+                MediaResourceType.CHARACTER,
+                MediaResourceType.LOTTIE
+            ]);
+
+            if (!clipResource || !nextResource || !compatibleTypes.has(clipResource.type) || !compatibleTypes.has(nextResource.type)) {
+                return;
+            }
+
+            const effectiveDuration = Math.max(
+                0.1,
+                Math.min(duration, clip.duration, nextClip.duration)
+            );
+
+            const nextClipId = nextClip.id;
+            const existingTransitionRefs = clip.layers.filter(ref => {
+                const layer = draft.layers[ref.id];
+                return layer && (layer.layerType === 'transition' || layer.layerType === 'transition_out');
+            });
+
+            existingTransitionRefs.forEach(ref => {
+                delete draft.layers[ref.id];
+            });
+
+            clip.layers = clip.layers.filter(ref => !existingTransitionRefs.some(existing => existing.id === ref.id));
+
+            const layerId = generateUUID();
+            const transitionLayer: CutLayer = {
+                id: layerId,
+                uuid: generateUUID(),
+                clip: { id: clipId, uuid: clip.uuid, type: 'CutClip' },
+                type: 'CutLayer',
+                layerType: 'transition_out',
+                enabled: true,
+                order: clip.layers.length,
+                params: {
+                    definitionId: transitionId,
+                    duration: effectiveDuration,
+                    nextClipId
+                },
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            };
+
+            draft.layers[layerId] = transitionLayer;
+            clip.layers.push({ id: layerId, uuid: transitionLayer.uuid, type: 'CutLayer' });
+            track.updatedAt = Date.now();
         });
     };
     const addKeyframe = (clipId: string, property: string, value: number) => {
@@ -1500,7 +1704,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             const resource = await toMagiccutResource(uploaded);
             resources.push(resource);
             updateState(draft => {
-                draft.resources[resource.id] = resource;
+                syncDraftResourceState(draft, resource);
             });
         }
         return resources;
@@ -1530,7 +1734,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                 const resource = await toMagiccutResource(uploaded);
                 importedResources.push(resource);
                 updateState(draft => {
-                    draft.resources[resource.id] = resource;
+                    syncDraftResourceState(draft, resource);
                 });
             }
             return importedResources;
@@ -1593,7 +1797,20 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     const updateProjectSettings = (settings: Partial<CutProjectSettings>) => {
         setProject(prev => ({ ...prev, settings: { ...prev.settings, ...settings } }));
     };
-    const setPreviewSource = (_resource: AnyMediaResource | null) => { };
+    const setPreviewSource = (resource: AnyMediaResource | null) => {
+        if (resource) {
+            playerControllerRef.current.pause();
+            setPreviewEffect(null);
+            storeRef.current.setState({
+                isPlaying: false,
+                currentTime: playerControllerRef.current.getCurrentTime(),
+                skimmingResource: resource
+            });
+            return;
+        }
+
+        storeRef.current.setState({ skimmingResource: null });
+    };
     
     // Updated setClipSpeed
     const setClipSpeed = (clipId: string, newSpeed: number) => {
@@ -1758,8 +1975,16 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         });
     };
     
-    const setInPoint = (time: number) => setInPointState(time);
-    const setOutPoint = (time: number) => setOutPointState(time);
+    const setInPoint = (time: number) => {
+        const nextRange = resolvePlaybackInPoint({ inPoint, outPoint }, time, totalDuration);
+        setInPointState(nextRange.inPoint);
+        setOutPointState(nextRange.outPoint);
+    };
+    const setOutPoint = (time: number) => {
+        const nextRange = resolvePlaybackOutPoint({ inPoint, outPoint }, time, totalDuration);
+        setInPointState(nextRange.inPoint);
+        setOutPointState(nextRange.outPoint);
+    };
     const clearInOutPoints = () => {
         setInPointState(null);
         setOutPointState(null);
@@ -1800,7 +2025,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         });
     };
     
-    const useSkimmingResource = () => storeRef.current.getState().skimmingResource;
+    const useSkimmingResource = () => useStore(storeRef.current, s => s.skimmingResource);
     const usePreviewEffect = () => previewEffect;
 
     return (
@@ -1808,10 +2033,10 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             project, state, activeTimelineId, activeTimeline,
             switchProject, loadLastProject, saveAsTemplate, loadTemplate,
             addTrack, removeTrack, updateTrack, resizeTrack, selectTrack,
-            addClip, updateClip, updateClipTransform, updateClipLayers, moveClip, splitClip, trimStart, trimEnd, trimClip, copyClip, pasteClip, deleteSelected, selectClip,
+            addClip, updateClip, updateClipTransform, updateClipLayers, moveClip, applyClipMoves, splitClip, trimStart, trimEnd, trimClip, copyClip, pasteClip, deleteSelected, selectClip,
             updateResource,
-            addEffectToClip, addKeyframe, removeKeyframe,
-            insertTrackAndMoveClip, insertTrackAndAddClip,
+            addEffectToClip, addTransitionToClip, addKeyframe, removeKeyframe,
+            insertTrackAndMoveClip, insertTrackAndMoveClipGroup, insertTrackAndAddClip,
             play: playerControllerRef.current.play,
             pause: playerControllerRef.current.pause,
             seek: playerControllerRef.current.seek,
@@ -1847,6 +2072,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             previewEffect, setPreviewEffect,
             isLooping, toggleLoop,
             setClipSpeed,
+            splitClipAt,
+            applyTimelineEditResult,
             setDragOperation,
             setInteraction,
             importAssets,
@@ -1889,6 +2116,8 @@ function createDefaultProject(): CutProject {
         settings: { resolution: '1920x1080', fps: 30, aspectRatio: '16:9' },
         createdAt: Date.now(), updatedAt: Date.now(),
         normalizedState: {
+            assets: {},
+            resourceViews: {},
             resources: {},
             timelines: {
                 [tid]: { id: tid, uuid: tid, type: 'CutTimeline', name: 'Sequence 1', fps: 30, duration: 60, tracks: [{ id: mainTrack.id, uuid: mainTrack.uuid, type: 'CutTrack' }], createdAt: Date.now(), updatedAt: Date.now() }
@@ -1902,5 +2131,5 @@ function createDefaultProject(): CutProject {
 
 function normalizeProject(project: CutProject): NormalizedState {
     if (project.normalizedState) return project.normalizedState as NormalizedState;
-    return { resources: {}, timelines: {}, tracks: {}, clips: {}, layers: {} };
+    return { assets: {}, resourceViews: {}, resources: {}, timelines: {}, tracks: {}, clips: {}, layers: {} };
 }

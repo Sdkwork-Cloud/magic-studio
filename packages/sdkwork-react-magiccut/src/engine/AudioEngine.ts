@@ -78,6 +78,9 @@ export class AudioEngine {
 
     // Track active sources by Clip ID
     private scheduledSources = new Map<string, ScheduledSource>();
+    private previewSource: AudioBufferSourceNode | null = null;
+    private previewGain: GainNode | null = null;
+    private previewRequestToken = 0;
 
     constructor() { }
 
@@ -178,6 +181,51 @@ export class AudioEngine {
         }
     }
 
+    public async previewResource(resource: AnyMediaResource, startTime: number = 0, maxDuration: number = 20): Promise<void> {
+        const requestToken = ++this.previewRequestToken;
+
+        if (!this.ctx) await this.initContext();
+        if (!this.ctx || !this.masterGain) return;
+
+        const buffer = await this.loadResource(resource);
+        if (!buffer) return;
+
+        await this.resume();
+        if (requestToken !== this.previewRequestToken) return;
+
+        this.clearActivePreview();
+
+        const safeStart = Math.max(0, Math.min(startTime, Math.max(0, buffer.duration - 0.01)));
+        const remainingDuration = Math.max(0, buffer.duration - safeStart);
+        const previewDuration = Math.min(remainingDuration, Math.max(0.25, maxDuration));
+        if (previewDuration <= 0) return;
+
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+
+        const gain = this.ctx.createGain();
+        gain.gain.value = 1;
+
+        source.connect(gain);
+        gain.connect(this.masterGain);
+
+        this.previewSource = source;
+        this.previewGain = gain;
+
+        source.onended = () => {
+            if (this.previewSource === source) {
+                this.clearActivePreview();
+            }
+        };
+
+        source.start(this.ctx.currentTime, safeStart, previewDuration);
+    }
+
+    public stopPreview(): void {
+        this.previewRequestToken += 1;
+        this.clearActivePreview();
+    }
+
     public setReversePlaybackMode(mode: ReversePlaybackMode): void {
         this.reversePlaybackMode = mode;
     }
@@ -261,6 +309,8 @@ export class AudioEngine {
             this.stopAll();
             return;
         }
+
+        this.stopPreview();
 
         if (playbackDirection === -1) {
             if (this.reversePlaybackMode === 'mute') {
@@ -681,10 +731,30 @@ export class AudioEngine {
     }
 
     public stopAll() {
+        this.stopPreview();
         this.scheduledSources.forEach((scheduled) => {
             this.stopSource(scheduled);
         });
         this.scheduledSources.clear();
+    }
+
+    private clearActivePreview(): void {
+        if (this.previewSource) {
+            try {
+                this.previewSource.stop();
+            } catch {}
+            try {
+                this.previewSource.disconnect();
+            } catch {}
+            this.previewSource = null;
+        }
+
+        if (this.previewGain) {
+            try {
+                this.previewGain.disconnect();
+            } catch {}
+            this.previewGain = null;
+        }
     }
 
     public async renderTimelineOffline(

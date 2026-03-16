@@ -288,7 +288,7 @@ export class PaymentService implements IPaymentService {
   async initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult> {
     try {
       const client = getSdkworkClient();
-      const response = await client.orders.payOrder(params.orderUuid, {
+      const response = await client.orders.pay(params.orderUuid, {
         orderId: params.orderUuid,
         paymentMethod: toSdkPaymentMethod(params.method),
       });

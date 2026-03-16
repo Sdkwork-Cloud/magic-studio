@@ -8,6 +8,7 @@ import { getRobustResourceUrl } from '../../../utils/resourceUtils';
 import { formatTime } from '../../../utils/timeUtils';
 import { DragOperation, InteractionState } from '../../../store/types';
 import { MagicCutClip } from '../MagicCutClip';
+import { buildLinkedGhostPreviews } from '../../../domain/timeline/dragGhosts';
 
 import { ResourceTraitsFactory } from '../../../domain/dnd/ResourceTraitsFactory';
 import { TrackFactory } from '../../../services/TrackFactory';
@@ -45,6 +46,75 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
     const insertGuideRef = useRef<HTMLDivElement>(null);
     const snapGuideRef = useRef<HTMLDivElement>(null);
     const infoPillRef = useRef<HTMLDivElement>(null);
+    const isSemanticResourceDrag = !!(
+        dragOperation &&
+        (dragOperation.payload.type === MediaResourceType.EFFECT || dragOperation.payload.type === MediaResourceType.TRANSITION)
+    );
+
+    const semanticPreview = useMemo(() => {
+        if (!isSemanticResourceDrag || !dragOperation) return null;
+
+        const status = {
+            left: Math.round(interaction.currentTime * pixelsPerSecond),
+            trackLayout: interaction.currentTrackId
+                ? trackLayouts.find((layout) => layout.id === interaction.currentTrackId) || null
+                : null,
+            validDrop: interaction.validDrop
+        };
+
+        const preview = interaction.dropPreview;
+        if (!preview) {
+            return {
+                kind: dragOperation.payload.type === MediaResourceType.EFFECT ? 'effect-invalid' as const : 'transition-invalid' as const,
+                left: status.left,
+                top: status.trackLayout ? status.trackLayout.top + Math.max(16, status.trackLayout.height / 2 - 10) : 20,
+                validDrop: false
+            };
+        }
+
+        if (preview.kind === 'effect') {
+            const clip = clipsMap[preview.clipId];
+            const layout = trackLayouts.find((candidate) => candidate.id === preview.trackId);
+            const resource = clip ? getResource(clip.resource.id) : undefined;
+            if (!clip || !layout) return null;
+
+            return {
+                kind: 'effect' as const,
+                left: Math.round(clip.start * pixelsPerSecond),
+                top: layout.top + 2,
+                width: Math.max(10, Math.round(clip.duration * pixelsPerSecond)),
+                height: Math.max(16, layout.height - 4),
+                label: resource?.name || 'Clip'
+            };
+        }
+
+        const fromClip = clipsMap[preview.fromClipId];
+        const toClip = clipsMap[preview.toClipId];
+        const layout = trackLayouts.find((candidate) => candidate.id === preview.trackId);
+        if (!fromClip || !toClip || !layout) return null;
+
+        return {
+            kind: 'transition' as const,
+            boundaryLeft: Math.round(preview.boundaryTime * pixelsPerSecond),
+            top: layout.top + 2,
+            height: Math.max(16, layout.height - 4),
+            fromLeft: Math.round(fromClip.start * pixelsPerSecond),
+            fromWidth: Math.max(8, Math.round(fromClip.duration * pixelsPerSecond)),
+            toLeft: Math.round(toClip.start * pixelsPerSecond),
+            toWidth: Math.max(8, Math.round(toClip.duration * pixelsPerSecond)),
+            fromLabel: getResource(fromClip.resource.id)?.name || 'Outgoing clip',
+            toLabel: getResource(toClip.resource.id)?.name || 'Incoming clip'
+        };
+    }, [isSemanticResourceDrag, dragOperation, interaction.currentTime, interaction.currentTrackId, interaction.validDrop, interaction.dropPreview, pixelsPerSecond, trackLayouts, clipsMap, getResource]);
+
+    const linkedGhostPreviews = useMemo(() => {
+        return buildLinkedGhostPreviews({
+            interaction,
+            clipsMap,
+            trackLayouts,
+            pixelsPerSecond
+        });
+    }, [interaction, clipsMap, trackLayouts, pixelsPerSecond]);
 
     // Calculate Ghost Data
     const ghostData = useMemo(() => {
@@ -127,6 +197,14 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
 
     // Direct DOM Update
     useLayoutEffect(() => {
+        if (isSemanticResourceDrag) {
+            if (ghostRef.current) ghostRef.current.style.display = 'none';
+            if (insertGuideRef.current) insertGuideRef.current.style.display = 'none';
+            if (snapGuideRef.current) snapGuideRef.current.style.display = 'none';
+            if (infoPillRef.current) infoPillRef.current.style.display = 'none';
+            return;
+        }
+
         if (!isVisible || !ghostData || !ghostData.hasTarget) {
             // Hide everything if not visible OR no valid target (e.g. dragging over clip which handles drop locally)
             if (ghostRef.current) ghostRef.current.style.display = 'none';
@@ -238,7 +316,9 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
              
              const timeStr = formatTime(currentTime);
              const pillText = infoPillRef.current.querySelector('span');
-             if (pillText) pillText.innerText = `${operationLabel} ? ${timeStr}`;
+             const linkedMoveCount = interaction.linkedMoves?.length || 0;
+             const linkedLabel = linkedMoveCount > 1 ? ` · Linked ${linkedMoveCount} Clips` : '';
+             if (pillText) pillText.innerText = `${operationLabel}${linkedLabel} · ${timeStr}`;
         }
 
         // Update Snap Lines
@@ -260,7 +340,100 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
             }
         }
 
-    }, [isVisible, interaction, ghostData, trackLayouts, pixelsPerSecond]);
+    }, [isVisible, interaction, ghostData, trackLayouts, pixelsPerSecond, isSemanticResourceDrag]);
+
+    if (isSemanticResourceDrag && semanticPreview) {
+        return (
+            <>
+                {semanticPreview.kind === 'effect' && (
+                    <>
+                        <div
+                            className="absolute z-[55] pointer-events-none rounded-lg border border-fuchsia-400/80 bg-fuchsia-500/10 shadow-[0_0_0_1px_rgba(232,121,249,0.35),0_0_24px_rgba(217,70,239,0.25)] backdrop-blur-[1px]"
+                            style={{
+                                left: semanticPreview.left,
+                                top: semanticPreview.top,
+                                width: semanticPreview.width,
+                                height: semanticPreview.height
+                            }}
+                        />
+                        <div
+                            className="absolute z-[70] pointer-events-none rounded-full border border-fuchsia-400/60 bg-[#140711]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-100 shadow-lg"
+                            style={{
+                                left: semanticPreview.left,
+                                top: semanticPreview.top - 28
+                            }}
+                        >
+                            Apply Effect · {semanticPreview.label}
+                        </div>
+                    </>
+                )}
+
+                {semanticPreview.kind === 'transition' && (
+                    <>
+                        <div
+                            className="absolute z-[54] pointer-events-none rounded-lg border border-cyan-400/30 bg-cyan-500/8"
+                            style={{
+                                left: semanticPreview.fromLeft,
+                                top: semanticPreview.top,
+                                width: semanticPreview.fromWidth,
+                                height: semanticPreview.height
+                            }}
+                        />
+                        <div
+                            className="absolute z-[54] pointer-events-none rounded-lg border border-cyan-400/30 bg-cyan-500/8"
+                            style={{
+                                left: semanticPreview.toLeft,
+                                top: semanticPreview.top,
+                                width: semanticPreview.toWidth,
+                                height: semanticPreview.height
+                            }}
+                        />
+                        <div
+                            className="absolute z-[60] pointer-events-none w-[3px] rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.9)]"
+                            style={{
+                                left: semanticPreview.boundaryLeft - 1,
+                                top: semanticPreview.top - 6,
+                                height: semanticPreview.height + 12
+                            }}
+                        />
+                        <div
+                            className="absolute z-[70] pointer-events-none rounded-full border border-cyan-300/60 bg-[#071317]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-cyan-100 shadow-lg"
+                            style={{
+                                left: semanticPreview.boundaryLeft + 8,
+                                top: semanticPreview.top - 28
+                            }}
+                        >
+                            Apply Transition
+                        </div>
+                    </>
+                )}
+
+                {semanticPreview.kind === 'effect-invalid' && (
+                    <div
+                        className="absolute z-[70] pointer-events-none rounded-full border border-red-400/60 bg-[#170707]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-red-100 shadow-lg"
+                        style={{
+                            left: semanticPreview.left,
+                            top: semanticPreview.top
+                        }}
+                    >
+                        Drop Effect On A Clip
+                    </div>
+                )}
+
+                {semanticPreview.kind === 'transition-invalid' && (
+                    <div
+                        className="absolute z-[70] pointer-events-none rounded-full border border-red-400/60 bg-[#170707]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-red-100 shadow-lg"
+                        style={{
+                            left: semanticPreview.left,
+                            top: semanticPreview.top
+                        }}
+                    >
+                        Drop Transition On An Edit Point
+                    </div>
+                )}
+            </>
+        );
+    }
 
     if (!isVisible || !ghostData) return null;
     
@@ -290,6 +463,7 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
                     resourceUrl={ghostData.resourceUrl}
                     resourceMetadata={ghostData.resource.metadata} // Pass metadata for filmstrip
                     pixelsPerSecond={pixelsPerSecond}
+                    editTool="select"
                     isSelected={false}
                     onSelect={() => {}}
                     trackHeight={ghostData.visualConfig.height}
@@ -298,6 +472,42 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
                     playerController={{ skim: () => {}, scrub: () => {}, previewFrame: () => {} } as any}
                 />
             </div>
+
+            {linkedGhostPreviews.map((preview) => {
+                const clip = clipsMap[preview.clipId];
+                if (!clip) return null;
+                const resource = getResource(clip.resource.id);
+                if (!resource) return null;
+
+                return (
+                    <div
+                        key={`linked-ghost-${preview.clipId}`}
+                        className="absolute z-[38] pointer-events-none opacity-70"
+                        style={{
+                            left: preview.left,
+                            top: preview.top,
+                            width: `${Math.max(2, Math.round(clip.duration * pixelsPerSecond))}px`,
+                            height: `${preview.trackHeight}px`
+                        }}
+                    >
+                        <MagicCutClip
+                            clip={{ ...clip, start: 0 }}
+                            resourceName={resource.name}
+                            resourceType={resource.type}
+                            resourceUrl={getRobustResourceUrl(resource)}
+                            resourceMetadata={resource.metadata}
+                            pixelsPerSecond={pixelsPerSecond}
+                            editTool="select"
+                            isSelected={false}
+                            onSelect={() => {}}
+                            trackHeight={preview.trackHeight}
+                            isGhost={true}
+                            setInteraction={() => {}}
+                            playerController={{ skim: () => {}, scrub: () => {}, previewFrame: () => {} } as any}
+                        />
+                    </div>
+                );
+            })}
             
             {/* 3. Info Pill */}
             <div 

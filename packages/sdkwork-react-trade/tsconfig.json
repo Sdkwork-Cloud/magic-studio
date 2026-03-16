@@ -20,7 +20,11 @@
     "baseUrl": ".",
     "paths": {
       "@sdkwork/react-core": ["../sdkwork-react-core/src"],
-      "@sdkwork/react-commons": ["../sdkwork-react-commons/src"]
+      "@sdkwork/react-commons": ["../sdkwork-react-commons/src"],
+      "@sdkwork/react-auth": ["./src/types/react-auth.d.ts"],
+      "@sdkwork/react-workspace": ["./src/types/react-workspace.d.ts"],
+      "@sdkwork/react-notifications": ["./src/types/react-notifications.d.ts"],
+      "@sdkwork/react-vip": ["./src/types/react-vip.d.ts"]
     }
   },
   "include": ["src"],

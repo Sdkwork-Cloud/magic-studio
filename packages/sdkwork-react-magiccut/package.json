@@ -18,7 +18,9 @@
     "scripts":  {
                     "dev":  "vite build --watch",
                     "build":  "vite build",
-                    "typecheck":  "tsc --noEmit"
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "vitest run",
+                    "test:watch":  "vitest"
                 },
     "peerDependencies":  {
                              "react":  "\u003e=18.0.0",
@@ -46,7 +48,8 @@
                             "react-dom":  "catalog:",
                             "typescript":  "catalog:",
                             "vite":  "catalog:",
-                            "vite-plugin-dts":  "catalog:"
+                            "vite-plugin-dts":  "catalog:",
+                            "vitest":  "^3.2.4"
                         },
     "private":  true,
     "description":  "AI-powered video editing package for SDKWork React applications"

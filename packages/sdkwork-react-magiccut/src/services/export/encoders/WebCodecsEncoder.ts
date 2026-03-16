@@ -3,6 +3,7 @@ import { IMediaEncoder, ExportConfig } from '../types';
 
 export class WebCodecsEncoder implements IMediaEncoder {
     public readonly requiresRealtime = false;
+    private static mediabunnyModulePromise: Promise<any | null> | null = null;
 
     private canvas: HTMLCanvasElement | null = null;
     private audioBuffer: AudioBuffer | null = null;
@@ -23,14 +24,16 @@ export class WebCodecsEncoder implements IMediaEncoder {
 
         const initialized = await this.initializeMediabunny();
         if (!initialized) {
-            console.warn('[WebCodecs] Mediabunny not available, export will produce placeholder');
+            throw new Error('WebCodecs MP4 muxer is unavailable in this runtime.');
         }
     }
 
     private async initializeMediabunny(): Promise<boolean> {
         try {
-            const dynamicImport = new Function('m', 'return import(m)');
-            this.mediabunny = await dynamicImport('mediabunny');
+            this.mediabunny = await WebCodecsEncoder.loadMediabunnyModule();
+            if (!this.mediabunny) {
+                return false;
+            }
             
             const { Output, Mp4OutputFormat, BufferTarget, CanvasSource, AudioBufferSource } = this.mediabunny;
             
@@ -102,8 +105,6 @@ export class WebCodecsEncoder implements IMediaEncoder {
     }
 
     async finish(): Promise<Blob> {
-        const elapsed = ((performance.now() - this.startTime) / 1000).toFixed(2);
-
         if (this.output && this.videoSource) {
             if (this.audioSource && this.audioBuffer) {
                 await this.audioSource.add(this.audioBuffer);
@@ -119,21 +120,7 @@ export class WebCodecsEncoder implements IMediaEncoder {
             return new Blob([buffer], { type: 'video/mp4' });
         }
 
-        const message = `WebCodecs Export (No Muxer Available)
-
-Total Frames: ${this.frameCount}
-Duration: ${elapsed}s
-Resolution: ${this.width}x${this.height}
-
-To generate MP4 files, install Mediabunny:
-  npm install mediabunny
-
-Mediabunny is a modern, zero-dependency media toolkit for the browser.
-It supports MP4, WebM, and many other formats with hardware-accelerated encoding.
-
-Learn more: https://www.npmjs.com/package/mediabunny`;
-        
-        return new Blob([message], { type: 'text/plain' });
+        throw new Error('WebCodecs export was not initialized.');
     }
 
     dispose(): void {
@@ -180,8 +167,38 @@ Learn more: https://www.npmjs.com/package/mediabunny`;
         return typeof VideoEncoder !== 'undefined';
     }
 
+    private static async loadMediabunnyModule(): Promise<any | null> {
+        if (!this.mediabunnyModulePromise) {
+            this.mediabunnyModulePromise = (async () => {
+                try {
+                    const dynamicImport = new Function('m', 'return import(m)');
+                    return await dynamicImport('mediabunny');
+                } catch (e) {
+                    console.warn('[WebCodecs] Mediabunny not available:', e);
+                    return null;
+                }
+            })();
+        }
+
+        return this.mediabunnyModulePromise;
+    }
+
+    static async checkMuxerSupport(): Promise<boolean> {
+        const mediabunny = await this.loadMediabunnyModule();
+        if (!mediabunny) {
+            return false;
+        }
+
+        return Boolean(
+            mediabunny.Output &&
+            mediabunny.Mp4OutputFormat &&
+            mediabunny.BufferTarget &&
+            mediabunny.CanvasSource
+        );
+    }
+
     static async checkCodecSupport(codec: string = 'avc1.64001f'): Promise<boolean> {
-        if (!('VideoEncoder' in window)) return false;
+        if (typeof window === 'undefined' || !('VideoEncoder' in window)) return false;
         
         try {
             const support = await VideoEncoder.isConfigSupported({

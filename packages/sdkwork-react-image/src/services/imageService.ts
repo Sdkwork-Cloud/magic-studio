@@ -7,7 +7,11 @@ import { resolveAssetUrlByAssetIdFirst } from '@sdkwork/react-assets';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { platform as _platform } from '@sdkwork/react-core';
 
-const API_KEY = process.env.API_KEY || '';
+const API_KEY = (
+    (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.API_KEY
+    || (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_API_KEY
+    || ''
+);
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 let genAIAdapterOverride: GenAIAdapter | null = null;
 let assetServiceAdapterOverride: AssetServiceAdapter | null = null;

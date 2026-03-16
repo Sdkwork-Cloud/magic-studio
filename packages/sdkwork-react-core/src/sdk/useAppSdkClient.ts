@@ -1,10 +1,34 @@
 import { useMemo } from 'react';
-import { createClient, type SdkworkAppClient, type SdkworkAppConfig } from '@sdkwork/app-sdk';
+import {
+    createClient,
+    type AnalyticApi,
+    type AssetApi,
+    type CouponApi,
+    type OrderApi,
+    type PaymentApi,
+    type ProjectApi,
+    type SettingApi,
+    type SdkworkAppClient,
+    type SdkworkAppConfig,
+    type WorkspaceApi,
+} from '@sdkwork/app-sdk';
 
 export type AppRuntimeEnv = 'development' | 'staging' | 'production' | 'test';
 
 export interface AppSdkClientConfig extends SdkworkAppConfig {
     env: AppRuntimeEnv;
+}
+
+export interface AppSdkClient extends SdkworkAppClient {
+    readonly assets: AssetApi;
+    readonly notes: SdkworkAppClient['note'];
+    readonly projects: ProjectApi;
+    readonly payments: PaymentApi;
+    readonly orders: OrderApi;
+    readonly coupons: CouponApi;
+    readonly settings: SettingApi;
+    readonly workspaces: WorkspaceApi;
+    readonly analytics: AnalyticApi;
 }
 
 export interface AppSdkSessionTokens {
@@ -20,7 +44,73 @@ export const APP_SDK_AUTH_TOKEN_STORAGE_KEY = 'sdkwork_token';
 export const APP_SDK_ACCESS_TOKEN_STORAGE_KEY = 'sdkwork_access_token';
 export const APP_SDK_REFRESH_TOKEN_STORAGE_KEY = 'sdkwork_refresh_token';
 
-let appSdkClient: SdkworkAppClient | null = null;
+const compatClients = new WeakSet<object>();
+
+function ensureAppSdkClientCompat(client: SdkworkAppClient): AppSdkClient {
+    if (!compatClients.has(client as object)) {
+        Object.defineProperties(client, {
+            assets: {
+                configurable: true,
+                get() {
+                    return client.asset;
+                },
+            },
+            notes: {
+                configurable: true,
+                get() {
+                    return client.note;
+                },
+            },
+            projects: {
+                configurable: true,
+                get() {
+                    return client.project;
+                },
+            },
+            payments: {
+                configurable: true,
+                get() {
+                    return client.payment;
+                },
+            },
+            orders: {
+                configurable: true,
+                get() {
+                    return client.order;
+                },
+            },
+            coupons: {
+                configurable: true,
+                get() {
+                    return client.coupon;
+                },
+            },
+            settings: {
+                configurable: true,
+                get() {
+                    return client.setting;
+                },
+            },
+            workspaces: {
+                configurable: true,
+                get() {
+                    return client.workspace;
+                },
+            },
+            analytics: {
+                configurable: true,
+                get() {
+                    return client.analytic;
+                },
+            },
+        });
+        compatClients.add(client as object);
+    }
+
+    return client as AppSdkClient;
+}
+
+let appSdkClient: AppSdkClient | null = null;
 let appSdkConfig: AppSdkClientConfig | null = null;
 
 function readEnv(name: string): string | undefined {
@@ -145,13 +235,13 @@ export function createAppSdkClientConfig(overrides: Partial<SdkworkAppConfig> = 
     };
 }
 
-export function initAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): SdkworkAppClient {
+export function initAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
     appSdkConfig = createAppSdkClientConfig(overrides);
-    appSdkClient = createClient(appSdkConfig);
+    appSdkClient = ensureAppSdkClientCompat(createClient(appSdkConfig));
     return appSdkClient;
 }
 
-export function getAppSdkClient(): SdkworkAppClient {
+export function getAppSdkClient(): AppSdkClient {
     if (!appSdkClient) {
         return initAppSdkClient();
     }
@@ -242,7 +332,7 @@ export function clearAppSdkSessionTokens(): void {
     resetAppSdkClient();
 }
 
-export function getAppSdkClientWithSession(overrides: Partial<SdkworkAppConfig> = {}): SdkworkAppClient {
+export function getAppSdkClientWithSession(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
     const client = Object.keys(overrides).length > 0 ? initAppSdkClient(overrides) : getAppSdkClient();
     const session = readAppSdkSessionTokens();
     applyAppSdkSessionTokens({
@@ -252,7 +342,7 @@ export function getAppSdkClientWithSession(overrides: Partial<SdkworkAppConfig> 
     return client;
 }
 
-export function useAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): SdkworkAppClient {
+export function useAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
     const key = JSON.stringify(overrides || {});
     return useMemo(() => getAppSdkClientWithSession(overrides), [key]);
 }

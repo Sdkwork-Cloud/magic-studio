@@ -1,39 +1,38 @@
 
-import React from 'react';
-import { Volume2, VolumeX, Activity, Mic2, BarChart2, Zap, SlidersHorizontal, Clock, FastForward, Rewind } from 'lucide-react';
-import { PropertySection, ScrubbableInput, ActionButton } from '../widgets/PropertyWidgets';
+import React, { useEffect, useState } from 'react';
+import { Volume2, VolumeX, Activity, BarChart2, Zap, SlidersHorizontal, Clock, FastForward, Rewind } from 'lucide-react';
+import { PropertySection, ScrubbableInput, ActionButton, SliderRow } from '../widgets/PropertyWidgets';
 ;
-import { AnyMediaResource } from '@sdkwork/react-commons';
 import { CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
+import {
+    resolveAudioEnhancementActive,
+    resolveEqSettings,
+    resetEqSettings,
+    setEqEnabled,
+    toggleAudioEnhancement,
+    updateEqBandGain
+} from '../../../domain/audio/audioEffectState';
 
 interface AudioSettingsPanelProps {
     clip: CutClip;
-    resource: AnyMediaResource;
     onUpdate: (updates: Partial<CutClip>) => void;
-    onUpdateResource: (updates: Partial<AnyMediaResource>) => void;
 }
 
-export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, resource, onUpdate, onUpdateResource }) => {
+export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, onUpdate }) => {
     // Access store actions directly to use specific business logic (speed recalculation)
     const { setClipSpeed } = useMagicCutStore();
+    const [equalizerOpen, setEqualizerOpen] = useState(false);
     
     const volume = clip.volume ?? 1;
     const isMuted = clip.muted ?? false;
     const fadeIn = clip.fadeIn ?? 0;
     const fadeOut = clip.fadeOut ?? 0;
     const speed = clip.speed ?? 1;
-    
-    // Metadata access for audio effects state
-    const meta = resource.metadata || {};
-    const isDenoiseEnabled = meta.denoise || false;
-    const isNormalizeEnabled = meta.normalize || false;
-
-    const toggleMeta = (key: string, val: boolean) => {
-         onUpdateResource({ 
-             metadata: { ...meta, [key]: val } 
-         });
-    };
+    const audioEffects = clip.audioEffects || [];
+    const eqSettings = resolveEqSettings(audioEffects);
+    const isDenoiseEnabled = resolveAudioEnhancementActive(audioEffects, 'denoise');
+    const isNormalizeEnabled = resolveAudioEnhancementActive(audioEffects, 'normalize');
 
     // Visual calculation for the volume bar
     const getVisualPercent = (vol: number) => {
@@ -49,6 +48,31 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, re
 
     const isAmplified = volume > 1.0;
     const PRESET_SPEEDS = [0.5, 1.0, 1.5, 2.0, 4.0];
+
+    useEffect(() => {
+        setEqualizerOpen(eqSettings.enabled);
+    }, [clip.id, eqSettings.enabled]);
+
+    const updateAudioEffects = (nextEffects: CutClip['audioEffects']) => {
+        onUpdate({ audioEffects: nextEffects });
+    };
+
+    const toggleEnhancement = (enhancement: 'denoise' | 'normalize') => {
+        updateAudioEffects(toggleAudioEnhancement(audioEffects, enhancement));
+    };
+
+    const toggleEqualizerPanel = () => {
+        const nextOpen = !equalizerOpen;
+        setEqualizerOpen(nextOpen);
+        if (nextOpen && !eqSettings.enabled) {
+            updateAudioEffects(setEqEnabled(audioEffects, true));
+        }
+    };
+
+    const closeEqualizer = () => {
+        setEqualizerOpen(false);
+        updateAudioEffects(setEqEnabled(audioEffects, false));
+    };
 
     return (
         <>
@@ -143,7 +167,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, re
             <PropertySection title="AI Enhance">
                  <div className="space-y-2">
                      <button 
-                        onClick={() => toggleMeta('denoise', !isDenoiseEnabled)}
+                        onClick={() => toggleEnhancement('denoise')}
                         className={`w-full flex items-center justify-between p-2 rounded-lg border transition-all ${isDenoiseEnabled ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' : 'bg-[#1a1a1c] border-[#27272a] text-gray-400'}`}
                      >
                          <span className="text-[10px] font-medium flex items-center gap-2">
@@ -153,7 +177,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, re
                      </button>
                      
                      <button 
-                        onClick={() => toggleMeta('normalize', !isNormalizeEnabled)}
+                        onClick={() => toggleEnhancement('normalize')}
                         className={`w-full flex items-center justify-between p-2 rounded-lg border transition-all ${isNormalizeEnabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' : 'bg-[#1a1a1c] border-[#27272a] text-gray-400'}`}
                      >
                          <span className="text-[10px] font-medium flex items-center gap-2">
@@ -244,11 +268,72 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, re
                     </div>
 
                     <ActionButton 
-                        label="Open Equalizer" 
+                        label={eqSettings.enabled ? 'Equalizer Enabled' : 'Open Equalizer'} 
                         icon={<SlidersHorizontal />} 
-                        onClick={() => {}} 
+                        onClick={toggleEqualizerPanel}
+                        variant={eqSettings.enabled ? 'primary' : 'secondary'}
                         className="w-full"
                     />
+
+                    {equalizerOpen && (
+                        <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-100">
+                                        Three-band EQ
+                                    </div>
+                                    <p className="mt-1 text-[10px] leading-4 text-blue-100/70">
+                                        This EQ writes directly to the clip audio effect chain used by preview and export.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={closeEqualizer}
+                                    className="rounded-md border border-blue-400/20 px-2 py-1 text-[10px] font-medium text-blue-100/80 transition-colors hover:bg-blue-400/10"
+                                >
+                                    Bypass
+                                </button>
+                            </div>
+
+                            <div className="mt-3 space-y-3">
+                                <SliderRow
+                                    label="Low"
+                                    value={eqSettings.lowGain}
+                                    onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'lowGain', value))}
+                                    min={-12}
+                                    max={12}
+                                    step={0.5}
+                                    defaultValue={0}
+                                />
+                                <SliderRow
+                                    label="Mid"
+                                    value={eqSettings.midGain}
+                                    onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'midGain', value))}
+                                    min={-12}
+                                    max={12}
+                                    step={0.5}
+                                    defaultValue={0}
+                                />
+                                <SliderRow
+                                    label="High"
+                                    value={eqSettings.highGain}
+                                    onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'highGain', value))}
+                                    min={-12}
+                                    max={12}
+                                    step={0.5}
+                                    defaultValue={0}
+                                />
+                            </div>
+
+                            <div className="mt-3 flex justify-end">
+                                <button
+                                    onClick={() => updateAudioEffects(resetEqSettings(audioEffects))}
+                                    className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                                >
+                                    Reset EQ
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </PropertySection>
         </>

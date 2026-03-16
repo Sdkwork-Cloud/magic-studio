@@ -2,11 +2,15 @@
 import { CutTrack } from '../../../entities/magicCut.entity';
 import { TIMELINE_CONSTANTS } from '../../../constants';
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import { MediaResourceType } from '@sdkwork/react-commons';
 import { useMagicCutStore } from '../../../store/magicCutStore';
 import { InteractionState } from '../../../store/types';
 import { useSnapPoints } from '../canvas/hooks/useSnapPoints';
 import { ResourceDropStrategy } from '../dnd/strategies/ResourceDropStrategy';
 import { DragInput, DragContext } from '../dnd/types';
+import { findEffectTargetClip, findTransitionTarget } from '../../../domain/effects/effectPlacement';
+import { resolveResourceDropPreview } from '../../../domain/dnd/dropPreview';
+import { resolveImportedDropSequence } from '../../../domain/dnd/importDropSequence';
 
 const RENDER_BUFFER_PX = 1000;
 const ZOOM_MAX_FPS = 60;
@@ -32,6 +36,7 @@ export const useTimeline = (
         validateTrackDrop, checkCollision,
         playerController, setSkimmingResource, setPreviewEffect,
         insertTrackAndAddClip, isSnappingEnabled,
+        addEffectToClip, addTransitionToClip,
         useTransientState, store, seek,
         getResource,
         importFileObjects
@@ -112,6 +117,16 @@ export const useTimeline = (
 
     const strategyRef = useRef<ResourceDropStrategy | null>(null);
 
+    const getTrackIdFromClientY = useCallback((clientY: number) => {
+        const container = tracksContainerRef.current;
+        if (!container) return null;
+
+        const rect = container.getBoundingClientRect();
+        const relativeY = clientY - rect.top + container.scrollTop;
+        const layout = trackLayouts.find(candidate => relativeY >= candidate.top && relativeY <= candidate.top + candidate.height);
+        return layout?.id || null;
+    }, [tracksContainerRef, trackLayouts]);
+
     // Update strategy when operation changes
     useEffect(() => {
         if (dragOperation) {
@@ -140,7 +155,7 @@ export const useTimeline = (
             dragCounter.current = 0;
             setIsDragOverTimeline(false);
             // FULL RESET of interaction state to prevent stale ghost overlays
-            setInteraction((prev: any) => ({ ...prev, type: 'idle', snapLines: [], insertTrackIndex: null, currentTrackId: null }));
+            setInteraction((prev: any) => ({ ...prev, type: 'idle', snapLines: [], insertTrackIndex: null, currentTrackId: null, dropPreview: undefined }));
         }
     }, [setIsDragOverTimeline, setInteraction]);
 
@@ -167,6 +182,36 @@ export const useTimeline = (
             pixelsPerSecond
         };
 
+        const hoveredTrackId = getTrackIdFromClientY(e.clientY);
+        const absoluteX = e.clientX - input.containerRect.left + input.scrollLeft;
+        const rawTime = Math.max(0, absoluteX / pixelsPerSecond);
+
+        if (dragOperation.payload.type === MediaResourceType.EFFECT || dragOperation.payload.type === MediaResourceType.TRANSITION) {
+            const dropPreview = resolveResourceDropPreview({
+                resourceType: dragOperation.payload.type,
+                time: rawTime,
+                preferredTrackId: hoveredTrackId,
+                tracks: timelineTracks,
+                clips: clipsMap,
+                resources: state.resources
+            });
+
+            setInteraction((prev: any) => ({
+                ...prev,
+                type: 'move',
+                currentTime: rawTime,
+                currentTrackId: dropPreview?.trackId || hoveredTrackId,
+                insertTrackIndex: null,
+                validDrop: !!dropPreview,
+                hasCollision: false,
+                snapLines: [],
+                initialDuration: dragOperation.duration,
+                clipId: null,
+                dropPreview
+            }));
+            return;
+        }
+
         const result = strategyRef.current.calculate(input, buildDragContext());
 
         setInteraction((prev: any) => ({
@@ -179,11 +224,12 @@ export const useTimeline = (
             hasCollision: result.hasCollision,
             snapLines: result.snapLines,
             initialDuration: dragOperation.duration,
-            clipId: null
+            clipId: null,
+            dropPreview: undefined
         }));
         
         playerController.previewFrame(result.time);
-    }, [dragOperation, pixelsPerSecond, buildDragContext, setInteraction, playerController, setIsDragOverTimeline]);
+    }, [dragOperation, pixelsPerSecond, buildDragContext, setInteraction, playerController, setIsDragOverTimeline, getTrackIdFromClientY, timelineTracks, clipsMap, state.resources]);
 
     const handleDropEmpty = useCallback(async (e: React.DragEvent) => {
         e.preventDefault(); e.stopPropagation();
@@ -196,16 +242,10 @@ export const useTimeline = (
                 const files = Array.from(e.dataTransfer.files);
                 const resources = await importFileObjects(files);
                 
-                // Determine drop location for the first file (sequential drop not supported yet for multi-file)
+                // Determine drop location from the first imported resource, then sequence the rest
                 if (tracksContainerRef.current && resources.length > 0) {
                      const resource = resources[0];
-                     // Default duration based on type
-                     let duration = 5;
-                     if (resource.type === 'AUDIO') duration = 10;
-                     if (resource.type === 'VIDEO') duration = 5; // Will be updated by metadata later ideally
-                     
-                     // Helper strategy to calculate position
-                     const tempStrategy = new ResourceDropStrategy(resource, duration);
+                     const tempStrategy = new ResourceDropStrategy(resource);
                      const input: DragInput = {
                         clientX: e.clientX,
                         clientY: e.clientY,
@@ -213,15 +253,48 @@ export const useTimeline = (
                         scrollLeft: tracksContainerRef.current.scrollLeft,
                         scrollTop: tracksContainerRef.current.scrollTop,
                         pixelsPerSecond
-                    };
-                    const result = tempStrategy.calculate(input, buildDragContext());
+                     };
+                     const result = tempStrategy.calculate(input, buildDragContext());
                     
-                    if (result.isValid) {
-                        if (result.trackId && !result.hasCollision) {
-                            addClip(result.trackId, resource, result.time, duration);
-                        } else if (result.insertIndex !== null) {
-                            insertTrackAndAddClip(resource, result.insertIndex, result.time, duration, result.suggestedTrackType);
-                        }
+                     if (result.isValid) {
+                        const plans = resolveImportedDropSequence({
+                            resources,
+                            tracks: timelineTracks,
+                            baseTime: result.time,
+                            basePlacement: {
+                                trackId: result.trackId && !result.hasCollision ? result.trackId : null,
+                                insertIndex: result.trackId && !result.hasCollision ? null : result.insertIndex
+                            }
+                        });
+                        const resourceMap = new Map(resources.map((item) => [item.id, item] as const));
+                        const createdTrackIds = new Map<string, string>();
+
+                        plans.forEach((plan) => {
+                            const plannedResource = resourceMap.get(plan.resourceId);
+                            if (!plannedResource) return;
+
+                            if (plan.target.kind === 'existing-track') {
+                                addClip(plan.target.trackId, plannedResource, plan.start, plan.duration);
+                                return;
+                            }
+
+                            const existingTrackId = createdTrackIds.get(plan.target.groupId);
+                            if (existingTrackId) {
+                                addClip(existingTrackId, plannedResource, plan.start, plan.duration);
+                                return;
+                            }
+
+                            const trackId = insertTrackAndAddClip(
+                                plannedResource,
+                                plan.target.insertIndex,
+                                plan.start,
+                                plan.duration,
+                                plan.target.trackType
+                            );
+                            if (trackId) {
+                                createdTrackIds.set(plan.target.groupId, trackId);
+                            }
+                        });
                     }
                 }
             } catch (err) {
@@ -242,6 +315,50 @@ export const useTimeline = (
             pixelsPerSecond
         };
 
+        const hoveredTrackId = getTrackIdFromClientY(e.clientY);
+        const absoluteX = e.clientX - input.containerRect.left + input.scrollLeft;
+        const rawTime = Math.max(0, absoluteX / pixelsPerSecond);
+
+        if (dragOperation.payload.type === MediaResourceType.EFFECT) {
+            const targetClipId = findEffectTargetClip({
+                time: rawTime,
+                preferredTrackId: hoveredTrackId,
+                tracks: timelineTracks,
+                clips: clipsMap,
+                resources: state.resources
+            });
+
+            if (targetClipId) {
+                addEffectToClip(targetClipId, dragOperation.payload.id);
+            }
+
+            setDragOperation(null);
+            setSkimmingResource(null);
+            setInteraction((prev: any) => ({ ...prev, type: 'idle', clipId: null, snapLines: [], insertTrackIndex: null, currentTrackId: null, dropPreview: undefined }));
+            playerController.skim(null);
+            return;
+        }
+
+        if (dragOperation.payload.type === MediaResourceType.TRANSITION) {
+            const targetTransition = findTransitionTarget({
+                time: rawTime,
+                preferredTrackId: hoveredTrackId,
+                tracks: timelineTracks,
+                clips: clipsMap,
+                resources: state.resources
+            });
+
+            if (targetTransition) {
+                addTransitionToClip(targetTransition.fromClipId, dragOperation.payload.id, dragOperation.duration);
+            }
+
+            setDragOperation(null);
+            setSkimmingResource(null);
+            setInteraction((prev: any) => ({ ...prev, type: 'idle', clipId: null, snapLines: [], insertTrackIndex: null, currentTrackId: null, dropPreview: undefined }));
+            playerController.skim(null);
+            return;
+        }
+
         const result = strategyRef.current.calculate(input, buildDragContext());
 
         if (result.isValid) {
@@ -255,10 +372,10 @@ export const useTimeline = (
         setDragOperation(null);
         setSkimmingResource(null);
         // FULL RESET
-        setInteraction((prev: any) => ({ ...prev, type: 'idle', clipId: null, snapLines: [], insertTrackIndex: null, currentTrackId: null }));
+        setInteraction((prev: any) => ({ ...prev, type: 'idle', clipId: null, snapLines: [], insertTrackIndex: null, currentTrackId: null, dropPreview: undefined }));
         playerController.skim(null);
 
-    }, [dragOperation, pixelsPerSecond, buildDragContext, addClip, insertTrackAndAddClip, setDragOperation, setSkimmingResource, setInteraction, playerController, setIsDragOverTimeline, importFileObjects]);
+    }, [dragOperation, pixelsPerSecond, buildDragContext, addClip, insertTrackAndAddClip, setDragOperation, setSkimmingResource, setInteraction, playerController, setIsDragOverTimeline, importFileObjects, getTrackIdFromClientY, timelineTracks, clipsMap, state.resources, addEffectToClip, addTransitionToClip]);
 
     // For Header Drag Over (Insert at start)
     const handleHeaderDragOver = useCallback((e: React.DragEvent) => {

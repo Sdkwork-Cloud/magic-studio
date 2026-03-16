@@ -22,6 +22,7 @@
     "noEmit": true,
     "jsx": "preserve",
     "strict": true,
+    "types": [],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
