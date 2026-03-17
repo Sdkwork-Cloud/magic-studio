@@ -12,7 +12,7 @@ import {
   Star,
   TrendingUp,
 } from 'lucide-react';
-import { GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
+import { GalleryCard, formatLocaleDate, type GalleryItem } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
 import { PortalHeader } from '../components/PortalHeader';
 import { ViralFeed } from '../components/ViralFeed';
@@ -176,7 +176,7 @@ const TheaterPage: React.FC = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock size={14} />
-                  {featuredItem?.createdAt ? new Date(featuredItem.createdAt).toLocaleDateString() : '-'}
+                  {featuredItem?.createdAt ? formatLocaleDate(featuredItem.createdAt) : '-'}
                 </span>
               </div>
               <button

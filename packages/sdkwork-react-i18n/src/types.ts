@@ -1,4 +1,6 @@
-export type Locale = 'en' | 'zh-CN' | 'ja';
+export type SupportedLocale = 'en-US' | 'zh-CN';
+export type Locale = SupportedLocale;
+export type LocaleInput = Locale | string;
 
 export interface TranslationResource {
   [namespace: string]: {
@@ -14,4 +16,16 @@ export interface I18nConfig {
 
 export interface I18nListener {
   (locale: Locale): void;
+}
+
+export interface LocaleResolutionOptions {
+  requestedLocale?: unknown;
+  storedLocale?: unknown;
+  browserLanguages?: readonly unknown[];
+  defaultLocale?: Locale;
+}
+
+export interface InitializeI18nOptions extends LocaleResolutionOptions {
+  persist?: boolean;
+  syncDocument?: boolean;
 }

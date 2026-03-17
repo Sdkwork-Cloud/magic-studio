@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { 
     Trash2, Copy, Repeat2, Check, Maximize2, Play, Image as ImageIcon, Film, Mic, Music, Volume2, Box, Save
 } from 'lucide-react';
-import { ImageTask, MediaType, PromptText, useAssetUrl } from '@sdkwork/react-commons';
+import { ImageTask, MediaType, PromptText, formatLocaleDateTime, useAssetUrl } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 
 type GeneratedResult = NonNullable<ImageTask['results']>[number] & {
@@ -69,7 +69,7 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
                         <div className="flex items-center gap-2 mb-1.5">
                              <MediaTypeBadge type={mediaType} />
                              <span className="text-[10px] text-gray-500 font-mono">
-                                {new Date(task.createdAt).toLocaleString()}
+                                {formatLocaleDateTime(task.createdAt)}
                              </span>
                              <span className="text-[10px] text-gray-600 border border-[#333] px-1.5 py-0.5 rounded uppercase font-medium bg-[#111]">
                                 {task.config.aspectRatio}

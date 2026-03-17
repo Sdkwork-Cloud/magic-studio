@@ -1,3 +1,12 @@
+import {
+    formatCurrency as formatSharedCurrency,
+    formatDate as formatSharedDate,
+    formatDateTime as formatSharedDateTime,
+    formatNumber as formatSharedNumber,
+    formatRelativeTime as formatSharedRelativeTime,
+    formatTime as formatSharedTime,
+} from '@sdkwork/react-i18n';
+
 export function cn(...classes: (string | undefined | null | false)[]): string {
     return classes.filter(Boolean).join(' ');
 }
@@ -26,18 +35,42 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatNumber(num: number, locale = 'en-US'): string {
-    return new Intl.NumberFormat(locale).format(num);
+    return formatSharedNumber(num, { locale });
 }
 
 export function formatDate(date: Date | string | number, locale = 'en-US'): string {
-    const d = new Date(date);
-    return new Intl.DateTimeFormat(locale, {
+    return formatSharedDateTime(date, {
+        locale,
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-    }).format(d);
+        minute: '2-digit',
+    });
+}
+
+export function formatLocaleDate(date: Date | string | number, locale?: string): string {
+    return formatSharedDate(date, locale ? { locale } : undefined);
+}
+
+export function formatLocaleTime(date: Date | string | number, locale?: string): string {
+    return formatSharedTime(date, locale ? { locale } : undefined);
+}
+
+export function formatLocaleDateTime(date: Date | string | number, locale?: string): string {
+    return formatSharedDateTime(date, locale ? { locale } : undefined);
+}
+
+export function formatLocaleNumber(num: number, locale?: string): string {
+    return formatSharedNumber(num, locale ? { locale } : undefined);
+}
+
+export function formatLocaleCurrency(value: number, currency: string, locale?: string): string {
+    return formatSharedCurrency(value, currency, locale ? { locale } : undefined);
+}
+
+export function formatRelativeTime(date: Date | string | number, locale?: string): string {
+    return formatSharedRelativeTime(date, locale ? { locale } : undefined);
 }
 
 /**

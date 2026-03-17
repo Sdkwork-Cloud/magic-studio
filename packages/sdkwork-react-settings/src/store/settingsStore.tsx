@@ -3,7 +3,7 @@ import { AppSettings } from '../entities'
 import { settingsBusinessService } from '../services'
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from '../constants';
-import { i18nService, Locale } from '@sdkwork/react-i18n';
+import { DEFAULT_LOCALE, i18nService, Locale, resolveLocale } from '@sdkwork/react-i18n';
 
 interface SettingsStoreContextType {
   settings: AppSettings;
@@ -16,15 +16,12 @@ const SettingsStoreContext = createContext<SettingsStoreContextType | undefined>
 
 // Helper function to detect browser language
 const detectSystemLanguage = (): Locale => {
-  if (typeof navigator === 'undefined') return 'en';
-  
-  const lang = navigator.language;
-  // Simple matching logic
-  if (lang.startsWith('zh')) return 'zh-CN';
-  if (lang.startsWith('ja')) return 'ja';
-  
-  // Default fallback
-  return 'en';
+  if (typeof navigator === 'undefined') return DEFAULT_LOCALE;
+
+  return resolveLocale({
+    browserLanguages: navigator.languages,
+    defaultLocale: DEFAULT_LOCALE,
+  });
 };
 
 export const SettingsStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -33,20 +30,14 @@ export const SettingsStoreProvider: React.FC<{ children: ReactNode }> = ({ child
 
   // Helper to sync Language
   const syncLanguage = (lang: string) => {
-      let targetLocale = lang;
-      
-      // Handle Auto-Detection
-      if (lang === 'system') {
-          targetLocale = detectSystemLanguage();
-      }
+      const targetLocale = lang === 'system'
+          ? detectSystemLanguage()
+          : resolveLocale({
+              requestedLocale: lang,
+              defaultLocale: DEFAULT_LOCALE,
+            });
 
-      // Validate support
-      if (['en', 'zh-CN', 'ja'].includes(targetLocale)) {
-          i18nService.setLocale(targetLocale as Locale);
-      } else {
-          // Fallback if detection returns unsupported locale
-          i18nService.setLocale('en');
-      }
+      i18nService.setLocale(targetLocale);
   };
 
   useEffect(() => {

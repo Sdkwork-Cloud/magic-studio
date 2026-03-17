@@ -7,7 +7,7 @@ import {
     Edit3, Trash2, Film, Image as ImageIcon,
     Copy, Repeat2, UserPlus
 } from 'lucide-react';
-import { ImageTask, MediaResourceType, GalleryItem, PromptText, useAssetUrl } from '@sdkwork/react-commons';
+import { ImageTask, MediaResourceType, GalleryItem, PromptText, formatLocaleDate, useAssetUrl } from '@sdkwork/react-commons';
 import { platform, useRouter, ROUTES, remixService } from '@sdkwork/react-core';
 
 export type PreviewMode = 'creation' | 'view';
@@ -314,7 +314,7 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                         <div className="grid grid-cols-2 gap-y-4 gap-x-4">
                             <ParamItem label="Model" value={mode === 'creation' ? ((currentItem as any).config.model || 'Unknown') : ((currentItem as any).model)} highlight />
                             <ParamItem label="Aspect Ratio" value={mode === 'creation' ? ((currentItem as any).config.aspectRatio) : ((currentItem as any).aspectRatio)} />
-                            <ParamItem label="Created" value={new Date(currentItem.createdAt).toLocaleDateString()} />
+                            <ParamItem label="Created" value={formatLocaleDate(currentItem.createdAt)} />
                         </div>
                     </div>
 

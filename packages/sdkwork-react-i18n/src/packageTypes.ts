@@ -1,4 +1,6 @@
-export type SupportedLocale = 'zh-CN' | 'en-US';
+import type { Locale, SupportedLocale } from './types';
+
+export type { SupportedLocale } from './types';
 
 export interface PackageI18nConfig {
     namespace: string;
@@ -24,14 +26,6 @@ export interface I18nModuleResource {
 
 export type I18nRegistry = Map<string, PackageI18nConfig>;
 
-// Import types only to avoid circular dependency
-import type { Locale } from './types';
-
 export function mapLocaleToSupported(locale: Locale): SupportedLocale {
-    const mapping: Record<string, SupportedLocale> = {
-        'en': 'en-US',
-        'zh-CN': 'zh-CN',
-        'ja': 'en-US',
-    };
-    return mapping[locale] || 'en-US';
+    return locale;
 }

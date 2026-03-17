@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { formatRelativeTime } from '@sdkwork/react-commons';
 import { useNotificationStore } from '../store/notificationStore';
 import { Bell, Check, Trash2, Info, AlertTriangle, CheckCircle2, AlertOctagon, ExternalLink } from 'lucide-react';
 import { NotificationType } from '../entities';
@@ -13,7 +14,6 @@ const getIcon = (type: NotificationType) => {
         default: return <Info size={16} className="text-blue-500" />;
     }
 };
-
 interface NotificationCenterProps {
     onClose?: () => void;
 }
@@ -81,7 +81,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
                                                 {item.title}
                                             </h4>
                                             <span className="text-[10px] text-gray-600 whitespace-nowrap ml-2">
-                                                {formatTime(item.createdAt)}
+                                                {formatRelativeTime(item.createdAt)}
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
@@ -108,15 +108,4 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
             </div>
         </div>
     );
-};
-
-const formatTime = (ts: string | number) => {
-    const timestamp = typeof ts === 'number' ? ts : new Date(ts).getTime();
-    const date = new Date(timestamp);
-    const now = Date.now();
-    const diff = (now - timestamp) / 1000; // seconds
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return date.toLocaleDateString();
 };

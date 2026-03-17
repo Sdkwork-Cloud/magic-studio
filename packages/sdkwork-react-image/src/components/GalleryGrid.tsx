@@ -1,5 +1,5 @@
 
-import { ImageTask } from '@sdkwork/react-commons'
+import { ImageTask, formatLocaleTime } from '@sdkwork/react-commons'
 import React, { useState } from 'react';
 import { useImageStore } from '../store/imageStore';
 ;
@@ -106,7 +106,7 @@ export const GalleryGrid: React.FC = () => {
                                 </p>
                                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#27272a]/50 text-[10px] text-gray-600 font-mono">
                                     <span>{task.config.aspectRatio}</span>
-                                    <span>{new Date(task.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    <span>{formatLocaleTime(task.createdAt)}</span>
                                 </div>
                             </div>
                         </div>

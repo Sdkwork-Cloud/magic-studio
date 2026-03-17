@@ -20,7 +20,9 @@
     "scripts":  {
                     "dev":  "vite build --watch",
                     "build":  "vite build",
-                    "typecheck":  "tsc --noEmit"
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "pnpm dlx vitest@1.0.4 run --globals",
+                    "test:watch":  "pnpm dlx vitest@1.0.4 --globals"
                 },
     "peerDependencies":  {
                              "react":  "\u003e=18.0.0",
