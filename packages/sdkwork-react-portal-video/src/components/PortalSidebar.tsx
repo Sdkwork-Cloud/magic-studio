@@ -1,5 +1,5 @@
 
-import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { platform, useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState } from 'react';
 import { 
     Home, Compass, FolderOpen, Video, Image as ImageIcon, 
@@ -19,6 +19,7 @@ export const PortalSidebar: React.FC = () => {
     const currentPath = routerContext?.currentPath || '/';
     const { t } = useTranslation();
     const [showPricing, setShowPricing] = useState(false);
+    const isDesktopRuntime = platform.getPlatform() === 'desktop';
 
     interface NavItem {
         id: string;
@@ -143,21 +144,22 @@ export const PortalSidebar: React.FC = () => {
             </div>
 
             <div className="flex-none p-4 pt-0">
-                {/* Download App Button */}
-                <button
-                    onClick={() => navigate(ROUTES.DOWNLOAD)}
-                    className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 border border-blue-400/50 hover:border-blue-300 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all group relative overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative z-10 w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                        <Download size={20} className="text-white group-hover:scale-110 transition-transform" />
-                    </div>
-                    <div className="relative z-10 flex-1 text-left">
-                        <div className="text-sm font-bold">{t('sidebar.download_app_title')}</div>
-                        <div className="text-[10px] text-blue-100/80">{t('sidebar.download_app_subtitle')}</div>
-                    </div>
-                    <ChevronRight size={16} className="relative z-10 opacity-70 group-hover:translate-x-1 transition-transform" />
-                </button>
+                {!isDesktopRuntime && (
+                    <button
+                        onClick={() => navigate(ROUTES.DOWNLOAD)}
+                        className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 border border-blue-400/50 hover:border-blue-300 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative z-10 w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                            <Download size={20} className="text-white group-hover:scale-110 transition-transform" />
+                        </div>
+                        <div className="relative z-10 flex-1 text-left">
+                            <div className="text-sm font-bold">{t('sidebar.download_app_title')}</div>
+                            <div className="text-[10px] text-blue-100/80">{t('sidebar.download_app_subtitle')}</div>
+                        </div>
+                        <ChevronRight size={16} className="relative z-10 opacity-70 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                )}
 
                 <div 
                     className="relative overflow-hidden rounded-xl bg-gradient-to-b from-[#1a1a1c] to-[#111] border border-white/5 p-4 group cursor-pointer hover:border-white/10 transition-all duration-300 mb-4 shadow-lg"

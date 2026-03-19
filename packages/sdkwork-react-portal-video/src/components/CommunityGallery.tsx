@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { AlertCircle, Clock, Filter, Flame, Loader2 } from 'lucide-react';
-import { GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
+import { Button, GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
 import { portalVideoBusinessService } from '../services';
 
@@ -88,13 +88,16 @@ export const CommunityGallery: React.FC = () => {
             onClick={() => setActiveFilter('latest')}
           />
           <div className="w-px h-5 bg-white/10 mx-2" />
-          <button
-            className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 hover:bg-[#1e1e20]"
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             disabled
             title="Filter is currently fixed to feed-based defaults."
+            className="px-3 py-1.5 text-xs font-medium text-gray-400 transition-colors flex items-center gap-1.5 hover:bg-[#1e1e20] hover:text-white"
           >
             <Filter size={14} /> Filter
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -124,13 +127,15 @@ export const CommunityGallery: React.FC = () => {
 
       {works.length > 0 && (
         <div className="pt-8 flex justify-center">
-          <button
-            onClick={handleLoadMore}
+          <Button
+            type="button"
+            variant="ghost"
             disabled={isLoadingMore || !hasMore}
+            onClick={handleLoadMore}
             className="px-8 py-3 rounded-full bg-[#18181b] border border-white/10 hover:border-white/20 hover:bg-[#222] text-sm font-medium text-gray-300 transition-all hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
           >
             {isLoadingMore ? 'Loading...' : hasMore ? 'Load More Creations' : 'No More Creations'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -154,19 +159,18 @@ interface FilterButtonProps {
 }
 
 const FilterButton: React.FC<FilterButtonProps> = ({ label, icon: Icon, active, onClick }) => (
-  <button
+  <Button
+    type="button"
+    size="sm"
+    variant="ghost"
     onClick={onClick}
-    className={`
-      flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all
-      ${
-        active
-          ? 'bg-[#27272a] text-white shadow-sm ring-1 ring-white/10'
-          : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c]'
-      }
-    `}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+      active
+        ? 'bg-[#27272a] text-white shadow-sm ring-1 ring-white/10'
+        : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c]'
+    }`}
   >
     <Icon size={14} className={active ? 'text-orange-500' : ''} />
     {label}
-  </button>
+  </Button>
 );
-

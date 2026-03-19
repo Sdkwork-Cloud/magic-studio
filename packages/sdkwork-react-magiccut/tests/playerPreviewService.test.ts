@@ -71,6 +71,41 @@ describe('PlayerPreviewService', () => {
     expect(player.renderNow).toHaveBeenCalledWith(12, false);
   });
 
+  it('clears a matching audio preview by resource id', () => {
+    const audioPreview: AudioPreviewController = {
+      preview: vi.fn(),
+      stop: vi.fn(),
+    };
+    const service = new PlayerPreviewCoordinator(audioPreview);
+
+    service.previewResource(createResource(MediaResourceType.MUSIC, 'music-preview'), 0);
+
+    expect((service as any).isPreviewingResource?.('music-preview')).toBe(true);
+    expect((service as any).clearPreviewForResource?.('other-resource')).toBe(false);
+    expect(audioPreview.stop).not.toHaveBeenCalled();
+
+    expect((service as any).clearPreviewForResource?.('music-preview')).toBe(true);
+    expect(audioPreview.stop).toHaveBeenCalledTimes(1);
+    expect((service as any).isPreviewingResource?.('music-preview')).toBe(false);
+  });
+
+  it('clears a matching visual preview by resource id', () => {
+    const audioPreview: AudioPreviewController = {
+      preview: vi.fn(),
+      stop: vi.fn(),
+    };
+    const service = new PlayerPreviewCoordinator(audioPreview);
+    const player = createPlayer();
+
+    service.registerPlayer({ current: player } as any);
+    service.previewResource(createResource(MediaResourceType.VIDEO, 'video-preview'), 3);
+
+    expect((service as any).isPreviewingResource?.('video-preview')).toBe(true);
+    expect((service as any).clearPreviewForResource?.('video-preview')).toBe(true);
+    expect(player.setPreviewResource).toHaveBeenCalledWith(null);
+    expect((service as any).isPreviewingResource?.('video-preview')).toBe(false);
+  });
+
   it('replays pending visual previews when the player registers later', () => {
     const audioPreview: AudioPreviewController = {
       preview: vi.fn(),

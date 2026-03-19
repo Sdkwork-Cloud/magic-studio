@@ -20,6 +20,21 @@ abstract class BaseResourceTraits implements IResourceTraits {
     getPreferredTrackTypes(): string[] {
         return [this.getPreferredTrackType()];
     }
+
+    protected resolveResourceDuration(resource: AnyMediaResource): number | null {
+        const directDuration =
+            'duration' in resource ? Number(resource.duration) : Number.NaN;
+        if (Number.isFinite(directDuration) && directDuration > 0) {
+            return directDuration;
+        }
+
+        const metadataDuration = Number((resource.metadata as Record<string, unknown> | undefined)?.duration);
+        if (Number.isFinite(metadataDuration) && metadataDuration > 0) {
+            return metadataDuration;
+        }
+
+        return null;
+    }
 }
 
 // --- Concrete Traits ---
@@ -27,7 +42,7 @@ abstract class BaseResourceTraits implements IResourceTraits {
 class VideoResourceTraits extends BaseResourceTraits {
     getResourceType() { return MediaResourceType.VIDEO; }
     getDefaultDuration(resource: AnyMediaResource): number {
-        return ('duration' in resource && resource.duration) ? resource.duration : 5;
+        return this.resolveResourceDuration(resource) ?? 5;
     }
     getPreferredTrackType(): CutTrackType { return 'video'; }
 }
@@ -35,7 +50,7 @@ class VideoResourceTraits extends BaseResourceTraits {
 class AudioResourceTraits extends BaseResourceTraits {
     getResourceType() { return MediaResourceType.AUDIO; }
     getDefaultDuration(resource: AnyMediaResource): number {
-        return ('duration' in resource && resource.duration) ? resource.duration : 10;
+        return this.resolveResourceDuration(resource) ?? 10;
     }
     getPreferredTrackType(): CutTrackType { return 'audio'; }
 }

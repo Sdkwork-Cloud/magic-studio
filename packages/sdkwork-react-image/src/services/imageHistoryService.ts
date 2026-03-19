@@ -4,9 +4,11 @@ import { Result, type ServiceResult } from '@sdkwork/react-commons';
 import { ImageTask } from '../entities';
 import { STORAGE_KEY_HISTORY } from '../constants';
 
+const LEGACY_STORAGE_KEYS_IMAGE_HISTORY = ['open_studio_image_history_v1'] as const;
+
 class ImageHistoryService extends LocalStorageService<ImageTask> {
     constructor() {
-        super(STORAGE_KEY_HISTORY);
+        super(STORAGE_KEY_HISTORY, LEGACY_STORAGE_KEYS_IMAGE_HISTORY);
     }
 
     async toggleFavorite(id: string): Promise<void> {

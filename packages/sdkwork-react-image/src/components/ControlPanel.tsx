@@ -8,11 +8,11 @@ import {
     Wand2, Ratio, Layers, Image as ImageIcon,
     Trash2, CheckCircle2, Loader2, Copy
 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { useTranslation } from '@sdkwork/react-i18n'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { resolveLocalizedText, useTranslation } from '@sdkwork/react-i18n';
 
 export const ControlPanel: React.FC = () => {
     const { config, setConfig, generate, enhancePrompt, isGenerating, history, clearHistory } = useImageStore();
-    const { t: _t } = useTranslation(); // eslint-disable-line @typescript-eslint/no-unused-vars
+    const { t, locale } = useTranslation();
 
     const handleRatioChange = (ratio: AspectRatio) => {
         setConfig({ aspectRatio: ratio });
@@ -131,7 +131,7 @@ export const ControlPanel: React.FC = () => {
                                     )}
                                     
                                     <span className={`ml-2 text-xs truncate ${thumbnail ? 'pl-6' : ''} ${config.styleId === style.id ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
-                                        {style.label}
+                                        {t(`portalVideo.styles.${style.id}.label`, resolveLocalizedText(style.label, locale))}
                                     </span>
                                     {config.styleId === style.id && <CheckCircle2 size={12} className="ml-auto text-purple-500" />}
                                 </button>

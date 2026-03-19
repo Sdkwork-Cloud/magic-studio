@@ -39,6 +39,11 @@ export const notes = {
             academic: "Academic",
             creative: "Creative",
             concise: "Concise"
+        },
+        languages: {
+            chineseSimplified: "Chinese (Simplified)",
+            japanese: "Japanese",
+            korean: "Korean"
         }
     },
     ai_actions: {

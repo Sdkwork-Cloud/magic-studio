@@ -1,38 +1,92 @@
 
-
-import React from 'react';
-import { Minus, Square, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Copy, Minus, Square, X } from 'lucide-react';
 import { windowControlService } from '../../../services/windowControlService';
 
 export const WindowControls: React.FC = () => {
-  const handleMinimize = (): void => windowControlService.minimize();
-  const handleMaximize = (): void => windowControlService.maximize();
-  const handleClose = (): void => windowControlService.close();
+  const [isAvailable, setIsAvailable] = useState(() => windowControlService.isAvailable());
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    const available = windowControlService.isAvailable();
+    setIsAvailable(available);
+
+    if (!available) {
+      setIsMaximized(false);
+      return;
+    }
+
+    const syncWindowState = async (): Promise<void> => {
+      setIsMaximized(await windowControlService.isMaximized());
+    };
+
+    void syncWindowState();
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleResize = (): void => {
+      void syncWindowState();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (!isAvailable) {
+    return null;
+  }
+
+  const handleMinimize = async (): Promise<void> => {
+    await windowControlService.minimize();
+  };
+
+  const handleMaximize = async (): Promise<void> => {
+    const nextIsMaximized = await windowControlService.maximize();
+    setIsMaximized(nextIsMaximized);
+  };
+
+  const handleClose = async (): Promise<void> => {
+    await windowControlService.close();
+  };
+
+  const frameButtonClassName =
+    'group/window-control flex h-10 w-12 items-center justify-center text-[#6b7280] transition-all duration-150 hover:bg-black/5 hover:text-[#111827] active:bg-black/10 dark:text-[#9ca3af] dark:hover:bg-white/8 dark:hover:text-white dark:active:bg-white/12';
+
+  const closeButtonClassName =
+    'group/window-control flex h-10 w-12 items-center justify-center text-[#6b7280] transition-all duration-150 hover:bg-[#e81123] hover:text-white active:bg-[#c50f1f] dark:text-[#9ca3af]';
+
+  const MaximizeIcon = isMaximized ? Copy : Square;
+  const maximizeTitle = isMaximized ? 'Restore' : 'Maximize';
 
   return (
-    <div className="flex items-center h-full z-50 window-controls">
+    <div className="window-controls flex h-full items-center border-l border-black/5 bg-white/75 backdrop-blur-xl dark:border-white/5 dark:bg-[#050505]/70">
       <button
-        onClick={handleMinimize}
-        className="h-full w-[46px] flex items-center justify-center text-gray-400 hover:bg-[#2d2d2d] hover:text-white transition-colors focus:outline-none"
+        onClick={() => void handleMinimize()}
+        className={frameButtonClassName}
+        aria-label="Minimize"
         title="Minimize"
       >
-        <Minus size={14} />
+        <Minus size={14} className="transition-transform duration-150 group-hover/window-control:scale-105" />
       </button>
 
       <button
-        onClick={handleMaximize}
-        className="h-full w-[46px] flex items-center justify-center text-gray-400 hover:bg-[#2d2d2d] hover:text-white transition-colors focus:outline-none"
-        title="Maximize"
+        onClick={() => void handleMaximize()}
+        className={frameButtonClassName}
+        aria-label={maximizeTitle}
+        title={maximizeTitle}
       >
-        <Square size={12} />
+        <MaximizeIcon size={isMaximized ? 13 : 12} className="transition-transform duration-150 group-hover/window-control:scale-105" />
       </button>
 
       <button
-        onClick={handleClose}
-        className="h-full w-[46px] flex items-center justify-center text-gray-400 hover:bg-[#ff5f57] hover:text-white transition-colors focus:outline-none"
+        onClick={() => void handleClose()}
+        className={closeButtonClassName}
+        aria-label="Close"
         title="Close"
       >
-        <X size={14} />
+        <X size={14} className="transition-transform duration-150 group-hover/window-control:scale-105" />
       </button>
     </div>
   );

@@ -1,11 +1,12 @@
 
-import { CutTimeline } from '../entities'
+import { CutTimeline, CutTrack } from '../entities'
 import { MasterClock } from '../engine/MasterClock';
 import { TimelineStore } from '../store/transientStore';
 import { NormalizedState } from '../store/magicCutStore';
 import { audioEngine } from '../engine/AudioEngine';
 import { TIMELINE_CONSTANTS } from '../constants';
 import { playerPreviewService } from '../services/PlayerPreviewService';
+import { resolveAudibleTrackIds } from '../domain/audio/trackAudibility';
 
 export class PlayerController {
     private clock: MasterClock;
@@ -334,10 +335,16 @@ export class PlayerController {
 
     private preloadAudio(timeline: CutTimeline, state: NormalizedState) {
         const resourcesToLoad = new Set<string>();
+        const audibleTrackIds = resolveAudibleTrackIds(
+            timeline.tracks
+                .map((trackRef) => state.tracks[trackRef.id])
+                .filter(Boolean) as CutTrack[],
+            this.store.getState().soloTrackIds
+        );
 
         timeline.tracks.forEach(trackRef => {
             const track = state.tracks[trackRef.id];
-            if (!track || track.muted) return;
+            if (!track || !audibleTrackIds.has(track.id)) return;
             track.clips.forEach(clipRef => {
                 const clip = state.clips[clipRef.id];
                 if (clip && clip.resource) resourcesToLoad.add(clip.resource.id);
@@ -361,7 +368,8 @@ export class PlayerController {
             this.currentState.tracks,
             this.currentState.clips,
             this.clock.isActive,
-            this.clock.getPlaybackDirection()
+            this.clock.getPlaybackDirection(),
+            this.store.getState().soloTrackIds
         );
     }
 

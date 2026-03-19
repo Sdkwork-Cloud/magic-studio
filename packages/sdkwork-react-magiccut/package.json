@@ -35,6 +35,7 @@
                          "@sdkwork/react-i18n":  "workspace:*",
                          "@sdkwork/react-image":  "workspace:*",
                          "@sdkwork/react-music":  "workspace:*",
+                         "@sdkwork/react-settings":  "workspace:*",
                          "@sdkwork/react-sfx":  "workspace:*",
                          "@sdkwork/react-video":  "workspace:*",
                          "@sdkwork/react-voicespeaker":  "workspace:*",

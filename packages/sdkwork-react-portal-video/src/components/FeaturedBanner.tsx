@@ -12,9 +12,9 @@ export const FeaturedBanner: React.FC = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {/* Card 1: OpenStudio (Video Generation) */}
+            {/* Card 1: MagicStudio (Video Generation) */}
             <BannerCard 
-                title="OPEN STUDIO"
+                title="MAGIC STUDIO"
                 subtitle="AI Video Gen"
                 description="Create cinematic videos with text prompts"
                 image="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop"

@@ -2,12 +2,13 @@
 import { EditorSession } from '../types';
 import { LocalStorageService } from '@sdkwork/react-core';
 
-const SESSION_KEY = 'open_studio_editor_session_v1';
+const SESSION_KEY = 'magic_studio_editor_session_v1';
+const LEGACY_SESSION_KEYS = ['open_studio_editor_session_v1'] as const;
 const DEFAULT_SESSION_ID = 'current_workspace';
 
 class EditorSessionService extends LocalStorageService<EditorSession> {
     constructor() {
-        super(SESSION_KEY);
+        super(SESSION_KEY, LEGACY_SESSION_KEYS);
     }
 
     async saveSession(

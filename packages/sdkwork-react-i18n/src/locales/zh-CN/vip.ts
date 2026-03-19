@@ -1,24 +1,52 @@
 export const vip = {
-    hero: {
-        badge: "新功能: Gemini 1.5 Pro 可用",
-        title: "增强您的工作流程",
-        subtitle: "获得高级 AI 模型、无限历史记录和云同步功能的访问权限。"
-    },
-    plans: {
-        free: { button: "当前计划" }
-    },
+    title: "\u4f1a\u5458\u5957\u9910",
+    subtitle: "\u9009\u62e9\u9002\u5408\u60a8\u7684\u5957\u9910\uff0c\u89e3\u9501\u66f4\u591a AI \u80fd\u529b",
     modal: {
-        offer_title: "升级到",
-        offer_subtitle: "Pro",
-        desc: "使用我们的高级计划解锁 Open Studio 的全部潜力。",
-        badge_save: "节省 {percent}%",
-        billing: {
-            year: "按年",
-            month: "按月",
-            onetime: "终身"
+        title: "\u4f1a\u5458\u5957\u9910",
+        subtitle: "\u9009\u62e9\u9002\u5408\u5f53\u524d\u5de5\u4f5c\u8d1f\u8f7d\u7684\u5957\u9910",
+        desc: "\u89e3\u9501\u66f4\u5feb\u751f\u6210\u3001\u66f4\u591a\u79ef\u5206\u548c\u9ad8\u7ea7\u6a21\u578b\u8bbf\u95ee\u6743\u9650\u3002",
+        tabs: {
+            yearly: "\u5e74\u4ed8",
+            monthly: "\u6708\u4ed8",
+            single: "\u5355\u6b21\u8d2d\u4e70",
         },
-        points_monthly: "每月 {points} AI 积分",
-        auto_refill: "每月自动充值",
-        free_limits: "适用标准限制"
-    }
+        discounts: {
+            yearly: "\u7acb\u7701 50%",
+            monthly: "\u7acb\u7701 20%",
+        },
+        badges: {
+            basic: "\u8bd5\u7528\u4f18\u60e0",
+            standard: "\u70ed\u95e8\u9009\u62e9",
+            premium: "\u8d85\u503c\u63a8\u8350",
+        },
+        current_plan: "\u5f53\u524d\u5957\u9910",
+        free_forever: "\u6c38\u4e45\u514d\u8d39",
+        choose_plan: "\u9009\u62e9\u5957\u9910",
+        subscribe_yearly: "\u7acb\u5373\u5e74\u4ed8",
+        subscribe_monthly: "\u7acb\u5373\u6708\u4ed8",
+        buy_once: "\u7acb\u5373\u8d2d\u4e70",
+        points_included: "\u542b {points} \u79ef\u5206",
+        estimated_usage: "\u7ea6\u53ef\u751f\u6210 {images} \u5f20\u56fe\u50cf\u6216 {videos} \u6761\u89c6\u9891",
+        monthly_label: "\u6bcf\u6708",
+        yearly_label: "\u6bcf\u5e74",
+        onetime_label: "\u5355\u6b21",
+        close: "\u5173\u95ed",
+        narrator: "\u65c1\u767d",
+    },
+    payment: {
+        title: "\u5b89\u5168\u8d2d\u4e70 VIP",
+        plan: "\u5957\u9910",
+        payment_method: "\u652f\u4ed8\u65b9\u5f0f",
+        wechat: "\u5fae\u4fe1\u652f\u4ed8",
+        alipay: "\u652f\u4ed8\u5b9d",
+        hint: "\u6b64\u64cd\u4f5c\u5c06\u4f7f\u7528\u6700\u65b0 SDK \u76f4\u63a5\u8c03\u7528\u540e\u7aef VIP \u8d2d\u4e70 API\uff0c\u4e0d\u4f7f\u7528\u4efb\u4f55\u6a21\u62df\u652f\u4ed8\u6570\u636e\u3002",
+        idle: "\u786e\u8ba4\u540e\u5c06\u901a\u8fc7 SDK \u63d0\u4ea4 VIP \u8d2d\u4e70\u8bf7\u6c42\u3002",
+        submitting: "\u6b63\u5728\u4f7f\u7528 {method} \u63d0\u4ea4\u8ba2\u5355...",
+        success: "\u8d2d\u4e70\u6210\u529f\uff0cVIP \u72b6\u6001\u5df2\u5237\u65b0\u3002",
+        failed: "\u8d2d\u4e70\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002",
+        close: "\u5173\u95ed",
+        confirm: "\u786e\u8ba4\u8d2d\u4e70",
+        processing: "\u5904\u7406\u4e2d...",
+        purchased: "\u5df2\u8d2d\u4e70",
+    },
 };

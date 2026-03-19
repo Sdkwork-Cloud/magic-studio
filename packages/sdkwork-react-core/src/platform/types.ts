@@ -55,6 +55,7 @@ export interface PlatformAPI {
   startDragging(): Promise<void>;
   minimizeWindow(): Promise<void>;
   maximizeWindow(): Promise<void>;
+  isWindowMaximized(): Promise<boolean>;
   closeWindow(): Promise<void>;
   setFullscreen(fullscreen: boolean): Promise<void>;
   setTitle(title: string): Promise<void>;

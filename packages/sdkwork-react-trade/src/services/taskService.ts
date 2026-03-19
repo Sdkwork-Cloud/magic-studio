@@ -4,88 +4,38 @@ import type {
   TradePageResponse,
 } from '../entities';
 
-/**
- * 接单参数
- */
 export interface AcceptTaskParams {
-  /** 任务 UUID */
   taskUuid: string;
-  /** 接单留言 */
   message?: string;
 }
 
-/**
- * 提交任务参数
- */
 export interface SubmitTaskParams {
-  /** 任务 UUID */
   taskUuid: string;
-  /** 交付资源 UUID 列表 */
   deliveryResourceUuids: string[];
-  /** 提交说明 */
   description?: string;
 }
 
-/**
- * 验收任务参数
- */
 export interface ApproveTaskParams {
-  /** 任务 UUID */
   taskUuid: string;
-  /** 是否通过 */
   approved: boolean;
-  /** 反馈说明 */
   feedback?: string;
 }
 
-/**
- * 任务服务接口
- */
 export interface ITaskService {
-  /**
-   * 获取可接任务列表
-   */
   getAvailableTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>>;
-
-  /**
-   * 获取任务详情
-   */
   getTaskById(uuid: string): Promise<AvailableTask | null>;
-
-  /**
-   * 接单
-   */
   acceptTask(params: AcceptTaskParams): Promise<AvailableTask>;
-
-  /**
-   * 提交任务
-   */
   submitTask(params: SubmitTaskParams): Promise<AvailableTask>;
-
-  /**
-   * 验收任务
-   */
   approveTask(params: ApproveTaskParams): Promise<AvailableTask>;
-
-  /**
-   * 取消任务
-   */
   cancelTask(taskUuid: string): Promise<AvailableTask>;
-
-  /**
-   * 获取我发布的任务
-   */
   getPublishedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>>;
-
-  /**
-   * 获取我接的任务
-   */
   getAcceptedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>>;
 }
 
-/**
- * 任务服务实现 (本地存储版本)
- */
+const TASK_NOT_FOUND_ERROR = 'Task not found';
+const TASK_NOT_ACCEPTABLE_ERROR = 'Task is not available for acceptance';
+const TASK_NOT_IN_PROGRESS_ERROR = 'Task is not currently in progress';
+
 export class TaskService implements ITaskService {
   private readonly STORAGE_KEY = 'trade_tasks';
 
@@ -100,31 +50,31 @@ export class TaskService implements ITaskService {
 
   async getAvailableTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>> {
     const tasks = await this.getTasks();
-    const availableTasks = tasks.filter((t) => t.status === 'AVAILABLE');
+    const availableTasks = tasks.filter((task) => task.status === 'AVAILABLE');
     return this.paginateTasks(availableTasks, params);
   }
 
   async getTaskById(uuid: string): Promise<AvailableTask | null> {
     const tasks = await this.getTasks();
-    return tasks.find((t) => t.uuid === uuid) || null;
+    return tasks.find((task) => task.uuid === uuid) || null;
   }
 
   async acceptTask(params: AcceptTaskParams): Promise<AvailableTask> {
     const tasks = await this.getTasks();
-    const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
+    const index = tasks.findIndex((task) => task.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存在');
+      throw new Error(TASK_NOT_FOUND_ERROR);
     }
 
     const task = tasks[index];
     if (task.status !== 'AVAILABLE') {
-      throw new Error('任务当前不可接');
+      throw new Error(TASK_NOT_ACCEPTABLE_ERROR);
     }
 
     const now = new Date().toISOString();
     task.status = 'ACCEPTED';
-    task.acceptorUuid = 'current-user'; // TODO: 从认证上下文获取
+    task.acceptorUuid = 'current-user';
     task.acceptorName = 'Current User';
     task.acceptedAt = now;
     task.updatedAt = now;
@@ -136,15 +86,15 @@ export class TaskService implements ITaskService {
 
   async submitTask(params: SubmitTaskParams): Promise<AvailableTask> {
     const tasks = await this.getTasks();
-    const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
+    const index = tasks.findIndex((task) => task.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存在');
+      throw new Error(TASK_NOT_FOUND_ERROR);
     }
 
     const task = tasks[index];
     if (task.status !== 'IN_PROGRESS') {
-      throw new Error('任务不在进行中状态');
+      throw new Error(TASK_NOT_IN_PROGRESS_ERROR);
     }
 
     const now = new Date().toISOString();
@@ -160,10 +110,10 @@ export class TaskService implements ITaskService {
 
   async approveTask(params: ApproveTaskParams): Promise<AvailableTask> {
     const tasks = await this.getTasks();
-    const index = tasks.findIndex((t) => t.uuid === params.taskUuid);
+    const index = tasks.findIndex((task) => task.uuid === params.taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存在');
+      throw new Error(TASK_NOT_FOUND_ERROR);
     }
 
     const task = tasks[index];
@@ -181,7 +131,6 @@ export class TaskService implements ITaskService {
     }
 
     task.updatedAt = now;
-
     tasks[index] = task;
     await this.saveTasks(tasks);
     return task;
@@ -189,10 +138,10 @@ export class TaskService implements ITaskService {
 
   async cancelTask(taskUuid: string): Promise<AvailableTask> {
     const tasks = await this.getTasks();
-    const index = tasks.findIndex((t) => t.uuid === taskUuid);
+    const index = tasks.findIndex((task) => task.uuid === taskUuid);
 
     if (index === -1) {
-      throw new Error('任务不存在');
+      throw new Error(TASK_NOT_FOUND_ERROR);
     }
 
     const task = tasks[index];
@@ -213,53 +162,51 @@ export class TaskService implements ITaskService {
 
   async getPublishedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>> {
     const tasks = await this.getTasks();
-    const publishedTasks = tasks.filter((t) => t.publisherUuid === 'current-user');
+    const publishedTasks = tasks.filter((task) => task.publisherUuid === 'current-user');
     return this.paginateTasks(publishedTasks, params);
   }
 
   async getAcceptedTasks(params: TradePageRequest): Promise<TradePageResponse<AvailableTask>> {
     const tasks = await this.getTasks();
-    const acceptedTasks = tasks.filter((t) => t.acceptorUuid === 'current-user');
+    const acceptedTasks = tasks.filter((task) => task.acceptorUuid === 'current-user');
     return this.paginateTasks(acceptedTasks, params);
   }
 
   private paginateTasks(
     tasks: AvailableTask[],
-    params: TradePageRequest
+    params: TradePageRequest,
   ): TradePageResponse<AvailableTask> {
     let filtered = [...tasks];
 
     if (params.status) {
-      filtered = filtered.filter((t) => t.status === params.status);
+      filtered = filtered.filter((task) => task.status === params.status);
     }
     if (params.type) {
-      filtered = filtered.filter((t) => t.type === params.type);
+      filtered = filtered.filter((task) => task.type === params.type);
     }
     if (params.keyword) {
       const keyword = params.keyword.toLowerCase();
-      filtered = filtered.filter(
-        (t) =>
-          t.title.toLowerCase().includes(keyword) ||
-          t.description.toLowerCase().includes(keyword)
-      );
+      filtered = filtered.filter((task) => (
+        task.title.toLowerCase().includes(keyword)
+        || task.description.toLowerCase().includes(keyword)
+      ));
     }
     if (params.difficulty) {
-      filtered = filtered.filter((t) => t.difficulty === params.difficulty);
+      filtered = filtered.filter((task) => task.difficulty === params.difficulty);
     }
 
-    // 按难度和预算排序
     const difficultyOrder = { EASY: 0, MEDIUM: 1, HARD: 2, EXPERT: 3 };
-    filtered.sort((a, b) => {
+    filtered.sort((taskA, taskB) => {
       if (params.sortBy === 'budget') {
-        return params.sortOrder === 'desc' ? b.budget - a.budget : a.budget - b.budget;
+        return params.sortOrder === 'desc' ? taskB.budget - taskA.budget : taskA.budget - taskB.budget;
       }
       if (params.sortBy === 'difficulty') {
-        const diffA = difficultyOrder[a.difficulty];
-        const diffB = difficultyOrder[b.difficulty];
+        const diffA = difficultyOrder[taskA.difficulty];
+        const diffB = difficultyOrder[taskB.difficulty];
         return params.sortOrder === 'desc' ? diffB - diffA : diffA - diffB;
       }
-      // 默认按创建时间降序
-      return a.createdAt < b.createdAt ? 1 : -1;
+
+      return taskA.createdAt < taskB.createdAt ? 1 : -1;
     });
 
     const page = params.page || 1;
@@ -279,7 +226,4 @@ export class TaskService implements ITaskService {
   }
 }
 
-/**
- * 任务服务单例
- */
 export const taskService = new TaskService();

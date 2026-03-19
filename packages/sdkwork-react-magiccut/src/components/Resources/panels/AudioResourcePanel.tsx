@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { Pause, Heart, FileAudio, Mic2, Trash2 } from 'lucide-react';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
+import { getResourceCardFrameClass, getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
+import { buildDeterministicBarHeights } from '../../../domain/assets/audioVisualization';
+import { AudioResourceList } from '../list/AudioResourceList';
 
 interface AudioResourcePanelProps {
     assets: AnyAsset[];
@@ -10,6 +14,7 @@ interface AudioResourcePanelProps {
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     onPreview: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
+    viewMode?: ResourcePanelViewMode;
 }
 
 export const AudioResourcePanel: React.FC<AudioResourcePanelProps> = React.memo(({
@@ -17,12 +22,24 @@ export const AudioResourcePanel: React.FC<AudioResourcePanelProps> = React.memo(
     onDragStart,
     onToggleFavorite,
     onPreview,
-    onDelete
+    onDelete,
+    viewMode = 'grid'
 }) => {
     const [playingId, setPlayingId] = useState<string | null>(null);
 
+    if (viewMode === 'list') {
+        return (
+            <AudioResourceList
+                assets={assets}
+                onDragStart={onDragStart}
+                onToggleFavorite={onToggleFavorite}
+                onPreview={onPreview}
+            />
+        );
+    }
+
     return (
-        <div className="grid grid-cols-4 gap-2 content-start pb-10 px-2">
+        <div className={getResourcePanelLayoutClass(viewMode)}>
             {assets.map((item) => (
                 <AudioTile 
                     key={item.id}
@@ -37,6 +54,7 @@ export const AudioResourcePanel: React.FC<AudioResourcePanelProps> = React.memo(
                     onDragStart={onDragStart}
                     onToggleFavorite={onToggleFavorite}
                     onDelete={onDelete}
+                    viewMode={viewMode}
                 />
             ))}
         </div>
@@ -50,7 +68,9 @@ const AudioTile: React.FC<{
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     onDelete?: (item: AnyAsset) => void;
-}> = ({ item, isPlaying, onPlayToggle, onDragStart, onToggleFavorite, onDelete }) => {
+    viewMode: ResourcePanelViewMode;
+}> = ({ item, isPlaying, onPlayToggle, onDragStart, onToggleFavorite, onDelete, viewMode }) => {
+    const waveformBars = buildDeterministicBarHeights(item.id, 6, 0.3, 1);
     
     // Determine icon based on type hint
     const getIcon = () => {
@@ -72,7 +92,7 @@ const AudioTile: React.FC<{
             draggable
             onDragStart={(e) => onDragStart(e, item)}
             className={`
-                group relative aspect-square bg-[#1e1e1e] border rounded-lg p-2 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none transition-all
+                group relative ${getResourceCardFrameClass(viewMode, 'tile')} bg-[#1e1e1e] border rounded-lg p-2 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none transition-all
                 ${isPlaying 
                     ? 'border-emerald-500 bg-emerald-900/10' 
                     : 'border-[#27272a] hover:border-[#444] hover:bg-[#252526]'
@@ -96,7 +116,7 @@ const AudioTile: React.FC<{
                         </button>
                     )}
                     <button 
-                        onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, !item.isFavorite); }}
+                        onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite)); }}
                         className={`transition-opacity p-1 rounded-full hover:bg-[#333] ${item.isFavorite ? 'opacity-100 text-red-500' : 'opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white'}`}
                     >
                         <Heart size={10} fill={item.isFavorite ? "currentColor" : "none"} />
@@ -106,11 +126,11 @@ const AudioTile: React.FC<{
 
             {/* Waveform Visualization (Fake) */}
             <div className="flex items-end gap-[1px] h-6 opacity-30 group-hover:opacity-50 transition-opacity">
-                {[...Array(6)].map((_, i) => (
+                {waveformBars.map((height, i) => (
                     <div 
                         key={i} 
                         className={`w-full rounded-t-sm ${isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`}
-                        style={{ height: `${30 + Math.random() * 70}%` }}
+                        style={{ height: `${height * 100}%` }}
                     />
                 ))}
             </div>

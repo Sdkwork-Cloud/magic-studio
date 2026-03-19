@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
     Mic2,
     Sparkles,
@@ -17,6 +16,19 @@ import {
     Trash2
 } from 'lucide-react';
 import { Button, AudioUpload } from '@sdkwork/react-commons';
+import {
+    Dialog,
+    DialogContent,
+    DialogClose,
+    Input,
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+    Textarea,
+    Label
+} from '@sdkwork/react-commons/ui';
 import { AudioRecorder } from '@sdkwork/react-audio';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { ChooseAsset, type Asset } from '@sdkwork/react-assets';
@@ -116,6 +128,11 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
         }
         setIsReferencePlaying(false);
     };
+
+    const closeModal = useCallback(() => {
+        stopReferencePlayback();
+        onClose();
+    }, [onClose, stopReferencePlayback]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -334,9 +351,9 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
         return null;
     }
 
-    return createPortal(
-        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-4xl h-[84vh] rounded-2xl border border-[#2f2f34] bg-[#121214] shadow-2xl overflow-hidden flex flex-col">
+    return (
+        <Dialog open onOpenChange={(open) => !open && closeModal()}>
+            <DialogContent className="w-full max-w-4xl h-[84vh] rounded-2xl border border-[#2f2f34] bg-[#121214] shadow-2xl overflow-hidden flex flex-col p-0" showCloseButton={false}>
                 <div className="h-16 px-6 border-b border-[#2a2a30] bg-[#18181b] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 text-white flex items-center justify-center shadow-lg shadow-emerald-900/25">
@@ -352,38 +369,34 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                         </div>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className="w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a30] transition-colors flex items-center justify-center"
-                    >
-                        <X size={18} />
-                    </button>
+                    <DialogClose asChild>
+                        <Button
+                            variant="ghost"
+                            className="w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-[#2a2a30] transition-colors flex items-center justify-center"
+                        >
+                            <X size={18} />
+                        </Button>
+                    </DialogClose>
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 custom-scrollbar">
                     <div className="flex items-center gap-2 bg-[#161618] border border-[#2c2c31] p-1 rounded-xl w-fit">
-                        <button
+                        <Button
                             onClick={() => setMode('design')}
-                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
-                                mode === 'design' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                            }`}
+                            variant={mode === 'design' ? 'secondary' : 'ghost'}
+                            className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5"
                         >
-                            <span className="inline-flex items-center gap-1.5">
-                                <Sparkles size={12} />
-                                {t('voice.lab.modeDesign', 'Design Voice')}
-                            </span>
-                        </button>
-                        <button
+                            <Sparkles size={12} />
+                            {t('voice.lab.modeDesign', 'Design Voice')}
+                        </Button>
+                        <Button
                             onClick={() => setMode('clone')}
-                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
-                                mode === 'clone' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                            }`}
+                            variant={mode === 'clone' ? 'secondary' : 'ghost'}
+                            className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5"
                         >
-                            <span className="inline-flex items-center gap-1.5">
-                                <Mic2 size={12} />
-                                {t('voice.lab.modeClone', 'Clone Voice')}
-                            </span>
-                        </button>
+                            <Mic2 size={12} />
+                            {t('voice.lab.modeClone', 'Clone Voice')}
+                        </Button>
                     </div>
 
                     <div className="rounded-2xl border border-[#313138] bg-[#17171a] p-4 space-y-3">
@@ -460,68 +473,69 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
 
                     <div className="rounded-2xl border border-[#313138] bg-[#17171a] p-4 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <Field label={t('voice.lab.form.name', 'Voice Name *')}>
-                                <input
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder={
-                                        mode === 'clone'
-                                            ? t('voice.lab.form.nameClonePlaceholder', 'e.g. My Clone Narration')
-                                            : t('voice.lab.form.nameDesignPlaceholder', 'e.g. Tech Narrator')
-                                    }
-                                    className="w-full h-10 rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-emerald-500/60"
-                                />
-                            </Field>
+                        <Field label={t('voice.lab.form.name', 'Voice Name *')}>
+                            <Input
+                                value={name}
+                                onChange={(event) => setName(event.target.value)}
+                                placeholder={
+                                    mode === 'clone'
+                                        ? t('voice.lab.form.nameClonePlaceholder', 'e.g. My Clone Narration')
+                                        : t('voice.lab.form.nameDesignPlaceholder', 'e.g. Tech Narrator')
+                                }
+                                className="bg-[#1a1a1d] border-[#313138] focus:border-emerald-500/60 placeholder:text-gray-500"
+                            />
+                        </Field>
 
-                            <Field label={t('voice.lab.form.language', 'Language')}>
-                                <select
-                                    value={language}
-                                    onChange={(event) => setLanguage(event.target.value)}
-                                    className="w-full h-10 rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/60"
-                                >
+                        <Field label={t('voice.lab.form.language', 'Language')}>
+                            <Select value={language} onValueChange={(value) => setLanguage(value)}>
+                                <SelectTrigger className="w-full h-10 rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/60">
+                                    <SelectValue placeholder={LANGUAGE_OPTIONS[0]} />
+                                </SelectTrigger>
+                                <SelectContent className="border-[#27272a] bg-[#1a1a1c] text-[#ffffff]">
                                     {LANGUAGE_OPTIONS.map((item) => (
-                                        <option key={item} value={item}>
+                                        <SelectItem key={item} value={item}>
                                             {item}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
-                            </Field>
+                                </SelectContent>
+                            </Select>
+                        </Field>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <Field label={t('voice.lab.form.gender', 'Gender')}>
-                                <div className="flex items-center gap-1.5 bg-[#1a1a1d] border border-[#313138] rounded-xl p-1">
-                                    {GENDER_OPTIONS.map((item) => (
-                                        <button
-                                            key={item}
-                                            onClick={() => setGender(item)}
-                                            className={`flex-1 h-8 rounded-lg text-xs font-semibold capitalize transition-colors ${
-                                                gender === item ? 'bg-[#2e2e34] text-white' : 'text-gray-500 hover:text-gray-200'
-                                            }`}
-                                        >
-                                            {resolveGenderLabel(item)}
-                                        </button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center gap-1.5 bg-[#1a1a1d] border border-[#313138] rounded-xl p-1">
+                                {GENDER_OPTIONS.map((item) => (
+                                    <Button
+                                        key={item}
+                                        onClick={() => setGender(item)}
+                                        variant={gender === item ? 'secondary' : 'ghost'}
+                                        className="flex-1 h-8 rounded-lg text-xs font-semibold capitalize transition-colors"
+                                    >
+                                        {resolveGenderLabel(item)}
+                                    </Button>
+                                ))}
+                            </div>
                             </Field>
 
                             <Field label={t('voice.lab.form.style', 'Style')}>
-                                <select
-                                    value={style}
-                                    onChange={(event) => setStyle(event.target.value)}
-                                    className="w-full h-10 rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/60"
-                                >
+                            <Select value={style} onValueChange={(value) => setStyle(value)}>
+                                <SelectTrigger className="w-full h-10 rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/60">
+                                    <SelectValue placeholder={STYLE_OPTIONS[0]} />
+                                </SelectTrigger>
+                                <SelectContent className="border-[#27272a] bg-[#1a1a1c] text-[#ffffff]">
                                     {STYLE_OPTIONS.map((item) => (
-                                        <option key={item} value={item}>
+                                        <SelectItem key={item} value={item}>
                                             {item}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
+                                </SelectContent>
+                            </Select>
                             </Field>
                         </div>
 
                         <Field label={t('voice.lab.form.description', 'Voice Description')}>
-                            <textarea
+                            <Textarea
                                 value={description}
                                 onChange={(event) => setDescription(event.target.value)}
                                 placeholder={t(
@@ -529,12 +543,12 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                                     'Describe voice traits, e.g. warm, steady, clear rhythm, suitable for brand narration'
                                 )}
                                 rows={4}
-                                className="w-full rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-emerald-500/60 resize-none"
+                                className="bg-[#1a1a1d] border-[#313138] focus:border-emerald-500/60 resize-none"
                             />
                         </Field>
 
                         <Field label={t('voice.lab.form.previewText', 'Preview Text')}>
-                            <textarea
+                            <Textarea
                                 value={previewText}
                                 onChange={(event) => setPreviewText(event.target.value)}
                                 placeholder={t(
@@ -542,7 +556,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                                     'Enter text for voice preview playback'
                                 )}
                                 rows={3}
-                                className="w-full rounded-xl bg-[#1a1a1d] border border-[#313138] px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-emerald-500/60 resize-none"
+                                className="bg-[#1a1a1d] border-[#313138] focus:border-emerald-500/60 resize-none"
                             />
                         </Field>
 
@@ -550,39 +564,30 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                             <Field label={t('voice.lab.cloneReference.label', 'Clone Reference Audio *')}>
                                 <div className="space-y-3">
                                     <div className="flex bg-[#1a1a1d] border border-[#313138] rounded-xl p-1">
-                                        <button
+                                        <Button
                                             onClick={() => setCloneInputMethod('upload')}
-                                            className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
-                                                cloneInputMethod === 'upload'
-                                                    ? 'bg-[#2e2e34] text-white'
-                                                    : 'text-gray-500 hover:text-gray-200'
-                                            }`}
+                                            variant={cloneInputMethod === 'upload' ? 'secondary' : 'ghost'}
+                                            className="flex-1 h-8 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5"
                                         >
                                             <Upload size={12} />
                                             {t('voice.lab.cloneReference.methodUpload', 'Upload')}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={() => setCloneInputMethod('record')}
-                                            className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
-                                                cloneInputMethod === 'record'
-                                                    ? 'bg-[#2e2e34] text-white'
-                                                    : 'text-gray-500 hover:text-gray-200'
-                                            }`}
+                                            variant={cloneInputMethod === 'record' ? 'secondary' : 'ghost'}
+                                            className="flex-1 h-8 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5"
                                         >
                                             <Mic size={12} />
                                             {t('voice.lab.cloneReference.methodRecord', 'Record')}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={() => setCloneInputMethod('library')}
-                                            className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
-                                                cloneInputMethod === 'library'
-                                                    ? 'bg-[#2e2e34] text-white'
-                                                    : 'text-gray-500 hover:text-gray-200'
-                                            }`}
+                                            variant={cloneInputMethod === 'library' ? 'secondary' : 'ghost'}
+                                            className="flex-1 h-8 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5"
                                         >
                                             <Library size={12} />
                                             {t('voice.lab.cloneReference.methodLibrary', 'Library')}
-                                        </button>
+                                        </Button>
                                     </div>
 
                                     {referenceAsset ? (
@@ -602,11 +607,12 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1.5 shrink-0">
-                                                <button
+                                                <Button
                                                     onClick={() => {
                                                         void handleToggleReferencePreview();
                                                     }}
                                                     disabled={!referencePreviewUrl}
+                                                    variant="ghost"
                                                     className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
                                                         !referencePreviewUrl
                                                             ? 'border-[#2f2f34] text-gray-600 cursor-not-allowed'
@@ -615,14 +621,15 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                                                     title={t('voice.lab.cloneReference.play', 'Play')}
                                                 >
                                                     {isReferencePlaying ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
-                                                </button>
-                                                <button
+                                                </Button>
+                                                <Button
                                                     onClick={clearReferenceAudio}
+                                                    variant="ghost"
                                                     className="w-8 h-8 rounded-lg border border-red-500/40 text-red-300 hover:text-white hover:bg-red-500/20 transition-colors flex items-center justify-center"
                                                     title={t('voice.lab.cloneReference.remove', 'Remove')}
                                                 >
                                                     <Trash2 size={13} />
-                                                </button>
+                                                </Button>
                                             </div>
                                         </div>
                                     ) : (
@@ -747,7 +754,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
 
 const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
     <div>
-        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{label}</label>
+        <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{label}</Label>
         {children}
     </div>
 );

@@ -205,7 +205,7 @@ export const BrowserViewport: React.FC = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center bg-[#1e1e1e] text-gray-500">
                 <Globe size={64} className="opacity-10 mb-4" />
-                <h2 className="text-xl font-medium text-gray-400">Open Studio Browser</h2>
+                <h2 className="text-xl font-medium text-gray-400">MagicStudio Browser</h2>
                 <p className="text-sm text-gray-600 mt-2">Enter a URL to start browsing</p>
             </div>
         );

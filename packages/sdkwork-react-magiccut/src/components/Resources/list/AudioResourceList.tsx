@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
 import { Play, Pause, Heart, MoreHorizontal } from 'lucide-react';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
+import { buildDeterministicBarHeights } from '../../../domain/assets/audioVisualization';
 
 interface AudioResourceListProps {
     assets: AnyAsset[];
@@ -32,10 +34,11 @@ export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
     };
 
     return (
-        <div className="grid grid-cols-4 gap-2 pb-10 px-1">
+        <div className="flex flex-col gap-2 pb-10 px-1">
             {assets.map((item) => {
                 const duration = (item as any).duration || 0;
                 const isPlaying = playingId === item.id;
+                const waveformBars = buildDeterministicBarHeights(item.id, 8, 0.2, 1);
                 
                 return (
                     <div 
@@ -52,9 +55,9 @@ export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
                              >
                                  {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                              </div>
-                             
+                            
                              <button 
-                                onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, !item.isFavorite); }}
+                                onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite)); }}
                                 className={`transition-colors p-1 rounded-full hover:bg-[#333] ${item.isFavorite ? 'text-red-500' : 'text-gray-600 hover:text-red-400'}`}
                             >
                                 <Heart size={12} fill={item.isFavorite ? "currentColor" : "none"} />
@@ -63,11 +66,11 @@ export const AudioResourceList: React.FC<AudioResourceListProps> = React.memo(({
                         
                         {/* Middle: Waveform Visual */}
                         <div className="h-6 flex items-center gap-0.5 opacity-50 overflow-hidden">
-                             {[...Array(8)].map((_, i) => (
+                             {waveformBars.map((height, i) => (
                                 <div 
                                     key={i} 
                                     className={`w-1 rounded-full ${isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`}
-                                    style={{ height: `${20 + Math.random() * 80}%` }}
+                                    style={{ height: `${height * 100}%` }}
                                 />
                              ))}
                         </div>

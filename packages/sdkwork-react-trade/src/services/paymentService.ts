@@ -21,63 +21,33 @@ interface ApiEnvelope<T> {
 
 const SUCCESS_CODE = '2000';
 
-/**
- * 发起支付参数
- */
 export interface InitiatePaymentParams {
-  /** 订单 UUID */
   orderUuid: string;
-  /** 支付方式 */
   method: PaymentMethod;
-  /** 使用余额 (分) */
   useBalance?: number;
-  /** 使用积分 */
   usePoints?: number;
 }
 
-/**
- * 支付结果
- */
 export interface PaymentResult {
-  /** 支付是否成功 */
   success: boolean;
-  /** 支付记录 */
   payment?: Payment;
-  /** 错误信息 */
   errorMessage?: string;
-  /** 第三方支付跳转 URL */
   redirectUrl?: string;
-  /** 支付流水号 */
   transactionId?: string;
 }
 
-/**
- * 退款参数
- */
 export interface RefundParams {
-  /** 支付 UUID */
   paymentUuid: string;
-  /** 退款金额(分) */
   amount?: number;
-  /** 退款原因 */
   reason: string;
 }
 
-/**
- * 充值参数
- */
 export interface RechargeParams {
-  /** 充值金额(分) */
   amount: number;
-  /** 支付方式 */
   method: PaymentMethod;
-  /** 备注 */
   remark?: string;
 }
 
-/**
- * 支付服务接口
- */
 export interface IPaymentService {
   initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult>;
   queryPaymentStatus(paymentUuid: string): Promise<PaymentStatus>;
@@ -281,9 +251,6 @@ function mapHistoryTransaction(raw: AnyRecord): Transaction {
   };
 }
 
-/**
- * 支付服务实现（SDK-only）
- */
 export class PaymentService implements IPaymentService {
   async initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult> {
     try {
@@ -533,7 +500,4 @@ export class PaymentService implements IPaymentService {
   }
 }
 
-/**
- * 支付服务单例
- */
 export const paymentService = new PaymentService();

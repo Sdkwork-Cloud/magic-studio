@@ -23,8 +23,49 @@ type ResourceMetadata = Record<string, unknown> & {
   primaryType?: AssetContentKey | string;
 };
 
+export type MagicCutMaterialStorageMode =
+  | 'local-first-sync'
+  | 'local-only'
+  | 'server-only';
+
+export interface DecideMagicCutImportRouteInput {
+  runtime: 'desktop' | 'web';
+  storageMode: MagicCutMaterialStorageMode;
+  filePath?: string;
+  hasBinaryData?: boolean;
+}
+
+export interface MagicCutImportRouteDecision {
+  kind: 'managed-local' | 'server-upload';
+  shouldQueueSync: boolean;
+}
+
 export type MagicCutTimelineResourceView = AnyMediaResource & {
   metadata: ResourceMetadata;
+};
+
+export const decideMagicCutImportRoute = (
+  input: DecideMagicCutImportRouteInput
+): MagicCutImportRouteDecision => {
+  if (input.storageMode === 'server-only') {
+    return {
+      kind: 'server-upload',
+      shouldQueueSync: false
+    };
+  }
+
+  const canPersistLocally = Boolean(input.filePath) || Boolean(input.hasBinaryData);
+  if (canPersistLocally) {
+    return {
+      kind: 'managed-local',
+      shouldQueueSync: input.storageMode === 'local-first-sync'
+    };
+  }
+
+  return {
+    kind: 'server-upload',
+    shouldQueueSync: false
+  };
 };
 
 export interface MagicCutAssetStateSlice {
@@ -36,6 +77,8 @@ export interface MagicCutAssetStateSlice {
 type ResourceRefLike = {
   id: string;
   uuid?: string;
+  assetId?: string;
+  resourceViewId?: string;
 };
 
 type ClipLike = {
@@ -622,6 +665,11 @@ export const buildMagicCutResourceView = (
     scopeDomain: asset.scope.domain,
     primaryType: asset.primaryType
   };
+  const origin =
+    (typeof (primary as { origin?: unknown } | undefined)?.origin === 'string'
+      ? (primary as { origin?: string }).origin
+      : undefined) ||
+    (typeof mergedMetadata.origin === 'string' ? mergedMetadata.origin : undefined);
 
   return {
     ...(primary as MagicCutTimelineResourceView | undefined),
@@ -631,6 +679,9 @@ export const buildMagicCutResourceView = (
     type: mapContentKeyToMediaType(asset.primaryType),
     path: locatorUri || undefined,
     url: resolvedUrl || undefined,
+    origin: origin as MagicCutTimelineResourceView['origin'],
+    isFavorite: asset.isFavorite,
+    tags: asset.tags,
     metadata: mergedMetadata,
     createdAt: asset.createdAt,
     updatedAt: asset.updatedAt
@@ -669,6 +720,62 @@ export const buildMagicCutAssetRef = (
         ? (resource.metadata.scopeDomain as AssetBusinessDomain)
         : undefined
   };
+};
+
+const matchesMagicCutAssetRef = (
+  resource: ResourceRefLike | undefined,
+  assetId: string
+): boolean => {
+  if (!resource) {
+    return false;
+  }
+
+  return (
+    resource.id === assetId ||
+    resource.assetId === assetId ||
+    resource.resourceViewId === assetId
+  );
+};
+
+export const isMagicCutAssetInUse = (
+  stateLike: Pick<AssetStateLike, 'clips' | 'layers'>,
+  assetId: string
+): boolean => {
+  if (!assetId) {
+    return false;
+  }
+
+  const clipResources = Object.values(stateLike.clips || {});
+  if (clipResources.some((clip) => matchesMagicCutAssetRef(clip.resource, assetId))) {
+    return true;
+  }
+
+  return Object.values(stateLike.layers || {}).some((layer) =>
+    matchesMagicCutAssetRef(layer.resource, assetId)
+  );
+};
+
+export const removeMagicCutAssetFromState = <T extends AssetStateLike>(
+  stateLike: T,
+  assetId: string
+): T & MagicCutAssetStateSlice => {
+  const nextAssets = {
+    ...(stateLike.assets || {})
+  };
+  delete nextAssets[assetId];
+
+  const currentResourceViews = stateLike.resourceViews || stateLike.resources || {};
+  const nextResourceViews = {
+    ...currentResourceViews
+  };
+  delete nextResourceViews[assetId];
+
+  return {
+    ...stateLike,
+    assets: nextAssets,
+    resourceViews: nextResourceViews,
+    resources: nextResourceViews
+  } as T & MagicCutAssetStateSlice;
 };
 
 export interface MagicCutImportedAssetLike {

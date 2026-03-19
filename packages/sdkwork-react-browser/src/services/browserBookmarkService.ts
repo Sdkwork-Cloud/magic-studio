@@ -5,11 +5,12 @@ import { BaseEntity, generateUUID } from '@sdkwork/react-commons';
 
 interface BookmarkEntity extends Bookmark, BaseEntity {}
 
-const BOOKMARKS_KEY = 'open_studio_browser_bookmarks';
+const BOOKMARKS_KEY = 'magic_studio_browser_bookmarks';
+const LEGACY_BOOKMARKS_KEYS = ['open_studio_browser_bookmarks'] as const;
 
 class BrowserBookmarkService extends LocalStorageService<BookmarkEntity> {
     constructor() {
-        super(BOOKMARKS_KEY);
+        super(BOOKMARKS_KEY, LEGACY_BOOKMARKS_KEYS);
     }
 
     async toggleBookmark(url: string, title: string): Promise<boolean> {

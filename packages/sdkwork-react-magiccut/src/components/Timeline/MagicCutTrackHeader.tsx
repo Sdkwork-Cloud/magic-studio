@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Video, Mic, Layers, Lock, Unlock, Eye, EyeOff, Volume2, VolumeX, Type, Sparkles, Image as ImageIcon, Trash2, Upload, Loader2, X, GripVertical } from 'lucide-react';
+import { Video, Mic, Layers, Lock, Unlock, Eye, EyeOff, Volume2, VolumeX, Type, Sparkles, Image as ImageIcon, Trash2, Upload, Loader2, X, GripVertical, Captions } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { uploadHelper } from '@sdkwork/react-core';
 import { CutTrack } from '../../entities/magicCut.entity';
@@ -127,6 +127,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             case 'video': return <Video size={14} />;
             case 'audio': return <Mic size={14} />;
             case 'text': return <Type size={14} />;
+            case 'subtitle': return <Captions size={14} />;
             case 'effect': return <Sparkles size={14} />;
             case 'ai': return <ImageIcon size={14} />;
             default: return <Layers size={14} />;
@@ -139,7 +140,9 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             case 'video': return 'text-cyan-400 bg-cyan-500/5 border-l-cyan-500';
             case 'audio': return 'text-emerald-400 bg-emerald-500/5 border-l-emerald-500';
             case 'text': return 'text-yellow-400 bg-yellow-500/5 border-l-yellow-500';
+            case 'subtitle': return 'text-orange-300 bg-orange-500/5 border-l-orange-400';
             case 'effect': return 'text-purple-400 bg-purple-500/5 border-l-purple-500';
+            case 'ai': return 'text-pink-300 bg-pink-500/5 border-l-pink-400';
             default: return 'text-gray-400 bg-gray-500/5 border-l-gray-500';
         }
     };

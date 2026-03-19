@@ -4,7 +4,7 @@ import { Globe, Image, Cpu, Video } from 'lucide-react';
 
 export { IMAGE_STYLES };
 
-export const STORAGE_KEY_HISTORY = 'open_studio_image_history_v1';
+export const STORAGE_KEY_HISTORY = 'magic_studio_image_history_v1';
 
 export const IMAGE_PROVIDERS: ModelProvider[] = [
     {

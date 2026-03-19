@@ -134,7 +134,8 @@ const isDeletedStatus = (status: unknown): boolean => normalizeStatus(status) ==
 
 const isArchivedStatus = (status: unknown): boolean => normalizeStatus(status) === 'ARCHIVED';
 
-const isNotFoundMessage = (message: string): boolean => /(not\s*found|notfound|不存在|未找到)/i.test(message);
+const isNotFoundMessage = (message: string): boolean =>
+  /(not\s*found|notfound|\u4e0d\u5b58\u5728|\u672a\u627e\u5230)/i.test(message);
 
 const isApiSuccess = (result: { code?: string | number } | null | undefined): boolean => {
   const code = normalizeString(result?.code);

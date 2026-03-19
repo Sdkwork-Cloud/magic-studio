@@ -1,307 +1,181 @@
 export const portalVideo = {
   modes: {
     short_drama: {
-      label: "AI 短剧",
-      desc: "一键生成连贯故事短片"
+      label: "AI \u77ed\u5267",
+      desc: "\u4e00\u952e\u751f\u6210\u8fde\u8d2f\u7684\u6545\u4e8b\u7247\u6bb5",
     },
     video: {
-      label: "AI 视频",
-      desc: "生成高品质视频片段"
+      label: "AI \u89c6\u9891",
+      desc: "\u751f\u6210\u9ad8\u8d28\u91cf\u89c6\u9891\u7247\u6bb5",
     },
     image: {
-      label: "AI 图片",
-      desc: "生成艺术图像与素材"
+      label: "AI \u56fe\u50cf",
+      desc: "\u751f\u6210\u827a\u672f\u56fe\u50cf\u4e0e\u7d20\u6750",
     },
     human: {
-      label: "角色",
-      desc: "AI 角色创作与播报"
+      label: "\u89d2\u8272",
+      desc: "AI \u89d2\u8272\u521b\u5efa\u4e0e\u8868\u73b0",
     },
     music: {
-      label: "AI 音乐",
-      desc: "生成背景音乐与音效"
-    }
+      label: "AI \u97f3\u4e50",
+      desc: "\u751f\u6210\u80cc\u666f\u97f3\u4e50\u4e0e\u97f3\u6548",
+    },
   },
   genModes: {
     smart_reference: {
-      label: "全能参考",
-      desc: "Intelligent Reference"
+      label: "\u667a\u80fd\u53c2\u8003",
+      desc: "\u667a\u80fd\u53c2\u8003\u6a21\u5f0f",
     },
     start_end: {
-      label: "首尾帧",
-      desc: "Start & End Frame"
+      label: "\u9996\u5c3e\u5e27",
+      desc: "\u901a\u8fc7\u9996\u5c3e\u5e27\u751f\u6210",
     },
     smart_multi: {
-      label: "智能多帧",
-      desc: "Multi-Frame Control"
+      label: "\u591a\u5e27\u667a\u63a7",
+      desc: "\u591a\u5e27\u5185\u5bb9\u63a7\u5236",
     },
     subject_ref: {
-      label: "主体参考",
-      desc: "Subject Consistency"
+      label: "\u4e3b\u4f53\u53c2\u8003",
+      desc: "\u4fdd\u6301\u4e3b\u4f53\u4e00\u81f4\u6027",
     },
     text: {
-      label: "文生内容",
-      desc: "使用提示词生成"
+      label: "\u6587\u672c\u751f\u6210",
+      desc: "\u4f7f\u7528\u63d0\u793a\u8bcd\u751f\u6210\u5185\u5bb9",
     },
     ref_multi: {
-      label: "参考生成",
-      desc: "上传风格参考图"
-    }
+      label: "\u53c2\u8003\u751f\u6210",
+      desc: "\u4e0a\u4f20\u98ce\u683c\u53c2\u8003\u56fe\u7247",
+    },
   },
   tools: {
     categories: {
-      all: "全部工具",
-      video: "视频工具",
-      image: "图像工具",
-      audio: "音频工具"
+      all: "\u5168\u90e8\u5de5\u5177",
+      video: "\u89c6\u9891\u5de5\u5177",
+      image: "\u56fe\u50cf\u5de5\u5177",
+      audio: "\u97f3\u9891\u5de5\u5177",
     },
     video_extender: {
-      title: "AI 视频延时",
-      description: "无缝延长视频长度，保持内容连贯性"
+      title: "AI \u89c6\u9891\u6269\u5c55",
+      description: "\u65e0\u7f1d\u5ef6\u957f\u89c6\u9891\u65f6\u957f\uff0c\u4fdd\u6301\u5185\u5bb9\u8fde\u8d2f\u3002",
     },
     lip_sync: {
-      title: "嘴型同步",
-      description: "让视频人物的嘴型与任意音频完美同步"
+      title: "\u53e3\u578b\u540c\u6b65",
+      description: "\u8ba9\u89c6\u9891\u4e2d\u7684\u4eba\u7269\u53e3\u578b\u4e0e\u4efb\u610f\u97f3\u9891\u7cbe\u51c6\u5bf9\u9f50\u3002",
     },
     img_to_video: {
-      title: "图像生成视频",
-      description: "让静态图片动起来，生成逼真的动态视频"
+      title: "\u56fe\u751f\u89c6\u9891",
+      description: "\u4e3a\u9759\u6001\u56fe\u50cf\u6ce8\u5165\u771f\u5b9e\u52a8\u6548\u3002",
     },
     video_upscale: {
-      title: "视频升级",
-      description: "将低分辨率视频提升至 4K 超清画质"
+      title: "\u89c6\u9891\u8d85\u5206",
+      description: "\u5c06\u4f4e\u5206\u8fa8\u7387\u89c6\u9891\u5347\u7ea7\u81f3 4K \u8d85\u6e05\u3002",
     },
     video_enhance: {
-      title: "视频增强",
-      description: "智能调节色彩、对比度，修复画质"
+      title: "\u89c6\u9891\u589e\u5f3a",
+      description: "\u667a\u80fd\u8c03\u6574\u8272\u5f69\u3001\u5bf9\u6bd4\u5ea6\u5e76\u4f18\u5316\u753b\u8d28\u3002",
     },
     face_swap: {
-      title: "视频换脸",
-      description: "高精度的视频人脸替换技术"
+      title: "\u6362\u8138",
+      description: "\u9ad8\u7cbe\u5ea6\u89c6\u9891\u6362\u8138\u80fd\u529b\u3002",
     },
     baby_generator: {
-      title: "AI 宝宝播客",
-      description: "生成可爱的 AI 宝宝形象进行播报"
+      title: "AI \u840c\u5a03\u751f\u6210",
+      description: "\u521b\u5efa\u53ef\u7231\u7684 AI \u5a03\u5a03\u89d2\u8272\u7528\u4e8e\u5185\u5bb9\u521b\u4f5c\u3002",
     },
     pet_generator: {
-      title: "AI 宠物播客",
-      description: "让你的宠物开口说话，制作趣味视频"
+      title: "AI \u5ba0\u7269\u751f\u6210",
+      description: "\u8ba9\u4f60\u7684\u5ba0\u7269\u201c\u5f00\u53e3\u8bf4\u8bdd\u201d\uff0c\u521b\u4f5c\u6709\u8da3\u5185\u5bb9\u3002",
     },
     denoise: {
-      title: "视频降噪",
-      description: "去除视频中的噪点，提升画面纯净度"
+      title: "\u89c6\u9891\u964d\u566a",
+      description: "\u79fb\u9664\u89c6\u9891\u566a\u70b9\uff0c\u8ba9\u753b\u9762\u66f4\u5e72\u51c0\u3002",
     },
     dance_gen: {
-      title: "AI 舞蹈生成",
-      description: "根据音乐节奏自动生成舞蹈动作"
+      title: "AI \u821e\u8e48\u751f\u6210",
+      description: "\u6839\u636e\u97f3\u4e50\u8282\u594f\u81ea\u52a8\u751f\u6210\u821e\u8e48\u52a8\u4f5c\u3002",
     },
     subtitle_remove: {
-      title: "字幕移除",
-      description: "智能擦除视频硬字幕，无痕修复背景"
+      title: "\u5b57\u5e55\u53bb\u9664",
+      description: "\u667a\u80fd\u64e6\u9664\u786c\u5b57\u5e55\u5e76\u6062\u590d\u80cc\u666f\u3002",
     },
     anime_video: {
-      title: "视频转动漫",
-      description: "一键将真人视频转换为二次元动漫风格"
+      title: "\u89c6\u9891\u8f6c\u52a8\u6f2b",
+      description: "\u4e00\u952e\u5c06\u771f\u4eba\u89c6\u9891\u8f6c\u4e3a\u52a8\u6f2b\u98ce\u683c\u3002",
     },
     face_enhance: {
-      title: "AI 人脸增强",
-      description: "修复模糊人脸，增强面部细节"
+      title: "AI \u4eba\u8138\u589e\u5f3a",
+      description: "\u4fee\u590d\u6a21\u7cca\u4eba\u8138\uff0c\u63d0\u5347\u9762\u90e8\u7ec6\u8282\u3002",
     },
     img_remove_obj: {
-      title: "物体移除",
-      description: "智能移除图片中的路人或杂物"
+      title: "\u7269\u4f53\u79fb\u9664",
+      description: "\u667a\u80fd\u4ece\u56fe\u50cf\u4e2d\u79fb\u9664\u4eba\u7269\u6216\u7269\u4f53\u3002",
     },
     bg_remove: {
-      title: "背景移除",
-      description: "精准抠图，一键移除图片背景"
-    }
+      title: "\u80cc\u666f\u79fb\u9664",
+      description: "\u7cbe\u51c6\u62a0\u56fe\uff0c\u4e00\u952e\u53bb\u9664\u56fe\u50cf\u80cc\u666f\u3002",
+    },
   },
   toolGrid: {
     lipsync: {
-      label: "对口型",
-      desc: "逼真唇形同步"
+      label: "\u53e3\u578b\u540c\u6b65",
+      desc: "\u771f\u5b9e\u53e3\u578b\u9a71\u52a8",
     },
     motion: {
-      label: "动作模仿",
-      desc: "视频动作迁移"
+      label: "\u52a8\u4f5c\u590d\u5236",
+      desc: "\u89c6\u9891\u52a8\u4f5c\u8fc1\u79fb",
     },
     upscale: {
-      label: "4K 升级",
-      desc: "画质增强"
+      label: "4K \u8d85\u5206",
+      desc: "\u753b\u8d28\u63d0\u5347",
     },
     remove: {
-      label: "字幕移除",
-      desc: "智能擦除"
+      label: "\u5b57\u5e55\u53bb\u9664",
+      desc: "\u667a\u80fd\u64e6\u9664",
     },
     enhance: {
-      label: "画质增强",
-      desc: "色彩与细节"
+      label: "\u753b\u8d28\u589e\u5f3a",
+      desc: "\u8272\u5f69\u4e0e\u7ec6\u8282\u4f18\u5316",
     },
     repair: {
-      label: "照片修复",
-      desc: "老照片复原"
+      label: "\u8001\u7167\u7247\u4fee\u590d",
+      desc: "\u65e7\u7167\u7247\u8fd8\u539f",
     },
     extend: {
-      label: "视频延时",
-      desc: "内容补全"
+      label: "\u89c6\u9891\u5ef6\u957f",
+      desc: "\u8865\u5168\u5185\u5bb9",
     },
     obj_remove: {
-      label: "物体消除",
-      desc: "一键移除"
-    }
+      label: "\u7269\u4f53\u79fb\u9664",
+      desc: "\u4e00\u952e\u6e05\u9664",
+    },
   },
   badges: {
-    newest: "最新",
-    hot: "热门",
+    newest: "\u6700\u65b0",
+    hot: "\u70ed\u95e8",
     beta: "Beta",
-    use_tool: "使用此工具"
+    use_tool: "\u7acb\u5373\u4f53\u9a8c",
   },
   page: {
-    ai_tools_title: "AI 工具箱",
-    ai_tools_subtitle: "探索强大的 AI 视频与图像处理工具，激发创意无限",
-    search_placeholder: "搜索 AI 工具...",
-    try_now: "立即试用",
-    view_all: "全部工具",
-    creative_tools: "AI 创意工具箱"
+    ai_tools_title: "AI \u5de5\u5177",
+    ai_tools_subtitle: "\u63a2\u7d22\u5f3a\u5927\u7684 AI \u89c6\u9891\u4e0e\u56fe\u50cf\u5904\u7406\u5de5\u5177\uff0c\u91ca\u653e\u65e0\u9650\u521b\u610f\u3002",
+    search_placeholder: "\u641c\u7d22 AI \u5de5\u5177...",
+    try_now: "\u7acb\u5373\u4f53\u9a8c",
+    view_all: "\u5168\u90e8\u5de5\u5177",
+    creative_tools: "AI \u521b\u4f5c\u5de5\u5177",
+    results_count: "\u5171 {count} \u4e2a\u5de5\u5177",
+    empty_title: "\u6ca1\u6709\u5339\u914d\u7684\u5de5\u5177",
+    empty_description: "\u8bf7\u5c1d\u8bd5\u5176\u4ed6\u641c\u7d22\u8bcd\u6216\u5207\u6362\u5206\u7c7b\u3002",
   },
   hero: {
-    title: "有什么新的故事灵感？"
+    title: "\u4f60\u60f3\u8981\u8bb2\u4e00\u4e2a\u600e\u6837\u7684\u65b0\u6545\u4e8b\uff1f",
   },
   placeholders: {
-    short_drama: "输入故事梗概，或上传剧本文件 (TXT/PDF)...",
-    video_image_start_end: "上传图片作为起始帧，描述运动...",
-    video: "描述画面内容、运动方向...",
-    image: "描述画面细节、风格、构图...",
-    music: "描述音乐风格、情绪...",
-    speech: "输入要转换的文本...",
-    default: "输入提示词..."
+    short_drama: "\u8f93\u5165\u6545\u4e8b\u5927\u7eb2\uff0c\u6216\u4e0a\u4f20\u5267\u672c\u6587\u4ef6 (TXT/PDF)...",
+    video_image_start_end: "\u4e0a\u4f20\u56fe\u7247\u4f5c\u4e3a\u9996\u5e27\uff0c\u63cf\u8ff0\u52a8\u4f5c\u548c\u955c\u5934...",
+    video: "\u63cf\u8ff0\u573a\u666f\u5185\u5bb9\u3001\u8fd0\u52a8\u65b9\u5411\u548c\u8282\u594f...",
+    image: "\u63cf\u8ff0\u56fe\u50cf\u7ec6\u8282\u3001\u98ce\u683c\u3001\u6784\u56fe\u4e0e\u5149\u7ebf...",
+    music: "\u63cf\u8ff0\u97f3\u4e50\u98ce\u683c\u3001\u60c5\u7eea\u548c\u4e50\u5668...",
+    speech: "\u8f93\u5165\u8981\u8f6c\u6362\u4e3a\u8bed\u97f3\u7684\u6587\u672c...",
+    default: "\u8f93\u5165\u63d0\u793a\u8bcd...",
   },
-  styles: {
-    cinematic: {
-      label: "影视质感 (Cinematic)",
-      description: "好莱坞大片质感，强调动态范围、景深与电影布光",
-      usage_drama: "剧情",
-      usage_commercial: "商业广告",
-      usage_epic: "史诗"
-    },
-    high_sat_real: {
-      label: "高饱和写实 (High Saturation)",
-      description: "色彩鲜艳浓郁的写实风格，适合展现充满活力的现代生活或自然风光"
-    },
-    aesthetic_real: {
-      label: "唯美写实 (Aesthetic)",
-      description: "柔光、梦幻、干净的写实画面，追求极致的视觉美感与氛围"
-    },
-    retro_dv: {
-      label: "复古DV质感 (Retro DV)",
-      description: "模拟90年代手持DV录像机的低保真、噪点与色偏效果，充满怀旧生活气息"
-    },
-    bw_film: {
-      label: "黑白电影 (B&W Film)",
-      description: "经典黑白摄影，高对比度，强调光影结构与叙事张力"
-    },
-    wkw_style: {
-      label: "王家卫电影 (WKW Style)",
-      description: "抽帧、重影、浓郁的色彩与暧昧的氛围，展现都市男女的情感纠葛"
-    },
-    iwai_style: {
-      label: "岩井俊二电影 (Iwai Style)",
-      description: "逆光、过曝、青春残酷物语，日系清新的胶片质感"
-    },
-    japanese_anime: {
-      label: "日漫二次元 (Anime)",
-      description: "典型的新海诚或京都动画风格，色彩明快，线条细腻"
-    },
-    chinese_comic: {
-      label: "国风漫剧 (CN Comic)",
-      description: "结合中国传统元素与现代漫画技法，色彩典雅，造型飘逸"
-    },
-    korean_manhwa: {
-      label: "韩漫二次元 (Manhwa)",
-      description: "韩式条漫风格，色彩高饱和，人物修长美型，都市感强"
-    },
-    cel_shaded: {
-      label: "华丽三渲二 (Cel Shaded)",
-      description: "类似《原神》或《崩坏》的游戏CG质感，3D建模配合2D渲染风格"
-    },
-    ghibli: {
-      label: "吉卜力 (Ghibli)",
-      description: "宫崎骏手绘风格，色彩温暖自然，充满童话与治愈感"
-    },
-    ancient_2d: {
-      label: "2D古风 (2D Ancient)",
-      description: "扁平化插画风格的古风画面，线条柔和，色彩淡雅"
-    },
-    ancient_3d: {
-      label: "3D古风 (3D Ancient)",
-      description: "类似《秦时明月》的3D国漫风格，建模精细，光效华丽"
-    },
-    ancient_real: {
-      label: "真人古风 (Realistic Ancient)",
-      description: "电影级别的古装剧质感，服化道考究，光影写实"
-    },
-    gongbi: {
-      label: "中国工笔画 (Gongbi)",
-      description: "传统工笔重彩风格，线条工整细致，色彩艳丽典雅"
-    },
-    sketch: {
-      label: "素描简笔画 (Sketch)",
-      description: "铅笔或炭笔手绘质感，黑白线条，简约抽象"
-    },
-    watercolor: {
-      label: "水彩画 (Watercolor)",
-      description: "水彩晕染效果，色彩通透，富有诗意和流动感"
-    },
-    oil_painting: {
-      label: "油画 (Oil Painting)",
-      description: "厚涂油画质感，笔触明显，色彩厚重，印象派风格"
-    },
-    clay: {
-      label: "黏土 (Clay)",
-      description: "定格动画风格，模拟手工黏土的质感与光泽，充满童趣"
-    },
-    felt: {
-      label: "毛毡 (Felt Art)",
-      description: "羊毛毡材质效果，毛茸茸的边缘，温暖柔软"
-    },
-    lego: {
-      label: "乐高 (Lego)",
-      description: "积木拼接风格，高光泽塑料质感，微缩摄影效果"
-    },
-    "3d_cartoon": {
-      label: "3D卡通 (3D Cartoon)",
-      description: "通用3D卡通渲染，色彩柔和，造型圆润，适合全年龄段"
-    },
-    pixar: {
-      label: "皮克斯 (Pixar)",
-      description: "顶级3D动画电影质感，极致的材质细节与表情捕捉"
-    },
-    cyberpunk: {
-      label: "赛博朋克 (Cyberpunk)",
-      description: "高对比度的霓虹色彩美学，雨夜、机械、全息投影与未来科技感"
-    },
-    futurism: {
-      label: "未来主义 (Futurism)",
-      description: "洁净的线条、金属质感、高科技构图，展现对未来的畅想"
-    },
-    y2k: {
-      label: "Y2K拼贴艺术 (Y2K)",
-      description: "千禧年复古未来风格，金属光泽、荧光色、低保真数字元素"
-    },
-    kpop: {
-      label: "K-pop舞台 (K-pop)",
-      description: "绚丽的舞台灯光，高对比度色彩，时尚潮流的服饰与妆容"
-    },
-    city_pop_urban: {
-      label: "City Pop现代都市",
-      description: "80年代都市繁华感，霓虹灯、夜景、轻松惬意的都会氛围"
-    },
-    city_pop_anime: {
-      label: "City Pop复古动漫",
-      description: "80-90年代日本OVA动画风格，赛璐璐质感，色彩柔和复古"
-    },
-    custom: {
-      label: "自定义 (Custom)",
-      description: "不使用预设风格，完全根据提示词进行生成"
-    }
-  }
 };

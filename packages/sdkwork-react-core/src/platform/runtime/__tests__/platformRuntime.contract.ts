@@ -27,6 +27,7 @@ const createMockPlatform = (): PlatformAPI => {
     startDragging: async () => {},
     minimizeWindow: async () => {},
     maximizeWindow: async () => {},
+    isWindowMaximized: async () => false,
     closeWindow: async () => {},
     setFullscreen: async () => {},
     setTitle: async () => {},

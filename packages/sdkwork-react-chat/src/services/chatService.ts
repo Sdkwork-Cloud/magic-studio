@@ -1,13 +1,12 @@
 
 import { ChatSession, ChatMessage, ChatTranscript } from '../entities';
-import { genAIService } from '@sdkwork/react-core';
+import { genAIService, getPlatformRuntime } from '@sdkwork/react-core';
 import { generateUUID, ServiceResult, Result, Page, PageRequest, pathUtils, TextSearchEngine } from '@sdkwork/react-commons';
 import { LocalStorageService } from '@sdkwork/react-core';
 import { vfs } from '@sdkwork/react-fs';
 import { platform } from '@sdkwork/react-core';
-
-const STORAGE_KEY = 'open_studio_chat_sessions_v2';
-const CHATS_DIR = 'OpenStudio/Chats';
+import { resolveMagicStudioChatDirectory } from './chatStoragePaths';
+import { CHAT_STORAGE_KEY, loadChatSessionsSnapshot } from './chatSessionStorage';
 
 export interface IChatService extends LocalStorageService<ChatSession> {
     createSession(modelId?: string): Promise<ServiceResult<ChatSession>>;
@@ -27,7 +26,7 @@ export class ChatService extends LocalStorageService<ChatSession> implements ICh
     private _initializedSearch = false;
 
     constructor() {
-        super(STORAGE_KEY);
+        super(CHAT_STORAGE_KEY);
         this._searchEngine = new TextSearchEngine({
             fields: ['title', 'summary'],
             weights: { title: 10, summary: 5 }
@@ -40,8 +39,11 @@ export class ChatService extends LocalStorageService<ChatSession> implements ICh
         if (platform.getPlatform() === 'web') {
             this._rootPath = '/mock/chats';
         } else {
-            const docs = await platform.getPath('documents');
-            this._rootPath = pathUtils.join(docs, CHATS_DIR);
+            const homeDir = await platform.getPath('home');
+            this._rootPath = await resolveMagicStudioChatDirectory(
+                homeDir,
+                (key) => platform.getStorage(key)
+            );
         }
         
         try {
@@ -57,7 +59,16 @@ export class ChatService extends LocalStorageService<ChatSession> implements ICh
     }
 
     protected async ensureInitialized(): Promise<void> {
-        await super.ensureInitialized();
+        if (this.cache === null) {
+            try {
+                const snapshot = await loadChatSessionsSnapshot(getPlatformRuntime().storage);
+                this.cache = snapshot ? JSON.parse(snapshot) : [];
+            } catch (e) {
+                console.error(`[ChatService] Failed to load ${CHAT_STORAGE_KEY}`, e);
+                this.cache = [];
+            }
+        }
+
         if (!this._initializedSearch && this.cache) {
             this._searchEngine.clear();
             this.cache.forEach(session => this._searchEngine.add(session));

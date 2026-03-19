@@ -3,7 +3,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Palette, ChevronDown, Check, Sparkles, Image as ImageIcon, User, ScanFace, LayoutTemplate, Search, X, Copy } from 'lucide-react';
 import { Popover } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { resolveLocalizedText, type LocalizedTextLike, useTranslation } from '@sdkwork/react-i18n';
 
 export interface StyleAsset {
     url: string;
@@ -14,9 +14,9 @@ export interface StyleAsset {
 
 export interface StyleOption {
     id: string;
-    label?: string;
-    description?: string;
-    usage?: string | string[];
+    label?: LocalizedTextLike;
+    description?: LocalizedTextLike;
+    usage?: LocalizedTextLike | LocalizedTextLike[];
     isCustom?: boolean;
     prompt?: string;
     prompt_zh?: string;
@@ -52,7 +52,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
     isOpen: controlledIsOpen,
     onToggle
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
     
@@ -65,14 +65,24 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
 
     const activeOption = options.find(o => o.id === value) || options[0];
     
+    const getLocalizedLabel = (option?: StyleOption) => {
+        if (!option) return '';
+        return t(`portalVideo.styles.${option.id}.label`, resolveLocalizedText(option.label || option.id, locale));
+    };
+
+    const getLocalizedDescription = (option?: StyleOption) => {
+        if (!option) return '';
+        if (option.description) {
+            return t(`portalVideo.styles.${option.id}.description`, resolveLocalizedText(option.description, locale));
+        }
+        return t(`portalVideo.styles.${option.id}.description`, '');
+    };
+
     const filteredOptions = useMemo(() => {
         if (!searchQuery) return options;
         const q = searchQuery.toLowerCase();
-        return options.filter(opt =>
-            opt.label?.toLowerCase().includes(q) ||
-            (Array.isArray(opt.usage) ? opt.usage.some((u: string) => u.toLowerCase().includes(q)) : opt.usage?.toLowerCase().includes(q))
-        );
-    }, [options, searchQuery]);
+        return options.filter(opt => getLocalizedLabel(opt).toLowerCase().includes(q));
+    }, [locale, options, searchQuery]);
 
     const displayOption = options.find(o => o.id === hoveredStyleId) || activeOption || options[0];
 
@@ -121,12 +131,12 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                     }
                     ${className}
                 `}
-                title="Select Style"
+                title={t('styleSelector.selectStyle', 'Select Style')}
             >
                 <div className={`p-1 rounded-full ${isOpen ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/5 text-gray-500 group-hover:text-gray-300'}`}>
                     <Palette size={12} />
                 </div>
-                <span className="truncate max-w-[100px]">{activeOption?.label || label}</span>
+                <span className="truncate max-w-[100px]">{activeOption ? getLocalizedLabel(activeOption) : label}</span>
                 <ChevronDown size={12} className={`text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -214,7 +224,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                                         
                                         <div className="w-full min-w-0 px-0.5">
                                             <span className={`block text-[9px] font-medium truncate leading-tight ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
-                                                {style.label}
+                                                {getLocalizedLabel(style)}
                                             </span>
                                         </div>
                                     </button>
@@ -237,22 +247,13 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                         <div className="flex justify-between items-start gap-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                                    {displayOption.label}
+                                    {getLocalizedLabel(displayOption)}
                                     {displayOption.isCustom && <span className="text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider align-middle relative -top-0.5">{t('styleSelector.custom')}</span>}
                                 </h2>
                                 <p className="text-sm text-gray-400 mt-2 leading-relaxed max-w-md">
-                                    {displayOption.description || t('styleSelector.defaultDescription')}
+                                    {getLocalizedDescription(displayOption) || t('styleSelector.defaultDescription')}
                                 </p>
                             </div>
-                            {displayOption.usage && (
-                                <div className="flex flex-wrap justify-end gap-1.5 max-w-[150px]">
-                                    {(Array.isArray(displayOption.usage) ? displayOption.usage.slice(0, 4) : [displayOption.usage].slice(0, 4)).map((tag: string) => (
-                                        <span key={tag} className="text-[10px] font-medium text-gray-400 bg-[#1a1a1c] border border-[#27272a] px-2.5 py-1 rounded-full whitespace-nowrap">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </div>
                         
                         {(displayOption.prompt || displayOption.prompt_zh) && (

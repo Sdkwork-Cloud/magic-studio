@@ -1,7 +1,37 @@
 
-import { AppSettings, ThemeMode, SidebarItemConfig, SidebarTemplate } from './entities';
+import {
+  AppSettings,
+  MaterialStorageConfig,
+  SidebarItemConfig,
+  SidebarTemplate,
+  ThemeMode,
+} from './entities';
+import {
+  LEGACY_MAGICSTUDIO_SETTINGS_STORAGE_KEYS,
+  MAGICSTUDIO_SETTINGS_STORAGE_KEY,
+} from '../../sdkwork-react-core/src/storage/magicStudioSettings';
+import { DEFAULT_MAGICSTUDIO_ROOT_RELATIVE_PATH } from '../../sdkwork-react-core/src/storage/magicStudioPaths';
 
-export const SETTINGS_STORAGE_KEY = 'open_studio_settings_v1';
+export const DEFAULT_MAGICSTUDIO_ROOT_DIR = `~/${DEFAULT_MAGICSTUDIO_ROOT_RELATIVE_PATH.replace(
+  /\\/g,
+  '/'
+)}`;
+export const SETTINGS_STORAGE_KEY = MAGICSTUDIO_SETTINGS_STORAGE_KEY;
+export const LEGACY_SETTINGS_STORAGE_KEYS = LEGACY_MAGICSTUDIO_SETTINGS_STORAGE_KEYS;
+
+export const DEFAULT_MATERIAL_STORAGE: MaterialStorageConfig = {
+  mode: 'local-first-sync',
+  desktop: {
+    rootDir: DEFAULT_MAGICSTUDIO_ROOT_DIR,
+  },
+  sync: {
+    enabled: false,
+    autoUploadOnImport: false,
+  },
+  naming: {
+    keepOriginalFilenameInMetadata: true,
+  },
+};
 
 const ROUTES = {
     EDITOR: '/editor',
@@ -36,7 +66,7 @@ const CORE_TOOLS: SidebarItemConfig[] = [
     { id: 'chat', labelKey: 'sidebar.chat', route: ROUTES.CHAT, icon: 'MessageSquare', visible: true },
     { id: 'browser', labelKey: 'sidebar.browser', route: ROUTES.BROWSER, icon: 'Globe', visible: true },
     { id: 'separator-2', labelKey: '', route: '', icon: '', visible: true, children: [] },
-    { id: 'download', labelKey: 'sidebar.download', route: ROUTES.DOWNLOAD, icon: 'Download', visible: true },
+    { id: 'download', labelKey: 'sidebar.download', route: ROUTES.DOWNLOAD, icon: 'Download', visible: true, runtimeVisibility: 'web-only' },
 ];
 
 const CREATIVE_TOOLS: SidebarItemConfig = {
@@ -209,6 +239,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   media: {},
   storage: {},
+  materialStorage: DEFAULT_MATERIAL_STORAGE,
   llm: {
     'openai': {
       id: 'openai',

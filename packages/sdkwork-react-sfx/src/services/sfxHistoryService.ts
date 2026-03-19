@@ -3,9 +3,11 @@ import { SfxTask } from '../entities';
 import { generateUUID as _generateUUID } from '@sdkwork/react-commons'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { STORAGE_KEY_SFX_HISTORY } from '../constants';
 
+const LEGACY_STORAGE_KEYS_SFX_HISTORY = ['open_studio_sfx_history_v1'] as const;
+
 class SfxHistoryService extends LocalStorageService<SfxTask & { uuid: string }> {
     constructor() {
-        super(STORAGE_KEY_SFX_HISTORY);
+        super(STORAGE_KEY_SFX_HISTORY, LEGACY_STORAGE_KEYS_SFX_HISTORY);
     }
 
     async toggleFavorite(id: string): Promise<void> {

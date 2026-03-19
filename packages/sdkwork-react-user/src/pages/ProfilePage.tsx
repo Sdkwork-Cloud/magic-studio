@@ -1158,7 +1158,7 @@ export const ProfilePage: React.FC = () => {
     })();
 
     const isPermissionOrAuthError = feedback?.type === 'error'
-        && /(permission|unauthorized|forbidden|unauthenticated|not login|not logged in|鏈櫥褰晐鏃犳潈闄恷鏉冮檺涓嶈冻|鏈巿鏉億绂佹璁块棶)/i.test(feedback.text);
+        && /(permission|unauthorized|forbidden|unauthenticated|not login|not logged in|\u672a\u767b\u5f55|\u65e0\u6743\u9650|\u6743\u9650\u4e0d\u8db3|\u672a\u6388\u6743|\u7981\u6b62\u8bbf\u95ee)/i.test(feedback.text);
 
     const feedbackClassName = feedback?.type === 'success'
         ? 'border-[#2563eb]/40 bg-[#2563eb]/10 text-[#d1d5db]'

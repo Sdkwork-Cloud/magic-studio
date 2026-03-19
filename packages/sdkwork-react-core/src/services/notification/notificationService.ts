@@ -4,11 +4,12 @@ import { AppNotification, NotificationType } from './entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { ServiceResult, Result } from '@sdkwork/react-commons';
 
-const NOTIFICATION_STORAGE_KEY = 'open_studio_notifications_v1';
+const NOTIFICATION_STORAGE_KEY = 'magic_studio_notifications_v1';
+const LEGACY_NOTIFICATION_STORAGE_KEYS = ['open_studio_notifications_v1'] as const;
 
 class NotificationService extends LocalStorageService<AppNotification> {
     constructor() {
-        super(NOTIFICATION_STORAGE_KEY);
+        super(NOTIFICATION_STORAGE_KEY, LEGACY_NOTIFICATION_STORAGE_KEYS);
     }
 
     /**

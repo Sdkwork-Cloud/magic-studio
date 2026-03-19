@@ -161,7 +161,10 @@ export const portalVideo = {
     search_placeholder: "Search AI tools...",
     try_now: "Try Now",
     view_all: "All Tools",
-    creative_tools: "AI Creative Tools"
+    creative_tools: "AI Creative Tools",
+    results_count: "{count} tools",
+    empty_title: "No matching tools",
+    empty_description: "Try another search or switch the current category."
   },
   hero: {
     title: "What's your new story idea?"

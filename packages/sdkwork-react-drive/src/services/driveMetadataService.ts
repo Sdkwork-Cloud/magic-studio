@@ -3,11 +3,12 @@ import { LocalStorageService } from '@sdkwork/react-core';
 import { DriveMetadata } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 
-const META_STORAGE_KEY = 'open_studio_drive_meta_v2';
+const META_STORAGE_KEY = 'magic_studio_drive_meta_v2';
+const LEGACY_META_STORAGE_KEYS = ['open_studio_drive_meta_v2'] as const;
 
 class DriveMetadataService extends LocalStorageService<DriveMetadata> {
     constructor() {
-        super(META_STORAGE_KEY);
+        super(META_STORAGE_KEY, LEGACY_META_STORAGE_KEYS);
     }
 
     async getMeta(path: string): Promise<DriveMetadata | undefined> {

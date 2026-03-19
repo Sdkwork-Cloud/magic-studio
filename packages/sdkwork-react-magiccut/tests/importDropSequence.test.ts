@@ -38,6 +38,44 @@ const createResource = (
   }) as any;
 
 describe('resolveImportedDropSequence', () => {
+  it('uses metadata duration when imported resources do not expose a top-level duration', () => {
+    const metadataOnlyDurationResource = {
+      id: 'video-meta',
+      uuid: 'video-meta-uuid',
+      name: 'video-meta',
+      type: MediaResourceType.VIDEO,
+      path: 'video-meta.mock',
+      url: 'video-meta.mock',
+      metadata: { duration: 12.4 },
+      createdAt: 0,
+      updatedAt: 0,
+    } as any;
+
+    const plans = resolveImportedDropSequence({
+      resources: [metadataOnlyDurationResource],
+      tracks: [createTrack('track-video', 'video', 0)],
+      baseTime: 2,
+      basePlacement: {
+        trackId: 'track-video',
+        insertIndex: null,
+      },
+    });
+
+    expect(plans).toEqual([
+      {
+        resourceId: 'video-meta',
+        start: 2,
+        duration: 12.4,
+        target: {
+          kind: 'existing-track',
+          groupId: 'existing:track-video',
+          trackId: 'track-video',
+          trackType: 'video',
+        },
+      },
+    ]);
+  });
+
   it('places compatible imported resources sequentially on the resolved existing track', () => {
     const plans = resolveImportedDropSequence({
       resources: [

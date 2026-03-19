@@ -17,7 +17,7 @@ const CodeEditor: React.FC = () => {
   // Sync Monaco Theme and Font Settings dynamically
   useEffect(() => {
       if (monacoInstance) {
-          monacoInstance.editor.setTheme(isDark ? 'open-studio-dark' : 'open-studio-light');
+          monacoInstance.editor.setTheme(isDark ? 'magic-studio-dark' : 'magic-studio-light');
       }
   }, [isDark, monacoInstance]);
 
@@ -25,7 +25,7 @@ const CodeEditor: React.FC = () => {
     setMonacoInstance(monaco);
 
     // Define Dark Theme
-    monaco.editor.defineTheme('open-studio-dark', {
+    monaco.editor.defineTheme('magic-studio-dark', {
       base: 'vs-dark',
       inherit: true,
       rules: [],
@@ -40,7 +40,7 @@ const CodeEditor: React.FC = () => {
     });
 
     // Define Light Theme
-    monaco.editor.defineTheme('open-studio-light', {
+    monaco.editor.defineTheme('magic-studio-light', {
       base: 'vs',
       inherit: true,
       rules: [],
@@ -54,7 +54,7 @@ const CodeEditor: React.FC = () => {
       }
     });
 
-    monaco.editor.setTheme(isDark ? 'open-studio-dark' : 'open-studio-light');
+    monaco.editor.setTheme(isDark ? 'magic-studio-dark' : 'magic-studio-light');
   };
 
   const handleChange = (value: string | undefined) => {
@@ -118,7 +118,7 @@ const CodeEditor: React.FC = () => {
              <div className="w-16 h-16 bg-white dark:bg-[#2d2d2d] rounded-xl flex items-center justify-center mb-4 shadow-sm dark:shadow-inner">
                  <span className="text-2xl opacity-50">📝</span>
              </div>
-             <h3 className="text-gray-700 dark:text-gray-300 font-medium mb-1">Open Studio Editor</h3>
+             <h3 className="text-gray-700 dark:text-gray-300 font-medium mb-1">MagicStudio Editor</h3>
              <p className="text-sm opacity-60">Select a file from the explorer to start coding</p>
            </div>
         ) : (

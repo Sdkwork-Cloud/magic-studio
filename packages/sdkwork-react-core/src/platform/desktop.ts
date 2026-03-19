@@ -143,6 +143,10 @@ export const createDesktopPlatform = (): PlatformAPI => {
       const { getCurrentWindow } = await loadTauriModules();
       await getCurrentWindow().toggleMaximize();
   },
+  isWindowMaximized: async () => {
+      const { getCurrentWindow } = await loadTauriModules();
+      return await getCurrentWindow().isMaximized();
+  },
   closeWindow: async () => {
       const { getCurrentWindow } = await loadTauriModules();
       await getCurrentWindow().close();

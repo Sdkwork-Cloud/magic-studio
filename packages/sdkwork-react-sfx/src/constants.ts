@@ -3,7 +3,7 @@ import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Waves, Volume2 } from 'lucide-react';
 
-export const STORAGE_KEY_SFX_HISTORY = 'open_studio_sfx_history_v1';
+export const STORAGE_KEY_SFX_HISTORY = 'magic_studio_sfx_history_v1';
 
 export const SFX_MODELS: { id: SfxModelType; name: string; badge?: string }[] = [
     { id: 'eleven-labs-sfx', name: 'ElevenLabs SFX', badge: 'PRO' },

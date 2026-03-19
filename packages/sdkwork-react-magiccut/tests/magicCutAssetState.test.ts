@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { MediaResourceType } from '@sdkwork/react-commons';
 import type { UnifiedDigitalAsset } from '@sdkwork/react-types';
+import * as magicCutAssetStateModule from '../src/domain/assets/magicCutAssetState';
 
 import {
   buildMagicCutAssetRef,
@@ -234,5 +235,82 @@ describe('magicCutAssetState', () => {
       language: 'zh-CN',
     });
     expect(normalized.resourceViews['voice-asset']?.path).toBe('assets://workspace-1/magiccut/voice.wav');
+  });
+
+  it('detects when an asset is still referenced by the timeline', () => {
+    const isMagicCutAssetInUse = (magicCutAssetStateModule as any).isMagicCutAssetInUse;
+    const state = {
+      assets: {
+        'asset-1': createAsset(),
+      },
+      resourceViews: {
+        'asset-1': buildMagicCutResourceView(createAsset()),
+      },
+      resources: {
+        'asset-1': buildMagicCutResourceView(createAsset()),
+      },
+      timelines: {},
+      tracks: {},
+      clips: {
+        'clip-1': {
+          id: 'clip-1',
+          resource: {
+            id: 'asset-1',
+            assetId: 'asset-1',
+          },
+        },
+      },
+      layers: {
+        'layer-1': {
+          id: 'layer-1',
+          resource: {
+            id: 'asset-2',
+            assetId: 'asset-2',
+          },
+        },
+      },
+    };
+
+    expect(isMagicCutAssetInUse(state, 'asset-1')).toBe(true);
+    expect(isMagicCutAssetInUse(state, 'asset-2')).toBe(true);
+    expect(isMagicCutAssetInUse(state, 'asset-3')).toBe(false);
+  });
+
+  it('removes an unused asset from canonical asset, view and resource maps together', () => {
+    const removeMagicCutAssetFromState = (magicCutAssetStateModule as any).removeMagicCutAssetFromState;
+    const assetOne = createAsset();
+    const assetTwo = createAsset({
+      id: 'asset-2',
+      uuid: 'asset-2',
+      assetId: 'asset-2',
+      title: 'B-roll',
+      key: 'workspace-1/magiccut/asset-2',
+    });
+    const state = {
+      assets: {
+        'asset-1': assetOne,
+        'asset-2': assetTwo,
+      },
+      resourceViews: {
+        'asset-1': buildMagicCutResourceView(assetOne),
+        'asset-2': buildMagicCutResourceView(assetTwo),
+      },
+      resources: {
+        'asset-1': buildMagicCutResourceView(assetOne),
+        'asset-2': buildMagicCutResourceView(assetTwo),
+      },
+      timelines: {},
+      tracks: {},
+      clips: {},
+      layers: {},
+    };
+
+    const nextState = removeMagicCutAssetFromState(state, 'asset-1');
+
+    expect(nextState.assets).toEqual({
+      'asset-2': assetTwo,
+    });
+    expect(Object.keys(nextState.resourceViews)).toEqual(['asset-2']);
+    expect(Object.keys(nextState.resources)).toEqual(['asset-2']);
   });
 });

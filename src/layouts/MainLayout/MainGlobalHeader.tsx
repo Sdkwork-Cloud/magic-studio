@@ -50,7 +50,7 @@ const MainGlobalHeader: React.FC = () => {
 
   return (
     <>
-      <div className="flex-none h-[40px] bg-white dark:bg-[#050505] border-b border-[#e4e4e7] dark:border-[#1a1a1a] flex items-center justify-between select-none z-[1000] transition-colors duration-200">
+      <div className="desktop-shell-header flex-none h-[40px] bg-white/92 dark:bg-[#050505]/92 border-b border-[#e4e4e7] dark:border-[#1a1a1a] flex items-center justify-between select-none z-[1000] transition-colors duration-200 backdrop-blur-xl">
         
         {/* LEFT: Workspace / Project Context Switcher */}
         <div className="flex items-center h-full px-4">

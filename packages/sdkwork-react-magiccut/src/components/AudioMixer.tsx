@@ -1,7 +1,9 @@
-import { CutTrackType } from '../entities/magicCut.entity'
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Volume2, VolumeX, Headphones, Speaker, Gauge } from 'lucide-react';
 import { useMagicCutStore } from '../store/magicCutStore';
+import { audioEngine } from '../engine/AudioEngine';
+import { buildMasterMeterBars, buildTrackMeterLevel } from '../domain/audio/audioMixerMeters';
+import { resolveAudibleTrackIds } from '../domain/audio/trackAudibility';
 
 interface AudioMixerProps {
     className?: string;
@@ -17,7 +19,10 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
         useTransientState
     } = useMagicCutStore();
     
-    const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
+    const currentTime = useTransientState(s => s.currentTime);
+    const isPlaying = useTransientState(s => s.isPlaying);
+    const soloTrackIds = useTransientState(s => s.soloTrackIds);
+    const toggleSoloTrack = useTransientState(s => s.toggleSoloTrack);
     
     const audioTracks = useMemo(() => {
         if (!activeTimeline) return [];
@@ -36,8 +41,8 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
     }, [updateTrack]);
     
     const handleSoloToggle = useCallback((trackId: string) => {
-        setSoloTrackId(prev => prev === trackId ? null : trackId);
-    }, []);
+        toggleSoloTrack(trackId);
+    }, [toggleSoloTrack]);
     
     const handlePanChange = useCallback((trackId: string, pan: number) => {
         updateTrack(trackId, { pan } as any);
@@ -48,10 +53,31 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
     }, [updateClip]);
     
     const selectedClip = selectedClipId ? state.clips[selectedClipId] : null;
-    
-    const calculateMeterLevel = (trackId: string): number => {
-        return 0.7 + Math.random() * 0.3;
-    };
+    const [masterLevel, setMasterLevel] = useState(0);
+    const audibleTrackIds = useMemo(
+        () => resolveAudibleTrackIds(audioTracks, soloTrackIds),
+        [audioTracks, soloTrackIds]
+    );
+
+    useEffect(() => {
+        if (!isPlaying) {
+            setMasterLevel(0);
+            return;
+        }
+
+        let rafId = 0;
+
+        const tick = () => {
+            setMasterLevel(audioEngine.getAudioLevels());
+            rafId = requestAnimationFrame(tick);
+        };
+
+        tick();
+
+        return () => cancelAnimationFrame(rafId);
+    }, [isPlaying]);
+
+    const masterBars = useMemo(() => buildMasterMeterBars(masterLevel, 4), [masterLevel]);
     
     return (
         <div className={`bg-[#09090b] border-l border-[#27272a] flex flex-col ${className || ''}`}>
@@ -62,14 +88,26 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
             
             <div className="flex-1 overflow-y-auto p-3 space-y-4">
                 {audioTracks.map(track => {
-                    const isSolo = soloTrackId === track.id;
-                    const isMuted = track.muted || (soloTrackId && soloTrackId !== track.id);
+                    const isSolo = soloTrackIds.has(track.id);
+                    const isMuted = !audibleTrackIds.has(track.id);
                     const volume = track.volume ?? 1;
                     const pan = (track as any).pan ?? 0;
                     
                     const trackClips = track.clips
                         .map(ref => state.clips[ref.id])
                         .filter(Boolean);
+                    const meterLevel = buildTrackMeterLevel({
+                        masterLevel,
+                        isPlaying,
+                        currentTime,
+                        trackVolume: volume,
+                        isMuted,
+                        clips: trackClips.map((clip) => ({
+                            start: clip.start,
+                            duration: clip.duration,
+                            volume: clip.volume,
+                        })),
+                    });
                     
                     return (
                         <div 
@@ -122,7 +160,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                         />
                                         <div 
                                             className="absolute bottom-0 w-full bg-emerald-400/30 animate-pulse"
-                                            style={{ height: `${calculateMeterLevel(track.id) * volume * 100}%` }}
+                                            style={{ height: `${meterLevel * 100}%` }}
                                         />
                                     </div>
                                     <span className="text-[9px] text-gray-500">{Math.round(volume * 100)}%</span>
@@ -277,7 +315,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                     <span className="text-[9px] text-gray-400">Master</span>
                 </div>
                 <div className="flex gap-1">
-                    {[0.8, 0.9, 0.7, 0.85].map((level, i) => (
+                    {masterBars.map((level, i) => (
                         <div 
                             key={i}
                             className="w-1.5 h-4 bg-[#27272a] rounded-sm overflow-hidden"

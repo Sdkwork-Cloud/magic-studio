@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic } from 'lucide-react';
+import { resolveLocalizedText, useTranslation } from '@sdkwork/react-i18n';
 import { useFilmStore, FilmStoreProvider } from '@sdkwork/react-film';
 import { inlineDataService, useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
 import { FILM_STYLES, GEN_MODES } from '../constants';
@@ -94,6 +95,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
     onInsertQuote,
     menuPrefix,
 }) => {
+    const { locale } = useTranslation();
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     
     const modeButtonRef = useRef<HTMLButtonElement>(null);
@@ -127,7 +129,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                 <InputFooterButton 
                     ref={modeButtonRef}
                     icon={<currentMode.icon size={16} className={currentMode.color} />}
-                    label={currentMode.label}
+                    label={resolveLocalizedText(currentMode.label, locale)}
                     onClick={() => toggleMenu(`${menuPrefix}-mode`)}
                     active={activeMenu === `${menuPrefix}-mode`}
                     suffix={<ChevronDown size={10} className="opacity-50" />}
@@ -194,7 +196,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                     <InputFooterButton
                         ref={genModeButtonRef}
                         icon={<GenModeIcon size={16} className={genMode === 'text' ? 'text-blue-400' : 'text-pink-400'} />}
-                        label={currentGenMode.label}
+                        label={resolveLocalizedText(currentGenMode.label, locale)}
                         onClick={() => toggleMenu(`${menuPrefix}-genMode`)}
                         active={activeMenu === `${menuPrefix}-genMode`}
                         suffix={<ChevronDown size={10} className="opacity-50" />}
@@ -218,10 +220,10 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                             >
                                 <div className="flex items-center gap-2">
                                     <m.icon size={14} className={genMode === m.id ? (m.id === 'text' ? 'text-blue-400' : 'text-pink-400') : 'text-gray-500 group-hover:text-gray-400'} />
-                                    <span className={`text-xs font-bold ${genMode === m.id ? 'text-white' : 'text-gray-300'}`}>{m.label}</span>
+                                    <span className={`text-xs font-bold ${genMode === m.id ? 'text-white' : 'text-gray-300'}`}>{resolveLocalizedText(m.label, locale)}</span>
                                     {genMode === m.id && <Check size={12} className="ml-auto text-green-500" />}
                                 </div>
-                                <span className="text-[10px] text-gray-500 pl-6 leading-tight opacity-80">{m.desc}</span>
+                                <span className="text-[10px] text-gray-500 pl-6 leading-tight opacity-80">{resolveLocalizedText(m.desc, locale)}</span>
                             </button>
                         ))}
                     </Popover>
@@ -392,9 +394,9 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
         const hasVideo = attachments.some(a => a.type === 'video');
 
         if (hasVideo && activeTab === 'video') {
-            setGenMode('image_start_end'); 
+            setGenMode('start_end'); 
         } else if (hasImage && activeTab === 'video') {
-            setGenMode('image_start_end');
+            setGenMode('start_end');
         } else if (attachments.length === 0) {
             setGenMode('text');
         }

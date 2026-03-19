@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     ChevronLeft, Scissors, Share2, Save, ChevronDown, FileJson
 } from 'lucide-react';
+import { WindowControls } from '@sdkwork/react-commons';
 import { ROUTES } from '../../router/routes';
 import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 import { useTranslation } from '@sdkwork/react-i18n';
@@ -12,6 +13,7 @@ import { useRouter, platform } from '@sdkwork/react-core';
 export const MagicCutLayoutHeader: React.FC = () => {
     const { navigate, currentQuery } = useRouter();
     const { t: _t } = useTranslation();
+    const isDesktopRuntime = platform.getPlatform() === 'desktop';
     
     const { project } = useMagicCutStore();
 
@@ -57,9 +59,13 @@ export const MagicCutLayoutHeader: React.FC = () => {
 
     return (
         <>
-            <div className="h-14 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-[1000] select-none shrink-0 relative">
+            <div className="h-14 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between pl-4 pr-0 z-[1000] select-none shrink-0 relative overflow-hidden">
+                {isDesktopRuntime && (
+                    <div className="absolute inset-0 z-0" data-tauri-drag-region />
+                )}
+
                 {/* Left: Navigation & Branding */}
-                <div className="flex items-center gap-4">
+                <div className="relative z-10 flex items-center gap-4">
                     <button 
                         onClick={() => navigate(backRoute)}
                         className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors group flex items-center gap-2"
@@ -86,15 +92,17 @@ export const MagicCutLayoutHeader: React.FC = () => {
                 </div>
 
                 {/* Center: Context Switcher */}
-                <WorkspaceProjectSelector 
-                    variant="portal"
-                    showDelete={false}
-                    defaultProjectType="VIDEO"
-                    compact={true}
-                />
+                <div className="absolute inset-y-0 left-1/2 z-10 hidden -translate-x-1/2 items-center lg:flex">
+                    <WorkspaceProjectSelector 
+                        variant="portal"
+                        showDelete={false}
+                        defaultProjectType="VIDEO"
+                        compact={true}
+                    />
+                </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-3">
+                <div className="relative z-10 flex h-full items-center gap-3 pl-4">
                     <div className="hidden md:flex items-center text-xs text-gray-500 gap-2 mr-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         Saved
@@ -132,6 +140,12 @@ export const MagicCutLayoutHeader: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    {isDesktopRuntime && (
+                        <div className="ml-2 h-full overflow-hidden border-l border-white/8">
+                            <WindowControls />
+                        </div>
+                    )}
                 </div>
             </div>
         </>

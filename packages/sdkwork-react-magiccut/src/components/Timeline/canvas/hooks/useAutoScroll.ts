@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useCallback } from 'react';
 import { TimelineStore } from '../../../../store/transientStore';
 
@@ -9,9 +8,9 @@ interface UseAutoScrollReturn {
 }
 
 /**
- * useAutoScroll - 自动滚动 Hook
- * 
- * 职责：管理拖拽时的边缘自动滚�? * 优化：使�?RAF 循环实现平滑滚动，并同步 Zustand Transient Store
+ * useAutoScroll keeps the timeline scrolling while drag interactions approach
+ * the viewport edge. A single RAF loop provides smooth movement and synchronizes
+ * the transient store so ruler and grid state stay aligned with the DOM.
  */
 export const useAutoScroll = (
     containerRef: React.RefObject<HTMLDivElement | null>,
@@ -33,7 +32,7 @@ export const useAutoScroll = (
             if (autoScrollSpeed.current !== 0 && containerRef.current) {
                 // Mutate DOM directly for performance
                 containerRef.current.scrollLeft += autoScrollSpeed.current;
-                
+
                 // Sync store to ensure Grid/Ruler updates
                 // We use setState directly on the store instance to avoid React batching/re-render lag
                 store.setState({ scrollLeft: containerRef.current.scrollLeft });
@@ -58,4 +57,3 @@ export const useAutoScroll = (
 };
 
 export default useAutoScroll;
-

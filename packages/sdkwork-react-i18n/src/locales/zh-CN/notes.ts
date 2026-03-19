@@ -39,6 +39,11 @@ export const notes = {
             academic: "学术",
             creative: "创意",
             concise: "简洁"
+        },
+        languages: {
+            chineseSimplified: "\u7b80\u4f53\u4e2d\u6587",
+            japanese: "\u65e5\u672c\u8bed",
+            korean: "\u97e9\u8bed"
         }
     },
     ai_actions: {

@@ -2,6 +2,8 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { FilmViewMode } from '@sdkwork/react-commons';
+import { useTranslation, createLocalizedText, resolveLocalizedText } from '@sdkwork/react-i18n';
+import type { LocalizedText } from '@sdkwork/react-i18n';
 import { FilmStoreProvider } from '../store/filmStore';
 import { FilmSidebar, FilmWorkspace, FilmChatPanel, FilmSettingsDropdown, FilmPreviewPanel } from '../index';
 import { 
@@ -84,16 +86,17 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 // Navigation Tabs
 const navTabs = [
-    { id: 'overview', label: '概览', icon: LayoutDashboard }, 
-    { id: 'script', label: '剧本', icon: FileText },
-    { id: 'characters', label: '角色', icon: Users },
-    { id: 'props', label: '道具', icon: Box },
-    { id: 'locations', label: '场景', icon: MapPin },
-    { id: 'storyboard', label: '分镜', icon: Clapperboard },
-    { id: 'timeline', label: '生成', icon: Sparkles },
-] as Array<{ id: Exclude<FilmViewMode, 'preview'>; label: string; icon: React.ElementType }>;
+    { id: 'overview', label: createLocalizedText('Overview', '\u6982\u89c8'), icon: LayoutDashboard }, 
+    { id: 'script', label: createLocalizedText('Script', '\u5267\u672c'), icon: FileText },
+    { id: 'characters', label: createLocalizedText('Characters', '\u89d2\u8272'), icon: Users },
+    { id: 'props', label: createLocalizedText('Props', '\u9053\u5177'), icon: Box },
+    { id: 'locations', label: createLocalizedText('Locations', '\u573a\u666f'), icon: MapPin },
+    { id: 'storyboard', label: createLocalizedText('Storyboard', '\u5206\u955c'), icon: Clapperboard },
+    { id: 'timeline', label: createLocalizedText('Generation', '\u751f\u6210'), icon: Sparkles },
+] as Array<{ id: Exclude<FilmViewMode, 'preview'>; label: LocalizedText; icon: React.ElementType }>;
 
 const FilmHeader: React.FC = () => {
+    const { locale } = useTranslation();
     const { navigate } = useRouter();
     const { project, isProcessing, currentView, setView } = useFilmStore();
     const [showMenu, setShowMenu] = useState(false);
@@ -140,7 +143,7 @@ const FilmHeader: React.FC = () => {
                                 }`}
                             >
                                 <Icon size={14} />
-                                {tab.label}
+                                {resolveLocalizedText(tab.label, locale)}
                             </button>
                         );
                     })}

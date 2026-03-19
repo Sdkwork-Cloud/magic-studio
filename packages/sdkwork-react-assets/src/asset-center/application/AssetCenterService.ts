@@ -3,9 +3,6 @@ import {
   pathUtils
 } from '@sdkwork/react-commons';
 import {
-  LIBRARY_SUBDIRS
-} from '@sdkwork/react-fs';
-import type {
   AssetCenterStats,
   AssetCenterPageRequest,
   AssetContentKey,
@@ -34,6 +31,10 @@ import type { AssetIndexPort } from '../ports/AssetIndexPort';
 import type { AssetMediaAnalyzerPort } from '../ports/AssetMediaAnalyzerPort';
 import type { AssetUrlResolverPort } from '../ports/AssetUrlResolverPort';
 import type { AssetVfsPort } from '../ports/AssetVfsPort';
+import {
+  buildManagedAssetTarget,
+  type ManagedAssetStorageClass
+} from './magicStudioAssetLayout';
 
 const DEFAULT_EXTENSION_BY_TYPE: Record<AssetContentKey, string> = {
   image: '.png',
@@ -85,7 +86,8 @@ export class AssetCenterService {
     const assetId = this.idGenerator();
     const resourceId = this.idGenerator();
     const extension = this.resolveExtension(input.name, input.type);
-    const locator = await this.persistPrimaryContent(resourceId, extension, input);
+    const persisted = await this.persistPrimaryContent(resourceId, extension, input);
+    const locator = persisted.locator;
     const resolvedUrl = await this.deps.urlResolver.resolve(locator);
 
     let mediaAnalysis: { metadata?: Record<string, unknown> } = {};
@@ -96,6 +98,7 @@ export class AssetCenterService {
     }
     const metadata: Record<string, unknown> = {
       ...(input.metadata || {}),
+      ...persisted.metadata,
       ...(mediaAnalysis.metadata || {})
     };
 
@@ -460,39 +463,60 @@ export class AssetCenterService {
     resourceId: string,
     extension: string,
     input: ImportAssetInput
-  ): Promise<AssetLocator> {
+  ): Promise<{ locator: AssetLocator; metadata: Record<string, unknown> }> {
     if (input.remoteUrl && !input.data && !input.sourcePath) {
       const protocol = input.remoteUrl.startsWith('https://') ? 'https' : 'http';
       return {
-        protocol,
-        uri: input.remoteUrl,
-        url: input.remoteUrl
+        locator: {
+          protocol,
+          uri: input.remoteUrl,
+          url: input.remoteUrl
+        },
+        metadata: {}
       };
     }
 
-    const root = await this.deps.vfsPort.getLibraryRoot();
-    const categoryDir = this.getSubdirByType(input.type);
-    const targetDir = pathUtils.join(root, categoryDir);
-    await this.deps.vfsPort.ensureDir(targetDir);
-
-    const filename = `${resourceId}${extension}`;
-    const absolutePath = pathUtils.join(targetDir, filename);
+    const storageConfig = await this.deps.vfsPort.getMagicStudioStorageConfig();
+    const storageClass = this.resolveManagedStorageClass(input);
+    const managedTarget = buildManagedAssetTarget({
+      rootDir: storageConfig.rootDir,
+      workspacesRootDir: storageConfig.workspacesRootDir,
+      cacheRootDir: storageConfig.cacheRootDir,
+      exportsRootDir: storageConfig.exportsRootDir,
+      workspaceId: input.scope.workspaceId,
+      projectId: input.scope.projectId,
+      type: input.type,
+      assetId: resourceId,
+      extension,
+      storageClass
+    });
+    await this.deps.vfsPort.ensureDir(managedTarget.absoluteDir);
 
     if (input.sourcePath) {
-      await this.deps.vfsPort.copyFile(input.sourcePath, absolutePath);
+      await this.deps.vfsPort.copyFile(input.sourcePath, managedTarget.absolutePath);
     } else if (input.data instanceof Blob) {
-      await this.deps.vfsPort.writeBlob(absolutePath, input.data);
+      await this.deps.vfsPort.writeBlob(managedTarget.absolutePath, input.data);
     } else if (input.data instanceof Uint8Array) {
-      await this.deps.vfsPort.writeBinary(absolutePath, input.data);
+      await this.deps.vfsPort.writeBinary(managedTarget.absolutePath, input.data);
     } else {
       throw new Error('Asset import requires data, sourcePath, or remoteUrl');
     }
 
-    const virtualPath = await this.deps.vfsPort.toVirtualPath(absolutePath);
     return {
-      protocol: 'assets',
-      uri: virtualPath,
-      path: absolutePath
+      locator: {
+        protocol: 'assets',
+        uri: managedTarget.virtualPath,
+        path: managedTarget.absolutePath
+      },
+      metadata: {
+        workspaceId: input.scope.workspaceId,
+        projectId: input.scope.projectId,
+        storageMode: this.deps.vfsPort.getMode(),
+        storageClass,
+        originalName: input.name,
+        managedFileName: managedTarget.managedFileName,
+        managedRootVersion: 1
+      }
     };
   }
 
@@ -576,23 +600,12 @@ export class AssetCenterService {
     return result;
   }
 
-  private getSubdirByType(type: AssetContentKey): string {
-    switch (type) {
-      case 'image':
-        return LIBRARY_SUBDIRS.IMAGES;
-      case 'video':
-        return LIBRARY_SUBDIRS.VIDEO;
-      case 'audio':
-      case 'music':
-      case 'voice':
-      case 'sfx':
-        return LIBRARY_SUBDIRS.AUDIO;
-      case 'character':
-      case 'model3d':
-        return LIBRARY_SUBDIRS.MODELS;
-      default:
-        return LIBRARY_SUBDIRS.DOWNLOADS;
+  private resolveManagedStorageClass(input: ImportAssetInput): ManagedAssetStorageClass {
+    const origin = input.metadata?.origin;
+    if (input.status === 'generated' || origin === 'ai') {
+      return 'generated';
     }
+    return 'original';
   }
 
   private resolveStorageMode(locator: AssetLocator): AssetStorageMode {

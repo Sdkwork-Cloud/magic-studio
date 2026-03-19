@@ -3,11 +3,15 @@ import { Asset, AssetType, AssetCategory, AssetMetadata, AssetOrigin } from '../
 import { vfs } from '@sdkwork/react-fs';
 import { pathUtils, generateUUID, IBaseService, ServiceResult, Result, Page, PageRequest, logger, MediaResource as _MediaResource, MediaResourceType, AnyMediaResource } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
-import { storageConfig, LIBRARY_SUBDIRS } from '@sdkwork/react-fs';
+import { LIBRARY_SUBDIRS } from '@sdkwork/react-fs';
 import { mediaAnalysisService } from '@sdkwork/react-core';
 import type { AssetContentKey, AssetLocator, AssetScope } from '@sdkwork/react-types';
 import { assetCenterService, readWorkspaceScope } from '../asset-center';
+import {
+    buildMagicStudioRootLayout,
+} from '../../../sdkwork-react-core/src/storage/magicStudioPaths';
 import { createSpringPage } from './impl/springPage';
+import { loadResolvedMagicStudioStorageConfig } from '../asset-center/application/magicStudioStorageConfig';
 
 const formatTimestamp = () => new Date().toISOString();
 const toEpochMillis = (value?: string | number): number => {
@@ -76,7 +80,6 @@ class AssetService implements IBaseService<Asset> {
     private _urlCache: Map<string, string> = new Map();
     private _resolveRequests: Map<string, Promise<string>> = new Map();
     private _initialized = false;
-    private _libraryRoot: string | null = null;
 
     constructor() {}
 
@@ -87,15 +90,21 @@ class AssetService implements IBaseService<Asset> {
         }
     }
 
+    private async getMagicStudioRoot(): Promise<string> {
+        const homeRoot = await platform.getPath('home');
+        const storageConfig = await loadResolvedMagicStudioStorageConfig(homeRoot);
+        return storageConfig.rootDir;
+    }
+
     public async getLibraryRoot(): Promise<string> {
-        if (this._libraryRoot) return this._libraryRoot;
-        const docRoot = await platform.getPath('documents');
-        this._libraryRoot = pathUtils.join(docRoot, storageConfig.library.root);
-        return this._libraryRoot;
+        const rootLayout = buildMagicStudioRootLayout({
+            rootDir: await this.getMagicStudioRoot()
+        });
+        return rootLayout.systemLibraryRoot;
     }
 
     public async toVirtualPath(absolutePath: string): Promise<string> {
-        const root = await this.getLibraryRoot();
+        const root = await this.getMagicStudioRoot();
         const normRoot = pathUtils.normalize(root);
         const normPath = pathUtils.normalize(absolutePath);
         const sep = pathUtils.detectSeparator(normRoot);
@@ -112,7 +121,7 @@ class AssetService implements IBaseService<Asset> {
 
     public async toAbsolutePath(virtualPath: string): Promise<string> {
         if (!virtualPath.startsWith(PROTOCOL)) return virtualPath;
-        const root = await this.getLibraryRoot();
+        const root = await this.getMagicStudioRoot();
         const relative = virtualPath.substring(PROTOCOL.length);
         return pathUtils.join(root, relative);
     }
@@ -260,7 +269,10 @@ class AssetService implements IBaseService<Asset> {
         }
         
         if (thumbnailBlob) {
-            const thumbDir = pathUtils.join(root, storageConfig.globalCache.thumbnails); 
+            const rootLayout = buildMagicStudioRootLayout({
+                rootDir: await this.getMagicStudioRoot()
+            });
+            const thumbDir = rootLayout.systemThumbnailCacheDir;
             await vfs.createDir(thumbDir);
             
             const thumbName = `${storageId}_thumb.jpg`;

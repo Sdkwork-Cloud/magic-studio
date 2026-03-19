@@ -2,7 +2,7 @@ import { PlatformAPI, FileEntry, FileStat, SystemPath, BrowserInstance } from '.
 import { pathUtils } from '@sdkwork/react-commons';
 
 class WebFileSystem {
-    private dbName = 'OpenStudio_VFS';
+    private dbName = 'MagicStudio_VFS';
     private storeName = 'files';
     private dbPromise: Promise<IDBDatabase>;
 
@@ -255,6 +255,7 @@ export const webPlatform: PlatformAPI = {
   startDragging: async () => {},
   minimizeWindow: async () => {},
   maximizeWindow: async () => {},
+  isWindowMaximized: async () => false,
   closeWindow: async () => {},
   setFullscreen: async (_fullscreen: boolean) => {},
   setTitle: async (title: string) => { document.title = title; },

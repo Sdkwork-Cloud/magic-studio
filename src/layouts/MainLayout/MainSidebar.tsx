@@ -1,5 +1,4 @@
-
-import { useRouter } from '@sdkwork/react-core'
+import { platform, useRouter } from '@sdkwork/react-core'
 import React, { useState, useRef } from 'react';
 import {
     Settings, Crown, ChevronRight
@@ -20,6 +19,7 @@ const MainSidebar: React.FC = () => {
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
   const { t } = useTranslation();
+  const isDesktopRuntime = platform.getPlatform() === 'desktop';
 
   // Debug: Log path changes
   React.useEffect(() => {
@@ -28,6 +28,12 @@ const MainSidebar: React.FC = () => {
 
   // Load Config (Fallback to Default Template if missing)
   const menuConfig = settings.appearance.sidebarConfig || SIDEBAR_TEMPLATES[0].config;
+  const runtimeMenuConfig = menuConfig
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter((child) => isSidebarItemVisible(child, isDesktopRuntime)),
+    }))
+    .filter((item) => isSidebarItemVisible(item, isDesktopRuntime));
 
   return (
     <>
@@ -50,7 +56,7 @@ const MainSidebar: React.FC = () => {
         {/* --- Middle Section: Dynamic Navigation --- */}
         <div className="flex flex-col gap-3 flex-1 w-full items-center overflow-y-auto overflow-x-hidden min-h-0 no-scrollbar pb-4">
           
-          {menuConfig.map((item, index) => {
+          {runtimeMenuConfig.map((item, index) => {
               if (!item.visible) return null;
 
               // Separator
@@ -288,6 +294,30 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
             )}
         </div>
     );
+};
+
+const isSidebarItemVisible = (item: SidebarItemConfig, isDesktopRuntime: boolean): boolean => {
+    if (!item.visible) {
+        return false;
+    }
+
+    if (item.runtimeVisibility === 'web-only' && isDesktopRuntime) {
+        return false;
+    }
+
+    if (item.runtimeVisibility === 'desktop-only' && !isDesktopRuntime) {
+        return false;
+    }
+
+    if (item.route === ROUTES.DOWNLOAD && isDesktopRuntime) {
+        return false;
+    }
+
+    if (item.children) {
+        return item.children.some((child) => isSidebarItemVisible(child, isDesktopRuntime));
+    }
+
+    return true;
 };
 
 export default MainSidebar;

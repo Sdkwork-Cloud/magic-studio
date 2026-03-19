@@ -1,10 +1,13 @@
 import { LocalStorageService } from '@sdkwork/react-core';
 import { VoiceTask } from '../entities';
 import { ServiceResult } from '@sdkwork/react-commons';
+import { STORAGE_KEY_VOICE_HISTORY } from '../constants';
+
+const LEGACY_STORAGE_KEYS_VOICE_HISTORY = ['open_studio_voice_history_v1'] as const;
 
 class VoiceHistoryService extends LocalStorageService<VoiceTask> {
     constructor() {
-        super('open_studio_voice_history_v1');
+        super(STORAGE_KEY_VOICE_HISTORY, LEGACY_STORAGE_KEYS_VOICE_HISTORY);
     }
 
     async toggleFavorite(id: string): Promise<void> {

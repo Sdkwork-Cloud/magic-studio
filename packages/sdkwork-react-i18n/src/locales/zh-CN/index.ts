@@ -1,4 +1,4 @@
-import { common, sidebar, header } from './common';
+import { common, sidebar, header, download } from './common';
 import { settings } from './settings';
 import { editor } from './editor';
 import { auth } from './auth';
@@ -15,11 +15,14 @@ import { video } from './video';
 import { image } from './image';
 import { portalVideo } from './portalVideo';
 import { assetCenter } from './assetCenter';
+import { plugins } from './plugins';
+import { skills } from './skills';
 
 export const zhCN = {
     common,
     sidebar,
     header,
+    download,
     settings,
     editor,
     auth,
@@ -37,5 +40,7 @@ export const zhCN = {
     video,
     image,
     portalVideo,
-    assetCenter
+    assetCenter,
+    plugins,
+    skills
 };

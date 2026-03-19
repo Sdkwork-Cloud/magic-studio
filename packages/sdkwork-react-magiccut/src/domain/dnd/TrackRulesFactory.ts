@@ -129,8 +129,10 @@ class TrackRulesRegistry {
 
     constructor() {
         this.register('video', new VideoTrackRules());
+        this.register('ai', new VideoTrackRules());
         this.register('audio', new AudioTrackRules());
         this.register('text', new TextTrackRules());
+        this.register('subtitle', new TextTrackRules());
         this.register('effect', new EffectTrackRules());
     }
 

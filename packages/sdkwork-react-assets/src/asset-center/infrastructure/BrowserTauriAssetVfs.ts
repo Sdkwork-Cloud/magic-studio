@@ -1,29 +1,99 @@
-import { pathUtils } from '@sdkwork/react-commons';
-import { storageConfig, vfs } from '@sdkwork/react-fs';
-import { platform } from '@sdkwork/react-core';
+import { vfs } from '@sdkwork/react-fs';
 import type { AssetStorageMode } from '@sdkwork/react-types';
+import { pathUtils } from '@sdkwork/react-commons';
+import { platform } from '../../../../sdkwork-react-core/src/platform';
+import { loadResolvedMagicStudioStorageConfig } from '../application/magicStudioStorageConfig';
+import {
+  resolveManagedAssetAbsolutePath,
+  resolveManagedAssetVirtualPath
+} from '../application/magicStudioAssetLayout';
 import type { AssetFileStat, AssetVfsPort } from '../ports/AssetVfsPort';
 import { ASSET_CENTER_PROTOCOL } from '../domain/assetCenter.domain';
 
-export class BrowserTauriAssetVfs implements AssetVfsPort {
-  private libraryRoot: string | null = null;
+const WINDOWS_DRIVE_PATTERN = /^[a-zA-Z]:$/;
 
+const buildDirectoryChain = (inputPath: string): string[] => {
+  const normalizedPath = pathUtils.normalize(inputPath);
+  if (!normalizedPath) {
+    return [];
+  }
+
+  const segments = normalizedPath.split(/[\\/]+/).filter(Boolean);
+  if (segments.length === 0) {
+    return [];
+  }
+
+  const usesBackslash = normalizedPath.includes('\\');
+  const separator = usesBackslash ? '\\' : '/';
+  const chain: string[] = [];
+
+  if (normalizedPath.startsWith('\\\\') && segments.length >= 2) {
+    let current = `\\\\${segments[0]}\\${segments[1]}`;
+    for (const segment of segments.slice(2)) {
+      current = `${current}\\${segment}`;
+      chain.push(current);
+    }
+    return chain;
+  }
+
+  let current = '';
+  let index = 0;
+
+  if (WINDOWS_DRIVE_PATTERN.test(segments[0])) {
+    current = `${segments[0]}${separator}`;
+    index = 1;
+  } else if (normalizedPath.startsWith('/')) {
+    current = separator;
+  }
+
+  for (const segment of segments.slice(index)) {
+    if (!segment) {
+      continue;
+    }
+
+    if (!current || current === separator) {
+      current = current === separator ? `${separator}${segment}` : segment;
+    } else if (current.endsWith(separator)) {
+      current = `${current}${segment}`;
+    } else {
+      current = `${current}${separator}${segment}`;
+    }
+
+    chain.push(current);
+  }
+
+  return chain;
+};
+
+export class BrowserTauriAssetVfs implements AssetVfsPort {
   getMode(): AssetStorageMode {
     return platform.getPlatform() === 'desktop' ? 'tauri-fs' : 'browser-vfs';
   }
 
+  async getMagicStudioStorageConfig() {
+    const homeDir = await platform.getPath('home');
+    return loadResolvedMagicStudioStorageConfig(homeDir);
+  }
+
   async getLibraryRoot(): Promise<string> {
-    if (this.libraryRoot) {
-      return this.libraryRoot;
-    }
-    const documentsDir = await platform.getPath('documents');
-    this.libraryRoot = pathUtils.join(documentsDir, storageConfig.library.root);
-    await this.ensureDir(this.libraryRoot);
-    return this.libraryRoot;
+    const storageConfig = await this.getMagicStudioStorageConfig();
+    await this.ensureDir(storageConfig.rootDir);
+    return storageConfig.rootDir;
   }
 
   async ensureDir(path: string): Promise<void> {
-    await vfs.createDir(path);
+    const directoryChain = buildDirectoryChain(path);
+    if (directoryChain.length === 0) {
+      await vfs.createDir(path);
+      return;
+    }
+
+    for (const directory of directoryChain) {
+      if (await vfs.exists(directory)) {
+        continue;
+      }
+      await vfs.createDir(directory);
+    }
   }
 
   async exists(path: string): Promise<boolean> {
@@ -75,32 +145,16 @@ export class BrowserTauriAssetVfs implements AssetVfsPort {
   }
 
   async toVirtualPath(absolutePath: string): Promise<string> {
-    const root = await this.getLibraryRoot();
-    const normalizedRoot = pathUtils.normalize(root);
-    const normalizedPath = pathUtils.normalize(absolutePath);
-    const separator = pathUtils.detectSeparator(normalizedRoot);
-    const rootWithSeparator = normalizedRoot.endsWith(separator)
-      ? normalizedRoot
-      : `${normalizedRoot}${separator}`;
-
-    if (normalizedPath.startsWith(rootWithSeparator)) {
-      const relativePath = normalizedPath.substring(rootWithSeparator.length).replace(/\\/g, '/');
-      return `${ASSET_CENTER_PROTOCOL}${relativePath}`;
-    }
-
-    if (normalizedPath === normalizedRoot) {
-      return ASSET_CENTER_PROTOCOL;
-    }
-
-    return absolutePath;
+    const storageConfig = await this.getMagicStudioStorageConfig();
+    return resolveManagedAssetVirtualPath(storageConfig, absolutePath);
   }
 
   async toAbsolutePath(virtualPath: string): Promise<string> {
     if (!virtualPath.startsWith(ASSET_CENTER_PROTOCOL)) {
       return virtualPath;
     }
-    const root = await this.getLibraryRoot();
     const relativePath = virtualPath.substring(ASSET_CENTER_PROTOCOL.length);
-    return pathUtils.join(root, relativePath);
+    const storageConfig = await this.getMagicStudioStorageConfig();
+    return resolveManagedAssetAbsolutePath(storageConfig, relativePath);
   }
 }

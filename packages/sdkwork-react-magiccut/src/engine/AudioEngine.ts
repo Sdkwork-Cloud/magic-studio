@@ -5,6 +5,7 @@ import { AudioEffectProcessor, createAudioEffectChain } from '../services/audio/
 import type { AudioEffectConfig as LocalAudioEffectConfig } from '../services/audio/AudioEffectTypes';
 import { audioResourceFetchService } from '../services/audio/audioResourceFetchService';
 import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
+import { resolveAudibleTrackIds } from '../domain/audio/trackAudibility';
 
 declare global {
     interface Window {
@@ -301,7 +302,8 @@ export class AudioEngine {
         tracks: Record<string, CutTrack>,
         clips: Record<string, CutClip>,
         isPlaying: boolean,
-        playbackDirection: 1 | -1 = 1
+        playbackDirection: 1 | -1 = 1,
+        soloTrackIds: ReadonlySet<string> | readonly string[] = []
     ): void {
         if (!this.ctx || !this.masterGain) return;
 
@@ -320,12 +322,18 @@ export class AudioEngine {
 
             const lookahead = this.reversePlaybackMode === 'highfi' ? 0.35 : 0.5;
             const microFade = this.reversePlaybackMode === 'highfi' ? 0.01 : 0;
-            this.scheduleReverse(currentTime, timeline, resources, tracks, clips, lookahead, microFade);
+            this.scheduleReverse(currentTime, timeline, resources, tracks, clips, lookahead, microFade, soloTrackIds);
             return;
         }
 
         const contextTime = this.ctx.currentTime;
         const SCHEDULE_LOOKAHEAD = 0.5;
+        const audibleTrackIds = resolveAudibleTrackIds(
+            timeline.tracks
+                .map((trackRef) => tracks[trackRef.id])
+                .filter(Boolean) as CutTrack[],
+            soloTrackIds
+        );
 
         // 1. Identify active clips for current time window
         const activeClipIds = new Set<string>();
@@ -334,8 +342,7 @@ export class AudioEngine {
         timeline.tracks.forEach(trackRef => {
             const track = tracks[trackRef.id];
 
-            // Skip if track is muted
-            if (!track || track.muted) return;
+            if (!track || !audibleTrackIds.has(track.id)) return;
 
             track.clips.forEach(clipRef => {
                 const clip = clips[clipRef.id];
@@ -386,19 +393,26 @@ export class AudioEngine {
         tracks: Record<string, CutTrack>,
         clips: Record<string, CutClip>,
         lookahead: number,
-        microFade: number
+        microFade: number,
+        soloTrackIds: ReadonlySet<string> | readonly string[] = []
     ): void {
         if (!this.ctx || !this.masterGain) return;
 
         const contextTime = this.ctx.currentTime;
         const windowStart = currentTime - lookahead;
         const windowEnd = currentTime;
+        const audibleTrackIds = resolveAudibleTrackIds(
+            timeline.tracks
+                .map((trackRef) => tracks[trackRef.id])
+                .filter(Boolean) as CutTrack[],
+            soloTrackIds
+        );
 
         const activeClipIds = new Set<string>();
 
         timeline.tracks.forEach(trackRef => {
             const track = tracks[trackRef.id];
-            if (!track || track.muted) return;
+            if (!track || !audibleTrackIds.has(track.id)) return;
 
             track.clips.forEach(clipRef => {
                 const clip = clips[clipRef.id];
@@ -761,7 +775,8 @@ export class AudioEngine {
         timeline: CutTimeline,
         resources: Record<string, AnyMediaResource>,
         tracks: Record<string, CutTrack>,
-        clips: Record<string, CutClip>
+        clips: Record<string, CutClip>,
+        soloTrackIds: ReadonlySet<string> | readonly string[] = []
     ): Promise<AudioBuffer> {
         await Promise.all(
             Object.values(clips).map(c => this.loadResource(resources[c.resource.id]))
@@ -776,10 +791,16 @@ export class AudioEngine {
         compressor.knee.value = 30;
         compressor.ratio.value = 12;
         compressor.connect(offlineCtx.destination);
+        const audibleTrackIds = resolveAudibleTrackIds(
+            timeline.tracks
+                .map((trackRef) => tracks[trackRef.id])
+                .filter(Boolean) as CutTrack[],
+            soloTrackIds
+        );
 
         timeline.tracks.forEach(trackRef => {
             const track = tracks[trackRef.id];
-            if (!track || track.muted) return;
+            if (!track || !audibleTrackIds.has(track.id)) return;
 
             track.clips.forEach(clipRef => {
                 const clip = clips[clipRef.id];

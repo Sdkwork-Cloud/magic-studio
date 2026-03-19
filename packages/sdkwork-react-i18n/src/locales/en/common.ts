@@ -36,6 +36,12 @@ export const common = {
         email: "Email",
         license: "License",
         version: "Version"
+    },
+    modelSelector: {
+        selectModel: "Select Model",
+        channel: "Channel",
+        version: "Version",
+        noModelsAvailable: "No models available"
     }
 };
 
@@ -48,7 +54,7 @@ export const sidebar = {
     portal: "AI Portal",
     chat: "Chat",
     browser: "Browser",
-    
+
     group_creative: "Creative Studio",
     group_ecosystem: "Ecosystem",
 
@@ -79,7 +85,6 @@ export const sidebar = {
     voice_workspace: "Voice Workspace",
     audio_workspace: "Speech Synthesis",
 
-    // Portal Sidebar
     home: "Home",
     discover: "Discover",
     quick_short: "AI Short Drama",
@@ -100,13 +105,13 @@ export const sidebar = {
 
 export const download = {
     title: "Download Magic Studio",
-    subtitle: "Choose the version for your device and start your AI creation journey",
+    subtitle: "Choose the best version for your device and start creating with AI right away.",
     pc_title: "Desktop Download",
-    pc_subtitle: "Full features, best experience",
+    pc_subtitle: "Full features, best performance",
     mobile_title: "Mobile Download",
-    mobile_subtitle: "Create anytime, anywhere",
+    mobile_subtitle: "Create anywhere, anytime",
     web_title: "Web Version",
-    web_desc: "No installation needed, use all features in your browser",
+    web_desc: "No installation required. Open the browser version and start instantly.",
     recommended: "Recommended",
     requirements: "System Requirements",
     download_now: "Download Now",
@@ -114,10 +119,53 @@ export const download = {
     visit: "Visit",
     coming_soon: "Coming Soon",
     open_web: "Open Web Version",
-    version_note: "All versions support cloud sync and data sharing",
+    version_note: "All versions support cloud sync and shared project data.",
     support: "Need help?",
     contact_support: "Contact Support",
-    view_changelog: "View Changelog"
+    view_changelog: "View Changelog",
+    features: {
+        ai_generation: "AI image and video generation",
+        multi_platform_sync: "Cross-platform cloud sync",
+        local_project_sync: "Project and history continuity",
+        offline_installer: "Offline desktop installer",
+        browser_access: "Browser access with no setup",
+        updates: "Continuous feature updates"
+    },
+    desktop: {
+        windows: {
+            title: "Windows",
+            description: "Best for Windows 10/11 64-bit devices.",
+            requirements: "Windows 10 or later"
+        },
+        macos: {
+            title: "macOS",
+            description: "Optimized for Apple Silicon and modern macOS releases.",
+            requirements: "macOS 12.0 or later"
+        },
+        linux: {
+            title: "Linux",
+            description: "AppImage package for Ubuntu, Debian, and compatible distributions.",
+            requirements: "Ubuntu 20.04+ / Debian 11+"
+        }
+    },
+    mobile: {
+        ios: {
+            title: "iOS App",
+            description: "Available on iPhone and iPad."
+        },
+        android: {
+            title: "Android App",
+            description: "Direct APK for Android 8.0 and above."
+        },
+        h5: {
+            title: "Mobile Web",
+            description: "Open on mobile browsers without installation."
+        },
+        miniprogram: {
+            title: "Mini Program",
+            description: "Quick access through WeChat ecosystem."
+        }
+    }
 };
 
 export const header = {
@@ -161,10 +209,11 @@ export const styleSelector = {
     copied: "Copied",
     copy: "Copy",
     noTranslation: "No translation available",
-    sceneConcept: "SCENE CONCEPT",
+    sceneConcept: "Scene Concept",
     noScenePreview: "No Scene Preview",
-    avatar: "AVATAR",
+    avatar: "Avatar",
     noPortrait: "No Portrait",
-    characterSheet: "CHARACTER SHEET",
-    noSheetData: "No Sheet Data"
+    characterSheet: "Character Sheet",
+    noSheetData: "No Sheet Data",
+    selectStyle: "Select Style"
 };

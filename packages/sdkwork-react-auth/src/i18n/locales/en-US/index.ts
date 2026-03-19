@@ -68,7 +68,7 @@ export const authEnUS: I18nNamespaceResource = {
         scan_wechat: 'Scan with phone',
         scan_tip: 'Open the mobile app and scan the QR code',
         refresh_qr: 'Refresh QR Code',
-        brand_name: 'Open Studio',
+        brand_name: 'MagicStudio',
         scan_title: 'Scan with phone, sign in instantly',
         scan_description: 'Open the mobile app and scan the QR code to log in without typing credentials.',
         mobile_first: 'Mobile First',

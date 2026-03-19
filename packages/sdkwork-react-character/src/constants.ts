@@ -1,7 +1,7 @@
 
 import { CharacterArchetype, CharacterGender } from './entities';
 
-export const STORAGE_KEY_CHARACTER_HISTORY = 'open_studio_character_history_v1';
+export const STORAGE_KEY_CHARACTER_HISTORY = 'magic_studio_character_history_v1';
 
 export const CHARACTER_MODELS = [
     { id: 'gemini-3-flash-image', name: 'Gemini Avatar', badge: 'FAST', color: 'text-green-400', desc: 'Fast character concepts' },

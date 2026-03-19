@@ -1,9 +1,17 @@
-import { Zap, Palette, Video, Music, Wand2, Sparkles, Box } from 'lucide-react';
+import { Zap, Palette, Video, Music, Wand2, Sparkles, Box, Mic } from 'lucide-react';
+
+export type PluginBadgeId =
+  | 'hot'
+  | 'official'
+  | 'featured'
+  | 'practical'
+  | 'asset'
+  | 'ai';
 
 export interface Plugin {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   icon: any;
   category: string;
   version: string;
@@ -12,32 +20,32 @@ export interface Plugin {
   author: string;
   verified: boolean;
   installed: boolean;
-  price: string;
-  badges: string[];
+  priceCny?: number;
+  badges: PluginBadgeId[];
   updateAvailable: boolean;
 }
 
 export interface PluginCategory {
   id: string;
-  label: string;
+  labelKey: string;
   icon: any;
 }
 
 export const PLUGIN_CATEGORIES: PluginCategory[] = [
-  { id: 'all', label: '全部', icon: Zap },
-  { id: 'trending', label: '热门', icon: Sparkles },
-  { id: 'ai', label: 'AI 工具', icon: Wand2 },
-  { id: 'effects', label: '特效', icon: Video },
-  { id: 'productivity', label: '效率', icon: Zap },
-  { id: 'assets', label: '素材', icon: Music },
-  { id: 'templates', label: '模板', icon: Box },
+  { id: 'all', labelKey: 'plugins.categories.all', icon: Zap },
+  { id: 'trending', labelKey: 'plugins.categories.trending', icon: Sparkles },
+  { id: 'ai', labelKey: 'plugins.categories.ai', icon: Wand2 },
+  { id: 'effects', labelKey: 'plugins.categories.effects', icon: Video },
+  { id: 'productivity', labelKey: 'plugins.categories.productivity', icon: Zap },
+  { id: 'assets', labelKey: 'plugins.categories.assets', icon: Music },
+  { id: 'templates', labelKey: 'plugins.categories.templates', icon: Box },
 ];
 
 export const DEFAULT_PLUGINS: Plugin[] = [
   {
-    id: 'p1',
-    name: '批量处理助手',
-    description: '一键批量处理多个媒体文件，提升工作效率',
+    id: 'batch_assistant',
+    nameKey: 'plugins.items.batch_assistant.name',
+    descriptionKey: 'plugins.items.batch_assistant.description',
     icon: Zap,
     category: 'productivity',
     version: '2.1.0',
@@ -46,14 +54,13 @@ export const DEFAULT_PLUGINS: Plugin[] = [
     author: 'AI Studio',
     verified: true,
     installed: true,
-    price: '免费',
-    badges: ['热门', '官方'],
-    updateAvailable: true
+    badges: ['hot', 'official'],
+    updateAvailable: true,
   },
   {
-    id: 'p2',
-    name: '高级滤镜',
-    description: '50+ 专业级滤镜效果，让作品更具艺术感',
+    id: 'premium_filters',
+    nameKey: 'plugins.items.premium_filters.name',
+    descriptionKey: 'plugins.items.premium_filters.description',
     icon: Palette,
     category: 'effects',
     version: '1.5.2',
@@ -62,14 +69,14 @@ export const DEFAULT_PLUGINS: Plugin[] = [
     author: 'FilterMaster',
     verified: true,
     installed: false,
-    price: '¥29',
-    badges: ['精选'],
-    updateAvailable: false
+    priceCny: 29,
+    badges: ['featured'],
+    updateAvailable: false,
   },
   {
-    id: 'p3',
-    name: '视频转场特效',
-    description: '丰富的视频转场动画效果库',
+    id: 'transition_fx',
+    nameKey: 'plugins.items.transition_fx.name',
+    descriptionKey: 'plugins.items.transition_fx.description',
     icon: Video,
     category: 'effects',
     version: '3.0.1',
@@ -78,14 +85,13 @@ export const DEFAULT_PLUGINS: Plugin[] = [
     author: 'VideoFX',
     verified: true,
     installed: true,
-    price: '免费',
-    badges: ['实用'],
-    updateAvailable: false
+    badges: ['practical'],
+    updateAvailable: false,
   },
   {
-    id: 'p4',
-    name: 'AI 智能抠图',
-    description: '一键精准抠图，支持复杂边缘处理',
+    id: 'smart_cutout',
+    nameKey: 'plugins.items.smart_cutout.name',
+    descriptionKey: 'plugins.items.smart_cutout.description',
     icon: Wand2,
     category: 'ai',
     version: '1.8.0',
@@ -94,8 +100,39 @@ export const DEFAULT_PLUGINS: Plugin[] = [
     author: 'AI Tools',
     verified: true,
     installed: false,
-    price: '¥19',
-    badges: ['AI', '热门'],
-    updateAvailable: true
+    priceCny: 19,
+    badges: ['ai', 'hot'],
+    updateAvailable: true,
+  },
+  {
+    id: 'sound_pack',
+    nameKey: 'plugins.items.sound_pack.name',
+    descriptionKey: 'plugins.items.sound_pack.description',
+    icon: Music,
+    category: 'assets',
+    version: '2.3.0',
+    downloads: 19600,
+    rating: 4.6,
+    author: 'SoundLab',
+    verified: false,
+    installed: false,
+    priceCny: 39,
+    badges: ['asset'],
+    updateAvailable: false,
+  },
+  {
+    id: 'voice_booster',
+    nameKey: 'plugins.items.voice_booster.name',
+    descriptionKey: 'plugins.items.voice_booster.description',
+    icon: Mic,
+    category: 'ai',
+    version: '1.2.5',
+    downloads: 15800,
+    rating: 4.8,
+    author: 'AudioAI',
+    verified: true,
+    installed: true,
+    badges: ['ai', 'practical'],
+    updateAvailable: false,
   },
 ];

@@ -1,21 +1,25 @@
 
 import React from 'react';
 import { AnyAsset, TextAsset } from '@sdkwork/react-assets';
-import { Type, Plus } from 'lucide-react';
+import { Type, Plus, Heart } from 'lucide-react';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
+import { getResourceCardFrameClass, getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
 
 interface TextResourcePanelProps {
     assets: AnyAsset[];
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
+    viewMode?: ResourcePanelViewMode;
 }
 
 export const TextResourcePanel: React.FC<TextResourcePanelProps> = React.memo(({
     assets,
     onDragStart,
-    onToggleFavorite
+    onToggleFavorite,
+    viewMode = 'grid'
 }) => {
     return (
-        <div className="grid grid-cols-4 gap-2 content-start pb-10 px-2">
+        <div className={getResourcePanelLayoutClass(viewMode)}>
             {(assets as TextAsset[]).map((item) => {
                 const meta = item.metadata || {};
                 
@@ -30,20 +34,32 @@ export const TextResourcePanel: React.FC<TextResourcePanelProps> = React.memo(({
                     lineHeight: 1.1
                 };
                 
-                const category = (item as any).category || 'Text';
-
                 return (
                     <div
                         key={item.id}
                         draggable
                         onDragStart={(e) => onDragStart(e, item)}
                         className={`
-                            group relative aspect-video bg-[#1e1e1e] border border-[#333] hover:border-yellow-500/50 hover:bg-[#252526] 
+                            group relative ${getResourceCardFrameClass(viewMode, 'visual')} bg-[#1e1e1e] border border-[#333] hover:border-yellow-500/50 hover:bg-[#252526]
                             rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all hover:shadow-lg flex flex-col
                             select-none
                         `}
                         title={item.name}
                     >
+                        <div className={`absolute top-1 right-1 z-20 transition-opacity duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite));
+                                }}
+                                className="p-1 text-white/80 hover:text-red-500 hover:scale-110 transition-all"
+                                title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                                <Heart size={12} fill={item.isFavorite ? '#ef4444' : 'none'} className={item.isFavorite ? 'text-red-500' : 'text-white drop-shadow-md'} />
+                            </button>
+                        </div>
+
                         {/* Preview Area */}
                         <div className="flex-1 relative flex items-center justify-center overflow-hidden p-1">
                              <div className="absolute inset-0 opacity-5" 

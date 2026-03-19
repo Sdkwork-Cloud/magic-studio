@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { ModelSelectorProps } from './types';
 import { Popover } from '../Popover';
 
@@ -14,6 +15,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     isOpen: controlledIsOpen,
     onToggle
 }) => {
+    const { t } = useTranslation();
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
     
@@ -74,7 +76,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                             {currentProvider.icon}
                         </div>
                     )}
-                    <span className="truncate">{label || selectedModel?.name || 'Select Model'}</span>
+                    <span className="truncate">{label || selectedModel?.name || t('common.modelSelector.selectModel', 'Select Model')}</span>
                 </div>
                 <ChevronDown size={12} className={`text-gray-500 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -89,7 +91,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                 {/* Left Column: Channels (Providers) */}
                 <div className="w-[160px] flex-none bg-[#121212] border-r border-[#27272a] flex flex-col">
                     <div className="px-3 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#121212] z-10 select-none flex-none">
-                        接入渠道 (Channel)
+                        {t('common.modelSelector.channel', 'Channel')}
                     </div>
                     <div className="p-2 space-y-0.5 overflow-y-auto custom-scrollbar flex-1">
                         {providers.map(provider => (
@@ -114,7 +116,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                 {/* Right Column: Models */}
                 <div className="flex-1 bg-[#18181b] flex flex-col min-w-0">
                     <div className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#18181b] z-10 border-b border-[#27272a] select-none flex-none">
-                        模型版本 (Version)
+                        {t('common.modelSelector.version', 'Version')}
                     </div>
                     <div className="p-2 space-y-1 overflow-y-auto custom-scrollbar flex-1">
                         {activeProvider?.models.map(model => {
@@ -156,7 +158,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                         })}
                         {!activeProvider && (
                             <div className="p-4 text-center text-xs text-gray-500 italic">
-                                No models available
+                                {t('common.modelSelector.noModelsAvailable', 'No models available')}
                             </div>
                         )}
                     </div>

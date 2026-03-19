@@ -1,55 +1,52 @@
 export const vip = {
     title: "Subscription Plans",
     subtitle: "Choose the plan that fits your needs and unlock more AI capabilities",
-    current_plan: "Current Plan",
-    save: "Save",
-    points_per_month: "points/month",
-    points_desc: "Generate approx. {images} images or {videos} videos",
-    points_detail: "Points Details",
-    show_more: "Show {count} more",
-    show_less: "Show less",
-    
-    billing: {
-        yearly: "Yearly",
-        quarterly: "Quarterly",
-        monthly: "Monthly",
-    },
-    
-    period: {
-        year: "year",
-        quarter: "quarter",
-        month: "month",
-    },
-    
-    badge: {
-        limited: "Limited Time",
-        best_value: "Best Value",
-        popular: "Popular",
-    },
-    
-    faq: {
-        title: "Frequently Asked Questions",
-        q1: "Can I cancel my subscription anytime?",
-        a1: "Yes, you can cancel your subscription at any time in your account settings. You'll continue to have access to paid features until the end of your current billing period.",
-        q2: "Do points expire?",
-        a2: "Monthly points reset at the end of each month and do not roll over. We recommend planning your usage accordingly.",
-        q3: "How do I upgrade or downgrade my plan?",
-        a3: "You can upgrade your plan at any time, and the new plan takes effect immediately. Downgrades will take effect at the end of your current billing period.",
-    },
-    
-    trust: {
-        secure: "Secure Payment",
-        cancel: "Cancel Anytime",
-        refund: "7-Day Money Back",
-    },
-    
     modal: {
-        offer_title: "Upgrade to",
-        offer_subtitle: "Pro",
-        desc: "Unlock the full potential of Magic Studio with our premium plans.",
-        badge_save: "Save {percent}%",
-        points_monthly: "{points} AI points per month",
-        auto_refill: "Auto-refill monthly",
-        free_limits: "Standard limits apply"
-    }
+        title: "Membership Plans",
+        subtitle: "Choose the plan that fits your current workload",
+        desc: "Unlock faster generation, more credits, and premium model access.",
+        tabs: {
+            yearly: "Yearly",
+            monthly: "Monthly",
+            single: "One-time",
+        },
+        discounts: {
+            yearly: "Save 50%",
+            monthly: "Save 20%",
+        },
+        badges: {
+            basic: "Trial Offer",
+            standard: "Popular",
+            premium: "Best Value",
+        },
+        current_plan: "Current Plan",
+        free_forever: "Free forever",
+        choose_plan: "Choose Plan",
+        subscribe_yearly: "Subscribe Yearly",
+        subscribe_monthly: "Subscribe Monthly",
+        buy_once: "Buy Once",
+        points_included: "+{points} points included",
+        estimated_usage: "Approx. {images} images or {videos} videos",
+        monthly_label: "per month",
+        yearly_label: "per year",
+        onetime_label: "one-time",
+        close: "Close",
+        narrator: "Narrator",
+    },
+    payment: {
+        title: "Secure VIP Purchase",
+        plan: "Plan",
+        payment_method: "Payment Method",
+        wechat: "WeChat Pay",
+        alipay: "Alipay",
+        hint: "This action uses the latest SDK and directly calls the backend VIP purchase API. No mock payment data is used.",
+        idle: "Confirm to submit VIP purchase via SDK.",
+        submitting: "Submitting order with {method}...",
+        success: "Purchase successful. VIP status has been refreshed.",
+        failed: "Purchase failed. Please retry.",
+        close: "Close",
+        confirm: "Confirm Purchase",
+        processing: "Processing...",
+        purchased: "Purchased",
+    },
 };

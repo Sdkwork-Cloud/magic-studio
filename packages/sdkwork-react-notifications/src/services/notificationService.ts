@@ -22,7 +22,8 @@ const Result = {
 };
 
 const SUCCESS_CODE = '2000';
-const NOTIFICATION_STORAGE_KEY = 'open_studio_notifications_v1';
+const NOTIFICATION_STORAGE_KEY = 'magic_studio_notifications_v1';
+const LEGACY_NOTIFICATION_STORAGE_KEYS = ['open_studio_notifications_v1'] as const;
 const MAX_CACHE_SIZE = 50;
 
 function generateUUID(): string {
@@ -220,15 +221,38 @@ class NotificationService {
       return;
     }
     try {
-      const data = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
-      const parsed = data ? JSON.parse(data) : [];
-      if (!Array.isArray(parsed)) {
-        this.cache = [];
+      const storageKeys = [
+        NOTIFICATION_STORAGE_KEY,
+        ...LEGACY_NOTIFICATION_STORAGE_KEYS,
+      ];
+
+      for (const key of storageKeys) {
+        const data = localStorage.getItem(key);
+        if (!data) {
+          continue;
+        }
+
+        const parsed = JSON.parse(data);
+        if (!Array.isArray(parsed)) {
+          continue;
+        }
+
+        this.cache = parsed
+          .map((item) => normalizeNotification(item))
+          .filter((item): item is AppNotification => item !== null);
+
+        if (key !== NOTIFICATION_STORAGE_KEY) {
+          try {
+            localStorage.setItem(NOTIFICATION_STORAGE_KEY, data);
+            localStorage.removeItem(key);
+          } catch {
+            // Keep using the recovered snapshot even if one migration attempt fails.
+          }
+        }
         return;
       }
-      this.cache = parsed
-        .map((item) => normalizeNotification(item))
-        .filter((item): item is AppNotification => item !== null);
+
+      this.cache = [];
     } catch {
       this.cache = [];
     }

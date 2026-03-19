@@ -68,7 +68,7 @@ export const authZhCN: I18nNamespaceResource = {
         scan_wechat: '手机扫码登录',
         scan_tip: '打开手机应用扫码即可登录',
         refresh_qr: '刷新二维码',
-        brand_name: 'Open Studio',
+        brand_name: 'MagicStudio',
         scan_title: '手机一扫，立即登录',
         scan_description: '打开手机客户端扫码，无需输入账号密码即可登录。',
         mobile_first: '移动优先',

@@ -2,6 +2,7 @@
 import React from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
 import { SkimmableAssetCard } from '../SkimmableAssetCard';
+import { getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
 
 interface ImageResourcePanelProps {
     assets: AnyAsset[];
@@ -11,6 +12,7 @@ interface ImageResourcePanelProps {
     onDoubleClick: (item: AnyAsset) => void;
     onHover?: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
+    viewMode?: ResourcePanelViewMode;
 }
 
 export const ImageResourcePanel: React.FC<ImageResourcePanelProps> = React.memo(({
@@ -20,14 +22,16 @@ export const ImageResourcePanel: React.FC<ImageResourcePanelProps> = React.memo(
     onToggleFavorite,
     onDoubleClick,
     onHover,
-    onDelete
+    onDelete,
+    viewMode = 'grid'
 }) => {
     return (
-        <div className="grid grid-cols-4 gap-2 content-start pb-10 px-2">
+        <div className={getResourcePanelLayoutClass(viewMode)}>
             {assets.map((item) => (
                 <SkimmableAssetCard 
                     key={item.id}
                     item={item}
+                    viewMode={viewMode}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDoubleClick={onDoubleClick}

@@ -1,9 +1,15 @@
 import { VideoTask } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
+import { STORAGE_KEY_VIDEO_HISTORY } from '../constants';
+
+const LEGACY_STORAGE_KEYS_VIDEO_HISTORY = [
+    'video_history',
+    'open_studio_video_history_v1'
+] as const;
 
 // Mock history service for video tasks
 export class VideoHistoryService {
-    private storageKey = 'video_history';
+    private storageKey = STORAGE_KEY_VIDEO_HISTORY;
     private tasks: VideoTask[] = [];
 
     constructor() {
@@ -13,10 +19,30 @@ export class VideoHistoryService {
 
     private loadFromStorage() {
         try {
-            const stored = localStorage.getItem(this.storageKey);
-            if (stored) {
-                this.tasks = JSON.parse(stored);
+            const storageKeys = [this.storageKey, ...LEGACY_STORAGE_KEYS_VIDEO_HISTORY];
+            for (const key of storageKeys) {
+                const stored = localStorage.getItem(key);
+                if (!stored) {
+                    continue;
+                }
+
+                const parsed = JSON.parse(stored);
+                if (!Array.isArray(parsed)) {
+                    continue;
+                }
+
+                this.tasks = parsed;
+                if (key !== this.storageKey) {
+                    try {
+                        localStorage.setItem(this.storageKey, stored);
+                        localStorage.removeItem(key);
+                    } catch {
+                        // Keep using the recovered snapshot even if migration cannot persist yet.
+                    }
+                }
+                return;
             }
+            this.tasks = [];
         } catch (e) {
             console.warn('[VideoHistoryService] Failed to load from storage:', e);
             this.tasks = [];
@@ -89,6 +115,7 @@ export class VideoHistoryService {
     async clear(): Promise<void> {
         this.tasks = [];
         localStorage.removeItem(this.storageKey);
+        LEGACY_STORAGE_KEYS_VIDEO_HISTORY.forEach((key) => localStorage.removeItem(key));
     }
 }
 

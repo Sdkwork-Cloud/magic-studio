@@ -18,7 +18,7 @@ import type { LucideIcon } from 'lucide-react';
 
 export { VIDEO_STYLES };
 
-export const STORAGE_KEY_VIDEO_HISTORY = 'open_studio_video_history_v1';
+export const STORAGE_KEY_VIDEO_HISTORY = 'magic_studio_video_history_v1';
 
 export const VIDEO_PROVIDERS: ModelProvider[] = [
     {

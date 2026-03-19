@@ -27,7 +27,7 @@ export const WechatQrPanel: React.FC = () => {
                 <div className="group relative">
                     <div className="w-48 h-48 bg-white p-2 rounded-2xl shadow-2xl border-4 border-white/5 relative overflow-hidden">
                          <img 
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=OpenStudioLogin" 
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MagicStudioLogin" 
                             className="w-full h-full object-contain" 
                             alt={t('auth.page.wechat_qr_alt')} 
                         />

@@ -10,7 +10,7 @@ import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Mic, Sparkles, Globe } from 'lucide-react';
 
-export const STORAGE_KEY_VOICE_HISTORY = 'open_studio_voice_history_v1';
+export const STORAGE_KEY_VOICE_HISTORY = 'magic_studio_voice_history_v1';
 
 export const VOICE_MODELS: { id: VoiceModelType; name: string; badge?: string }[] = [
     { id: 'gemini-tts', name: 'Gemini TTS', badge: 'FAST' },

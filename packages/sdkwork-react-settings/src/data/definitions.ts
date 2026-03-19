@@ -69,9 +69,9 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     tags: ['locale', 'i18n'],
     options: [
       { labelKey: 'settings.general.language.options.system', value: 'system' },
-      { label: 'English (US)', value: 'en' },
-      { label: '中文 (简体)', value: 'zh-CN' },
-      // { label: '日本语', value: 'ja' },
+      { labelKey: 'settings.general.language.options.enUS', value: 'en' },
+      { labelKey: 'settings.general.language.options.zhCN', value: 'zh-CN' },
+      // { label: 'Japanese', value: 'ja' },
     ]
   },
   {

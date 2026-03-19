@@ -17,10 +17,10 @@ interface AIDrafterModalProps {
 }
 
 const SUPPORTED_LANGUAGES = [
-    { value: 'Chinese (Simplified)', label: '简体中文' },
+    { value: 'Chinese (Simplified)', labelKey: 'notes.ai_drafter.languages.chineseSimplified' },
     { value: 'English', label: 'English' },
-    { value: 'Japanese', label: '日本语' },
-    { value: 'Korean', label: '한국어' },
+    { value: 'Japanese', labelKey: 'notes.ai_drafter.languages.japanese' },
+    { value: 'Korean', labelKey: 'notes.ai_drafter.languages.korean' },
     { value: 'Spanish', label: 'Español' },
     { value: 'French', label: 'Français' },
     { value: 'German', label: 'Deutsch' },
@@ -160,7 +160,9 @@ export const AIDrafterModal: React.FC<AIDrafterModalProps> = ({ initialTopic, on
                                         disabled={isGenerating}
                                     >
                                         {SUPPORTED_LANGUAGES.map(lang => (
-                                            <option key={lang.value} value={lang.value}>{lang.label}</option>
+                                            <option key={lang.value} value={lang.value}>
+                                                {lang.labelKey ? t(lang.labelKey) : lang.label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>

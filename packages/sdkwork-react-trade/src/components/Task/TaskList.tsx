@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, Zap, Briefcase, Clock, DollarSign } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Briefcase, Clock, DollarSign, Filter, Search, Zap } from 'lucide-react';
 import type { AvailableTask, TradePageRequest } from '../../entities';
 import { tradeBusinessService } from '../../services';
 import { TaskCard } from './TaskCard';
-import { cn } from '@sdkwork/react-commons';
+import {
+  Button,
+  Card,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  cn,
+} from '@sdkwork/react-commons';
 
 type TaskDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
 
@@ -11,6 +21,18 @@ interface TaskListProps {
   onTaskAccept?: (task: AvailableTask) => void;
   onTaskViewDetail?: (task: AvailableTask) => void;
   className?: string;
+}
+
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface FilterSelectProps {
+  value: string;
+  options: FilterOption[];
+  placeholder: string;
+  onChange: (value: string) => void;
 }
 
 export const TaskList: React.FC<TaskListProps> = ({
@@ -35,7 +57,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   const [keyword, setKeyword] = useState('');
 
   useEffect(() => {
-    loadTasks();
+    void loadTasks();
   }, [filters]);
 
   const loadTasks = async () => {
@@ -74,174 +96,115 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   const totalPages = Math.ceil(total / pageSize);
 
-  const typeOptions: { value: string; label: string }[] = [
-    { value: '', label: '全部类型' },
-    { value: 'TEXT_TO_VIDEO', label: '文生视频' },
-    { value: 'IMAGE_TO_VIDEO', label: '图生视频' },
-    { value: 'VIDEO_EXTEND', label: '视频扩展' },
-    { value: 'VIDEO_RESTORE', label: '视频修复' },
-    { value: 'VIDEO_SUPER_RESOLUTION', label: '视频超分' },
-    { value: 'AVATAR_VIDEO', label: '角色视频' },
-    { value: 'LIP_SYNC', label: '唇型同步' },
+  const typeOptions: FilterOption[] = [
+    { value: '', label: '鍏ㄩ儴绫诲瀷' },
+    { value: 'TEXT_TO_VIDEO', label: '鏂囩敓瑙嗛' },
+    { value: 'IMAGE_TO_VIDEO', label: '鍥剧敓瑙嗛' },
+    { value: 'VIDEO_EXTEND', label: '瑙嗛鎵╁睍' },
+    { value: 'VIDEO_RESTORE', label: '瑙嗛淇' },
+    { value: 'VIDEO_SUPER_RESOLUTION', label: '瑙嗛瓒呭垎' },
+    { value: 'AVATAR_VIDEO', label: '瑙掕壊瑙嗛' },
+    { value: 'LIP_SYNC', label: '鍞囧瀷鍚屾' },
   ];
 
-  const difficultyOptions: { value: TaskDifficulty | ''; label: string }[] = [
-    { value: '', label: '全部难度' },
-    { value: 'EASY', label: '简单' },
-    { value: 'MEDIUM', label: '中等' },
-    { value: 'HARD', label: '困难' },
-    { value: 'EXPERT', label: '专家' },
+  const difficultyOptions: FilterOption[] = [
+    { value: '', label: '鍏ㄩ儴闅惧害' },
+    { value: 'EASY', label: '绠€鍗�' },
+    { value: 'MEDIUM', label: '涓瓑' },
+    { value: 'HARD', label: '鍥伴毦' },
+    { value: 'EXPERT', label: '涓撳' },
+  ];
+
+  const sortOptions: FilterOption[] = [
+    { value: 'latest', label: '鏈€鏂板彂甯�' },
+    { value: 'budget', label: '鏈€楂樻姤閰�' },
+    { value: 'difficulty', label: '鏈€楂橀毦搴�' },
   ];
 
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Search & Filters */}
-      <div className="bg-[#1e1e20] border border-white/10 rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-            />
-            <input
-              type="text"
-              placeholder="搜索任务..."
-              value={keyword}
+      <Card className="border-white/10 bg-[#1e1e20] p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+            <Input
+              className="border-white/10 bg-background pl-10 pr-4 text-white placeholder:text-gray-500"
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-              className="w-full bg-[#2a2a2d] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+              placeholder="鎼滅储浠诲姟..."
+              type="text"
+              value={keyword}
             />
           </div>
 
-          {/* Type Filter */}
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="bg-[#2a2a2d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
-          >
-            {typeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <FilterSelect onChange={setSelectedType} options={typeOptions} placeholder="Type" value={selectedType} />
+          <FilterSelect onChange={(value) => setSelectedDifficulty(value as TaskDifficulty | '')} options={difficultyOptions} placeholder="Difficulty" value={selectedDifficulty} />
+          <FilterSelect onChange={(value) => setSortBy(value as typeof sortBy)} options={sortOptions} placeholder="Sort" value={sortBy} />
 
-          {/* Difficulty Filter */}
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value as TaskDifficulty | '')}
-            className="bg-[#2a2a2d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
-          >
-            {difficultyOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="bg-[#2a2a2d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
-          >
-            <option value="latest">最新发布</option>
-            <option value="budget">最高报酬</option>
-            <option value="difficulty">最高难度</option>
-          </select>
-
-          {/* Apply Button */}
-          <button
-            onClick={handleApplyFilters}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-          >
+          <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-500" onClick={handleApplyFilters} type="button">
             <Filter size={14} />
-            筛选
-          </button>
+            绛涢€�
+          </Button>
         </div>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard bgColor="bg-blue-500/10" color="text-blue-400" icon={Zap} label="鍙帴浠诲姟" value={total.toString()} />
+        <StatCard bgColor="bg-green-500/10" color="text-green-400" icon={DollarSign} label="鎬婚绠�" value="楼12,580" />
+        <StatCard bgColor="bg-purple-500/10" color="text-purple-400" icon={Briefcase} label="宸叉帴浠诲姟" value="24" />
+        <StatCard bgColor="bg-yellow-500/10" color="text-yellow-400" icon={Clock} label="杩涜涓�" value="3" />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard
-          icon={Zap}
-          label="可接任务"
-          value={total.toString()}
-          color="text-blue-400"
-          bgColor="bg-blue-500/10"
-        />
-        <StatCard
-          icon={DollarSign}
-          label="总预算"
-          value="¥12,580"
-          color="text-green-400"
-          bgColor="bg-green-500/10"
-        />
-        <StatCard
-          icon={Briefcase}
-          label="已接任务"
-          value="24"
-          color="text-purple-400"
-          bgColor="bg-purple-500/10"
-        />
-        <StatCard
-          icon={Clock}
-          label="进行中"
-          value="3"
-          color="text-yellow-400"
-          bgColor="bg-yellow-500/10"
-        />
-      </div>
-
-      {/* Task List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-sm text-gray-500">加载中...</div>
+          <div className="text-sm text-gray-500">鍔犺浇涓�..</div>
         </div>
       ) : tasks.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="text-sm text-gray-500 mb-2">暂无可接任务</div>
-            <div className="text-xs text-gray-600">请稍后再来看看新任务</div>
+            <div className="mb-2 text-sm text-gray-500">鏆傛棤鍙帴浠诲姟</div>
+            <div className="text-xs text-gray-600">璇风◢鍚庡啀鏉ョ湅鐪嬫柊浠诲姟</div>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {tasks.map((task) => (
-            <TaskCard
-              key={task.uuid}
-              task={task}
-              onAccept={onTaskAccept}
-              onViewDetail={onTaskViewDetail}
-            />
+            <TaskCard key={task.uuid} onAccept={onTaskAccept} onViewDetail={onTaskViewDetail} task={task} />
           ))}
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 ? (
         <div className="flex items-center justify-center gap-2 pt-4">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
-          >
-            上一页
-          </button>
+          <Button className="border-white/10 bg-[#2a2a2d] text-xs text-gray-400 hover:bg-white/10 hover:text-white" disabled={page === 1} onClick={() => handlePageChange(page - 1)} type="button" variant="outline">
+            涓婁竴椤�
+          </Button>
           <span className="text-xs text-gray-500">
             {page} / {totalPages}
           </span>
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 bg-[#2a2a2d] border border-white/10 rounded-lg text-xs text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white transition-colors"
-          >
-            下一页
-          </button>
+          <Button className="border-white/10 bg-[#2a2a2d] text-xs text-gray-400 hover:bg-white/10 hover:text-white" disabled={page === totalPages} onClick={() => handlePageChange(page + 1)} type="button" variant="outline">
+            涓嬩竴椤�
+          </Button>
         </div>
-      )}
+      ) : null}
     </div>
+  );
+};
+
+const FilterSelect: React.FC<FilterSelectProps> = ({ value, options, placeholder, onChange }) => {
+  return (
+    <Select onValueChange={onChange} value={value}>
+      <SelectTrigger className="w-full min-w-[180px] border-white/10 bg-background text-sm text-white">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="border-white/10 bg-[#1e1e20] text-white">
+        {options.map((option) => (
+          <SelectItem key={option.value || '__empty'} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
 
@@ -260,13 +223,13 @@ const StatCard: React.FC<StatCardProps> = ({
   color,
   bgColor,
 }) => (
-  <div className="bg-[#1e1e20] border border-white/10 rounded-xl p-4">
-    <div className="flex items-center gap-2 mb-2">
-      <div className={cn('p-1.5 rounded-lg', bgColor)}>
-        <Icon size={14} className={color} />
+  <Card className="border-white/10 bg-[#1e1e20] p-4">
+    <div className="mb-2 flex items-center gap-2">
+      <div className={cn('rounded-lg p-1.5', bgColor)}>
+        <Icon className={color} size={14} />
       </div>
       <span className="text-xs text-gray-400">{label}</span>
     </div>
     <div className="text-lg font-bold text-white">{value}</div>
-  </div>
+  </Card>
 );

@@ -1,4 +1,5 @@
 import type { AssetStorageMode } from '@sdkwork/react-types';
+import type { MagicStudioRootOverrides } from '../../../../sdkwork-react-core/src/storage/magicStudioPaths';
 
 export interface AssetFileStat {
   isDirectory: boolean;
@@ -8,6 +9,7 @@ export interface AssetFileStat {
 export interface AssetVfsPort {
   getMode(): AssetStorageMode;
   getLibraryRoot(): Promise<string>;
+  getMagicStudioStorageConfig(): Promise<MagicStudioRootOverrides>;
   ensureDir(path: string): Promise<void>;
   exists(path: string): Promise<boolean>;
   list(path: string): Promise<string[]>;

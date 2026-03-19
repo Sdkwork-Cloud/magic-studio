@@ -1,4 +1,5 @@
 import { FileStat } from '@sdkwork/react-types';
+import { pathUtils } from '@sdkwork/react-commons';
 import { IFileSystemProvider } from '../types';
 import {
   runtimePlatformService,
@@ -46,6 +47,14 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
     return runtimePlatformService.getPlatformApi();
   }
 
+  private async ensureParentDirectory(path: string): Promise<void> {
+    const parentDir = pathUtils.dirname(path);
+    if (!parentDir || parentDir === '.' || parentDir === path) {
+      return;
+    }
+    await this.mkdir(parentDir);
+  }
+
   async readdir(path: string): Promise<string[]> {
     if (typeof this.platform.readdir === 'function') {
       const entries = await this.platform.readdir(path);
@@ -63,6 +72,7 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
   }
 
   async writeFile(path: string, content: string): Promise<void> {
+    await this.ensureParentDirectory(path);
     return this.platform.writeFile(path, content);
   }
 
@@ -71,6 +81,7 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
   }
 
   async writeFileBinary(path: string, content: Uint8Array): Promise<void> {
+    await this.ensureParentDirectory(path);
     return this.platform.writeFileBinary(path, content);
   }
 
@@ -79,6 +90,7 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
   }
 
   async writeFileBlob(path: string, content: Blob): Promise<void> {
+    await this.ensureParentDirectory(path);
     return this.platform.writeFileBlob(path, content);
   }
 
@@ -98,12 +110,12 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
   }
 
   async mkdir(path: string): Promise<void> {
-    if (typeof this.platform.mkdir === 'function') {
-      await this.platform.mkdir(path);
-      return;
-    }
     if (typeof this.platform.createDir === 'function') {
       await this.platform.createDir(path);
+      return;
+    }
+    if (typeof this.platform.mkdir === 'function') {
+      await this.platform.mkdir(path);
     }
   }
 
@@ -180,6 +192,7 @@ export class LocalFileSystemProvider implements IFileSystemProvider {
   }
 
   async copyFile(sourcePath: string, destPath: string): Promise<void> {
+    await this.ensureParentDirectory(destPath);
     return this.platform.copyFile(sourcePath, destPath);
   }
 }

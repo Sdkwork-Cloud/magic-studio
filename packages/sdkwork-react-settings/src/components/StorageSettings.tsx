@@ -1,5 +1,5 @@
 
-import { StorageConfig, StorageProviderType } from '../entities'
+import { StorageConfig, StorageProviderType, MaterialStorageConfig } from '../entities'
 import { Button } from '@sdkwork/react-commons'
 import { storageManager, S3Provider, ServerProvider } from '@sdkwork/react-core'
 import React, { useState } from 'react';
@@ -9,7 +9,8 @@ import {
     HardDrive, Plus, Trash2, Edit2, AlertCircle, CheckCircle2, 
     Wifi, Key, Server
 } from 'lucide-react';
-import { SettingsSection, SettingInput, SettingSelect, SettingToggle } from './SettingsWidgets';
+import { DEFAULT_MAGICSTUDIO_ROOT_DIR } from '../constants';
+import { SettingsSection, SettingInput, SettingPathInput, SettingSelect, SettingToggle } from './SettingsWidgets';
 import { STORAGE_PROVIDERS } from '../data/storageProviders';
 ;
 ;
@@ -24,6 +25,54 @@ const StorageSettings: React.FC = () => {
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
     const storageList = Object.values(settings.storage || {}) as StorageConfig[];
+    const materialStorage = settings.materialStorage;
+
+    type MaterialStorageUpdate = {
+        mode?: MaterialStorageConfig['mode'];
+        desktop?: Partial<MaterialStorageConfig['desktop']>;
+        sync?: Partial<MaterialStorageConfig['sync']>;
+        naming?: Partial<MaterialStorageConfig['naming']>;
+    };
+
+    const updateMaterialStorage = async (updates: MaterialStorageUpdate) => {
+        const nextMaterialStorage: MaterialStorageConfig = {
+            ...materialStorage,
+            ...updates,
+            desktop: {
+                ...materialStorage.desktop,
+                ...updates.desktop
+            },
+            sync: {
+                ...materialStorage.sync,
+                ...updates.sync
+            },
+            naming: {
+                ...materialStorage.naming,
+                ...updates.naming
+            }
+        };
+
+        await updateSettings({
+            ...settings,
+            materialStorage: nextMaterialStorage
+        });
+    };
+
+    const updateMaterialStoragePath = async (
+        key: keyof MaterialStorageConfig['desktop'],
+        value: string
+    ) => {
+        const normalizedValue = value.trim();
+        const desktopUpdate: Partial<MaterialStorageConfig['desktop']> = {
+            [key]:
+                key === 'rootDir'
+                    ? normalizedValue || DEFAULT_MAGICSTUDIO_ROOT_DIR
+                    : normalizedValue || undefined
+        };
+        await updateMaterialStorage({
+            desktop: desktopUpdate
+        });
+    };
 
     const updateStorage = async (id: string, updates: Partial<StorageConfig>) => {
         const newConfig = { ...settings.storage[id], ...updates };
@@ -131,6 +180,119 @@ const StorageSettings: React.FC = () => {
                 >
                     <Plus size={16} /> {t('common.actions.add')}
                 </button>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-blue-200/60 dark:border-blue-900/40 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-[#1e1e1e] p-6 shadow-sm">
+                <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        {t('settings.storage.material.title')}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 max-w-3xl">
+                        {t('settings.storage.material.subtitle')}
+                    </p>
+                </div>
+
+                <SettingsSection title={t('settings.storage.material.mode.label')}>
+                    <SettingSelect
+                        label={t('settings.storage.material.mode.label')}
+                        description={t('settings.storage.material.mode.desc')}
+                        value={materialStorage.mode}
+                        onChange={(value) =>
+                            updateMaterialStorage({
+                                mode: value as MaterialStorageConfig['mode']
+                            })
+                        }
+                        options={[
+                            {
+                                label: t('settings.storage.material.mode.options.localFirstSync'),
+                                value: 'local-first-sync'
+                            },
+                            {
+                                label: t('settings.storage.material.mode.options.localOnly'),
+                                value: 'local-only'
+                            },
+                            {
+                                label: t('settings.storage.material.mode.options.serverOnly'),
+                                value: 'server-only'
+                            }
+                        ]}
+                        fullWidth
+                    />
+                </SettingsSection>
+
+                <SettingsSection title={t('settings.storage.material.desktop.title')}>
+                    <SettingPathInput
+                        label={t('settings.storage.material.desktop.rootDir')}
+                        description={t('settings.storage.material.desktop.rootDirDesc')}
+                        value={materialStorage.desktop.rootDir}
+                        onChange={(value) => updateMaterialStoragePath('rootDir', value)}
+                        type="folder"
+                        placeholder={DEFAULT_MAGICSTUDIO_ROOT_DIR}
+                    />
+                    <SettingPathInput
+                        label={t('settings.storage.material.desktop.workspacesRootDir')}
+                        description={t('settings.storage.material.desktop.workspacesRootDirDesc')}
+                        value={materialStorage.desktop.workspacesRootDir || ''}
+                        onChange={(value) => updateMaterialStoragePath('workspacesRootDir', value)}
+                        type="folder"
+                        placeholder={`${DEFAULT_MAGICSTUDIO_ROOT_DIR}/workspaces`}
+                    />
+                    <SettingPathInput
+                        label={t('settings.storage.material.desktop.cacheRootDir')}
+                        description={t('settings.storage.material.desktop.cacheRootDirDesc')}
+                        value={materialStorage.desktop.cacheRootDir || ''}
+                        onChange={(value) => updateMaterialStoragePath('cacheRootDir', value)}
+                        type="folder"
+                        placeholder={`${DEFAULT_MAGICSTUDIO_ROOT_DIR}/cache-root`}
+                    />
+                    <SettingPathInput
+                        label={t('settings.storage.material.desktop.exportsRootDir')}
+                        description={t('settings.storage.material.desktop.exportsRootDirDesc')}
+                        value={materialStorage.desktop.exportsRootDir || ''}
+                        onChange={(value) => updateMaterialStoragePath('exportsRootDir', value)}
+                        type="folder"
+                        placeholder={`${DEFAULT_MAGICSTUDIO_ROOT_DIR}/exports-root`}
+                    />
+                </SettingsSection>
+
+                <SettingsSection title={t('settings.storage.material.behavior.title')}>
+                    <SettingToggle
+                        label={t('settings.storage.material.behavior.syncEnabled')}
+                        description={t('settings.storage.material.behavior.syncEnabledDesc')}
+                        checked={materialStorage.sync.enabled}
+                        onChange={(checked) =>
+                            updateMaterialStorage({
+                                sync: {
+                                    enabled: checked
+                                }
+                            })
+                        }
+                    />
+                    <SettingToggle
+                        label={t('settings.storage.material.behavior.autoUploadOnImport')}
+                        description={t('settings.storage.material.behavior.autoUploadOnImportDesc')}
+                        checked={materialStorage.sync.autoUploadOnImport}
+                        onChange={(checked) =>
+                            updateMaterialStorage({
+                                sync: {
+                                    autoUploadOnImport: checked
+                                }
+                            })
+                        }
+                    />
+                    <SettingToggle
+                        label={t('settings.storage.material.behavior.keepOriginalFilename')}
+                        description={t('settings.storage.material.behavior.keepOriginalFilenameDesc')}
+                        checked={materialStorage.naming.keepOriginalFilenameInMetadata}
+                        onChange={(checked) =>
+                            updateMaterialStorage({
+                                naming: {
+                                    keepOriginalFilenameInMetadata: checked
+                                }
+                            })
+                        }
+                    />
+                </SettingsSection>
             </div>
 
             {/* Split Content */}

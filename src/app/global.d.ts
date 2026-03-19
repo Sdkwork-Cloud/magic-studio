@@ -1,25 +1,26 @@
 /**
- * 全局 Platform API 和 Upload Helper 的类型声明
- * 
- * 这些 API 在应用启动时通过 bootstrap.ts 注入到 window 对象
- * 供 sdkwork-react-commons 和 sdkwork-react-fs 包使用
+ * Global type declarations for the Platform API and Upload Helper.
+ *
+ * These APIs are injected onto the `window` object during application startup
+ * through `bootstrap.ts` and are consumed by the `sdkwork-react-commons`
+ * and `sdkwork-react-fs` packages.
  */
 
 /**
- * Platform API 接口定义
+ * Platform API contract.
  */
 interface PlatformAPI {
-  // 窗口管理
+  // Window controls
   minimizeWindow(): void;
   maximizeWindow(): void;
   closeWindow(): void;
-  
-  // 平台信息
+
+  // Platform metadata
   getPlatform(): 'web' | 'desktop';
   getPath(name: string): Promise<string>;
   getSystemTheme(): Promise<'light' | 'dark'>;
-  
-  // 文件系统
+
+  // File system
   readDir(path: string): Promise<any[]>;
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): Promise<void>;
@@ -32,26 +33,26 @@ interface PlatformAPI {
   delete(path: string): Promise<void>;
   rename(oldPath: string, newPath: string): Promise<void>;
   copyFile(sourcePath: string, destPath: string): Promise<void>;
-  
-  // 文件转换
+
+  // File conversion
   convertFileSrc(path: string): string;
-  
-  // 剪贴板
+
+  // Clipboard
   copy(text: string): void;
-  
-  // 对话框
+
+  // Dialogs
   confirm(message: string, title?: string, type?: string): Promise<boolean>;
-  
-  // 通知
+
+  // Notifications
   notify(message: string, title?: string): Promise<void>;
-  
-  // 更新
+
+  // Updates
   checkForUpdates(): Promise<any>;
   installUpdate(): Promise<void>;
 }
 
 /**
- * Upload Helper 接口定义
+ * Upload Helper contract.
  */
 interface UploadHelper {
   pickFiles(multiple: boolean, accept: string, compress: boolean): Promise<any[]>;
@@ -60,18 +61,18 @@ interface UploadHelper {
 declare global {
   interface Window {
     /**
-     * 全局 Platform API 实例
-     * 由 sdkwork-react-core 提供，在 bootstrap.ts 中注入
+     * Global Platform API instance provided by `sdkwork-react-core`
+     * and injected in `bootstrap.ts`.
      */
     __sdkworkPlatform: PlatformAPI;
-    
+
     /**
-     * 全局 Upload Helper 实例
-     * 由 sdkwork-react-core 提供，在 bootstrap.ts 中注入
+     * Global Upload Helper instance provided by `sdkwork-react-core`
+     * and injected in `bootstrap.ts`.
      */
     __sdkworkUploadHelper: UploadHelper;
   }
 }
 
-// 导出类型以便其他文件使用
+// Export types for reuse in other files.
 export type { PlatformAPI, UploadHelper };

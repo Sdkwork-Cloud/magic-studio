@@ -23,7 +23,7 @@ const resolveFormatterLocale = (locale?: LocaleInput) => (
   locale ? normalizeLocale(locale) : i18nService.locale
 );
 
-const resolveDate = (value: DateValue, fallback: string): Date | null => {
+const resolveDate = (value: DateValue): Date | null => {
   const parsed = value instanceof Date ? value : new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
@@ -56,7 +56,7 @@ export function formatCurrency(
 
 export function formatDate(value: DateValue, options: DateFormatterOptions = {}): string {
   const { locale, fallback = INVALID_DATE_FALLBACK, ...intlOptions } = options;
-  const parsed = resolveDate(value, fallback);
+  const parsed = resolveDate(value);
   if (!parsed) {
     return fallback;
   }
@@ -71,7 +71,7 @@ export function formatDate(value: DateValue, options: DateFormatterOptions = {})
 
 export function formatTime(value: DateValue, options: DateFormatterOptions = {}): string {
   const { locale, fallback = INVALID_DATE_FALLBACK, ...intlOptions } = options;
-  const parsed = resolveDate(value, fallback);
+  const parsed = resolveDate(value);
   if (!parsed) {
     return fallback;
   }
@@ -85,7 +85,7 @@ export function formatTime(value: DateValue, options: DateFormatterOptions = {})
 
 export function formatDateTime(value: DateValue, options: DateFormatterOptions = {}): string {
   const { locale, fallback = INVALID_DATE_FALLBACK, ...intlOptions } = options;
-  const parsed = resolveDate(value, fallback);
+  const parsed = resolveDate(value);
   if (!parsed) {
     return fallback;
   }
@@ -107,8 +107,8 @@ export function formatRelativeTime(value: DateValue, options: RelativeTimeFormat
     now = Date.now(),
     numeric = 'auto',
   } = options;
-  const parsed = resolveDate(value, fallback);
-  const nowDate = resolveDate(now, fallback);
+  const parsed = resolveDate(value);
+  const nowDate = resolveDate(now);
 
   if (!parsed || !nowDate) {
     return fallback;

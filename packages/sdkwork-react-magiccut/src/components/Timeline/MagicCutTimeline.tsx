@@ -14,7 +14,7 @@ import { TimelineTabBar } from './TimelineTabBar';
 import { TimelineMinimap } from './TimelineMinimap';
 import { useTimeline } from './hooks/useTimeline';
 import { MagicCutTrackHeader } from './MagicCutTrackHeader';
-import { Plus, Video, Mic, Type } from 'lucide-react';
+import { Plus, Video, Mic, Type, Captions } from 'lucide-react';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
 import { MagicCutErrorBoundary } from '../ErrorBoundary/MagicCutErrorBoundary';
@@ -246,6 +246,7 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                     <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video" />
                                     <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio" />
                                     <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text" />
+                                    <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label="Subtitle" />
                                 </div>
                             )}
                         </div>
@@ -316,6 +317,7 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                             <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video Track" />
                                             <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio Track" />
                                             <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text Track" />
+                                            <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label="Subtitle Track" />
                                         </div>
                                     )}
                                 </div>

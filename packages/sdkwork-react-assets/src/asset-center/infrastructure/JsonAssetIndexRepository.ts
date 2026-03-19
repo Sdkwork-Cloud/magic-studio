@@ -11,27 +11,31 @@ import type { AssetIndexPort } from '../ports/AssetIndexPort';
 import type { AssetVfsPort } from '../ports/AssetVfsPort';
 import { createSpringPage } from '../../services/impl/springPage';
 
-const INDEX_RELATIVE_PATH = 'asset-center/index.json';
+const INDEX_RELATIVE_PATH = 'system/indexes/assets-index.json';
 type SortOrder = { field: string; direction: 'asc' | 'desc' };
 const DEFAULT_SORT_ORDERS: SortOrder[] = [{ field: 'updatedAt', direction: 'desc' }];
 
 export class JsonAssetIndexRepository implements AssetIndexPort {
   private initialized = false;
+  private activeIndexPath: string | null = null;
   private cache = new Map<string, UnifiedDigitalAsset>();
 
   constructor(private readonly vfsPort: AssetVfsPort) {}
 
   async initialize(): Promise<void> {
-    if (this.initialized) {
+    const indexPath = await this.getIndexPath();
+    if (this.initialized && this.activeIndexPath === indexPath) {
       return;
     }
-    const indexPath = await this.getIndexPath();
+
+    this.cache.clear();
     const indexDir = pathUtils.dirname(indexPath);
     await this.vfsPort.ensureDir(indexDir);
 
     const exists = await this.vfsPort.exists(indexPath);
     if (!exists) {
       await this.vfsPort.writeText(indexPath, JSON.stringify([], null, 2));
+      this.activeIndexPath = indexPath;
       this.initialized = true;
       return;
     }
@@ -43,6 +47,7 @@ export class JsonAssetIndexRepository implements AssetIndexPort {
     } catch {
       await this.vfsPort.writeText(indexPath, JSON.stringify([], null, 2));
     }
+    this.activeIndexPath = indexPath;
     this.initialized = true;
   }
 
@@ -284,12 +289,15 @@ export class JsonAssetIndexRepository implements AssetIndexPort {
   }
 
   private async getIndexPath(): Promise<string> {
-    const root = await this.vfsPort.getLibraryRoot();
-    return pathUtils.join(root, INDEX_RELATIVE_PATH);
+    const storageConfig = await this.vfsPort.getMagicStudioStorageConfig();
+    return pathUtils.join(storageConfig.rootDir, INDEX_RELATIVE_PATH);
   }
 
   private async flush(): Promise<void> {
-    const indexPath = await this.getIndexPath();
+    await this.initialize();
+    const indexPath = this.activeIndexPath || await this.getIndexPath();
+    const indexDir = pathUtils.dirname(indexPath);
+    await this.vfsPort.ensureDir(indexDir);
     const records = Array.from(this.cache.values());
     await this.vfsPort.writeText(indexPath, JSON.stringify(records, null, 2));
   }

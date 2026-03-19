@@ -11,6 +11,7 @@ export class PlayerPreviewCoordinator {
     private playerRef: React.RefObject<UniversalPlayerHandle | null> | null = null;
     private pendingVisualPreview: { resource: AnyMediaResource; time: number } | null = null;
     private lastTimelineTime = 0;
+    private activePreviewResourceId: string | null = null;
 
     constructor(private readonly audioPreviewController: AudioPreviewController) {}
 
@@ -28,6 +29,8 @@ export class PlayerPreviewCoordinator {
     }
 
     previewResource(resource: AnyMediaResource, time: number) {
+        this.activePreviewResourceId = resource.id;
+
         if (this.isAudioOnly(resource)) {
             this.pendingVisualPreview = null;
             this.playerRef?.current?.setPreviewResource(null);
@@ -48,6 +51,7 @@ export class PlayerPreviewCoordinator {
 
     clearPreview() {
         this.pendingVisualPreview = null;
+        this.activePreviewResourceId = null;
         this.audioPreviewController.stop();
 
         if (this.playerRef?.current) {
@@ -58,6 +62,7 @@ export class PlayerPreviewCoordinator {
 
     renderTime(time: number) {
         this.lastTimelineTime = time;
+        this.activePreviewResourceId = null;
         this.audioPreviewController.stop();
 
         if (this.playerRef?.current) {
@@ -68,6 +73,19 @@ export class PlayerPreviewCoordinator {
 
     syncTimelineTime(time: number) {
         this.lastTimelineTime = time;
+    }
+
+    isPreviewingResource(resourceId: string): boolean {
+        return this.activePreviewResourceId === resourceId;
+    }
+
+    clearPreviewForResource(resourceId: string): boolean {
+        if (!this.isPreviewingResource(resourceId)) {
+            return false;
+        }
+
+        this.clearPreview();
+        return true;
     }
 
     private isAudioOnly(resource: AnyMediaResource): boolean {

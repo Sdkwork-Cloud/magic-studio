@@ -6,11 +6,12 @@ import { Presentation, Slide } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { ServiceResult, Result } from '@sdkwork/react-commons';
 
-const STORAGE_KEY_PPT = 'open_studio_ppt_v1';
+const STORAGE_KEY_PPT = 'magic_studio_ppt_v1';
+const LEGACY_STORAGE_KEYS_PPT = ['open_studio_ppt_v1'] as const;
 
 class ChatPPTService extends LocalStorageService<Presentation> {
     constructor() {
-        super(STORAGE_KEY_PPT);
+        super(STORAGE_KEY_PPT, LEGACY_STORAGE_KEYS_PPT);
     }
 
     async createPresentation(title: string): Promise<ServiceResult<Presentation>> {

@@ -16,13 +16,48 @@ export class LocalStorageService<T extends BaseEntity> implements IBaseService<T
         return getPlatformRuntime();
     }
 
-    constructor(protected storageKey: string) {}
+    constructor(
+        protected storageKey: string,
+        protected legacyStorageKeys: readonly string[] = []
+    ) {}
+
+    private async loadStoredCache(): Promise<T[]> {
+        const storageKeys = [this.storageKey, ...this.legacyStorageKeys];
+
+        for (const key of storageKeys) {
+            try {
+                const raw = await this.runtime.storage.get(key);
+                if (!raw) {
+                    continue;
+                }
+
+                const parsed = JSON.parse(raw);
+                if (!Array.isArray(parsed)) {
+                    continue;
+                }
+
+                if (key !== this.storageKey) {
+                    try {
+                        await this.runtime.storage.set(this.storageKey, raw);
+                        await this.runtime.storage.remove(key);
+                    } catch {
+                        // Best-effort migration: keep using legacy data even if one write fails.
+                    }
+                }
+
+                return parsed as T[];
+            } catch {
+                // Ignore malformed snapshots and fall through to the next storage source.
+            }
+        }
+
+        return [];
+    }
 
     protected async ensureInitialized(): Promise<void> {
         if (this.cache !== null) return;
         try {
-            const data = await this.runtime.storage.get(this.storageKey);
-            this.cache = data ? JSON.parse(data) : [];
+            this.cache = await this.loadStoredCache();
         } catch (e) {
             console.error(`[LocalStorageService] Failed to load ${this.storageKey}`, e);
             this.cache = [];

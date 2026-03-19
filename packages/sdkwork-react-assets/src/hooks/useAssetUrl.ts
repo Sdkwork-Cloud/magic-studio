@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnyMediaResource } from '@sdkwork/react-commons';
+import { resolveAssetUrlByAssetIdFirst } from '../asset-center/application/assetUrlResolver';
 
 export interface Asset {
   id: string;
@@ -14,6 +15,70 @@ export interface UseAssetUrlOptions {
   /** Custom resolver function to convert asset source to URL */
   resolver?: (source: AssetSource) => Promise<string | null>;
 }
+
+const INTERNAL_ASSET_PROTOCOL = 'assets://';
+
+const isRenderableAssetUrl = (value: string): boolean => {
+    const isInternal = value.startsWith(INTERNAL_ASSET_PROTOCOL);
+
+    return (
+        value.startsWith('http:') ||
+        value.startsWith('https:') ||
+        value.startsWith('data:') ||
+        value.startsWith('blob:') ||
+        (value.startsWith('asset:') && !isInternal) ||
+        value.startsWith('file://')
+    );
+};
+
+const sanitizeResolvedAssetUrl = (value: string | null | undefined): string | null => {
+    if (!value) {
+        return null;
+    }
+    return value.startsWith(INTERNAL_ASSET_PROTOCOL) ? null : value;
+};
+
+export const resolveAssetSourceUrl = async (
+    source: AssetSource,
+    resolver?: (source: AssetSource) => Promise<string | null>
+): Promise<string | null> => {
+    if (!source) {
+        return null;
+    }
+
+    if (typeof source === 'string' && isRenderableAssetUrl(source)) {
+        return source;
+    }
+
+    const candidateResolvers = [
+        resolver,
+        resolver === resolveAssetUrlByAssetIdFirst ? undefined : resolveAssetUrlByAssetIdFirst
+    ].filter((candidate): candidate is NonNullable<typeof resolver> => typeof candidate === 'function');
+
+    for (const candidateResolver of candidateResolvers) {
+        try {
+            const resolved = sanitizeResolvedAssetUrl(await candidateResolver(source));
+            if (resolved) {
+                return resolved;
+            }
+        } catch {
+            // Keep local-first URL resolution resilient when a caller-provided resolver fails.
+        }
+    }
+
+    if (typeof source === 'object' && source !== null) {
+        const directValue =
+            ('url' in source && typeof source.url === 'string' && source.url) ||
+            ('path' in source && typeof source.path === 'string' && source.path) ||
+            null;
+
+        if (directValue && isRenderableAssetUrl(directValue)) {
+            return directValue;
+        }
+    }
+
+    return null;
+};
 
 /**
  * Hook to resolve an asset reference (path, object, or resource) to a renderable URL.
@@ -56,50 +121,8 @@ export const useAssetUrl = (source: AssetSource, options?: UseAssetUrlOptions) =
                 setError(null);
             }
 
-            // Quick check for string URLs that don't need resolution
-            if (typeof source === 'string') {
-                // Explicitly check for our internal protocol
-                const isInternal = source.startsWith('assets://');
-                
-                // Allow valid renderable schemes
-                const isRenderable = 
-                    source.startsWith('http:') || 
-                    source.startsWith('https:') || 
-                    source.startsWith('data:') || 
-                    source.startsWith('blob:') ||
-                    (source.startsWith('asset:') && !isInternal); // 'asset:' (singular) is Tauri's protocol
-
-                if (isRenderable) {
-                     if (isMounted) {
-                         setUrl(source);
-                         setLoading(false);
-                     }
-                     return;
-                }
-            }
-
             try {
-                let resolved: string | null = null;
-                
-                // Use custom resolver if provided
-                if (options?.resolver) {
-                    resolved = await options.resolver(source);
-                } else {
-                    // Default behavior: try to extract URL from object
-                    if (typeof source === 'object' && source !== null) {
-                        if ('url' in source && source.url) {
-                            resolved = source.url;
-                        } else if ('path' in source && source.path) {
-                            resolved = source.path;
-                        }
-                    }
-                }
-                
-                // Safety check: Ensure we never return the raw internal protocol as a result
-                if (resolved && resolved.startsWith('assets://')) {
-                    console.warn("[useAssetUrl] Resolved URL is still internal, forcing null:", resolved);
-                    resolved = null; 
-                }
+                const resolved = await resolveAssetSourceUrl(source, options?.resolver);
 
                 if (isMounted) {
                     setUrl(resolved);

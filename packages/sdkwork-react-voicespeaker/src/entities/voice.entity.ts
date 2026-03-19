@@ -1,7 +1,7 @@
 import { BaseEntity } from '@sdkwork/react-commons';
 
 // ============================================================================
-// Voice Speaker - 全局声音角色
+// Voice Speaker - shared voice persona definitions
 // ============================================================================
 
 export type VoiceGender = 'male' | 'female' | 'neutral';
@@ -32,7 +32,7 @@ export interface VoiceSpeaker extends BaseEntity {
 }
 
 // ============================================================================
-// Voice Task - 语音生成任务
+// Voice Task - voice generation job definitions
 // ============================================================================
 
 export interface VoiceTask extends BaseEntity {
@@ -51,7 +51,7 @@ export interface VoiceTask extends BaseEntity {
 }
 
 // ============================================================================
-// Legacy Types (向后兼容)
+// Legacy types kept for backward compatibility
 // ============================================================================
 
 export type VoiceModelType = VoiceProvider;

@@ -2,7 +2,8 @@
 import { CutProject } from '../entities/magicCut.entity'
 import { LocalStorageService } from '@sdkwork/react-core';
 
-const STORAGE_KEY_MAGIC_CUT_PROJECTS = 'open_studio_magic_cut_projects_v1';
+const STORAGE_KEY_MAGIC_CUT_PROJECTS = 'magic_studio_magic_cut_projects_v1';
+const LEGACY_STORAGE_KEYS_MAGIC_CUT_PROJECTS = ['open_studio_magic_cut_projects_v1'] as const;
 
 /**
  * Magic Cut Project Service
@@ -11,7 +12,7 @@ const STORAGE_KEY_MAGIC_CUT_PROJECTS = 'open_studio_magic_cut_projects_v1';
  */
 class MagicCutProjectService extends LocalStorageService<CutProject> {
     constructor() {
-        super(STORAGE_KEY_MAGIC_CUT_PROJECTS);
+        super(STORAGE_KEY_MAGIC_CUT_PROJECTS, LEGACY_STORAGE_KEYS_MAGIC_CUT_PROJECTS);
     }
 }
 

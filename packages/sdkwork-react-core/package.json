@@ -24,9 +24,13 @@
                                        "types":  "./dist/eventBus/index.d.ts"
                                    },
                     "./platform":  {
-                                       "import":  "./dist/platform/index.js",
-                                       "types":  "./dist/platform/index.d.ts"
+                                       "import":  "./src/platform/index.ts",
+                                       "types":  "./src/platform/index.ts"
                                    },
+                    "./storage":  {
+                                      "import":  "./src/storage/index.ts",
+                                      "types":  "./src/storage/index.ts"
+                                  },
                     "./ai":  {
                                  "import":  "./dist/ai/index.js",
                                  "types":  "./dist/ai/index.d.ts"

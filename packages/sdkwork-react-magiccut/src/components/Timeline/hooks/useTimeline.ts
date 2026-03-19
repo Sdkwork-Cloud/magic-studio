@@ -20,7 +20,9 @@ const getTrackHeight = (track: CutTrack) => {
     if (track.trackType === 'video') return TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
     if (track.trackType === 'audio') return TIMELINE_CONSTANTS.TRACK_HEIGHT_AUDIO;
     if (track.trackType === 'text') return TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
+    if (track.trackType === 'subtitle') return TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
     if (track.trackType === 'effect') return TIMELINE_CONSTANTS.TRACK_HEIGHT_EFFECT;
+    if (track.trackType === 'ai') return TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
     return TIMELINE_CONSTANTS.TRACK_HEIGHT_DEFAULT;
 };
 

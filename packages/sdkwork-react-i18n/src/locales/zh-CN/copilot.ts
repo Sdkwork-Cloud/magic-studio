@@ -1,5 +1,5 @@
 export const copilot = {
-    title: "Open Studio Copilot",
+    title: "MagicStudio Copilot",
     new_chat: "新对话",
     modes: {
         agent: { label: "代理", desc: "执行任务和工具" },

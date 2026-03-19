@@ -28,7 +28,9 @@ export const settings = {
             label: "Language",
             desc: "Change the UI language.",
             options: {
-                system: "System Default"
+                system: "System Default",
+                enUS: "English (US)",
+                zhCN: "Chinese (Simplified)"
             }
         },
         checkUpdates: {
@@ -184,6 +186,39 @@ export const settings = {
             success: "Connection successful.",
             failed: "Connection failed. Check settings.",
             error: "Error: {message}"
+        },
+        material: {
+            title: "MagicStudio Material Storage",
+            subtitle: "Keep editing media local-first with a professional workspace/project filesystem layout. Cloud storage stays optional and secondary.",
+            mode: {
+                label: "Storage Mode",
+                desc: "Choose whether Magic Cut writes media to the local filesystem first or forces server-only uploads.",
+                options: {
+                    localFirstSync: "Local First (Recommended)",
+                    localOnly: "Local Only",
+                    serverOnly: "Server Only"
+                }
+            },
+            desktop: {
+                title: "Desktop Paths",
+                rootDir: "MagicStudio Root",
+                rootDirDesc: "Primary root for MagicStudio users, workspaces, projects, and system indexes.",
+                workspacesRootDir: "Workspaces Override",
+                workspacesRootDirDesc: "Optional dedicated root for workspace and project folders. MagicStudio still creates the standard workspace/project hierarchy inside this path.",
+                cacheRootDir: "Cache Override",
+                cacheRootDirDesc: "Optional high-speed root for project cache data. MagicStudio appends the standard workspace/project/cache structure automatically.",
+                exportsRootDir: "Exports Override",
+                exportsRootDirDesc: "Optional separate root for exports. MagicStudio appends the standard workspace/project/exports structure automatically."
+            },
+            behavior: {
+                title: "Behavior",
+                syncEnabled: "Enable Server Sync",
+                syncEnabledDesc: "Allow background synchronization for locally managed assets when remote storage is available.",
+                autoUploadOnImport: "Auto Upload After Import",
+                autoUploadOnImportDesc: "Queue a server upload immediately after local ingest when sync is enabled.",
+                keepOriginalFilename: "Preserve Original Filename In Metadata",
+                keepOriginalFilenameDesc: "Store the user-visible source filename in metadata while keeping managed files collision-safe on disk."
+            }
         }
     },
     lsp: {

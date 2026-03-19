@@ -1,19 +1,34 @@
-
-import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { useRouter, ROUTES, platform } from '@sdkwork/react-core';
 import React, { useState, useRef, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
-    Bell, User, LogOut, Plus,
-    CreditCard, Settings, LayoutGrid, Home, Users, Tv, Wrench, Puzzle, Briefcase, ClipboardList
+    Bell,
+    User,
+    LogOut,
+    Plus,
+    CreditCard,
+    Settings,
+    LayoutGrid,
+    Home,
+    Users,
+    Tv,
+    Wrench,
+    Puzzle,
+    Briefcase,
+    ClipboardList,
 } from 'lucide-react';
 import { useAuthStore } from '@sdkwork/react-auth';
+import { WindowControls } from '@sdkwork/react-commons';
 import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 import { useNotificationStore, NotificationCenter } from '@sdkwork/react-notifications';
 import { PricingModal } from '@sdkwork/react-vip';
+import { useTranslation, createLocalizedText, resolveLocalizedText } from '@sdkwork/react-i18n';
+
+type LocalizedLabel = ReturnType<typeof createLocalizedText>;
 
 interface NavItem {
     id: string;
-    label: string;
+    label: LocalizedLabel;
     icon: LucideIcon;
     route: string;
 }
@@ -25,21 +40,22 @@ interface MenuLinkProps {
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { id: 'home', label: '首页', icon: Home, route: ROUTES.PORTAL_VIDEO },
-    { id: 'community', label: '社区', icon: Users, route: ROUTES.PORTAL_COMMUNITY },
-    { id: 'theater', label: '剧场', icon: Tv, route: ROUTES.PORTAL_THEATER },
-    { id: 'skills', label: '技能', icon: Wrench, route: ROUTES.PORTAL_SKILLS },
-    { id: 'plugins', label: '插件', icon: Puzzle, route: ROUTES.PORTAL_PLUGINS },
-    { id: 'task-market', label: '任务市场', icon: Briefcase, route: ROUTES.TASK_MARKET },
+    { id: 'home', label: createLocalizedText('Home', '\u9996\u9875'), icon: Home, route: ROUTES.PORTAL_VIDEO },
+    { id: 'community', label: createLocalizedText('Community', '\u793e\u533a'), icon: Users, route: ROUTES.PORTAL_COMMUNITY },
+    { id: 'theater', label: createLocalizedText('Theater', '\u5267\u573a'), icon: Tv, route: ROUTES.PORTAL_THEATER },
+    { id: 'skills', label: createLocalizedText('Skills', '\u6280\u80fd'), icon: Wrench, route: ROUTES.PORTAL_SKILLS },
+    { id: 'plugins', label: createLocalizedText('Plugins', '\u63d2\u4ef6'), icon: Puzzle, route: ROUTES.PORTAL_PLUGINS },
+    { id: 'task-market', label: createLocalizedText('Task Market', '\u4efb\u52a1\u5e02\u573a'), icon: Briefcase, route: ROUTES.TASK_MARKET },
 ];
 
 export const PortalHeader: React.FC = () => {
+    const { locale } = useTranslation();
     const { user, logout } = useAuthStore();
-    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
     const routerContext = useRouter();
     const navigate = routerContext?.navigate || (() => {});
     const currentPath = routerContext?.currentPath || '/';
     const { unreadCount } = useNotificationStore();
+    const isDesktopRuntime = platform.getPlatform() === 'desktop';
 
     React.useEffect(() => {
         console.log('[PortalHeader] currentPath changed:', currentPath);
@@ -54,7 +70,7 @@ export const PortalHeader: React.FC = () => {
     const [showPricing, setShowPricing] = useState(false);
 
     const activeNav = React.useMemo(() => {
-        const item = NAV_ITEMS.find(i => i.route === currentPath);
+        const item = NAV_ITEMS.find((candidate) => candidate.route === currentPath);
         return item ? item.id : 'home';
     }, [currentPath]);
 
@@ -65,7 +81,7 @@ export const PortalHeader: React.FC = () => {
         return {
             displayName: user.name || 'User',
             email: user.email || '',
-            avatar: user.avatar
+            avatar: user.avatar,
         };
     }, [user]);
 
@@ -78,6 +94,7 @@ export const PortalHeader: React.FC = () => {
                 setShowNotifications(false);
             }
         };
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
@@ -92,43 +109,51 @@ export const PortalHeader: React.FC = () => {
         setShowPricing(true);
     };
 
+    const myTasksLabel = resolveLocalizedText(createLocalizedText('My Tasks', '\u6211\u7684\u4efb\u52a1'), locale);
+
     return (
-        <div className="h-16 flex items-center justify-between px-8 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 transition-colors duration-300">
-            {/* 左侧导航 */}
-            <div className="flex items-center gap-1">
-                {NAV_ITEMS.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeNav === item.id;
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => {
-                                console.log('[PortalHeader] Clicked nav item:', item.id, 'route:', item.route);
-                                navigate(item.route);
-                            }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                                isActive
-                                    ? 'bg-[#1a1a1c] text-white border border-white/10'
-                                    : 'text-gray-400 hover:text-white hover:bg-[#1a1a1c]/50 border border-transparent'
-                            }`}
-                        >
-                            <Icon size={16} className={isActive ? 'text-blue-400' : 'opacity-70'} />
-                            {item.label}
-                        </button>
-                    );
-                })}
+        <div className="sticky top-0 z-50 flex min-w-0 h-16 items-center bg-[#020202]/80 pl-6 pr-0 backdrop-blur-xl border-b border-white/5 transition-colors duration-300">
+            <div className="relative z-10 min-w-0 flex-1 overflow-hidden pr-4">
+                <div className="flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {NAV_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activeNav === item.id;
+
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    console.log('[PortalHeader] Clicked nav item:', item.id, 'route:', item.route);
+                                    navigate(item.route);
+                                }}
+                                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                                    isActive
+                                        ? 'bg-[#1a1a1c] text-white border border-white/10'
+                                        : 'text-gray-400 hover:text-white hover:bg-[#1a1a1c]/50 border border-transparent'
+                                }`}
+                            >
+                                <Icon size={16} className={isActive ? 'text-blue-400' : 'opacity-70'} />
+                                {resolveLocalizedText(item.label, locale)}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            <div className="flex items-center gap-5">
-                {/* Workspace / Project Selector */}
-                <WorkspaceProjectSelector 
+            <div
+                className="h-full shrink-0 w-10 lg:w-14 xl:w-20"
+                data-tauri-drag-region={isDesktopRuntime ? true : undefined}
+            />
+
+            <div className="relative z-10 flex h-full shrink-0 items-center gap-5 pr-4">
+                <WorkspaceProjectSelector
                     variant="portal"
                     showDelete={false}
                     defaultProjectType="VIDEO"
                     compact={true}
                 />
 
-                <div 
+                <div
                     className="hidden md:flex items-center gap-2 bg-[#1a1a1c] px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-colors group cursor-pointer"
                     onClick={() => setShowPricing(true)}
                 >
@@ -140,7 +165,7 @@ export const PortalHeader: React.FC = () => {
                 <div className="w-px h-6 bg-white/10" />
 
                 <div className="relative" ref={notificationRef}>
-                    <button 
+                    <button
                         className={`relative p-2 rounded-full transition-colors ${showNotifications ? 'bg-[#1a1a1c] text-white' : 'text-gray-400 hover:text-white hover:bg-[#1a1a1c]'}`}
                         onClick={() => setShowNotifications(!showNotifications)}
                     >
@@ -156,7 +181,7 @@ export const PortalHeader: React.FC = () => {
 
                 {user ? (
                     <div className="relative" ref={userMenuRef}>
-                        <button 
+                        <button
                             onClick={() => setShowUserMenu(!showUserMenu)}
                             className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg ring-2 ring-white/10 hover:ring-white/30 transition-all overflow-hidden"
                         >
@@ -175,14 +200,14 @@ export const PortalHeader: React.FC = () => {
                                 </div>
                                 <div className="p-1.5 space-y-0.5">
                                     <MenuLink icon={User} label="My Profile" onClick={() => navigate(ROUTES.PROFILE)} />
-                                    <MenuLink icon={ClipboardList} label="我的任务" onClick={() => navigate(ROUTES.MY_TASKS)} />
+                                    <MenuLink icon={ClipboardList} label={myTasksLabel} onClick={() => navigate(ROUTES.MY_TASKS)} />
                                     <MenuLink icon={CreditCard} label="Billing & Plans" onClick={handleShowPricing} />
                                     <MenuLink icon={LayoutGrid} label="Switch Workspace" onClick={() => {}} />
                                     <MenuLink icon={Settings} label="Preferences" onClick={() => navigate(ROUTES.SETTINGS)} />
                                 </div>
                                 <div className="h-px bg-white/5 mx-2 my-1" />
                                 <div className="p-1.5">
-                                    <button 
+                                    <button
                                         onClick={handleLogout}
                                         className="w-full flex items-center gap-3 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors"
                                     >
@@ -194,7 +219,7 @@ export const PortalHeader: React.FC = () => {
                         )}
                     </div>
                 ) : (
-                    <button 
+                    <button
                         onClick={() => navigate(ROUTES.LOGIN)}
                         className="px-5 py-2 bg-white text-black hover:bg-gray-200 rounded-full text-xs font-bold transition-all shadow-lg hover:scale-105"
                     >
@@ -203,13 +228,19 @@ export const PortalHeader: React.FC = () => {
                 )}
             </div>
 
+            {isDesktopRuntime && (
+                <div className="relative z-10 h-full shrink-0">
+                    <WindowControls />
+                </div>
+            )}
+
             {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
         </div>
     );
 };
 
 const MenuLink: React.FC<MenuLinkProps> = ({ icon: Icon, label, onClick }) => (
-    <button 
+    <button
         onClick={onClick}
         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-gray-300 hover:bg-[#2a2a2d] hover:text-white rounded-lg transition-colors"
     >

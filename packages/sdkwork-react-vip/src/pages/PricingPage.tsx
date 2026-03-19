@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Crown, Gem, Sparkles, Star, TimerReset } from 'lucide-react';
 import { PlanTier, type Subscription, type VipPlan } from '../entities';
 import { vipBusinessService } from '../services/vipBusinessService';
+import { Button } from '@sdkwork/react-commons';
 
 type BillingCycle = 'month' | 'year' | 'onetime';
 
@@ -167,9 +168,11 @@ const PricingPage: React.FC = () => {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
             {CYCLE_OPTIONS.map((cycle) => (
-              <button
+              <Button
                 key={cycle.id}
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedCycle(cycle.id)}
                 className={`rounded-lg px-4 py-2 text-xs font-medium transition ${
                   selectedCycle === cycle.id
@@ -178,18 +181,20 @@ const PricingPage: React.FC = () => {
                 }`}
               >
                 {cycle.label}
-              </button>
+              </Button>
             ))}
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => void loadPlans(true)}
             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-gray-200 hover:bg-white/10 disabled:opacity-60"
             disabled={isRefreshing}
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
+          </Button>
         </div>
 
         {message ? (
@@ -280,18 +285,19 @@ const PricingPage: React.FC = () => {
                   ))}
                 </ul>
 
-                <button
+                <Button
                   type="button"
+                  variant="default"
+                  className="mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => void handleSubscribe(plan.id)}
                   disabled={subscribingPlanId !== null || plan.id === PlanTier.FREE}
-                  className="mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {plan.id === PlanTier.FREE
                     ? 'Current Plan'
                     : subscribingPlanId === plan.id
                       ? 'Processing...'
                       : `Subscribe (${getCycleLabel(selectedCycle)})`}
-                </button>
+                </Button>
               </article>
             ))}
           </div>

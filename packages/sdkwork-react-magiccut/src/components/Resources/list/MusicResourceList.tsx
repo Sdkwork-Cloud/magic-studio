@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
-import { Play, Pause, Heart, MoreHorizontal, Music } from 'lucide-react';
+import { Play, Pause, Heart, Music } from 'lucide-react';
 import { useAssetUrl } from '@sdkwork/react-assets';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
 
 interface MusicResourceListProps {
     assets: AnyAsset[];
@@ -76,7 +77,7 @@ const MusicItem: React.FC<{
             draggable
             onDragStart={(e) => onDragStart(e, item)}
             className={`
-                group flex items-center gap-3 p-2 rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none
+                group relative flex items-center gap-3 p-2 rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none
                 ${isPlaying 
                     ? 'bg-indigo-900/20 border-indigo-500/50' 
                     : 'bg-[#252526] border-transparent hover:border-[#333] hover:bg-[#2a2a2d]'
@@ -134,7 +135,7 @@ const MusicItem: React.FC<{
             
             {/* 3. Favorite Action (Absolute top right) */}
             <button 
-                onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, !item.isFavorite); }}
+                onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite)); }}
                 className={`absolute top-2 right-2 p-1 rounded-full transition-opacity hover:bg-[#333] ${item.isFavorite ? 'opacity-100 text-red-500' : 'opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white'}`}
             >
                 <Heart size={10} fill={item.isFavorite ? "currentColor" : "none"} />

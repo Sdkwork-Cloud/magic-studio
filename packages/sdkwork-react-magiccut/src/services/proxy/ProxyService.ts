@@ -24,11 +24,12 @@ export interface ProxyStatus {
     originalUrl: string;
     proxyUrl: string | null;
     quality: ProxyQuality;
-    status: 'pending' | 'generating' | 'ready' | 'failed';
+    status: 'pending' | 'generating' | 'ready' | 'failed' | 'unsupported';
     progress: number;
     originalSize: number;
     proxySize: number | null;
     generatedAt: number | null;
+    errorMessage: string | null;
 }
 
 export interface ProxyManifest {
@@ -36,11 +37,32 @@ export interface ProxyManifest {
     resources: Record<string, ProxyStatus>;
 }
 
+export interface ProxyTranscodeRequest {
+    resourceId: string;
+    originalUrl: string;
+    quality: ProxyQuality;
+    resolution: { width: number; height: number };
+    bitrate: number;
+    format: ProxyConfig['proxyFormat'];
+    onProgress?: (progress: number) => void;
+}
+
+export interface ProxyTranscodeResult {
+    proxyUrl: string;
+    originalSize?: number | null;
+    proxySize?: number | null;
+}
+
+export interface ProxyTranscoder {
+    transcodeToProxy(request: ProxyTranscodeRequest): Promise<ProxyTranscodeResult>;
+}
+
 export class ProxyService {
     private config: ProxyConfig = DEFAULT_PROXY_CONFIG;
     private proxyStatus = new Map<string, ProxyStatus>();
     private generating = new Set<string>();
     private onProgressCallbacks = new Map<string, (progress: number) => void>();
+    private transcoder: ProxyTranscoder | null = null;
     
     public setConfig(config: Partial<ProxyConfig>): void {
         this.config = { ...this.config, ...config };
@@ -48,6 +70,14 @@ export class ProxyService {
     
     public getConfig(): ProxyConfig {
         return { ...this.config };
+    }
+
+    public setTranscoder(transcoder: ProxyTranscoder | null): void {
+        this.transcoder = transcoder;
+    }
+
+    public hasTranscoder(): boolean {
+        return this.transcoder !== null;
     }
     
     public getProxyStatus(resourceId: string): ProxyStatus | undefined {
@@ -111,64 +141,69 @@ export class ProxyService {
             this.onProgressCallbacks.set(resourceId, onProgress);
         }
         
-        const status: ProxyStatus = {
+        const status: ProxyStatus = existing || {
             resourceId,
             originalUrl,
             proxyUrl: null,
             quality: this.config.defaultQuality,
-            status: 'generating',
+            status: 'pending',
             progress: 0,
             originalSize: 0,
             proxySize: null,
-            generatedAt: null
+            generatedAt: null,
+            errorMessage: null
         };
+        status.originalUrl = originalUrl;
+        status.quality = this.config.defaultQuality;
+        status.proxyUrl = existing?.proxyUrl ?? null;
+        status.status = 'generating';
+        status.progress = 0;
+        status.generatedAt = null;
+        status.errorMessage = null;
         this.proxyStatus.set(resourceId, status);
+
+        if (!this.transcoder) {
+            status.status = 'unsupported';
+            status.errorMessage = 'Proxy transcoding is not configured.';
+            this.generating.delete(resourceId);
+            this.onProgressCallbacks.delete(resourceId);
+            return null;
+        }
         
         try {
-            const proxyUrl = await this.transcodeToProxy(resourceId, originalUrl);
+            const proxyResult = await this.transcoder.transcodeToProxy({
+                resourceId,
+                originalUrl,
+                quality: this.config.defaultQuality,
+                resolution: this.getProxyResolution(),
+                bitrate: this.config.proxyBitrate,
+                format: this.config.proxyFormat,
+                onProgress: (progress) => {
+                    status.progress = Math.max(0, Math.min(100, progress));
+                    const callback = this.onProgressCallbacks.get(resourceId);
+                    if (callback) {
+                        callback(status.progress);
+                    }
+                }
+            });
             
-            status.proxyUrl = proxyUrl;
+            status.proxyUrl = proxyResult.proxyUrl;
             status.status = 'ready';
             status.progress = 100;
+            status.originalSize = proxyResult.originalSize ?? status.originalSize;
+            status.proxySize = proxyResult.proxySize ?? status.proxySize;
             status.generatedAt = Date.now();
+            status.errorMessage = null;
             
-            return proxyUrl;
+            return proxyResult.proxyUrl;
         } catch (error) {
             console.error(`[ProxyService] Failed to generate proxy for ${resourceId}:`, error);
             status.status = 'failed';
+            status.errorMessage = error instanceof Error ? error.message : 'Proxy generation failed.';
             return null;
         } finally {
             this.generating.delete(resourceId);
             this.onProgressCallbacks.delete(resourceId);
-        }
-    }
-    
-    private async transcodeToProxy(resourceId: string, _originalUrl: string): Promise<string> {
-        const { width, height } = this.getProxyResolution();
-        
-        const proxyFileName = `proxy_${resourceId}_${width}x${height}.${this.config.proxyFormat}`;
-        const proxyUrl = `proxy://${proxyFileName}`;
-        
-        await this.simulateProxyGeneration(resourceId);
-        
-        return proxyUrl;
-    }
-    
-    private async simulateProxyGeneration(resourceId: string): Promise<void> {
-        const totalSteps = 10;
-        for (let i = 0; i <= totalSteps; i++) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const progress = (i / totalSteps) * 100;
-            const status = this.proxyStatus.get(resourceId);
-            if (status) {
-                status.progress = progress;
-            }
-            
-            const callback = this.onProgressCallbacks.get(resourceId);
-            if (callback) {
-                callback(progress);
-            }
         }
     }
     
@@ -228,6 +263,7 @@ export class ProxyService {
         pending: number;
         generating: number;
         failed: number;
+        unsupported: number;
         totalOriginalSize: number;
         totalProxySize: number;
         savingsRatio: number;
@@ -237,6 +273,7 @@ export class ProxyService {
         let pending = 0;
         let generating = 0;
         let failed = 0;
+        let unsupported = 0;
         let totalOriginalSize = 0;
         let totalProxySize = 0;
         
@@ -258,6 +295,9 @@ export class ProxyService {
                 case 'failed':
                     failed++;
                     break;
+                case 'unsupported':
+                    unsupported++;
+                    break;
             }
         });
         
@@ -271,6 +311,7 @@ export class ProxyService {
             pending,
             generating,
             failed,
+            unsupported,
             totalOriginalSize,
             totalProxySize,
             savingsRatio

@@ -8,6 +8,8 @@ import { useResourceSkimming } from '../../hooks/useResourceSkimming';
 import { playerPreviewService } from '../../services';
 import { formatTime } from '../../utils/timeUtils';
 import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
+import { resolveNextFavoriteState } from '../../domain/assets/favoriteToggle';
+import { getResourceCardFrameClass, type ResourcePanelViewMode } from '../../domain/assets/resourcePanelPresentation';
 
 // Static empty image for drag ghost removal (performance optimized)
 const EMPTY_DRAG_IMAGE = new Image();
@@ -17,6 +19,7 @@ interface SkimmableAssetCardProps {
     item: AnyAsset;
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onDragEnd: () => void;
+    viewMode?: ResourcePanelViewMode;
     onDoubleClick?: (item: AnyAsset) => void;
     onToggleFavorite?: (id: string, isFavorite: boolean) => void;
     onHover?: (item: AnyAsset | null) => void;
@@ -24,7 +27,7 @@ interface SkimmableAssetCardProps {
 }
 
 export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(({ 
-    item, onDragStart, onDragEnd, onDoubleClick, onHover, onDelete
+    item, onDragStart, onDragEnd, viewMode = 'grid', onDoubleClick, onToggleFavorite, onHover, onDelete
 }) => {
     const isVideo = item.type === MediaResourceType.VIDEO;
     const isEffect = item.type === MediaResourceType.EFFECT || item.type === MediaResourceType.TRANSITION;
@@ -169,7 +172,7 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
             onMouseMove={handleMouseMove}
             onDoubleClick={() => onDoubleClick && onDoubleClick(item)}
             className={`
-                group relative aspect-[16/9] bg-[#0a0a0a] rounded-md overflow-hidden select-none
+                group relative ${getResourceCardFrameClass(viewMode, 'visual')} bg-[#0a0a0a] rounded-md overflow-hidden select-none
                 transition-all duration-200 border
                 ${isDragging ? 'opacity-40 grayscale ring-2 ring-blue-500/50' : ''}
                 ${!resolvedSrc && !isEffect && !isText && !error ? 'cursor-wait border-transparent' : 'cursor-grab active:cursor-grabbing border-[#2a2a2c] hover:border-[#444]'}
@@ -261,8 +264,13 @@ export const SkimmableAssetCard: React.FC<SkimmableAssetCardProps> = React.memo(
             {/* Favorite Button */}
             <div className={`absolute top-1 right-1 z-30 transition-opacity duration-200 ${isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 <button 
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onToggleFavorite?.(item.id, resolveNextFavoriteState(item.isFavorite));
+                    }}
                     className="p-1 text-white/80 hover:text-red-500 hover:scale-110 transition-all"
+                    title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 >
                     <Heart size={12} fill={isFavorite ? "#ef4444" : "none"} className={isFavorite ? "text-red-500" : "text-white drop-shadow-md"} />
                 </button>

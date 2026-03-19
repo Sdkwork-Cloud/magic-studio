@@ -43,7 +43,7 @@ export const ShotListItemCard: React.FC<ShotListItemCardProps> = ({
         resolver: resolveFilmAssetUrlByAssetIdFirst
     });
 
-    // 获取对话文本
+    // Build a plain text preview from dialogue items.
     const dialogueText = shot.dialogue?.items?.map(item => item.text).join(' ') || '';
     // Auto focus prompt input when entering edit mode.
     useEffect(() => {

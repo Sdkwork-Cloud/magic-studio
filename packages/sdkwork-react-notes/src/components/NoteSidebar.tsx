@@ -151,7 +151,7 @@ const SidebarItemInput: React.FC<{
 };
 
 // --- Creation Dropdown Menu ---
-const CreateDropdown: React.FC<{ 
+export const CreateDropdown: React.FC<{ 
     onSelect: (type: 'folder' | 'note', subType?: NoteType) => void;
     t: TranslateFn;
 }> = ({ onSelect, t }) => {

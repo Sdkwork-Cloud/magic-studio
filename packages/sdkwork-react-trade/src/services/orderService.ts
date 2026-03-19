@@ -28,45 +28,24 @@ interface ApiEnvelope<T> {
 
 const SUCCESS_CODE = '2000';
 
-/**
- * 创建订单参数
- */
 export interface CreateOrderParams {
-  /** 订单类型 */
   type: OrderType;
-  /** 订单标题 */
   title: string;
-  /** 订单描述 */
   description?: string;
-  /** 订单金额 (分) */
   amount: number;
-  /** 任务类型 */
   taskType?: string;
-  /** 任务参数 */
   taskParams?: Record<string, unknown>;
-  /** 工作区 UUID */
   workspaceUuid?: string;
-  /** 项目 UUID */
   projectUuid?: string;
-  /** 备注 */
   remark?: string;
-  /** 过期时间 (分钟) */
   expireInMinutes?: number;
 }
 
-/**
- * 取消订单参数
- */
 export interface CancelOrderParams {
-  /** 订单 UUID */
   orderUuid: string;
-  /** 取消原因 */
   reason: string;
 }
 
-/**
- * 订单服务接口
- */
 export interface IOrderService {
   createOrder(params: CreateOrderParams): Promise<Order>;
   getOrderById(uuid: string): Promise<Order | null>;
@@ -294,9 +273,6 @@ function toTradePageResponse(pageData: AnyRecord, fallbackPage: number, fallback
   };
 }
 
-/**
- * 订单服务实现（SDK-only）
- */
 export class OrderService implements IOrderService {
   async createOrder(params: CreateOrderParams): Promise<Order> {
     const client = getSdkworkClient();
@@ -485,7 +461,4 @@ export class OrderService implements IOrderService {
   }
 }
 
-/**
- * 订单服务单例
- */
 export const orderService = new OrderService();

@@ -1,4 +1,3 @@
-
 import { PlanTier, VipPlan } from './entities/vip.entity';
 
 export const VIP_PLANS: VipPlan[] = [
@@ -6,7 +5,7 @@ export const VIP_PLANS: VipPlan[] = [
     id: PlanTier.FREE,
     name: 'Free',
     price: 0,
-    currency: '¥',
+    currency: 'CNY',
     billingCycle: 'Forever',
     points: 0,
     buttonText: 'Current Plan',
@@ -16,37 +15,37 @@ export const VIP_PLANS: VipPlan[] = [
       { id: 'f3', text: 'Community Support', included: true },
       { id: 'f4', text: 'Local History Only', included: true },
       { id: 'f5', text: 'GPT-3.5 / Basic Models', included: true },
-    ]
+    ],
   },
   {
     id: PlanTier.BASIC,
     name: 'Basic',
     price: 1,
     originalPrice: 41,
-    currency: '¥',
+    currency: 'CNY',
     billingCycle: '7 Days',
     points: 1080,
     tags: [{ text: 'Trial Offer', color: 'blue' }],
-    buttonText: '¥1 Trial for 7 Days',
-    description: 'Then ¥69/month auto-renew',
+    buttonText: 'CNY 1 Trial for 7 Days',
+    description: 'Then CNY 69/month auto-renew',
     features: [
       { id: 'b1', text: '1,080 Credits / Month', included: true },
       { id: 'b2', text: 'Fast Generation Queue', included: true },
       { id: 'b3', text: 'Cloud Sync (2 Devices)', included: true },
       { id: 'b4', text: 'Remove Watermarks', included: true },
       { id: 'b5', text: 'Access to GPT-4', included: true },
-    ]
+    ],
   },
   {
     id: PlanTier.STANDARD,
     name: 'Standard',
     price: 119,
     originalPrice: 199,
-    currency: '¥',
+    currency: 'CNY',
     billingCycle: 'Month',
     points: 4000,
     tags: [{ text: 'Most Popular', color: 'cyan' }],
-    buttonText: '¥119 Get 60% OFF',
+    buttonText: 'CNY 119 Get 60% OFF',
     description: 'Auto-renew, cancel anytime',
     isPopular: true,
     features: [
@@ -56,18 +55,18 @@ export const VIP_PLANS: VipPlan[] = [
       { id: 's4', text: 'Priority Feature Access', included: true },
       { id: 's5', text: 'GPT-4 Turbo & Claude 3 Opus', included: true },
       { id: 's6', text: 'Voice-to-Code Mode', included: true },
-    ]
+    ],
   },
   {
     id: PlanTier.PREMIUM,
     name: 'Premium',
     price: 299,
     originalPrice: 499,
-    currency: '¥',
+    currency: 'CNY',
     billingCycle: 'Month',
     points: 15000,
     tags: [{ text: 'Best Value', color: 'orange' }],
-    buttonText: '¥299 Get 60% OFF',
+    buttonText: 'CNY 299 Get 60% OFF',
     description: 'For professional developers',
     features: [
       { id: 'p1', text: '15,000 Credits / Month', included: true },
@@ -77,6 +76,6 @@ export const VIP_PLANS: VipPlan[] = [
       { id: 'p5', text: 'Early Access to vNext Models', included: true },
       { id: 'p6', text: 'API Access Key', included: true },
       { id: 'p7', text: '24/7 Dedicated Support', included: true },
-    ]
-  }
+    ],
+  },
 ];

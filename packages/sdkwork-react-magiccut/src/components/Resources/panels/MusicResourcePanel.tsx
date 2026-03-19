@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
 import { Play, Heart, Music, Trash2 } from 'lucide-react';
 import { useAssetUrl } from '@sdkwork/react-assets';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
+import { getResourceCardFrameClass, getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
+import { MusicResourceList } from '../list/MusicResourceList';
 
 interface MusicResourcePanelProps {
     assets: AnyAsset[];
@@ -10,6 +13,7 @@ interface MusicResourcePanelProps {
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     onPreview: (item: AnyAsset | null) => void;
     onDelete?: (item: AnyAsset) => void;
+    viewMode?: ResourcePanelViewMode;
 }
 
 export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(({
@@ -17,7 +21,8 @@ export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(
     onDragStart,
     onToggleFavorite,
     onPreview,
-    onDelete
+    onDelete,
+    viewMode = 'grid'
 }) => {
     const [playingId, setPlayingId] = useState<string | null>(null);
 
@@ -28,8 +33,19 @@ export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(
         onPreview(nextPlayingId ? item : null);
     };
 
+    if (viewMode === 'list') {
+        return (
+            <MusicResourceList
+                assets={assets}
+                onDragStart={onDragStart}
+                onToggleFavorite={onToggleFavorite}
+                onPreview={onPreview}
+            />
+        );
+    }
+
     return (
-        <div className="grid grid-cols-4 gap-2 content-start pb-10 px-2">
+        <div className={getResourcePanelLayoutClass(viewMode)}>
             {assets.map((item) => (
                 <MusicCard 
                     key={item.id}
@@ -39,6 +55,7 @@ export const MusicResourcePanel: React.FC<MusicResourcePanelProps> = React.memo(
                     onDragStart={onDragStart}
                     onToggleFavorite={onToggleFavorite}
                     onDelete={onDelete}
+                    viewMode={viewMode}
                 />
             ))}
         </div>
@@ -52,7 +69,8 @@ const MusicCard: React.FC<{
     onDragStart: (e: React.DragEvent, item: AnyAsset) => void;
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     onDelete?: (item: AnyAsset) => void;
-}> = ({ item, isPlaying, onPlayToggle, onDragStart, onToggleFavorite, onDelete }) => {
+    viewMode: ResourcePanelViewMode;
+}> = ({ item, isPlaying, onPlayToggle, onDragStart, onToggleFavorite, onDelete, viewMode }) => {
     const { url: thumbnail } = useAssetUrl(item.metadata?.thumbnailUrl ? { id: 'thumb', path: item.metadata.thumbnailUrl } as any : null);
     
     // Fallback gradient if no thumb
@@ -64,7 +82,7 @@ const MusicCard: React.FC<{
             draggable
             onDragStart={(e) => onDragStart(e, item)}
             className={`
-                group relative aspect-square rounded-lg overflow-hidden cursor-grab active:cursor-grabbing select-none border transition-all
+                group relative ${getResourceCardFrameClass(viewMode, 'tile')} rounded-lg overflow-hidden cursor-grab active:cursor-grabbing select-none border transition-all
                 ${isPlaying ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-[#27272a] hover:border-[#444]'}
                 bg-[#18181b]
             `}
@@ -127,9 +145,9 @@ const MusicCard: React.FC<{
                      >
                          <Trash2 size={10} />
                      </button>
-                 )}
+                )}
                 <button 
-                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, !item.isFavorite); }}
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite)); }}
                     className={`
                         p-1 rounded-full transition-all
                         ${item.isFavorite 

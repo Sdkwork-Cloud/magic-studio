@@ -3,7 +3,7 @@ import { ModelProvider } from '@sdkwork/react-commons';
 import React from 'react';
 import { Volume2, Zap, Globe } from 'lucide-react';
 
-export const STORAGE_KEY_AUDIO_HISTORY = 'open_studio_audio_history_v1';
+export const STORAGE_KEY_AUDIO_HISTORY = 'magic_studio_audio_history_v1';
 
 export const AUDIO_MODELS: { id: AudioModelType; name: string; badge?: string }[] = [
     { id: 'gemini-2.5-flash-tts', name: 'Gemini Flash TTS', badge: 'FAST' },

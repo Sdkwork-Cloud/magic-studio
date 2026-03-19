@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Filter, LayoutGrid, Loader2 } from 'lucide-react';
-import { GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
+import { Button, GalleryCard, type GalleryItem } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
 import { PortalHeader } from '../components/PortalHeader';
 import { PortalSidebar } from '../components/PortalSidebar';
@@ -63,37 +63,46 @@ const DiscoverPage: React.FC = () => {
         <PortalHeader />
 
         <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6">
             {TABS.map((tab) => (
-              <button
+              <Button
                 key={tab.id}
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveTab(tab.id)}
                 className={`text-sm font-medium transition-colors ${
                   activeTab === tab.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+            <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               disabled
               title="Discover feed query is controlled by the selected tab."
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
             >
               <Filter size={14} />
               Filter
-            </button>
-            <button
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               disabled
               title="Grid view is fixed for discover feed."
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
             >
               <LayoutGrid size={14} />
               View
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -130,4 +139,3 @@ const DiscoverPage: React.FC = () => {
 };
 
 export default DiscoverPage;
-

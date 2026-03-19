@@ -5,6 +5,7 @@ import { useMagicCutStore } from '../store/magicCutStore';
 import { useMagicCutBus } from '../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../events';
 import { buildMagicCutShortcutDefinitions } from '../domain/shortcuts/magicCutShortcutDefinitions';
+import { createJklTransportHandlers } from '../domain/shortcuts/shortcutTransport';
 
 export function useShortcuts() {
     const store = useMagicCutStore();
@@ -20,6 +21,7 @@ export function useShortcuts() {
         setInPoint, setOutPoint, clearInOutPoints,
         toggleSnapping, toggleSkimming,
         totalDuration,
+        playerController,
         useTransientState, store: transientStore
     } = store;
     
@@ -61,28 +63,13 @@ export function useShortcuts() {
     }, []);
     
     useEffect(() => {
+        const jklTransport = createJklTransportHandlers({ playerController });
         const shortcuts: ShortcutDefinition[] = buildMagicCutShortcutDefinitions({
             emit: (event) => bus.emit(event),
             playPause: () => bus.emit(MagicCutEvents.PLAYBACK_TOGGLE),
-            playForward: () => {
-                const state = transientStore.getState();
-                if (state.isPlaying && state.playbackDirection === 1) {
-                    const newRate = Math.min(8, state.playbackRate * 2);
-                    transientStore.setState({ playbackRate: newRate });
-                } else {
-                    transientStore.setState({ playbackDirection: 1, playbackRate: 1, isPlaying: true });
-                }
-            },
-            playBackward: () => {
-                const state = transientStore.getState();
-                if (state.isPlaying && state.playbackDirection === -1) {
-                    const newRate = Math.min(8, state.playbackRate * 2);
-                    transientStore.setState({ playbackRate: newRate });
-                } else {
-                    transientStore.setState({ playbackDirection: -1, playbackRate: 1, isPlaying: true });
-                }
-            },
-            pausePlayback: pause,
+            playForward: jklTransport.playForward,
+            playBackward: jklTransport.playBackward,
+            pausePlayback: jklTransport.pausePlayback,
             stepForward,
             stepBackward,
             jumpStart: () => seek(0),
@@ -123,7 +110,7 @@ export function useShortcuts() {
             shortcutManager.detach();
         };
     }, [
-        bus, transientStore, pause, stepForward, stepBackward,
+        bus, transientStore, pause, playerController, stepForward, stepBackward,
         undo, redo, canUndo, canRedo, selectAllClips, clearSelection,
         deleteSelected, copySelectedClips, pasteClips, splitClip,
         nudgeSelectedClips, setInPoint, setOutPoint, clearInOutPoints,

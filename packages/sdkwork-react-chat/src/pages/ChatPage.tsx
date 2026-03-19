@@ -5,8 +5,9 @@ import { ChatSidebar } from '../components/ChatSidebar';
 import { ChatInput } from '../components/ChatInput';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatMode } from '../entities';
-import { PanelLeft, Sparkles, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, PanelLeft, Sparkles } from 'lucide-react';
 import { useRouter } from '@sdkwork/react-core';
+import { Button } from '@sdkwork/react-commons';
 
 const ChatPage: React.FC = () => {
     const { currentSession, isGenerating, sendMessage } = useChatStore();
@@ -38,28 +39,39 @@ const ChatPage: React.FC = () => {
                 
                 {/* Header Toggle */}
                 <div className="flex-none p-3 absolute top-0 left-0 z-10 flex items-center gap-2">
-                    <button 
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={handleGoBack}
                         className="p-2 text-gray-400 hover:text-white hover:bg-[#333] rounded-lg transition-colors"
                         title="Go Back"
                     >
                         <ArrowLeft size={20} />
-                    </button>
-                    <button 
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         className="p-2 text-gray-400 hover:text-white hover:bg-[#333] rounded-lg transition-colors"
-                        title={sidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+                        title={sidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
                     >
                         <PanelLeft size={20} />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Model Selector (Floating Top) */}
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-                     <button className="flex items-center gap-2 px-3 py-1.5 bg-[#2f2f2f] hover:bg-[#383838] rounded-lg text-sm font-medium text-gray-200 transition-colors shadow-sm cursor-pointer">
+                     <Button
+                         type="button"
+                         variant="ghost"
+                         size="sm"
+                         className="flex items-center gap-2 px-3 py-1.5 bg-[#2f2f2f] hover:bg-[#383838] rounded-lg text-sm font-medium text-gray-200 transition-colors shadow-sm"
+                     >
                          <span>GPT-4o</span>
                          <span className="text-xs text-gray-500">▼</span>
-                     </button>
+                     </Button>
                 </div>
 
                 {/* Messages Area */}

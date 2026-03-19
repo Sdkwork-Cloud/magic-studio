@@ -1,6 +1,6 @@
 import { pathUtils } from './helpers';
 
-export const APP_ROOT_DIR = 'open-studio';
+export const APP_ROOT_DIR = pathUtils.join('.sdkwork', 'magicstudio');
 
 export const DIR_NAMES = {
     WORKSPACES: 'workspaces',

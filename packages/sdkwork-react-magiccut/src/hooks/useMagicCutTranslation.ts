@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useTranslation } from '@sdkwork/react-i18n';
 
@@ -69,12 +68,12 @@ export const formatTime = (seconds: number, locale: string = 'en'): string => {
 
     if (h > 0) {
         return locale.startsWith('zh')
-            ? `${h}Сʱ${m}��${s}��`
+            ? `${h}\u5c0f\u65f6${m}\u5206${s}\u79d2`
             : `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
-    
+
     return locale.startsWith('zh')
-        ? `${m}��${s}��`
+        ? `${m}\u5206${s}\u79d2`
         : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
 };
 
@@ -85,24 +84,24 @@ export const formatDuration = (seconds: number, locale: string = 'en'): string =
 
     if (h > 0) {
         return locale.startsWith('zh')
-            ? `${h}ʱ${m}��${s}��`
+            ? `${h}\u65f6${m}\u5206${s}\u79d2`
             : `${h}h ${m}m ${s}s`;
     }
-    
+
     if (m > 0) {
         return locale.startsWith('zh')
-            ? `${m}��${s}��`
+            ? `${m}\u5206${s}\u79d2`
             : `${m}m ${s}s`;
     }
-    
+
     return locale.startsWith('zh')
-        ? `${s}��`
+        ? `${s}\u79d2`
         : `${s}s`;
 };
 
 export const formatFileSize = (bytes: number, locale: string = 'en'): string => {
     const units = locale.startsWith('zh')
-        ? ['�ֽ�', 'KB', 'MB', 'GB', 'TB']
+        ? ['\u5b57\u8282', 'KB', 'MB', 'GB', 'TB']
         : ['B', 'KB', 'MB', 'GB', 'TB'];
 
     let size = bytes;
@@ -126,4 +125,3 @@ export const formatBitrate = (bps: number, locale: string = 'en'): string => {
         ? `${(bps / 1000).toFixed(1)} Kbps`
         : `${(bps / 1000).toFixed(1)} Kbps`;
 };
-

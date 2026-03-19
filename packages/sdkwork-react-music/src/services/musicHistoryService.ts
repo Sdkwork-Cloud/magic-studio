@@ -1,8 +1,14 @@
 import { MusicTask } from '../entities';
+import { STORAGE_KEY_MUSIC_HISTORY } from '../constants';
+
+const LEGACY_STORAGE_KEYS_MUSIC_HISTORY = [
+    'music_history',
+    'open_studio_music_history_v1'
+] as const;
 
 // Mock history service for music tasks
 export class MusicHistoryService {
-    private storageKey = 'music_history';
+    private storageKey = STORAGE_KEY_MUSIC_HISTORY;
     private tasks: MusicTask[] = [];
 
     constructor() {
@@ -12,10 +18,30 @@ export class MusicHistoryService {
 
     private loadFromStorage() {
         try {
-            const stored = localStorage.getItem(this.storageKey);
-            if (stored) {
-                this.tasks = JSON.parse(stored);
+            const storageKeys = [this.storageKey, ...LEGACY_STORAGE_KEYS_MUSIC_HISTORY];
+            for (const key of storageKeys) {
+                const stored = localStorage.getItem(key);
+                if (!stored) {
+                    continue;
+                }
+
+                const parsed = JSON.parse(stored);
+                if (!Array.isArray(parsed)) {
+                    continue;
+                }
+
+                this.tasks = parsed;
+                if (key !== this.storageKey) {
+                    try {
+                        localStorage.setItem(this.storageKey, stored);
+                        localStorage.removeItem(key);
+                    } catch {
+                        // Keep using the recovered snapshot even if migration cannot persist yet.
+                    }
+                }
+                return;
             }
+            this.tasks = [];
         } catch (e) {
             console.warn('[MusicHistoryService] Failed to load from storage:', e);
             this.tasks = [];
@@ -79,6 +105,7 @@ export class MusicHistoryService {
     async clear(): Promise<void> {
         this.tasks = [];
         localStorage.removeItem(this.storageKey);
+        LEGACY_STORAGE_KEYS_MUSIC_HISTORY.forEach((key) => localStorage.removeItem(key));
     }
 }
 

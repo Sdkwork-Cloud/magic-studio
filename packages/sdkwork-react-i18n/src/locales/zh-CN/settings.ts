@@ -28,7 +28,9 @@ export const settings = {
             label: "语言",
             desc: "更改界面语言。",
             options: {
-                system: "系统默认"
+                system: "系统默认",
+                enUS: "English (US)",
+                zhCN: "\u4e2d\u6587\uff08\u7b80\u4f53\uff09"
             }
         },
         checkUpdates: {
@@ -184,7 +186,73 @@ export const settings = {
             success: "连接成功。",
             failed: "连接失败，请检查设置。",
             error: "错误: {message}"
-        }
+        },
+        material: {
+            title: "MagicStudio \u7d20\u6750\u5b58\u50a8",
+            subtitle: "\u9ed8\u8ba4\u4ee5\u672c\u5730\u4f18\u5148\u65b9\u5f0f\u4fdd\u5b58\u7f16\u8f91\u7d20\u6750\uff0c\u5e76\u4fdd\u6301\u4e13\u4e1a\u7684 workspace / project \u6587\u4ef6\u7cfb\u7edf\u7ed3\u6784\u3002\u4e91\u7aef\u5b58\u50a8\u4f5c\u4e3a\u53ef\u9009\u80fd\u529b\u3002",
+            mode: {
+                label: "\u5b58\u50a8\u6a21\u5f0f",
+                desc: "\u9009\u62e9 Magic Cut \u662f\u5426\u9ed8\u8ba4\u5148\u5199\u5165\u672c\u5730\u6587\u4ef6\u7cfb\u7edf\uff0c\u6216\u5f3a\u5236\u4ec5\u4f7f\u7528\u670d\u52a1\u7aef\u4e0a\u4f20\u3002",
+                options: {
+                    localFirstSync: "\u672c\u5730\u4f18\u5148\uff08\u63a8\u8350\uff09",
+                    localOnly: "\u4ec5\u672c\u5730",
+                    serverOnly: "\u4ec5\u670d\u52a1\u7aef"
+                }
+            },
+            desktop: {
+                title: "\u684c\u9762\u7aef\u8def\u5f84",
+                rootDir: "MagicStudio \u6839\u76ee\u5f55",
+                rootDirDesc: "MagicStudio \u7528\u4e8e\u5b58\u653e users\u3001workspaces\u3001projects \u4ee5\u53ca system \u7d22\u5f15\u7684\u4e3b\u6839\u76ee\u5f55\u3002",
+                workspacesRootDir: "Workspace \u6839\u76ee\u5f55\u8986\u76d6",
+                workspacesRootDirDesc: "\u53ef\u9009\u5355\u72ec\u6307\u5b9a workspace \u4e0e project \u76ee\u5f55\u7684\u6839\u4f4d\u7f6e\uff0cMagicStudio \u4ecd\u4f1a\u5728\u5176\u4e2d\u81ea\u52a8\u521b\u5efa\u6807\u51c6\u7684 workspace/project \u5c42\u7ea7\u7ed3\u6784\u3002",
+                cacheRootDir: "\u7f13\u5b58\u6839\u76ee\u5f55\u8986\u76d6",
+                cacheRootDirDesc: "\u53ef\u9009\u5c06 render\u3001waveform\u3001thumbnail \u7b49\u53ef\u91cd\u5efa\u7f13\u5b58\u6307\u5411\u72ec\u7acb\u9ad8\u901f\u6839\u76ee\u5f55\uff0cMagicStudio \u4f1a\u81ea\u52a8\u8ffd\u52a0\u6807\u51c6\u7684 workspace/project/cache \u7ed3\u6784\u3002",
+                exportsRootDir: "\u5bfc\u51fa\u6839\u76ee\u5f55\u8986\u76d6",
+                exportsRootDirDesc: "\u53ef\u9009\u4e3a draft\u3001master\u3001package \u5bfc\u51fa\u6307\u5b9a\u72ec\u7acb\u6839\u76ee\u5f55\uff0cMagicStudio \u4f1a\u81ea\u52a8\u8ffd\u52a0\u6807\u51c6\u7684 workspace/project/exports \u7ed3\u6784\u3002"
+            },
+            behavior: {
+                title: "\u884c\u4e3a\u7b56\u7565",
+                syncEnabled: "\u542f\u7528\u670d\u52a1\u7aef\u540c\u6b65",
+                syncEnabledDesc: "\u5f53\u8fdc\u7a0b\u5b58\u50a8\u53ef\u7528\u65f6\uff0c\u5141\u8bb8\u5df2\u672c\u5730\u7ba1\u7406\u7684\u7d20\u6750\u8fdb\u884c\u540e\u53f0\u540c\u6b65\u3002",
+                autoUploadOnImport: "\u5bfc\u5165\u540e\u81ea\u52a8\u4e0a\u4f20",
+                autoUploadOnImportDesc: "\u542f\u7528\u540c\u6b65\u65f6\uff0c\u5728\u672c\u5730\u5165\u5e93\u540e\u7acb\u5373\u5c06\u4efb\u52a1\u52a0\u5165\u4e0a\u4f20\u961f\u5217\u3002",
+                keepOriginalFilename: "\u5728\u5143\u6570\u636e\u4e2d\u4fdd\u7559\u539f\u59cb\u6587\u4ef6\u540d",
+                keepOriginalFilenameDesc: "\u786e\u4fdd\u7528\u6237\u53ef\u8bfb\u7684\u539f\u59cb\u6587\u4ef6\u540d\u88ab\u4fdd\u7559\u5728\u5143\u6570\u636e\u4e2d\uff0c\u540c\u65f6\u7ba1\u7406\u6587\u4ef6\u540d\u5728\u78c1\u76d8\u4e0a\u4fdd\u6301\u7a33\u5b9a\u3002"
+            }
+        },
+        /* material: {
+            title: "MagicStudio 绱犳潗瀛樺偍",
+            subtitle: "榛樿灏嗙紪杈戠礌鏉愪繚瀛樺湪鏈湴锛岄噰鐢ㄤ笓涓氱殑 workspace / project 鐩綍浣撶郴锛屼簯绔悓姝ュ彧浣滀负鍙€夎兘鍔涖€?,
+            mode: {
+                label: "瀛樺偍妯″紡",
+                desc: "閫夋嫨 Magic Cut 鏄惁榛樿鍏堝啓鍏ユ湰鍦版枃浠剁郴缁燂紝鎴栬€呭己鍒朵粎浣跨敤鏈嶅姟绔笂浼犮€?,
+                options: {
+                    localFirstSync: "鏈湴浼樺厛锛堟帹鑽愶級",
+                    localOnly: "浠呮湰鍦?,
+                    serverOnly: "浠呮湇鍔″櫒"
+                }
+            },
+            desktop: {
+                title: "妗岄潰绔矾寰?",
+                rootDir: "MagicStudio 鏍圭洰褰?",
+                rootDirDesc: "MagicStudio 鐢ㄦ埛銆乄orkspace銆乸roject 浠ュ強 system 绱㈠紩鐨勪富鏍圭洰褰曘€?,
+                workspacesRootDir: "Workspace 瑕嗙洊鐩綍",
+                workspacesRootDirDesc: "鍙€夌殑 workspace / project 鐙珛瀛樺偍鐩綍锛屽唴閮ㄧ粨鏋勪繚鎸佹爣鍑嗕竴鑷淬€?,
+                cacheRootDir: "缂撳瓨瑕嗙洊鐩綍",
+                cacheRootDirDesc: "鍙€夌殑楂橀€熺紦瀛樹綅缃紝鐢ㄤ簬 render銆乄aveform銆亀humbnail 鍜屽垎鏋愮粨鏋溿€?,
+                exportsRootDir: "瀵煎嚭瑕嗙洊鐩綍",
+                exportsRootDirDesc: "鍙€夌殑 draft銆乵aster銆乸ackage 瀵煎嚭鐩綍銆?"
+            },
+            behavior: {
+                title: "琛屼负绛栫暐",
+                syncEnabled: "鍚敤鏈嶅姟绔悓姝?",
+                syncEnabledDesc: "褰撹繙绋嬪瓨鍌ㄥ彲鐢ㄦ椂锛屽厑璁稿凡鏈湴绠＄悊鐨勭礌鏉愯繘琛岃儗鏅悓姝ャ€?,
+                autoUploadOnImport: "瀵煎叆鍚庤嚜鍔ㄤ笂浼?",
+                autoUploadOnImportDesc: "鍚敤鍚屾鏃讹紝鍦ㄦ湰鍦板叆搴撳悗绔嬪嵆灏嗕换鍔″姞鍏ヤ笂浼犻槦鍒椼€?,
+                keepOriginalFilename: "鍦ㄥ厓鏁版嵁涓繚鐣欏師濮嬫枃浠跺悕",
+                keepOriginalFilenameDesc: "纭繚鐢ㄦ埛鍙鐨勫師濮嬫枃浠跺悕琚繚鐣欏湪鍏冩暟鎹腑锛屽悓鏃剁鐞嗘枃浠跺悕鍦ㄧ鐩樹笂淇濇寔绋冲畾銆?"
+            }
+        } */
     },
     lsp: {
         title: "语言服务器",

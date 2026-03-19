@@ -1,8 +1,10 @@
 
 import React from 'react';
 import { AnyAsset } from '@sdkwork/react-assets';
-import { Sparkles, Eye } from 'lucide-react';
+import { Sparkles, Eye, Heart } from 'lucide-react';
 import { useAssetUrl } from '@sdkwork/react-assets';
+import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
+import { getResourceCardFrameClass, getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
 
 interface EffectResourcePanelProps {
     assets: AnyAsset[];
@@ -10,6 +12,7 @@ interface EffectResourcePanelProps {
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     previewEffect: AnyAsset | null;
     setPreviewEffect: (effect: AnyAsset | null) => void;
+    viewMode?: ResourcePanelViewMode;
 }
 
 export const EffectResourcePanel: React.FC<EffectResourcePanelProps> = React.memo(({
@@ -17,10 +20,11 @@ export const EffectResourcePanel: React.FC<EffectResourcePanelProps> = React.mem
     onDragStart,
     onToggleFavorite,
     previewEffect,
-    setPreviewEffect
+    setPreviewEffect,
+    viewMode = 'grid'
 }) => {
     return (
-        <div className="grid grid-cols-4 gap-2 content-start pb-10 px-2">
+        <div className={getResourcePanelLayoutClass(viewMode)}>
             {assets.map((item) => (
                 <EffectCard 
                     key={item.id}
@@ -29,6 +33,7 @@ export const EffectResourcePanel: React.FC<EffectResourcePanelProps> = React.mem
                     onToggleFavorite={onToggleFavorite}
                     previewEffect={previewEffect}
                     setPreviewEffect={setPreviewEffect}
+                    viewMode={viewMode}
                 />
             ))}
         </div>
@@ -41,7 +46,8 @@ const EffectCard: React.FC<{
     onToggleFavorite: (id: string, isFavorite: boolean) => void;
     previewEffect: AnyAsset | null;
     setPreviewEffect: (effect: AnyAsset | null) => void;
-}> = ({ item, onDragStart, onToggleFavorite, previewEffect, setPreviewEffect }) => {
+    viewMode: ResourcePanelViewMode;
+}> = ({ item, onDragStart, onToggleFavorite, previewEffect, setPreviewEffect, viewMode }) => {
     const isActive = previewEffect?.id === item.id;
     
     const { url: thumbnail } = useAssetUrl(item.metadata?.thumbnailUrl ? { id: 'thumb', path: item.metadata.thumbnailUrl } as any : null);
@@ -53,7 +59,7 @@ const EffectCard: React.FC<{
             onMouseEnter={() => setPreviewEffect(item)}
             onMouseLeave={() => setPreviewEffect(null)}
             className={`
-                group relative aspect-square bg-[#1e1e1e] border rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all select-none
+                group relative ${getResourceCardFrameClass(viewMode, 'tile')} bg-[#1e1e1e] border rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all select-none
                 ${isActive 
                     ? 'border-purple-500 ring-1 ring-purple-500/50 scale-[1.05] z-10 shadow-lg' 
                     : 'border-[#333] hover:border-[#555] hover:bg-[#252526]'
@@ -89,12 +95,24 @@ const EffectCard: React.FC<{
                 </div>
             </div>
 
-            {/* Active Indicator (Eye) */}
-            {isActive && (
-                <div className="absolute top-1 right-1 bg-black/60 text-purple-400 p-1 rounded-full shadow-lg backdrop-blur-sm animate-in fade-in zoom-in-95 duration-100 border border-white/10">
-                    <Eye size={8} />
-                </div>
-            )}
+            <div className="absolute top-1 right-1 z-20 flex gap-1">
+                {isActive && (
+                    <div className="bg-black/60 text-purple-400 p-1 rounded-full shadow-lg backdrop-blur-sm animate-in fade-in zoom-in-95 duration-100 border border-white/10">
+                        <Eye size={8} />
+                    </div>
+                )}
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite));
+                    }}
+                    className={`p-1 rounded-full transition-all ${item.isFavorite ? 'text-red-500 bg-black/40' : 'text-white/80 bg-black/30 opacity-0 group-hover:opacity-100 hover:text-red-500'}`}
+                    title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                    <Heart size={10} fill={item.isFavorite ? 'currentColor' : 'none'} />
+                </button>
+            </div>
         </div>
     );
 };

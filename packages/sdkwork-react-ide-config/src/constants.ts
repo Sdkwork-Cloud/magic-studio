@@ -1,5 +1,7 @@
 import { IdeConfigSchema } from './types';
 
+export const MAGICSTUDIO_ROOT_VARIABLE = '${MAGICSTUDIO_ROOT}';
+
 export const IDE_AND_TOOLS_CONFIG: IdeConfigSchema = {
     schemaVersion: "2.4.0",
     definitions: [
@@ -11,16 +13,16 @@ export const IDE_AND_TOOLS_CONFIG: IdeConfigSchema = {
             format: "json",
             platforms: {
                 macos: {
-                    install: "${HOME}/.openstudio/skills",
-                    config: "${HOME}/.openstudio/skills/registry.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/skills",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/skills/registry.json"
                 },
                 linux: {
-                    install: "${HOME}/.openstudio/skills",
-                    config: "${HOME}/.openstudio/skills/registry.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/skills",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/skills/registry.json"
                 },
                 windows: {
-                    install: "${USERPROFILE}/.openstudio/skills",
-                    config: "${USERPROFILE}/.openstudio/skills/registry.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/skills",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/skills/registry.json"
                 }
             }
         },
@@ -32,16 +34,16 @@ export const IDE_AND_TOOLS_CONFIG: IdeConfigSchema = {
             format: "json",
             platforms: {
                 macos: {
-                    install: "${HOME}/.openstudio/mcp",
-                    config: "${HOME}/.openstudio/mcp_settings.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/mcp",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/mcp/settings.json"
                 },
                 linux: {
-                    install: "${HOME}/.openstudio/mcp",
-                    config: "${HOME}/.openstudio/mcp_settings.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/mcp",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/mcp/settings.json"
                 },
                 windows: {
-                    install: "${USERPROFILE}/.openstudio/mcp",
-                    config: "${USERPROFILE}/.openstudio/mcp_settings.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/mcp",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/mcp/settings.json"
                 }
             }
         },
@@ -53,16 +55,16 @@ export const IDE_AND_TOOLS_CONFIG: IdeConfigSchema = {
             format: "json",
             platforms: {
                 macos: {
-                    install: "${HOME}/.openstudio/plugins",
-                    config: "${HOME}/.openstudio/plugins.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/plugins",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/plugins/registry.json"
                 },
                 linux: {
-                    install: "${HOME}/.openstudio/plugins",
-                    config: "${HOME}/.openstudio/plugins.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/plugins",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/plugins/registry.json"
                 },
                 windows: {
-                    install: "${USERPROFILE}/.openstudio/plugins",
-                    config: "${USERPROFILE}/.openstudio/plugins.json"
+                    install: "${MAGICSTUDIO_ROOT}/system/integrations/plugins",
+                    config: "${MAGICSTUDIO_ROOT}/system/integrations/plugins/registry.json"
                 }
             }
         },

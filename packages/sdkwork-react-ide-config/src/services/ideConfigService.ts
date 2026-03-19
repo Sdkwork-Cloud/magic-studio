@@ -1,6 +1,6 @@
-import { IDE_AND_TOOLS_CONFIG } from '../constants';
+import { IDE_AND_TOOLS_CONFIG, MAGICSTUDIO_ROOT_VARIABLE } from '../constants';
 import { IDEDefinition, PlatformKey } from '../types';
-import { platform } from '@sdkwork/react-core';
+import { loadMagicStudioStorageConfigFromStorage, platform } from '@sdkwork/react-core';
 import { pathUtils } from '@sdkwork/react-commons';
 import { vfs } from '@sdkwork/react-fs';
 
@@ -70,6 +70,18 @@ export const ideConfigService = {
 
     _replaceVariables: async (rawPath: string, projectRoot?: string): Promise<string> => {
         let resolved = rawPath;
+
+        if (resolved.includes(MAGICSTUDIO_ROOT_VARIABLE)) {
+            const home = await platform.getPath('home');
+            const storageConfig = await loadMagicStudioStorageConfigFromStorage(
+                (key) => platform.getStorage(key),
+                home
+            );
+            resolved = resolved.replace(
+                /\$\{MAGICSTUDIO_ROOT\}/g,
+                storageConfig.rootDir
+            );
+        }
 
         if (resolved.includes('${HOME}')) {
             const home = await platform.getPath('home');

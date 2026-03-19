@@ -16,6 +16,11 @@ import type {
   ToolkitSqlTransaction,
   ToolkitLocalWorkspaceDirs
 } from './types';
+import {
+  buildMagicStudioRootLayout,
+  buildMagicStudioWorkspaceLayout,
+  loadMagicStudioStorageConfigFromStorage,
+} from '../../storage';
 
 const DEFAULT_RECORD_MIME = 'video/webm;codecs=vp9,opus';
 const DEFAULT_AUDIO_RECORD_MIME = 'audio/webm;codecs=opus';
@@ -340,25 +345,38 @@ export const createPlatformToolKit = (runtime: PlatformRuntime): PlatformToolKit
   };
 
   const resolveWorkspaceDirs = async (appName?: string): Promise<ToolkitLocalWorkspaceDirs> => {
-    const normalizedName = sanitizePathSegment(appName || DEFAULT_APP_NAME);
-    let basePath = '';
-    try {
-      basePath = await runtime.system.path('appData');
-    } catch {
-      basePath = await runtime.system.path('home');
-    }
-    const root = joinPath(basePath, normalizedName);
+    const homePath = await runtime.system.path('home');
+    const workspaceId = sanitizePathSegment(appName || DEFAULT_APP_NAME);
+    const storageConfig = await loadMagicStudioStorageConfigFromStorage(
+      (key) => runtime.storage.get(key),
+      homePath
+    );
+    const rootLayout = buildMagicStudioRootLayout(storageConfig);
+    const workspaceLayout = buildMagicStudioWorkspaceLayout({
+      ...storageConfig,
+      workspaceId,
+    });
+    const workspaceTempRoot = joinPath(
+      rootLayout.systemTempRoot,
+      'workspaces',
+      workspaceId
+    );
+
     return {
-      root,
-      projects: joinPath(root, 'projects'),
-      media: joinPath(root, 'media'),
-      imports: joinPath(root, 'imports'),
-      exports: joinPath(root, 'exports'),
-      cache: joinPath(root, 'cache'),
-      temp: joinPath(root, 'temp'),
-      recordings: joinPath(root, 'recordings'),
-      database: joinPath(root, 'database'),
-      logs: joinPath(root, 'logs')
+      root: rootLayout.rootDir,
+      projects: workspaceLayout.projectsRoot,
+      media: workspaceLayout.workspaceRoot,
+      imports: joinPath(workspaceTempRoot, 'imports'),
+      exports: storageConfig.exportsRootDir
+        ? joinPath(storageConfig.exportsRootDir, workspaceId, 'toolkit', 'exports')
+        : joinPath(workspaceTempRoot, 'exports'),
+      cache: storageConfig.cacheRootDir
+        ? joinPath(storageConfig.cacheRootDir, workspaceId, 'toolkit', 'cache')
+        : joinPath(workspaceTempRoot, 'cache'),
+      temp: joinPath(workspaceTempRoot, 'temp'),
+      recordings: joinPath(workspaceTempRoot, 'recordings'),
+      database: rootLayout.systemIndexesRoot,
+      logs: rootLayout.systemLogsRoot
     };
   };
 

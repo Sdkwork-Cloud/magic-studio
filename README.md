@@ -1,20 +1,54 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Magic Studio V2
 
-# Run and deploy your AI Studio app
+## Development
 
-This contains everything you need to run your app locally.
+Prerequisites:
 
-View your app in AI Studio: https://ai.studio/apps/drive/1y4vCr-T8tLrgepTfFttEKC7hV0THIn_0
+- Node.js
+- pnpm
+- Rust toolchain
+- Tauri desktop prerequisites for your operating system
 
-## Run Locally
+Install dependencies:
 
-**Prerequisites:**  Node.js
+```bash
+pnpm install
+```
 
+Run the web app:
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+pnpm dev
+```
+
+Run the desktop app in Tauri development mode:
+
+```bash
+pnpm tauri:dev
+```
+
+## Build
+
+Build the web app:
+
+```bash
+pnpm build
+```
+
+Build the desktop app without generating installers:
+
+```bash
+pnpm tauri:build
+```
+
+Build the desktop installer bundle:
+
+```bash
+pnpm tauri:bundle
+```
+
+Windows installer output:
+
+```text
+src-tauri/target/release/bundle/nsis/
+```

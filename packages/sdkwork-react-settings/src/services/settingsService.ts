@@ -43,6 +43,23 @@ const normalizeSidebarConfigOrder = (sidebarConfig?: SidebarItemConfig[]): Sideb
   return normalized;
 };
 
+const mergeMaterialStorage = (saved: AppSettings | null) => ({
+  ...DEFAULT_SETTINGS.materialStorage,
+  ...saved?.materialStorage,
+  desktop: {
+    ...DEFAULT_SETTINGS.materialStorage.desktop,
+    ...saved?.materialStorage?.desktop,
+  },
+  sync: {
+    ...DEFAULT_SETTINGS.materialStorage.sync,
+    ...saved?.materialStorage?.sync,
+  },
+  naming: {
+    ...DEFAULT_SETTINGS.materialStorage.naming,
+    ...saved?.materialStorage?.naming,
+  },
+});
+
 const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
   try {
     const saved = await settingsRepository.loadSettings();
@@ -77,7 +94,8 @@ const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
           ...saved?.terminal, 
           defaultShell: shell 
       },
-      ai: { ...DEFAULT_SETTINGS.ai, ...saved?.ai }
+      ai: { ...DEFAULT_SETTINGS.ai, ...saved?.ai },
+      materialStorage: mergeMaterialStorage(saved),
     };
     
     return Result.success(settings);
@@ -120,7 +138,8 @@ export const settingsService = {
           appearance: {
             ...settings.appearance,
             sidebarConfig: normalizeSidebarConfigOrder(settings.appearance.sidebarConfig)
-          }
+          },
+          materialStorage: mergeMaterialStorage(settings)
         };
         await settingsRepository.saveSettings(normalizedSettings);
         settingsCache = normalizedSettings;

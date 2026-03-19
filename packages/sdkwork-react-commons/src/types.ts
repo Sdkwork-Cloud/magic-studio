@@ -1,5 +1,6 @@
 import type { BaseEntity as Base } from '@sdkwork/react-types';
 import type { ImageMediaResource } from '@sdkwork/react-types';
+import type { LocalizedTextLike } from '@sdkwork/react-i18n';
 
 // Re-export MediaResource types from sdkwork-react-types
 export type {
@@ -140,9 +141,9 @@ export interface GalleryItem {
 
 export interface StyleOption {
   id: string;
-  label: string;
+  label: LocalizedTextLike;
   value?: string;
-  description?: string;
+  description?: LocalizedTextLike;
   imageUrl?: string;
   category?: string;
   assets?: {
@@ -151,7 +152,7 @@ export interface StyleOption {
     sheet?: { url: string };
     video?: { url: string };
   };
-  usage?: string[];
+  usage?: LocalizedTextLike[];
   prompt?: string;
   prompt_zh?: string;
   previewColor?: string;

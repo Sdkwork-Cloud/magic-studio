@@ -3,7 +3,13 @@ import { AppSettings } from '../entities'
 import { settingsBusinessService } from '../services'
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from '../constants';
-import { DEFAULT_LOCALE, i18nService, Locale, resolveLocale } from '@sdkwork/react-i18n';
+import {
+  DEFAULT_LOCALE,
+  getRequestedLocaleFromSearch,
+  i18nService,
+  Locale,
+  resolveLocale,
+} from '@sdkwork/react-i18n';
 
 interface SettingsStoreContextType {
   settings: AppSettings;
@@ -24,20 +30,35 @@ const detectSystemLanguage = (): Locale => {
   });
 };
 
+const resolveRuntimeLocale = (lang: string): Locale => {
+  const requestedLocale = typeof window !== 'undefined'
+    ? getRequestedLocaleFromSearch(window.location.search)
+    : null;
+
+  if (requestedLocale) {
+    return resolveLocale({
+      requestedLocale,
+      defaultLocale: DEFAULT_LOCALE,
+    });
+  }
+
+  if (lang === 'system') {
+    return detectSystemLanguage();
+  }
+
+  return resolveLocale({
+    requestedLocale: lang,
+    defaultLocale: DEFAULT_LOCALE,
+  });
+};
+
 export const SettingsStoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper to sync Language
+  // Sync the runtime locale while preserving explicit request overrides.
   const syncLanguage = (lang: string) => {
-      const targetLocale = lang === 'system'
-          ? detectSystemLanguage()
-          : resolveLocale({
-              requestedLocale: lang,
-              defaultLocale: DEFAULT_LOCALE,
-            });
-
-      i18nService.setLocale(targetLocale);
+      i18nService.setLocale(resolveRuntimeLocale(lang));
   };
 
   useEffect(() => {

@@ -8,6 +8,7 @@ export interface TimelineState {
     isPlaying: boolean;
     playbackRate: number;
     playbackDirection: 1 | -1;
+    soloTrackIds: Set<string>;
     
     scrollLeft: number;
     scrollTop: number;
@@ -40,6 +41,8 @@ export interface TimelineState {
     setSkimmingResource: (res: AnyMediaResource | null) => void;
     setPlaybackRate: (rate: number) => void;
     setPlaybackDirection: (dir: 1 | -1) => void;
+    toggleSoloTrack: (trackId: string) => void;
+    clearSoloTracks: () => void;
     setSelection: (selection: SelectionState | ((prev: SelectionState) => SelectionState)) => void;
     setMarquee: (marquee: MarqueeState | null) => void;
     setInPoint: (time: number | null) => void;
@@ -75,6 +78,7 @@ export const createTimelineStore = () => {
         isPlaying: false,
         playbackRate: 1.0,
         playbackDirection: 1,
+        soloTrackIds: new Set<string>(),
         scrollLeft: 0,
         scrollTop: 0,
         zoomLevel: 1,
@@ -120,6 +124,16 @@ export const createTimelineStore = () => {
         setSkimmingResource: (res) => set({ skimmingResource: res }),
         setPlaybackRate: (rate) => set({ playbackRate: Math.max(0.1, Math.min(8, rate)) }),
         setPlaybackDirection: (dir) => set({ playbackDirection: dir }),
+        toggleSoloTrack: (trackId) => set((state) => {
+            const nextSoloTrackIds = new Set(state.soloTrackIds);
+            if (nextSoloTrackIds.has(trackId)) {
+                nextSoloTrackIds.delete(trackId);
+            } else {
+                nextSoloTrackIds.add(trackId);
+            }
+            return { soloTrackIds: nextSoloTrackIds };
+        }),
+        clearSoloTracks: () => set({ soloTrackIds: new Set<string>() }),
         setSelection: (selection) => set((state) => ({ 
             selection: typeof selection === 'function' ? selection(state.selection) : selection 
         })),

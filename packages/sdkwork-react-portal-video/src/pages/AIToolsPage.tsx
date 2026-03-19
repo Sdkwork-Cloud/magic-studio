@@ -1,311 +1,377 @@
-
-import { useRouter, ROUTES } from '@sdkwork/react-core'
-import { PortalSidebar } from '../components/PortalSidebar'
-import { PortalHeader } from '../components/PortalHeader'
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { 
-    Wand2, Video, Mic, 
-    Search, Layers, Scissors, Move, Eraser, Play, Sparkles
+import {
+  Eraser,
+  Layers,
+  Mic,
+  Move,
+  Play,
+  Scissors,
+  Search,
+  Sparkles,
+  Video,
+  Wand2,
 } from 'lucide-react';
+import { Button, Input } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
+import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { PortalHeader } from '../components/PortalHeader';
+import { PortalSidebar } from '../components/PortalSidebar';
 
-interface AITool {
-    id: string;
-    title: string;
-    description: string;
-    category: 'Video' | 'Image' | 'Audio';
-    image: string;
-    badge?: string;
-    icon: LucideIcon;
-    color?: string;
-    route: string;
+type ToolCategoryId = 'all' | 'video' | 'image' | 'audio';
+type ToolBadgeId = 'newest' | 'hot' | 'beta';
+
+interface ToolDefinition {
+  id: string;
+  localeKey: string;
+  category: Exclude<ToolCategoryId, 'all'>;
+  image: string;
+  badge?: ToolBadgeId;
+  icon: LucideIcon;
+  route: string;
 }
 
-const TOOL_CATEGORIES = [
-    { id: 'all', label: '全部工具' },
-    { id: 'Video', label: '视频工具' },
-    { id: 'Image', label: '图像工具' },
-    { id: 'Audio', label: '音频工具' },
+interface LocalizedTool extends ToolDefinition {
+  title: string;
+  description: string;
+  categoryLabel: string;
+  badgeLabel?: string;
+}
+
+const TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    id: 'video-extender',
+    localeKey: 'video_extender',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=600&auto=format&fit=crop',
+    badge: 'newest',
+    icon: Layers,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'lip-sync',
+    localeKey: 'lip_sync',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop',
+    icon: Mic,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'img-to-video',
+    localeKey: 'img_to_video',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=600&auto=format&fit=crop',
+    badge: 'hot',
+    icon: Video,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'video-upscale',
+    localeKey: 'video_upscale',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600&auto=format&fit=crop',
+    icon: Wand2,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'video-enhance',
+    localeKey: 'video_enhance',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=600&auto=format&fit=crop',
+    icon: Sparkles,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'face-swap',
+    localeKey: 'face_swap',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop',
+    badge: 'beta',
+    icon: Video,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'baby-generator',
+    localeKey: 'baby_generator',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=600&auto=format&fit=crop',
+    icon: Mic,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'pet-generator',
+    localeKey: 'pet_generator',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=600&auto=format&fit=crop',
+    icon: Mic,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'denoise',
+    localeKey: 'denoise',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1550745165-9010d9521d51?q=80&w=600&auto=format&fit=crop',
+    icon: Eraser,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'dance-gen',
+    localeKey: 'dance_gen',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?q=80&w=600&auto=format&fit=crop',
+    icon: Move,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'subtitle-remove',
+    localeKey: 'subtitle_remove',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?q=80&w=600&auto=format&fit=crop',
+    icon: Scissors,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'anime-video',
+    localeKey: 'anime_video',
+    category: 'video',
+    image: 'https://images.unsplash.com/photo-1569701813229-33284b643634?q=80&w=600&auto=format&fit=crop',
+    icon: Wand2,
+    route: ROUTES.VIDEO,
+  },
+  {
+    id: 'face-enhance',
+    localeKey: 'face_enhance',
+    category: 'image',
+    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=600&auto=format&fit=crop',
+    badge: 'newest',
+    icon: Sparkles,
+    route: ROUTES.IMAGE,
+  },
+  {
+    id: 'img-remove-obj',
+    localeKey: 'img_remove_obj',
+    category: 'image',
+    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=600&auto=format&fit=crop',
+    icon: Eraser,
+    route: ROUTES.IMAGE,
+  },
+  {
+    id: 'bg-remove',
+    localeKey: 'bg_remove',
+    category: 'image',
+    image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=600&auto=format&fit=crop',
+    icon: Scissors,
+    route: ROUTES.IMAGE,
+  },
 ];
 
-const AI_TOOLS: AITool[] = [
-    {
-        id: 'video-extender',
-        title: 'AI 视频延时',
-        description: '无缝延长视频长度，保持内容连贯性',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=600&auto=format&fit=crop',
-        badge: '最新',
-        icon: Layers,
-        color: 'bg-blue-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'lip-sync',
-        title: '嘴型同步',
-        description: '让视频人物的嘴型与任意音频完美同步',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop',
-        icon: Mic,
-        color: 'bg-purple-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'img-to-video',
-        title: '图像生成视频',
-        description: '让静态图片动起来，生成逼真的动态视频',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=600&auto=format&fit=crop',
-        badge: '热门',
-        icon: Video,
-        color: 'bg-pink-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'video-upscale',
-        title: '视频升级',
-        description: '将低分辨率视频提升至 4K 超清画质',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600&auto=format&fit=crop',
-        icon: Wand2,
-        color: 'bg-green-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'video-enhance',
-        title: '视频增强',
-        description: '智能调节色彩、对比度，修复画质',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=600&auto=format&fit=crop',
-        icon: Sparkles,
-        color: 'bg-yellow-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'face-swap',
-        title: '视频换脸',
-        description: '高精度的视频人脸替换技术',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop',
-        badge: 'Beta',
-        icon: Video,
-        color: 'bg-red-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'baby-generator',
-        title: 'AI 宝宝播客',
-        description: '生成可爱的 AI 宝宝形象进行播报',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=600&auto=format&fit=crop',
-        icon: Mic,
-        color: 'bg-indigo-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'pet-generator',
-        title: 'AI 宠物播客',
-        description: '让你的宠物开口说话，制作趣味视频',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=600&auto=format&fit=crop',
-        icon: Mic,
-        color: 'bg-orange-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'denoise',
-        title: '视频降噪',
-        description: '去除视频中的噪点，提升画面纯净度',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1550745165-9010d9521d51?q=80&w=600&auto=format&fit=crop',
-        icon: Eraser,
-        color: 'bg-gray-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'dance-gen',
-        title: 'AI 舞蹈生成',
-        description: '根据音乐节奏自动生成舞蹈动作',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?q=80&w=600&auto=format&fit=crop',
-        icon: Move,
-        color: 'bg-fuchsia-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'subtitle-remove',
-        title: '字幕移除',
-        description: '智能擦除视频硬字幕，无痕修复背景',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?q=80&w=600&auto=format&fit=crop',
-        icon: Scissors,
-        color: 'bg-cyan-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'anime-video',
-        title: '视频转动漫',
-        description: '一键将真人视频转换为二次元动漫风格',
-        category: 'Video',
-        image: 'https://images.unsplash.com/photo-1569701813229-33284b643634?q=80&w=600&auto=format&fit=crop',
-        icon: Wand2,
-        color: 'bg-pink-500',
-        route: ROUTES.VIDEO
-    },
-    {
-        id: 'face-enhance',
-        title: 'AI 人脸增强',
-        description: '修复模糊人脸，增强面部细节',
-        category: 'Image',
-        image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=600&auto=format&fit=crop',
-        badge: '使用此工具',
-        icon: Sparkles,
-        color: 'bg-amber-500',
-        route: ROUTES.IMAGE
-    },
-    {
-        id: 'img-remove-obj',
-        title: '物体移除',
-        description: '智能移除图片中的路人或杂物',
-        category: 'Image',
-        image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=600&auto=format&fit=crop',
-        icon: Eraser,
-        color: 'bg-teal-500',
-        route: ROUTES.IMAGE
-    },
-    {
-        id: 'bg-remove',
-        title: '背景移除',
-        description: '精准抠图，一键移除图片背景',
-        category: 'Image',
-        image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=600&auto=format&fit=crop',
-        icon: Scissors,
-        color: 'bg-lime-500',
-        route: ROUTES.IMAGE
-    }
-];
+const CATEGORY_IDS: ToolCategoryId[] = ['all', 'video', 'image', 'audio'];
 
 const AIToolsPage: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
-    const routerContext = useRouter();
-    const navigate = routerContext?.navigate || (() => {});
+  const { t } = useTranslation();
+  const [activeCategory, setActiveCategory] = useState<ToolCategoryId>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const routerContext = useRouter();
+  const navigate = routerContext?.navigate || (() => {});
 
-    const filteredTools = AI_TOOLS.filter(tool => {
-        const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
-        const matchesSearch = tool.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
+  const localizedTools = useMemo<LocalizedTool[]>(
+    () =>
+      TOOL_DEFINITIONS.map((tool) => ({
+        ...tool,
+        title: t(`portalVideo.tools.${tool.localeKey}.title`, tool.id),
+        description: t(`portalVideo.tools.${tool.localeKey}.description`, tool.id),
+        categoryLabel: t(
+          `portalVideo.tools.categories.${tool.category}`,
+          tool.category,
+        ),
+        badgeLabel: tool.badge
+          ? t(`portalVideo.badges.${tool.badge}`, tool.badge)
+          : undefined,
+      })),
+    [t],
+  );
+
+  const filteredTools = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return localizedTools.filter((tool) => {
+      const matchesCategory =
+        activeCategory === 'all' || tool.category === activeCategory;
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        tool.title.toLowerCase().includes(normalizedQuery) ||
+        tool.description.toLowerCase().includes(normalizedQuery);
+      return matchesCategory && matchesQuery;
     });
+  }, [activeCategory, localizedTools, searchQuery]);
 
-    return (
-        <div className="flex w-full h-full bg-[#050505] text-gray-200 font-sans overflow-hidden">
-            <PortalSidebar />
+  return (
+    <div className="flex h-full w-full overflow-hidden bg-[#050505] font-sans text-gray-200">
+      <PortalSidebar />
 
-            <div className="flex-1 flex flex-col min-w-0 relative h-full">
-                <PortalHeader />
+      <div className="relative flex h-full min-w-0 flex-1 flex-col">
+        <PortalHeader />
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                    <div className="max-w-[1600px] mx-auto">
-                        
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-white mb-1">AI 工具箱</h1>
-                                <p className="text-gray-500 text-sm">探索强大的 AI 视频与图像处理工具，激发创意无限</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 bg-[#18181b] p-1.5 rounded-xl border border-[#27272a]">
-                                {TOOL_CATEGORIES.map(cat => (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => setActiveCategory(cat.id)}
-                                        className={`
-                                            px-4 py-1.5 rounded-lg text-xs font-bold transition-all
-                                            ${activeCategory === cat.id 
-                                                ? 'bg-white text-black shadow-sm' 
-                                                : 'text-gray-500 hover:text-white hover:bg-[#27272a]'
-                                            }
-                                        `}
-                                    >
-                                        {cat.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+              <div>
+                <h1 className="mb-1 text-2xl font-bold text-white">
+                  {t('portalVideo.page.ai_tools_title', 'AI Tools')}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {t(
+                    'portalVideo.page.ai_tools_subtitle',
+                    'Explore creative tools for video and image workflows.',
+                  )}
+                </p>
+              </div>
 
-                        <div className="relative mb-8 max-w-lg">
-                            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                            <input 
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="搜索 AI 工具..."
-                                className="w-full bg-[#18181b] border border-[#27272a] rounded-xl pl-11 pr-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-600"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-20">
-                            {filteredTools.map(tool => (
-                                <ToolCard key={tool.id} tool={tool} onClick={() => navigate(tool.route)} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+              <div className="flex items-center gap-4 rounded-xl border border-[#27272a] bg-[#18181b] p-1.5">
+                {CATEGORY_IDS.map((categoryId) => (
+                  <Button
+                    key={categoryId}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveCategory(categoryId)}
+                    className={`px-4 py-1.5 text-xs font-bold transition-all ${
+                      activeCategory === categoryId
+                        ? 'rounded-lg bg-white text-black shadow-sm'
+                        : 'rounded-lg text-gray-500 hover:bg-[#27272a] hover:text-white'
+                    }`}
+                  >
+                    {t(
+                      `portalVideo.tools.categories.${categoryId}`,
+                      categoryId,
+                    )}
+                  </Button>
+                ))}
+              </div>
             </div>
+
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="relative max-w-lg flex-1">
+                <Search
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+                />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={t(
+                    'portalVideo.page.search_placeholder',
+                    'Search AI tools...',
+                  )}
+                  className="w-full rounded-xl border border-[#27272a] bg-[#18181b] py-3 pl-11 pr-4 text-sm text-gray-200 transition-colors placeholder-gray-600 focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+              <div className="text-xs text-gray-500">
+                {t('portalVideo.page.results_count', {
+                  count: String(filteredTools.length),
+                })}
+              </div>
+            </div>
+
+            {filteredTools.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 pb-20 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                {filteredTools.map((tool) => (
+                  <ToolCard
+                    key={tool.id}
+                    tool={tool}
+                    ctaLabel={t('portalVideo.page.try_now', 'Try Now')}
+                    onClick={() => navigate(tool.route)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#27272a] bg-[#111113] text-center">
+                <Sparkles size={36} className="mb-4 text-gray-600" />
+                <h2 className="mb-2 text-lg font-semibold text-white">
+                  {t('portalVideo.page.empty_title', 'No matching tools')}
+                </h2>
+                <p className="max-w-md text-sm text-gray-500">
+                  {t(
+                    'portalVideo.page.empty_description',
+                    'Try another search or switch the current category.',
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
-const ToolCard: React.FC<{ tool: AITool, onClick: () => void }> = ({ tool, onClick }) => {
-    return (
-        <div 
-            onClick={onClick}
-            className="group relative bg-[#18181b] rounded-xl overflow-hidden cursor-pointer border border-[#27272a] hover:border-[#444] transition-all duration-300 hover:shadow-2xl hover:shadow-black/50 hover:-translate-y-1"
-        >
-            <div className="aspect-[16/9] relative overflow-hidden bg-[#111]">
-                <img 
-                    src={tool.image} 
-                    alt={tool.title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-[#18181b] via-transparent to-transparent opacity-80" />
+const ToolCard: React.FC<{
+  tool: LocalizedTool;
+  ctaLabel: string;
+  onClick: () => void;
+}> = ({ tool, ctaLabel, onClick }) => {
+  const badgeClassname =
+    tool.badge === 'newest'
+      ? 'bg-pink-600'
+      : tool.badge === 'hot'
+        ? 'bg-orange-600'
+        : 'bg-blue-600';
 
-                {tool.badge && (
-                    <div className={`absolute top-2 left-2 text-[9px] font-bold text-white px-2 py-0.5 rounded shadow-sm uppercase tracking-wide ${tool.badge === '使用此工具' ? 'bg-pink-600' : 'bg-blue-600'}`}>
-                        {tool.badge}
-                    </div>
-                )}
-                
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[1px]">
-                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg">
-                        <Play size={16} fill="currentColor" className="ml-0.5" />
-                    </div>
-                </div>
-            </div>
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className="group relative block overflow-hidden rounded-xl border border-[#27272a] bg-[#18181b] text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#444] hover:shadow-2xl hover:shadow-black/50"
+      onClick={onClick}
+    >
+      <div className="relative aspect-[16/9] overflow-hidden bg-[#111]">
+        <img
+          src={tool.image}
+          alt={tool.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
 
-            <div className="p-4 relative">
-                <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">{tool.title}</h3>
-                </div>
-                
-                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed h-9">
-                    {tool.description}
-                </p>
-                
-                <div className="mt-4 pt-3 border-t border-[#27272a] flex justify-between items-center">
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium bg-[#222] px-2 py-1 rounded">
-                         <tool.icon size={10} />
-                         {tool.category}
-                    </div>
-                    <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        立即试用 <Sparkles size={10} />
-                    </span>
-                </div>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#18181b] via-transparent to-transparent opacity-80" />
+
+        {tool.badgeLabel ? (
+          <div
+            className={`absolute left-2 top-2 rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm ${badgeClassname}`}
+          >
+            {tool.badgeLabel}
+          </div>
+        ) : null}
+
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 backdrop-blur-[1px] transition-opacity duration-300 group-hover:opacity-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-lg backdrop-blur-md">
+            <Play size={16} fill="currentColor" className="ml-0.5" />
+          </div>
         </div>
-    );
+      </div>
+
+      <div className="relative p-4">
+        <div className="mb-2 flex items-start justify-between">
+          <h3 className="line-clamp-1 text-sm font-bold text-white transition-colors group-hover:text-blue-400">
+            {tool.title}
+          </h3>
+        </div>
+
+        <p className="h-9 line-clamp-2 text-xs leading-relaxed text-gray-500">
+          {tool.description}
+        </p>
+
+        <div className="mt-4 flex items-center justify-between border-t border-[#27272a] pt-3">
+          <div className="flex items-center gap-1.5 rounded bg-[#222] px-2 py-1 text-[10px] font-medium text-gray-400">
+            <tool.icon size={10} />
+            {tool.categoryLabel}
+          </div>
+          <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500 opacity-0 transition-opacity group-hover:opacity-100">
+            {ctaLabel} <Sparkles size={10} />
+          </span>
+        </div>
+      </div>
+    </button>
+  );
 };
 
 export default AIToolsPage;

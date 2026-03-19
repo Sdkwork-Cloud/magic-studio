@@ -1,12 +1,14 @@
 
 import { Button } from '@sdkwork/react-commons';
 import React from 'react';
+import { useTranslation, createLocalizedText, resolveLocalizedText } from '@sdkwork/react-i18n';
 import { useFilmStore } from '../store/filmStore';
 import { SettingsSection, SettingInput, SettingTextArea } from '@sdkwork/react-settings';
 
 import { Image as ImageIcon, Video } from 'lucide-react';
 
 export const FilmPropertiesPanel: React.FC = () => {
+    const { locale } = useTranslation();
     const { 
         selectedId, selectedType, project, 
         updateCharacter, updateScene, updateShot, updateLocation,
@@ -118,7 +120,7 @@ export const FilmPropertiesPanel: React.FC = () => {
                         className="gap-2 bg-[#252526] hover:bg-[#333] border border-[#333]"
                         onClick={() => generateShotImage(shot.sceneUuid, shot.uuid)}
                     >
-                        <ImageIcon size={14} /> 生成图片
+                        <ImageIcon size={14} /> {resolveLocalizedText(createLocalizedText('Generate Image', '\u751f\u6210\u56fe\u7247'), locale)}
                     </Button>
                     <Button 
                         size="sm" 
@@ -126,7 +128,7 @@ export const FilmPropertiesPanel: React.FC = () => {
                         onClick={() => generateShotVideo(shot.sceneUuid, shot.uuid)}
                         disabled={!hasImage}
                     >
-                        <Video size={14} /> 生成结果
+                        <Video size={14} /> {resolveLocalizedText(createLocalizedText('Generate Result', '\u751f\u6210\u7ed3\u679c'), locale)}
                     </Button>
                 </div>
 

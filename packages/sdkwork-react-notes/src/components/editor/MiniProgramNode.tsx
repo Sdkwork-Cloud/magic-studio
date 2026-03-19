@@ -2,8 +2,10 @@
 import React from 'react';
 import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import { AppWindow, Image as ImageIcon, Link2 } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const MiniProgramNode: React.FC<NodeViewProps> = (props) => {
+  const { t } = useTranslation();
   const { node, selected } = props;
   const { title, image, type, text } = node.attrs;
 
@@ -53,7 +55,7 @@ export const MiniProgramNode: React.FC<NodeViewProps> = (props) => {
                              <div className="w-3 h-3 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                                 <Link2 size={8} className="text-white" />
                              </div>
-                             <span className="text-[10px] text-white text-shadow-sm">小程序</span>
+                             <span className="text-[10px] text-white text-shadow-sm">{t('notes.editor.media.mini_program')}</span>
                         </div>
                     </div>
                 </div>
@@ -90,7 +92,7 @@ export const MiniProgramNode: React.FC<NodeViewProps> = (props) => {
                 )}
                 {/* Overlay Badge to indicate it's an MP link */}
                 <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm pointer-events-none flex items-center gap-1">
-                    <AppWindow size={10} /> 小程序
+                    <AppWindow size={10} /> {t('notes.editor.media.mini_program')}
                 </div>
             </div>
         )}

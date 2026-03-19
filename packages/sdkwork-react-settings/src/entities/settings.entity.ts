@@ -11,6 +11,7 @@ export interface SidebarItemConfig {
     route: string;
     icon: string;
     visible: boolean;
+    runtimeVisibility?: 'all' | 'web-only' | 'desktop-only';
     children?: SidebarItemConfig[];
 }
 
@@ -158,6 +159,31 @@ export interface StorageConfig {
   publicDomain?: string; 
 }
 
+export type MaterialStorageMode = 'local-first-sync' | 'local-only' | 'server-only';
+
+export interface MaterialStorageDesktopConfig {
+  rootDir: string;
+  workspacesRootDir?: string;
+  cacheRootDir?: string;
+  exportsRootDir?: string;
+}
+
+export interface MaterialStorageSyncConfig {
+  enabled: boolean;
+  autoUploadOnImport: boolean;
+}
+
+export interface MaterialStorageNamingConfig {
+  keepOriginalFilenameInMetadata: boolean;
+}
+
+export interface MaterialStorageConfig {
+  mode: MaterialStorageMode;
+  desktop: MaterialStorageDesktopConfig;
+  sync: MaterialStorageSyncConfig;
+  naming: MaterialStorageNamingConfig;
+}
+
 export type AppMode = 'creator' | 'developer';
 
 export interface AppSettings {
@@ -215,4 +241,5 @@ export interface AppSettings {
   llm: Record<string, LlmProviderConfig>;
   media: Record<string, MediaAccountConfig>;
   storage: Record<string, StorageConfig>; 
+  materialStorage: MaterialStorageConfig;
 }

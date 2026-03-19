@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { ROUTES, platform, useRouter } from '@sdkwork/react-core';
+import { WindowControls } from '@sdkwork/react-commons';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { Sparkles, Smartphone, ScanLine, ShieldCheck } from 'lucide-react';
 import { LoginForm, RegisterForm, ForgotPasswordForm, QrCodeLogin } from '../index';
@@ -14,6 +15,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const { t } = useTranslation();
     const { navigate } = useRouter();
     const [view, setView] = useState<AuthView>('login');
+    const isDesktopRuntime = platform.getPlatform() === 'desktop';
 
     const handleLoginSuccess = () => {
         if (onLoginSuccess) {
@@ -24,12 +26,34 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="relative w-full h-full min-h-screen overflow-hidden bg-[#050505] text-white flex items-center justify-center p-4">
+        <div className={`relative w-full h-full min-h-screen overflow-hidden bg-[#050505] text-white flex items-center justify-center p-4 ${isDesktopRuntime ? 'pt-16' : ''}`}>
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-900/20 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[120px] rounded-full mix-blend-screen" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150" />
             </div>
+
+            {isDesktopRuntime && (
+                <div className="absolute inset-x-0 top-0 z-20 flex h-12 items-center pl-5">
+                    <div className="flex items-center gap-3 rounded-full border border-white/8 bg-black/30 px-4 py-2 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+                        <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-950/40">
+                            <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-semibold tracking-[0.18em] uppercase text-white/80">
+                                {t('auth.page.brand_name')}
+                            </span>
+                            <span className="text-[10px] text-gray-400">Desktop Edition</span>
+                        </div>
+                    </div>
+
+                    <div className="h-full flex-1" data-tauri-drag-region />
+
+                    <div className="h-full">
+                        <WindowControls />
+                    </div>
+                </div>
+            )}
 
             <div className="relative z-10 w-full max-w-[1060px] mx-auto animate-in fade-in zoom-in-95 duration-300">
                 <div className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden shadow-2xl">

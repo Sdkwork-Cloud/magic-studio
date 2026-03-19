@@ -18,8 +18,11 @@ export class TrackFactory {
         if (t === MediaResourceType.AUDIO || t === MediaResourceType.MUSIC || t === MediaResourceType.VOICE || t === MediaResourceType.SPEECH) {
             return 'audio';
         }
-        if (t === MediaResourceType.TEXT || t === MediaResourceType.SUBTITLE) {
+        if (t === MediaResourceType.TEXT) {
             return 'text'; 
+        }
+        if (t === MediaResourceType.SUBTITLE) {
+            return 'subtitle';
         }
         if (t === MediaResourceType.EFFECT || t === MediaResourceType.TRANSITION) {
             return 'effect'; 
@@ -54,6 +57,14 @@ export class TrackFactory {
                 case 'text':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
                     name = 'Text Track';
+                    break;
+                case 'subtitle':
+                    height = TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
+                    name = 'Subtitle Track';
+                    break;
+                case 'ai':
+                    height = TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
+                    name = 'AI Track';
                     break;
                 default:
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_DEFAULT;

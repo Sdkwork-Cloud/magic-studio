@@ -27,7 +27,9 @@ const resolveTrackColor = (trackType: CutTrack['trackType']) => {
     if (trackType === 'video') return '#38bdf8';
     if (trackType === 'audio') return '#34d399';
     if (trackType === 'text') return '#fbbf24';
+    if (trackType === 'subtitle') return '#fb923c';
     if (trackType === 'effect') return '#a78bfa';
+    if (trackType === 'ai') return '#f472b6';
     return '#71717a';
 };
 

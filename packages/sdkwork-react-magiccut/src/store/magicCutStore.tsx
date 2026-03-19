@@ -35,10 +35,16 @@ import {
     buildMagicCutAssetRef,
     buildMagicCutAssetRegistrationInput,
     buildMagicCutResourceView,
-    normalizeMagicCutAssetState
+    isMagicCutAssetInUse,
+    type MagicCutMaterialStorageMode,
+    decideMagicCutImportRoute,
+    normalizeMagicCutAssetState,
+    removeMagicCutAssetFromState
 } from '../domain/assets/magicCutAssetState';
+import { buildMagicCutImportScope } from '../domain/assets/magicCutImportScope';
 import { setPlaybackInPoint as resolvePlaybackInPoint, setPlaybackOutPoint as resolvePlaybackOutPoint } from '../domain/playback/playbackRange';
 import { resolveLinkedSelectionState } from '../domain/timeline/linkedSelection';
+import { settingsBusinessService } from '@sdkwork/react-settings';
 ;
 ;
 
@@ -51,6 +57,8 @@ type AssetImportSource = {
     data?: Uint8Array;
     remoteUrl?: string;
 };
+
+const DEFAULT_MAGICCUT_STORAGE_MODE: MagicCutMaterialStorageMode = 'local-first-sync';
 
 const {
     timelineOperationService,
@@ -155,7 +163,10 @@ function applyClipMovesToDraft(
     }
 }
 
-const toMagiccutResource = async (uploaded: Asset): Promise<AnyMediaResource> => {
+const toMagiccutResource = async (
+    uploaded: Asset,
+    scope = buildMagicCutImportScope(readWorkspaceScope())
+): Promise<AnyMediaResource> => {
     const resolvedUrl =
         (await resolveAssetPrimaryUrlBySdk(uploaded.id)) ||
         uploaded.path ||
@@ -176,10 +187,7 @@ const toMagiccutResource = async (uploaded: Asset): Promise<AnyMediaResource> =>
                 updatedAt: uploaded.updatedAt
             },
             resolvedUrl,
-            {
-                ...readWorkspaceScope(),
-                domain: 'magiccut'
-            }
+            scope
         )
     );
     return buildMagicCutResourceView(unifiedAsset);
@@ -199,6 +207,12 @@ const resolveResourceImportSource = async (resource: AnyMediaResource): Promise<
     for (const source of candidates) {
         if (source.startsWith('http://') || source.startsWith('https://')) {
             return { remoteUrl: source };
+        }
+        if (source.startsWith('assets://')) {
+            const resolvedLocatorUrl = await assetCenterService.resolveLocatorUrl(source);
+            if (resolvedLocatorUrl) {
+                return { remoteUrl: resolvedLocatorUrl };
+            }
         }
         const inlineData = await inlineDataService.tryExtractInlineData(source);
         if (inlineData) {
@@ -221,6 +235,23 @@ const resolveAssetNameExtension = (resource: AnyMediaResource): string => {
     }
     return '.mp4';
 };
+
+const resolveMagicCutStorageMode = async (): Promise<MagicCutMaterialStorageMode> => {
+    try {
+        const result = await settingsBusinessService.getSettings();
+        const mode = result.success ? result.data?.materialStorage?.mode : undefined;
+        if (mode === 'local-first-sync' || mode === 'local-only' || mode === 'server-only') {
+            return mode;
+        }
+    } catch (error) {
+        console.warn('[MagicCutStore] Failed to resolve material storage mode, falling back to local-first-sync', error);
+    }
+
+    return DEFAULT_MAGICCUT_STORAGE_MODE;
+};
+
+const resolveCurrentMagicCutImportScope = (projectId?: string) =>
+    buildMagicCutImportScope(readWorkspaceScope(), projectId);
 
 class ClipTransformFactory {
     static calculate(resource: AnyMediaResource, resolutionStr: string): CutClipTransform {
@@ -329,6 +360,8 @@ export interface MagicCutStoreContextType {
     applyTimelineEditResult: (result: EditOperationResult) => void;
 
     updateResource: (id: string, updates: Partial<AnyMediaResource>) => void;
+    isAssetInUse: (assetId: string) => boolean;
+    removeAssetFromProjectState: (assetId: string) => void;
     
     addEffectToClip: (clipId: string, effectId: string) => void;
     addTransitionToClip: (clipId: string, transitionId: string, duration?: number) => void;
@@ -473,6 +506,47 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
     const [previewRange, _setPreviewRange] = useState<{ start: number; end: number } | null>(null);
 
     const playerControllerRef = useRef(new PlayerController(storeRef.current));
+
+    const importMagicCutUpload = useCallback(async (
+        file: { name: string; data: Uint8Array; path?: string },
+        type: AssetContentKey
+    ): Promise<AnyMediaResource> => {
+        const storageMode = await resolveMagicCutStorageMode();
+        const route = decideMagicCutImportRoute({
+            runtime: file.path ? 'desktop' : 'web',
+            storageMode,
+            filePath: file.path,
+            hasBinaryData: file.data.length > 0
+        });
+
+        if (route.kind === 'managed-local') {
+            await assetCenterService.initialize();
+            const imported = await assetCenterService.importAsset({
+                scope: resolveCurrentMagicCutImportScope(project.id),
+                type,
+                name: file.name,
+                sourcePath: file.path,
+                data: file.path ? undefined : file.data,
+                metadata: {
+                    origin: 'upload',
+                    storageMode,
+                    syncQueued: route.shouldQueueSync
+                },
+                status: 'imported'
+            });
+            return buildMagicCutResourceView(imported.asset);
+        }
+
+        const uploaded = await importAssetBySdk(
+            {
+                name: file.name,
+                data: file.data
+            },
+            type,
+            { domain: 'magiccut' }
+        );
+        return toMagiccutResource(uploaded, resolveCurrentMagicCutImportScope(project.id));
+    }, [project.id]);
     
     // History Management
     const [history, setHistory] = useState<{ undo: Patch[], redo: Patch[] }[]>([]);
@@ -1364,7 +1438,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                     domain: 'magiccut'
                 }
             );
-        const audioResource = await toMagiccutResource(uploaded);
+        const audioResource = await toMagiccutResource(uploaded, resolveCurrentMagicCutImportScope(project.id));
 
         const result = timelineOperationService.calculateDetachAudio(state, clipId, audioResource.id);
         
@@ -1498,6 +1572,19 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             }
         });
     };
+
+    const isAssetInUse = useCallback((assetId: string) => {
+        return isMagicCutAssetInUse(state, assetId);
+    }, [state]);
+
+    const removeAssetFromProjectState = useCallback((assetId: string) => {
+        updateState(draft => {
+            const nextState = removeMagicCutAssetFromState(draft, assetId);
+            draft.assets = nextState.assets;
+            draft.resourceViews = nextState.resourceViews;
+            draft.resources = nextState.resources;
+        });
+    }, [updateState]);
 
     const addEffectToClip = (clipId: string, effectId: string) => {
         const id = generateUUID();
@@ -1681,6 +1768,7 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
         const resources: AnyMediaResource[] = [];
         for (const file of files) {
             const buffer = new Uint8Array(await file.arrayBuffer());
+            const fileWithPath = file as File & { path?: string };
             let typeStr = file.type;
             if (!typeStr || typeStr === '') {
                 const ext = file.name.split('.').pop()?.toLowerCase();
@@ -1693,15 +1781,11 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             else if (typeStr.startsWith('audio')) type = 'audio';
             else if (typeStr.startsWith('image')) type = 'image';
             else if (typeStr.startsWith('text')) type = 'text';
-            const uploaded = await importAssetBySdk(
-                {
-                    name: file.name,
-                    data: buffer
-                },
-                type,
-                { domain: 'magiccut' }
-            );
-            const resource = await toMagiccutResource(uploaded);
+            const resource = await importMagicCutUpload({
+                name: file.name,
+                data: buffer,
+                path: fileWithPath.path
+            }, type);
             resources.push(resource);
             updateState(draft => {
                 syncDraftResourceState(draft, resource);
@@ -1723,15 +1807,11 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
                     if (['mp4', 'mov', 'webm', 'mkv', 'avi'].includes(ext || '')) type = 'video';
                     else if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext || '')) type = 'audio';
                 }
-                const uploaded = await importAssetBySdk(
-                    {
-                        name: f.name,
-                        data: f.data
-                    },
-                    type,
-                    { domain: 'magiccut' }
-                );
-                const resource = await toMagiccutResource(uploaded);
+                const resource = await importMagicCutUpload({
+                    name: f.name,
+                    data: f.data,
+                    path: f.path
+                }, type);
                 importedResources.push(resource);
                 updateState(draft => {
                     syncDraftResourceState(draft, resource);
@@ -2035,6 +2115,8 @@ export const MagicCutStoreProvider: React.FC<MagicCutStoreProviderProps> = ({
             addTrack, removeTrack, updateTrack, resizeTrack, selectTrack,
             addClip, updateClip, updateClipTransform, updateClipLayers, moveClip, applyClipMoves, splitClip, trimStart, trimEnd, trimClip, copyClip, pasteClip, deleteSelected, selectClip,
             updateResource,
+            isAssetInUse,
+            removeAssetFromProjectState,
             addEffectToClip, addTransitionToClip, addKeyframe, removeKeyframe,
             insertTrackAndMoveClip, insertTrackAndMoveClipGroup, insertTrackAndAddClip,
             play: playerControllerRef.current.play,

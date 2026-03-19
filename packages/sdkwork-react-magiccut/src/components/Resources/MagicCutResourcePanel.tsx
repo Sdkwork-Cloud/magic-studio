@@ -2,12 +2,16 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Search, Grid, List, UploadCloud, Heart, Sparkles, FolderUp, LayoutGrid, Save, Box } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
-import { DEFAULT_PAGE_SIZE, AssetType, MediaResourceType } from '@sdkwork/react-commons';
+import { DEFAULT_PAGE_SIZE, AssetType, MediaResourceType, type AnyMediaResource } from '@sdkwork/react-commons';
 import {
+    assetCenterService,
     AnyAsset,
     type Asset,
+    mapUnifiedAssetToAnyAsset,
+    mapUnifiedPageToAnyAssetPage,
     mapContentKeyToMediaType,
     queryAssetsBySdk,
+    readWorkspaceScope,
     type AssetSdkQueryCategory
 } from '@sdkwork/react-assets';
 import { CutTemplate, TemplateMetadata } from '../../entities/magicCut.entity';
@@ -30,6 +34,27 @@ import { FilterTab, LoadingSpinner, EmptyState } from '../common/UIComponents';
 import { platform } from '@sdkwork/react-core';
 import { getProtectedAssetDeleteMessage } from '../../domain/assets/assetDeleteGuard';
 import { playerPreviewService } from '../../services';
+import {
+    collectLocalAssetsForCategory,
+    filterAssetCollectionByQuery,
+    mergeAssetCollections,
+    mergeRemoteAssetRefresh,
+    queryResourcePanelAssets,
+    type ResourcePanelStorageMode
+} from '../../domain/assets/resourcePanelAssets';
+import { resolveDeletedAssetPreviewCleanup } from '../../domain/assets/deletedAssetPreview';
+import { type ResourcePanelViewMode } from '../../domain/assets/resourcePanelPresentation';
+import { settingsBusinessService } from '@sdkwork/react-settings';
+import type { AssetContentKey } from '@sdkwork/react-types';
+import { buildMagicCutImportScope } from '../../domain/assets/magicCutImportScope';
+import {
+    applyFavoriteStateFromCatalog,
+    beginFavoriteMutation,
+    buildFavoriteRegistrationInput,
+    clearFavoriteOverride,
+    isCurrentFavoriteMutation,
+    syncFavoriteInAssetCollection
+} from '../../domain/assets/favoriteToggle';
 
 interface MagicCutResourcePanelProps {
     activeTab: string;
@@ -82,6 +107,31 @@ const resolveMagiccutTypes = (category: string): Array<'video' | 'image' | 'audi
     }
 };
 
+const resolveMagiccutContentKeys = (category: string): AssetContentKey[] | undefined => {
+    switch (category) {
+        case 'video':
+            return ['video'];
+        case 'image':
+            return ['image'];
+        case 'music':
+            return ['music'];
+        case 'audio':
+            return ['audio'];
+        case 'voice':
+            return ['voice'];
+        case 'text':
+            return ['text', 'subtitle'];
+        case 'effects':
+            return ['effect'];
+        case 'transitions':
+            return ['transition'];
+        case 'sfx':
+            return ['sfx'];
+        default:
+            return undefined;
+    }
+};
+
 const resolveMagiccutQueryCategory = (category: string): AssetSdkQueryCategory => {
     if (category === 'effects') return 'effects';
     if (category === 'transitions') return 'transitions';
@@ -119,12 +169,25 @@ const toAnyAsset = (asset: Asset): AnyAsset => ({
 });
 
 export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ activeTab }) => {
+    const [assetViewModes, setAssetViewModes] = useState<Record<string, ResourcePanelViewMode>>({});
     
     if (activeTab === 'templates') {
         return <TemplateCategoryView />;
     }
 
-    return <AssetCategoryView key={activeTab} category={activeTab} />;
+    return (
+        <AssetCategoryView
+            key={activeTab}
+            category={activeTab}
+            viewMode={assetViewModes[activeTab] ?? 'grid'}
+            onViewModeChange={(nextViewMode) => {
+                setAssetViewModes((prev) => ({
+                    ...prev,
+                    [activeTab]: nextViewMode
+                }));
+            }}
+        />
+    );
 };
 
 // --- 1. Template View Component (Independent) ---
@@ -250,14 +313,21 @@ const TemplateCategoryView: React.FC = () => {
 
 interface AssetCategoryViewProps {
     category: string;
+    viewMode: ResourcePanelViewMode;
+    onViewModeChange: (viewMode: ResourcePanelViewMode) => void;
 }
 
-const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
+const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMode, onViewModeChange }) => {
     const { 
+        project,
         setDragOperation, 
         importAssets, 
         setPreviewSource, 
+        removeAssetFromProjectState,
+        updateResource,
+        isAssetInUse,
         state,
+        skimmingResource,
         setSkimmingResource,
         previewEffect,
         setPreviewEffect,
@@ -268,65 +338,127 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     
     const zoomLevel = useTransientState(s => s.zoomLevel);
 
-    const [assets, setAssets] = useState<AnyAsset[]>([]);
+    const [remoteAssets, setRemoteAssets] = useState<AnyAsset[]>([]);
     const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [_showFilters, _setShowFilters] = useState(false);
     const [_filters, _setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+    const [debouncedQuery, setDebouncedQuery] = useState(DEFAULT_FILTERS.query);
+    const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
+    const [hiddenAssetIds, setHiddenAssetIds] = useState<Record<string, true>>({});
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const loadRequestIdRef = useRef(0);
+    const favoriteMutationVersionsRef = useRef<Record<string, number>>({});
 
     const isEffectTab = category === 'effects' || category === 'transitions';
     const isTextTab = category === 'text';
+
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => {
+            setDebouncedQuery(_filters.query.trim());
+        }, 250);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [_filters.query]);
+
+    const localAssets = useMemo(() => {
+        const collectedAssets = collectLocalAssetsForCategory(
+            state.resources as Record<string, AnyMediaResource>,
+            category
+        );
+
+        return filterAssetCollectionByQuery(collectedAssets, debouncedQuery);
+    }, [state.resources, category, debouncedQuery]);
+
+    const resolveResourcePanelStorageMode = useCallback(async (): Promise<ResourcePanelStorageMode> => {
+        try {
+            const result = await settingsBusinessService.getSettings();
+            const mode = result.success ? result.data?.materialStorage?.mode : undefined;
+            if (mode === 'local-first-sync' || mode === 'local-only' || mode === 'server-only') {
+                return mode;
+            }
+        } catch (error) {
+            console.warn('[MagicCutResourcePanel] Failed to resolve storage mode, falling back to local-first-sync', error);
+        }
+
+        return 'local-first-sync';
+    }, []);
+
+    const queryLocalAssetCenterPage = useCallback(async (pageNum: number) => {
+        const workspaceScope = readWorkspaceScope();
+        const localResult = await assetCenterService.query({
+            page: pageNum,
+            size: DEFAULT_PAGE_SIZE,
+            keyword: debouncedQuery,
+            sort: ['updatedAt,desc'],
+            scope: {
+                ...workspaceScope,
+                projectId: workspaceScope.projectId || project.id,
+                domain: 'magiccut'
+            },
+            types: resolveMagiccutContentKeys(category)
+        });
+
+        return mapUnifiedPageToAnyAssetPage(localResult);
+    }, [category, debouncedQuery, project.id]);
+
+    const queryRemoteAssetPage = useCallback(async (pageNum: number) => {
+        const result = await queryAssetsBySdk({
+            category: resolveMagiccutQueryCategory(category),
+            pageRequest: {
+                page: pageNum,
+                size: DEFAULT_PAGE_SIZE,
+                keyword: debouncedQuery,
+                sort: ['updatedAt,desc']
+            },
+            allowedTypes: resolveMagiccutTypes(category)
+        });
+
+        const remoteContent = (Array.isArray(result?.content) ? result.content : []).map((item) => toAnyAsset(item));
+        const persistedCatalogAssets = remoteContent.length === 0
+            ? []
+            : await Promise.all(
+                remoteContent.map(async (item) => {
+                    try {
+                        const persisted = await assetCenterService.findById(item.id);
+                        return persisted ? mapUnifiedAssetToAnyAsset(persisted) : null;
+                    } catch (error) {
+                        console.warn('[MagicCutResourcePanel] Failed to read persisted favorite state', error);
+                        return null;
+                    }
+                })
+            );
+
+        return {
+            ...result,
+            content: applyFavoriteStateFromCatalog(remoteContent, persistedCatalogAssets)
+        };
+    }, [category, debouncedQuery]);
 
     const loadAssets = useCallback(async (pageNum: number, reset: boolean = false) => {
         const requestId = ++loadRequestIdRef.current;
         if (reset) setLoading(true);
         try {
-            const result = await queryAssetsBySdk({
-                category: resolveMagiccutQueryCategory(category),
-                pageRequest: {
-                    page: pageNum,
-                    size: DEFAULT_PAGE_SIZE,
-                    keyword: _filters.query,
-                    sort: ['updatedAt,desc']
-                },
-                allowedTypes: resolveMagiccutTypes(category)
+            const storageMode = await resolveResourcePanelStorageMode();
+            const result = await queryResourcePanelAssets({
+                category,
+                storageMode,
+                queryLocal: () => queryLocalAssetCenterPage(pageNum),
+                queryRemote: () => queryRemoteAssetPage(pageNum)
             });
 
-            const fetchedContent: AnyAsset[] = (Array.isArray(result?.content) ? result.content : [])
-                .map((item) => toAnyAsset(item));
-            
-            let localContent: AnyAsset[] = [];
-            if (pageNum === 0 && !isEffectTab && !isTextTab) {
-                 const storeResources = Object.values(state.resources).filter((res: any) => {
-                     const type = res.type as MediaResourceType;
-                     if (category === 'video' && type === MediaResourceType.VIDEO) return true;
-                     if (category === 'image' && type === MediaResourceType.IMAGE) return true;
-                     if (category === 'music' && type === MediaResourceType.MUSIC) return true;
-                     if ((category === 'audio' || category === 'sfx') && (type === MediaResourceType.AUDIO || type === MediaResourceType.VOICE || type === MediaResourceType.SPEECH)) return true;
-                     if (category === 'voice' && type === MediaResourceType.VOICE) return true;
-                     return false;
-                 });
-                 localContent = [...storeResources].reverse();
-            }
+            const fetchedContent: AnyAsset[] = Array.isArray(result?.content) ? result.content : [];
 
             if (requestId !== loadRequestIdRef.current) {
                 return;
             }
 
             if (reset) {
-                const localIds = new Set(localContent.map(l => l.id));
-                const uniqueFetched = fetchedContent.filter(f => !localIds.has(f.id));
-                setAssets([...localContent, ...uniqueFetched]);
+                setRemoteAssets(prev => mergeRemoteAssetRefresh(prev, fetchedContent));
             } else {
-                setAssets(prev => {
-                    const existingIds = new Set(prev.map(p => p.id));
-                    const newUnique = fetchedContent.filter(f => !existingIds.has(f.id));
-                    return [...prev, ...newUnique];
-                });
+                setRemoteAssets(prev => mergeAssetCollections(prev, fetchedContent));
             }
             
             setHasMore(!(result?.last ?? true));
@@ -336,11 +468,24 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         } finally {
             if (reset && requestId === loadRequestIdRef.current) setLoading(false);
         }
-    }, [category, _filters.query, state.resources, isEffectTab, isTextTab]);
+    }, [category, queryLocalAssetCenterPage, queryRemoteAssetPage, resolveResourcePanelStorageMode]);
 
     useEffect(() => {
         loadAssets(0, true);
     }, [loadAssets]);
+
+    const assets = useMemo(() => {
+        const merged = mergeAssetCollections(localAssets, remoteAssets)
+            .filter((asset) => !hiddenAssetIds[asset.id]);
+
+        return merged.map((asset) => {
+            if (favoriteOverrides[asset.id] === undefined) return asset;
+            return {
+                ...asset,
+                isFavorite: favoriteOverrides[asset.id]
+            };
+        });
+    }, [localAssets, remoteAssets, hiddenAssetIds, favoriteOverrides]);
 
     const filteredAssets = useMemo(() => {
         let result = assets;
@@ -396,9 +541,58 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
         return result;
     }, [assets, filterCategory, _filters]);
 
-    const handleToggleFavorite = useCallback((id: string, isFavorite: boolean) => {
-        setAssets(prev => prev.map(a => a.id === id ? { ...a, isFavorite } : a));
-    }, []);
+    const handleToggleFavorite = useCallback(async (id: string, isFavorite: boolean) => {
+        const asset = assets.find((item) => item.id === id);
+        if (!asset) {
+            return;
+        }
+
+        const mutation = beginFavoriteMutation(favoriteMutationVersionsRef.current, id);
+        favoriteMutationVersionsRef.current = mutation.activeMutations;
+        setFavoriteOverrides(prev => ({ ...prev, [id]: isFavorite }));
+
+        try {
+            const scope = buildMagicCutImportScope(readWorkspaceScope(), project.id);
+            let persistedAsset = await assetCenterService.setFavorite(id, isFavorite);
+
+            if (!persistedAsset) {
+                await assetCenterService.registerExistingAsset(
+                    buildFavoriteRegistrationInput(asset, scope)
+                );
+                persistedAsset = await assetCenterService.setFavorite(id, isFavorite);
+            }
+
+            const nextAsset = persistedAsset
+                ? mapUnifiedAssetToAnyAsset(persistedAsset)
+                : null;
+
+            if (!nextAsset) {
+                throw new Error(`Favorite update failed: asset ${id} was not available in the local catalog.`);
+            }
+
+            if (!isCurrentFavoriteMutation(favoriteMutationVersionsRef.current, id, mutation.requestId)) {
+                return;
+            }
+
+            setRemoteAssets(prev => syncFavoriteInAssetCollection(prev, id, !!nextAsset.isFavorite));
+            updateResource(id, {
+                isFavorite: !!nextAsset.isFavorite,
+                updatedAt: nextAsset.updatedAt,
+                metadata: nextAsset.metadata as AnyMediaResource['metadata']
+            });
+            setFavoriteOverrides(prev => clearFavoriteOverride(prev, id));
+        } catch (error) {
+            if (!isCurrentFavoriteMutation(favoriteMutationVersionsRef.current, id, mutation.requestId)) {
+                return;
+            }
+            console.error('Failed to save favorite', error);
+            setFavoriteOverrides(prev => clearFavoriteOverride(prev, id));
+            await platform.notify(
+                'Favorite update failed',
+                'MagicStudio could not save this favorite to the local asset catalog.'
+            );
+        }
+    }, [assets, project.id, updateResource]);
     
     const handleDeleteAsset = useCallback(async (asset: AnyAsset) => {
         const protectedDeleteMessage = getProtectedAssetDeleteMessage(asset.origin);
@@ -406,13 +600,45 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
             await platform.notify('Delete unavailable', protectedDeleteMessage);
             return;
         }
+
+        if (isAssetInUse(asset.id)) {
+            await platform.notify(
+                'Asset in use',
+                'This media is currently used on the timeline. Remove the related clips before deleting the source asset.'
+            );
+            return;
+        }
         
         const confirmed = await platform.confirm(`Delete "${asset.name}"?`, "Delete Asset", 'warning');
         if (confirmed) {
-            await assetService.deleteById(asset.id);
-            setAssets(prev => prev.filter(a => a.id !== asset.id));
+            const previewCleanup = resolveDeletedAssetPreviewCleanup({
+                assetId: asset.id,
+                skimmingResourceId: skimmingResource?.id,
+                isCoordinatorPreviewingAsset: playerPreviewService.isPreviewingResource(asset.id)
+            });
+
+            const deletionResult = await assetService.deleteById(asset.id);
+            if (!deletionResult.success) {
+                await platform.notify(
+                    'Delete failed',
+                    deletionResult.message || 'MagicStudio could not remove this asset from local storage.'
+                );
+                return;
+            }
+
+            if (previewCleanup.clearCoordinatorPreview) {
+                playerPreviewService.clearPreviewForResource(asset.id);
+            }
+            if (previewCleanup.clearStorePreview) {
+                setPreviewSource(null);
+                setSkimmingResource(null);
+            }
+
+            removeAssetFromProjectState(asset.id);
+            setRemoteAssets(prev => prev.filter(a => a.id !== asset.id));
+            setHiddenAssetIds(prev => ({ ...prev, [asset.id]: true }));
         }
-    }, []);
+    }, [isAssetInUse, removeAssetFromProjectState, setPreviewSource, setSkimmingResource, skimmingResource]);
 
     const handleDragStart = useCallback((e: React.DragEvent, item: AnyAsset) => {
         let duration = (item as any).duration || ((item.metadata as any)?.duration) || 5; 
@@ -519,11 +745,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                 });
 
             if (normalizedImported.length > 0) {
-                setAssets(prev => {
-                    const existingIds = new Set(prev.map(item => item.id));
-                    const uniqueImported = normalizedImported.filter(item => !existingIds.has(item.id));
-                    return uniqueImported.length > 0 ? [...uniqueImported, ...prev] : prev;
-                });
+                setRemoteAssets(prev => mergeAssetCollections(normalizedImported, prev));
             }
 
             setFilterCategory('upload');
@@ -536,23 +758,23 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
     const renderPanelContent = () => {
         switch (category) {
             case 'video':
-                return <VideoResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <VideoResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} viewMode={viewMode} />;
             case 'image':
-                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} viewMode={viewMode} />;
             case 'text':
-                return <TextResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} />;
+                return <TextResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} viewMode={viewMode} />;
             case 'music':
-                 return <MusicResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} />;
+                 return <MusicResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} viewMode={viewMode} />;
             case 'audio':
             case 'voice':
             case 'sfx':
-                return <AudioResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} />;
+                return <AudioResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} onPreview={handlePreviewToggle} onDelete={handleDeleteAsset} viewMode={viewMode} />;
             case 'transitions':
-                return <TransitionResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} />;
+                return <TransitionResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} viewMode={viewMode} />;
             case 'effects':
-                return <EffectResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} previewEffect={previewEffect} setPreviewEffect={setPreviewEffect} />;
+                return <EffectResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onToggleFavorite={handleToggleFavorite} previewEffect={previewEffect} setPreviewEffect={setPreviewEffect} viewMode={viewMode} />;
             default:
-                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} />;
+                return <ImageResourcePanel assets={filteredAssets} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onToggleFavorite={handleToggleFavorite} onDoubleClick={handlePreviewToggle} onHover={setSkimmingResource} onDelete={handleDeleteAsset} viewMode={viewMode} />;
         }
     };
 
@@ -568,8 +790,22 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category }) => {
                         </span>
                     </span>
                     <div className="flex gap-1">
-                        <button className="p-1.5 hover:text-white rounded hover:bg-[#1a1a1a] text-gray-500"><Grid size={12} /></button>
-                        <button className="p-1.5 hover:text-white rounded hover:bg-[#1a1a1a] text-gray-500"><List size={12} /></button>
+                        <button
+                            onClick={() => onViewModeChange('grid')}
+                            aria-pressed={viewMode === 'grid'}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
+                            title="Grid view"
+                        >
+                            <Grid size={12} />
+                        </button>
+                        <button
+                            onClick={() => onViewModeChange('list')}
+                            aria-pressed={viewMode === 'list'}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
+                            title="List view"
+                        >
+                            <List size={12} />
+                        </button>
                     </div>
                 </div>
                 
