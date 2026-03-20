@@ -21,8 +21,8 @@
                     "dev":  "vite build --watch",
                     "build":  "vite build",
                     "typecheck":  "tsc --noEmit",
-                    "test":  "pnpm dlx vitest@1.0.4 run --globals",
-                    "test:watch":  "pnpm dlx vitest@1.0.4 --globals"
+                    "test":  "node ../../node_modules/vitest/vitest.mjs run --globals",
+                    "test:watch":  "node ../../node_modules/vitest/vitest.mjs --globals"
                 },
     "peerDependencies":  {
                              "react":  "\u003e=18.0.0",

@@ -344,7 +344,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
         };
 
         onSave(voice);
-        onClose();
+        closeModal();
     };
 
     if (!isOpen) {
@@ -732,7 +732,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                             : t('voice.lab.footer.designHint', 'After saving, it will appear in "My Voices"')}
                     </span>
                     <div className="flex items-center gap-3">
-                        <Button variant="secondary" onClick={onClose} className="px-5">
+                        <Button variant="secondary" onClick={closeModal} className="px-5">
                             {t('voice.lab.footer.cancel', 'Cancel')}
                         </Button>
                         <Button
@@ -746,9 +746,8 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
                         </Button>
                     </div>
                 </div>
-            </div>
-        </div>,
-        document.body
+            </DialogContent>
+        </Dialog>
     );
 };
 

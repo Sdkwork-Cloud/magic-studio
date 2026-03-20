@@ -6,7 +6,7 @@ import { Folder, MoreHorizontal, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDriveStore, SortOption } from '../store/driveStore';
 import { FileIcon } from '@sdkwork/react-editor'; 
 import { useTranslation } from '@sdkwork/react-i18n';
-import { Button, Input } from '@sdkwork/react-commons';
+import { Button } from '@sdkwork/react-commons';
 
 interface DriveGridProps {
     items: DriveItem[];
@@ -281,7 +281,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
                                     </div>
                                     
                                     {isRenaming ? (
-                                        <Input
+                                        <input
                                             ref={renameInputRef}
                                             type="text"
                                             className="bg-[#111] text-white border-none outline-none w-full text-sm font-medium p-0 focus-visible:ring-0"
@@ -322,7 +322,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
                                     <Button
                                         type="button"
                                         variant="ghost"
-                                        size="icon"
+                                        size="sm"
                                         className={`p-1 rounded-md transition-all ${isSelected ? 'hover:bg-blue-500 text-white' : 'hover:bg-[#333] text-gray-400 opacity-0 group-hover:opacity-100'}`}
                                         onClick={(e) => onContextMenu(e, item)}
                                     >
@@ -398,7 +398,7 @@ export const DriveGrid: React.FC<DriveGridProps> = ({
                         
                         <div className="w-full text-center relative px-1">
                             {isRenaming ? (
-                                <Input
+                                <input
                                     ref={renameInputRef}
                                     type="text"
                                     className="bg-[#111] text-white border border-blue-500 rounded px-1 text-xs w-full text-center focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 absolute -bottom-1 left-0 right-0 z-20 shadow-xl py-1"

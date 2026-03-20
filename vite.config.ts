@@ -2,6 +2,7 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
+import { configDefaults } from 'vitest/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,9 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
         strictPort: true,
       },
+      test: {
+        exclude: [...configDefaults.exclude, '**/.worktrees/**'],
+      },
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -62,6 +66,7 @@ export default defineConfig(({ mode }) => {
           
           { find: '@sdkwork/react-i18n', replacement: path.resolve(__dirname, 'packages/sdkwork-react-i18n/src/index.ts') },
           { find: '@sdkwork/react-commons/hooks/useAssetUrl', replacement: path.resolve(__dirname, 'packages/sdkwork-react-commons/src/hooks/useAssetUrl.ts') },
+          { find: '@sdkwork/react-commons/ui', replacement: path.resolve(__dirname, 'packages/sdkwork-react-commons/src/components/ui/index.tsx') },
           { find: '@sdkwork/react-commons', replacement: path.resolve(__dirname, 'packages/sdkwork-react-commons/src/index.ts') },
           
           // @sdkwork/react-assets subpaths

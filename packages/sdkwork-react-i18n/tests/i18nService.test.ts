@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { registerPackageI18n } from '../src';
 import { packageI18nRegistry } from '../src/registryInstance';
 import {

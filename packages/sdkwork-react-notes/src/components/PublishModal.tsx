@@ -23,18 +23,20 @@ import { ChooseAsset } from '@sdkwork/react-assets';
 import {
   ArticlePayload,
   Button,
-  Dialog,
-  DialogContent,
-  Input,
   Note,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   PublishTarget,
-  Textarea,
   cn,
   generateUUID,
 } from '@sdkwork/react-commons';
+import {
+  Dialog,
+  DialogContent,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Textarea,
+} from '@sdkwork/react-commons/ui';
 import { publishingService } from '../services';
 
 interface PublishModalProps {
@@ -53,7 +55,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
 
   const defaultAuthor = (() => {
     if (!user) {
-      return 'Open Studio';
+      return 'MagicStudio';
     }
 
     const usernameCandidate = 'username' in user ? user.username : undefined;
@@ -66,7 +68,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
       return nameCandidate;
     }
 
-    return 'Open Studio';
+    return 'MagicStudio';
   })();
 
   const [articles, setArticles] = useState<ArticleDraft[]>([]);
@@ -266,7 +268,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
               <div className="text-[10px] text-gray-500">WeChat Official Account Style</div>
             </div>
           </div>
-          <Button className="h-9 w-9 text-gray-400 hover:bg-[#27272a] hover:text-white" onClick={onClose} size="icon" type="button" variant="ghost">
+          <Button className="h-9 w-9 p-0 text-gray-400 hover:bg-[#27272a] hover:text-white" onClick={onClose} size="sm" type="button" variant="ghost">
             <X size={18} />
           </Button>
         </div>
@@ -316,13 +318,13 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
                             {article.coverImage ? <img className="h-full w-full object-cover" src={article.coverImage} /> : <ImageIcon className="text-gray-600" size={16} />}
                           </div>
                           <div className="absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 rounded bg-black/80 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-blue-400" onClick={(e) => moveArticle(e, index, 'up')} size="icon" type="button" variant="ghost">
+                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-blue-400" onClick={(e) => moveArticle(e, index, 'up')} size="sm" type="button" variant="ghost">
                               <ArrowUp size={12} />
                             </Button>
-                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-red-400" onClick={(e) => removeArticle(e, index)} size="icon" type="button" variant="ghost">
+                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-red-400" onClick={(e) => removeArticle(e, index)} size="sm" type="button" variant="ghost">
                               <Trash2 size={12} />
                             </Button>
-                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-blue-400" onClick={(e) => moveArticle(e, index, 'down')} size="icon" type="button" variant="ghost">
+                            <Button className="h-7 w-7 p-0 text-gray-300 hover:text-blue-400" onClick={(e) => moveArticle(e, index, 'down')} size="sm" type="button" variant="ghost">
                               <ArrowDown size={12} />
                             </Button>
                           </div>
@@ -332,7 +334,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
                   );
                 })}
               </div>
-              <Button className="h-auto w-full gap-2 rounded-lg border-2 border-dashed border-[#27272a] bg-transparent py-3 text-gray-500 hover:border-[#444] hover:bg-green-900/5 hover:text-green-500" onClick={addNewArticle} type="button" variant="outline">
+              <Button className="h-auto w-full gap-2 rounded-lg border-2 border-dashed border-[#27272a] bg-transparent py-3 text-gray-500 hover:border-[#444] hover:bg-green-900/5 hover:text-green-500" onClick={addNewArticle} type="button" variant="ghost">
                 <Plus size={16} />
                 <span className="text-xs font-bold uppercase tracking-wide">Add Article</span>
               </Button>
@@ -373,7 +375,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wide text-gray-400">Digest</label>
-                  <Button className="h-auto gap-1 px-0 text-[10px] text-blue-400 hover:text-blue-300" onClick={handleExtractDigest} type="button" variant="link">
+                  <Button className="h-auto gap-1 px-0 text-[10px] text-blue-400 hover:text-blue-300" onClick={handleExtractDigest} type="button" variant="ghost">
                     <Sparkles size={10} /> Auto-Generate
                   </Button>
                 </div>
@@ -427,7 +429,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ note, onClose }) => 
                 )}
                 disabled={isPublishing}
                 type="button"
-                variant="outline"
+                variant="ghost"
               >
                 <div className="flex -space-x-2">
                   {selectedAccountIds.size > 0 ? Array.from(selectedAccountIds).slice(0, 3).map((id) => (

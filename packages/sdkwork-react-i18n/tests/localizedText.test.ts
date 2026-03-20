@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from 'vitest';
 import { DEFAULT_LOCALE, i18nService } from '../src/I18nService';
 import {
   createLocalizedText,

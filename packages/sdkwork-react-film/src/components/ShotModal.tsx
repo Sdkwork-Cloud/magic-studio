@@ -26,12 +26,12 @@ interface ShotModalProps {
 }
 
 const GENERATION_MODES = [
-    { value: 'TEXT_TO_VIDEO', label: '文生视频', icon: Type, description: '使用文字生成视频' },
-    { value: 'IMAGE_TO_VIDEO', label: '图生视频', icon: FileImage, description: '从图片生成视频' },
-    { value: 'START_END_FRAMES', label: '首尾帧', icon: ArrowRightLeft, description: '设置首尾帧生成' },
-    { value: 'REFERENCE_GUIDED', label: '参考生成', icon: Layers, description: '参考素材生成视频' },
-    { value: 'MULTI_FRAME_INTELLIGENT', label: '智能多帧', icon: Grid3x3, description: '智能多帧/分镜' },
-    { value: 'UNIVERSAL_REFERENCE', label: '全能智能参考', icon: Activity, description: '图片/视频/音频参考' },
+    { value: 'TEXT_TO_VIDEO', label: "\u6587\u751f\u89c6\u9891", icon: Type, description: "\u4f7f\u7528\u6587\u5b57\u751f\u6210\u89c6\u9891" },
+    { value: 'IMAGE_TO_VIDEO', label: "\u56fe\u751f\u89c6\u9891", icon: FileImage, description: "\u4ece\u56fe\u7247\u751f\u6210\u89c6\u9891" },
+    { value: 'START_END_FRAMES', label: "\u9996\u5c3e\u5e27", icon: ArrowRightLeft, description: "\u8bbe\u7f6e\u9996\u5c3e\u5e27\u751f\u6210" },
+    { value: 'REFERENCE_GUIDED', label: "\u53c2\u8003\u751f\u6210", icon: Layers, description: "\u53c2\u8003\u7d20\u6750\u751f\u6210\u89c6\u9891" },
+    { value: 'MULTI_FRAME_INTELLIGENT', label: "\u667a\u80fd\u591a\u5e27", icon: Grid3x3, description: "\u667a\u80fd\u591a\u5e27/\u5206\u955c" },
+    { value: 'UNIVERSAL_REFERENCE', label: "\u5168\u80fd\u667a\u80fd\u53c2\u8003", icon: Activity, description: "\u56fe\u7247/\u89c6\u9891/\u97f3\u9891\u53c2\u8003" },
 ];
 
 const isGenerationProduct = (value: string): value is GenerationProduct => {
@@ -57,23 +57,23 @@ const resolveShotPromptText = (shot?: FilmShot): string => {
 };
 
 const ASSET_ROLES = {
-    START_FRAME: '开始帧',
-    END_FRAME: '结束帧',
-    REFERENCE: '参考素材',
-    AUDIO_TRACK: '音频轨',
-    VIDEO_REFERENCE: '视频参考',
-    IMAGE_REFERENCE: '图片参考',
+    START_FRAME: "\u5f00\u59cb\u5e27",
+    END_FRAME: "\u7ed3\u675f\u5e27",
+    REFERENCE: "\u53c2\u8003\u7d20\u6750",
+    AUDIO_TRACK: "\u97f3\u9891\u8f68",
+    VIDEO_REFERENCE: "\u89c6\u9891\u53c2\u8003",
+    IMAGE_REFERENCE: "\u56fe\u7247\u53c2\u8003",
 };
 
 const PLATFORM_PROVIDERS: ModelProvider[] = [
     {
         id: 'keling',
-        name: '可灵',
+        name: "\u53ef\u7075",
         icon: <Zap size={16} />,
         color: 'text-yellow-400',
         models: [
-            { id: 'keling-v1', name: '可灵AI视频 v1.0', description: '可灵官方视频生成模型，支持文生视频和图生视频' },
-            { id: 'keling-v2', name: '可灵AI视频 v2.0', description: '新版本，画质更高' }
+            { id: 'keling-v1', name: "\u53ef\u7075AI\u89c6\u9891 v1.0", description: "\u53ef\u7075\u5b98\u65b9\u89c6\u9891\u751f\u6210\u6a21\u578b，\u652f\u6301\u6587\u751f\u89c6\u9891\u548c\u56fe\u751f\u89c6\u9891" },
+            { id: 'keling-v2', name: "\u53ef\u7075AI\u89c6\u9891 v2.0", description: "\u65b0\u7248\u672c，\u753b\u8d28\u66f4\u9ad8" }
         ]
     },
     {
@@ -82,16 +82,16 @@ const PLATFORM_PROVIDERS: ModelProvider[] = [
         icon: <Sparkles size={16} />,
         color: 'text-purple-400',
         models: [
-            { id: 'vidu-gen1', name: 'Vidu Gen1', description: 'Vidu 第一代视频生成' }
+            { id: 'vidu-gen1', name: 'Vidu Gen1', description: "Vidu \u7b2c\u4e00\u4ee3\u89c6\u9891\u751f\u6210" }
         ]
     },
     {
         id: 'jimeng',
-        name: '即梦',
+        name: "\u5373\u68a6",
         icon: <Cpu size={16} />,
         color: 'text-green-400',
         models: [
-            { id: 'jimeng-v1', name: '即梦 v1', description: '即梦AI视频生成' }
+            { id: 'jimeng-v1', name: "\u5373\u68a6 v1", description: "\u5373\u68a6AI\u89c6\u9891\u751f\u6210" }
         ]
     },
     {
@@ -100,7 +100,7 @@ const PLATFORM_PROVIDERS: ModelProvider[] = [
         icon: <Star size={16} />,
         color: 'text-blue-400',
         models: [
-            { id: 'sora-1', name: 'Sora 1.0', description: 'OpenAI Sora 视频生成模型' }
+            { id: 'sora-1', name: 'Sora 1.0', description: "OpenAI Sora \u89c6\u9891\u751f\u6210\u6a21\u578b" }
         ]
     },
     {
@@ -109,7 +109,7 @@ const PLATFORM_PROVIDERS: ModelProvider[] = [
         icon: <Cloud size={16} />,
         color: 'text-red-400',
         models: [
-            { id: 'google-veo3', name: 'Veo 3', description: 'Google Veo 视频生成' }
+            { id: 'google-veo3', name: 'Veo 3', description: "Google Veo \u89c6\u9891\u751f\u6210" }
         ]
     },
     {
@@ -118,7 +118,7 @@ const PLATFORM_PROVIDERS: ModelProvider[] = [
         icon: <Brain size={16} />,
         color: 'text-pink-400',
         models: [
-            { id: 'runway-gen3', name: 'Gen-3', description: 'Runway Gen-3 视频生成' }
+            { id: 'runway-gen3', name: 'Gen-3', description: "Runway Gen-3 \u89c6\u9891\u751f\u6210" }
         ]
     },
     {
@@ -127,7 +127,7 @@ const PLATFORM_PROVIDERS: ModelProvider[] = [
         icon: <Sparkles size={16} />,
         color: 'text-cyan-400',
         models: [
-            { id: 'pika-1', name: 'Pika 1.0', description: 'Pika Labs 视频生成' }
+            { id: 'pika-1', name: 'Pika 1.0', description: "Pika Labs \u89c6\u9891\u751f\u6210" }
         ]
     }
 ];
@@ -404,10 +404,10 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
 
         const getTypeLabel = () => {
             switch (asset.type) {
-                case MediaResourceType.IMAGE: return '图片';
-                case MediaResourceType.VIDEO: return '视频';
-                case MediaResourceType.AUDIO: return '音频';
-                default: return '素材';
+                case MediaResourceType.IMAGE: return "\u56fe\u7247";
+                case MediaResourceType.VIDEO: return "\u89c6\u9891";
+                case MediaResourceType.AUDIO: return "\u97f3\u9891";
+                default: return "\u7d20\u6750";
             }
         };
 
@@ -432,10 +432,10 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         onChange={(e) => updateAsset(index, { scene: e.target.value as MediaScene })}
                         className="bg-[#18181b] border border-[#333] hover:border-[#444] rounded-lg px-2.5 py-1.5 text-[9px] text-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer flex-shrink-0"
                     >
-                        <option value={MediaScene.REFERENCE}>参考</option>
-                        <option value={MediaScene.FIRST_FRAME}>开始帧</option>
-                        <option value={MediaScene.END_FRAME}>结束帧</option>
-                        <option value="AUDIO_TRACK">音频轨</option>
+                        <option value={MediaScene.REFERENCE}>{"\u53c2\u8003"}</option>
+                        <option value={MediaScene.FIRST_FRAME}>{"\u5f00\u59cb\u5e27"}</option>
+                        <option value={MediaScene.END_FRAME}>{"\u7ed3\u675f\u5e27"}</option>
+                        <option value="AUDIO_TRACK">{"\u97f3\u9891\u8f68"}</option>
                     </select>
                 </div>
                 
@@ -449,8 +449,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                             <Music size={28} className="text-purple-400 animate-pulse" />
                                         </div>
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-[12px] font-medium text-gray-200 truncate max-w-[150px] leading-tight">{asset.name || '音频文件'}</span>
-                                            <span className="text-[10px] text-gray-500 leading-tight">点击播放音频</span>
+                                            <span className="text-[12px] font-medium text-gray-200 truncate max-w-[150px] leading-tight">{asset.name || "\u97f3\u9891\u6587\u4ef6"}</span>
+                                            <span className="text-[10px] text-gray-500 leading-tight">{"\u70b9\u51fb\u64ad\u653e\u97f3\u9891"}</span>
                                         </div>
                                     </div>
                                     <div className="w-full">
@@ -471,12 +471,12 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all flex items-end justify-center pb-4">
                                         <div className="flex items-center gap-2.5 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
                                             <Play size={14} className="text-white" />
-                                            <span className="text-[11px] text-white font-medium">点击播放</span>
+                                            <span className="text-[11px] text-white font-medium">{"\u70b9\u51fb\u64ad\u653e"}</span>
                                         </div>
                                     </div>
                                     <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2">
                                         <Video size={12} className="text-green-400" />
-                                        <span className="text-[10px] text-white font-medium">视频</span>
+                                        <span className="text-[10px] text-white font-medium">{"\u89c6\u9891"}</span>
                                     </div>
                                 </div>
                             ) : (
@@ -488,7 +488,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                     />
                                     <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2">
                                         <ImageIcon size={12} className="text-blue-400" />
-                                        <span className="text-[10px] text-white font-medium">图片</span>
+                                        <span className="text-[10px] text-white font-medium">{"\u56fe\u7247"}</span>
                                     </div>
                                 </div>
                             )}
@@ -499,8 +499,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                 <Icon size={28} />
                             </div>
                             <div className="flex flex-col items-center gap-1.5">
-                                <span className="text-[12px] font-medium text-gray-400">添加{getTypeLabel()}</span>
-                                <span className="text-[10px] text-gray-600">上传或从素材库选择</span>
+                                <span className="text-[12px] font-medium text-gray-400">{"\u6dfb\u52a0"}{getTypeLabel()}</span>
+                                <span className="text-[10px] text-gray-600">{"\u4e0a\u4f20\u6216\u4ece\u7d20\u6750\u5e93\u9009\u62e9"}</span>
                             </div>
                         </div>
                     )}
@@ -509,7 +509,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         <button 
                             onClick={() => handleLocalUpload(index)}
                             className="w-11 h-11 rounded-full bg-[#18181b] hover:bg-[#252526] text-gray-300 hover:text-white flex items-center justify-center transition-all border border-[#333] hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-110"
-                            title="上传文件"
+                            title="\u4e0a\u4f20\u6587\u4ef6"
                         >
                             <Upload size={18} />
                         </button>
@@ -517,7 +517,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         <button 
                             onClick={() => handleChooseFromLibrary(index)}
                             className="w-11 h-11 rounded-full bg-[#18181b] hover:bg-[#252526] text-gray-300 hover:text-white flex items-center justify-center transition-all border border-[#333] hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-110"
-                            title="从素材库选择"
+                            title="\u4ece\u7d20\u6750\u5e93\u9009\u62e9"
                         >
                             <LayoutGrid size={18} />
                         </button>
@@ -526,7 +526,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                             <button 
                                 onClick={() => { setActiveAssetIndex(index); setShowAIModal(true); }}
                                 className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white flex items-center justify-center transition-all shadow-lg hover:shadow-purple-500/30 hover:scale-110"
-                                title="AI生成图片"
+                                title="AI\u751f\u6210\u56fe\u7247"
                             >
                                 <Wand2 size={18} />
                             </button>
@@ -535,7 +535,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         <button 
                             onClick={() => removeAsset(index)}
                             className="w-11 h-11 rounded-full bg-[#18181b] hover:bg-red-500/20 text-gray-400 hover:text-red-400 flex items-center justify-center transition-all border border-[#333] hover:border-red-500/30 shadow-lg hover:shadow-xl hover:scale-110"
-                            title="删除素材"
+                            title="\u5220\u9664\u7d20\u6750"
                         >
                             <Trash2 size={18} />
                         </button>
@@ -551,8 +551,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 return (
                     <div className="text-center py-6 text-xs text-gray-500 border border-dashed border-[#27272a] rounded-xl bg-[#121214]/50">
                         <Type size={28} className="mx-auto mb-3 opacity-40" />
-                        <p className="text-gray-400">将使用文字提示生成视频</p>
-                        <p className="text-[10px] text-gray-600 mt-1">无需上传参考资源</p>
+                        <p className="text-gray-400">{"\u5c06\u4f7f\u7528\u6587\u5b57\u63d0\u793a\u751f\u6210\u89c6\u9891"}</p>
+                        <p className="text-[10px] text-gray-600 mt-1">{"\u65e0\u9700\u4e0a\u4f20\u53c2\u8003\u8d44\u6e90"}</p>
                     </div>
                 );
             
@@ -562,15 +562,13 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <Layers size={12} /> 参考素材
-                            </label>
+                                <Layers size={12} /> {"\u53c2\u8003\u7d20\u6750\r\n                            "}</label>
                             <div className="flex gap-1.5">
                                 <button 
                                     onClick={() => addAsset(MediaResourceType.IMAGE, 'REFERENCE')} 
                                     className="text-[10px] text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all border border-blue-500/20 hover:border-blue-500/40"
                                 >
-                                    <Plus size={10} /> 添加图片
-                                </button>
+                                    <Plus size={10} /> {"\u6dfb\u52a0\u56fe\u7247\r\n                                "}</button>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -579,8 +577,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         {assets.length === 0 && (
                             <div className="text-center py-6 text-xs text-gray-500 border border-dashed border-[#27272a] rounded-xl bg-[#121214]/50">
                                 <Layers size={28} className="mx-auto mb-3 opacity-40" />
-                                <p className="text-gray-400">请添加参考素材</p>
-                                <p className="text-[10px] text-gray-600 mt-1">参考素材将影响视频风格</p>
+                                <p className="text-gray-400">{"\u8bf7\u6dfb\u52a0\u53c2\u8003\u7d20\u6750"}</p>
+                                <p className="text-[10px] text-gray-600 mt-1">{"\u53c2\u8003\u7d20\u6750\u5c06\u5f71\u54cd\u89c6\u9891\u98ce\u683c"}</p>
                             </div>
                         )}
                     </div>
@@ -591,24 +589,21 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <ArrowRightLeft size={12} /> 首尾帧
-                            </label>
+                                <ArrowRightLeft size={12} /> {"\u9996\u5c3e\u5e27\r\n                            "}</label>
                             <div className="flex gap-1.5">
                                 {!assets.find(a => a.scene === MediaScene.FIRST_FRAME) && (
                                     <button 
                                         onClick={() => addAsset(MediaResourceType.IMAGE, 'FIRST_FRAME')} 
                                         className="text-[10px] text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1 rounded-lg flex items-center gap-1 transition-all"
                                     >
-                                        <Plus size={10} /> 开始帧
-                                    </button>
+                                        <Plus size={10} /> {"\u5f00\u59cb\u5e27\r\n                                    "}</button>
                                 )}
                                 {!assets.find(a => a.scene === MediaScene.END_FRAME) && (
                                     <button 
                                         onClick={() => addAsset(MediaResourceType.IMAGE, 'END_FRAME')} 
                                         className="text-[10px] text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-1 rounded-lg flex items-center gap-1 transition-all"
                                     >
-                                        <Plus size={10} /> 结束帧
-                                    </button>
+                                        <Plus size={10} /> {"\u7ed3\u675f\u5e27\r\n                                    "}</button>
                                 )}
                             </div>
                         </div>
@@ -625,8 +620,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         {assets.filter(a => a.scene === MediaScene.FIRST_FRAME || a.scene === MediaScene.END_FRAME).length === 0 && (
                             <div className="text-center py-6 text-xs text-gray-500 border border-dashed border-[#27272a] rounded-xl bg-[#121214]/50">
                                 <ArrowRightLeft size={28} className="mx-auto mb-3 opacity-40" />
-                                <p className="text-gray-400">请添加开始帧和结束帧</p>
-                                <p className="text-[10px] text-gray-600 mt-1">设置首尾帧生成视频</p>
+                                <p className="text-gray-400">{"\u8bf7\u6dfb\u52a0\u5f00\u59cb\u5e27\u548c\u7ed3\u675f\u5e27"}</p>
+                                <p className="text-[10px] text-gray-600 mt-1">{"\u8bbe\u7f6e\u9996\u5c3e\u5e27\u751f\u6210\u89c6\u9891"}</p>
                             </div>
                         )}
                     </div>
@@ -637,16 +632,14 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <Grid3x3 size={12} /> 多帧参考 (最多6个)
-                            </label>
+                                <Grid3x3 size={12} /> {"\u591a\u5e27\u53c2\u8003 (\u6700\u591a6\u4e2a)\r\n                            "}</label>
                             <div className="flex gap-1.5">
                                 <button 
                                     onClick={() => addAsset(MediaResourceType.IMAGE, 'REFERENCE')} 
                                     disabled={assets.length >= 6}
                                     className={`text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all border ${assets.length >= 6 ? 'text-gray-600 bg-gray-800/30 border-gray-700/30 cursor-not-allowed' : 'text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 hover:border-blue-500/40'}`}
                                 >
-                                    <Plus size={10} /> 添加
-                                </button>
+                                    <Plus size={10} /> {"\u6dfb\u52a0\r\n                                "}</button>
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
@@ -655,8 +648,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         {assets.length === 0 && (
                             <div className="text-center py-6 text-xs text-gray-500 border border-dashed border-[#27272a] rounded-xl bg-[#121214]/50">
                                 <Grid3x3 size={28} className="mx-auto mb-3 opacity-40" />
-                                <p className="text-gray-400">请添加多帧参考</p>
-                                <p className="text-[10px] text-gray-600 mt-1">智能多帧/分镜生成</p>
+                                <p className="text-gray-400">{"\u8bf7\u6dfb\u52a0\u591a\u5e27\u53c2\u8003"}</p>
+                                <p className="text-[10px] text-gray-600 mt-1">{"\u667a\u80fd\u591a\u5e27/\u5206\u955c\u751f\u6210"}</p>
                             </div>
                         )}
                     </div>
@@ -667,27 +660,23 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <Activity size={12} /> 全能智能参考 (图片/视频/音频)
-                            </label>
+                                <Activity size={12} /> {"\u5168\u80fd\u667a\u80fd\u53c2\u8003 (\u56fe\u7247/\u89c6\u9891/\u97f3\u9891)\r\n                            "}</label>
                             <div className="flex gap-1.5">
                                 <button 
                                     onClick={() => addAsset(MediaResourceType.IMAGE)} 
                                     className="text-[10px] text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all border border-blue-500/20 hover:border-blue-500/40"
                                 >
-                                    <ImageIcon size={10} /> 图片
-                                </button>
+                                    <ImageIcon size={10} /> {"\u56fe\u7247\r\n                                "}</button>
                                 <button 
                                     onClick={() => addAsset(MediaResourceType.VIDEO)} 
                                     className="text-[10px] text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all border border-green-500/20 hover:border-green-500/40"
                                 >
-                                    <Video size={10} /> 视频
-                                </button>
+                                    <Video size={10} /> {"\u89c6\u9891\r\n                                "}</button>
                                 <button 
                                     onClick={() => addAsset(MediaResourceType.AUDIO)} 
                                     className="text-[10px] text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all border border-purple-500/20 hover:border-purple-500/40"
                                 >
-                                    <Music size={10} /> 音频
-                                </button>
+                                    <Music size={10} /> {"\u97f3\u9891\r\n                                "}</button>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -696,8 +685,8 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         {assets.length === 0 && (
                             <div className="text-center py-6 text-xs text-gray-500 border border-dashed border-[#27272a] rounded-xl bg-[#121214]/50">
                                 <Activity size={28} className="mx-auto mb-3 opacity-40" />
-                                <p className="text-gray-400">请添加全能智能参考素材</p>
-                                <p className="text-[10px] text-gray-600 mt-1">支持图片、视频、音频</p>
+                                <p className="text-gray-400">{"\u8bf7\u6dfb\u52a0\u5168\u80fd\u667a\u80fd\u53c2\u8003\u7d20\u6750"}</p>
+                                <p className="text-[10px] text-gray-600 mt-1">{"\u652f\u6301\u56fe\u7247、\u89c6\u9891、\u97f3\u9891"}</p>
                             </div>
                         )}
                     </div>
@@ -716,7 +705,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                 <div className="flex-none px-6 py-4 border-b border-[#333] bg-[#252526] flex justify-between items-center">
                     <h3 className="text-white font-bold flex items-center gap-2">
                         <Clapperboard size={18} className="text-blue-500" />
-                        编辑分镜 (Edit Shot) {sceneIndex ? `- Scene ${sceneIndex}` : ''} {initialData?.index ? `Shot ${initialData.index}` : ''}
+                        {"\u7f16\u8f91\u5206\u955c (Edit Shot) "}{sceneIndex ? `- Scene ${sceneIndex}` : ''} {initialData?.index ? `Shot ${initialData.index}` : ''}
                     </h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={20} /></button>
                 </div>
@@ -761,7 +750,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">生成产品 (Product)</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{"\u751f\u6210\u4ea7\u54c1 (Product)"}</label>
                                     <div className="relative">
                                         <select
                                             value={genProduct}
@@ -794,12 +783,12 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">生成平台 (Platform)</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{"\u751f\u6210\u5e73\u53f0 (Platform)"}</label>
                                     <ModelSelector
                                         value={selectedPlatform}
                                         onChange={setSelectedPlatform}
                                         providers={PLATFORM_PROVIDERS}
-                                        label="选择平台 & 模型"
+                                        label="\u9009\u62e9\u5e73\u53f0 & \u6a21\u578b"
                                     />
                                 </div>
                             </div>
@@ -811,7 +800,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
                         <div>
                              <PromptTextInput 
-                                label="视觉提示词 (Visual Prompt)"
+                                label="\u89c6\u89c9\u63d0\u793a\u8bcd (Visual Prompt)"
                                 value={visualPrompt}
                                 onChange={setVisualPrompt}
                                 rows={4}
@@ -828,8 +817,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                    <MessageSquare size={12} /> 台词 & 脚本 (Dialogue)
-                                </label>
+                                    <MessageSquare size={12} /> {"\u53f0\u8bcd & \u811a\u672c (Dialogue)\r\n                                "}</label>
                                 <button onClick={addDialogueItem} className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
                                     <Plus size={10} /> Add Line
                                 </button>
@@ -854,7 +842,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                                                     onChange={(e) => updateDialogueItem(item.id, 'characterId', e.target.value)}
                                                     className="w-full bg-[#18181b] border border-[#333] rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500 cursor-pointer"
                                                  >
-                                                     <option value="narrator">Narrator (旁白)</option>
+                                                     <option value="narrator">{"Narrator (\u65c1\u767d)"}</option>
                                                      {characters.map(c => <option key={c.uuid} value={c.uuid}>{c.name}</option>)}
                                                  </select>
                                                  <input 
@@ -879,7 +867,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         </div>
 
                         <SettingTextArea 
-                            label="场景描述 (Description)" 
+                            label="\u573a\u666f\u63cf\u8ff0 (Description)" 
                             value={description} 
                             onChange={setDescription} 
                             rows={4} 
@@ -888,15 +876,15 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                         />
 
                         <div>
-                             <SettingSlider label="时长 (Duration)" value={duration} onChange={setDuration} min={1} max={10} step={0.5} unit="s" />
+                             <SettingSlider label="\u65f6\u957f (Duration)" value={duration} onChange={setDuration} min={1} max={10} step={0.5} unit="s" />
                         </div>
 
                     </div>
                 </div>
 
                 <div className="flex-none px-6 py-4 border-t border-[#333] bg-[#252526] flex justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose}>取消</Button>
-                    <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-500 border-0"><Save size={16} className="mr-2" /> 保存修改</Button>
+                    <Button variant="secondary" onClick={onClose}>{"\u53d6\u6d88"}</Button>
+                    <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-500 border-0"><Save size={16} className="mr-2" /> {"\u4fdd\u5b58\u4fee\u6539"}</Button>
                 </div>
             </div>
 
@@ -924,7 +912,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                             ? ['audio', 'music', 'voice', 'sfx'] 
                             : ['image'])
                         : ['image', 'video', 'audio']}
-                    title="选择素材"
+                    title="\u9009\u62e9\u7d20\u6750"
                     multiple={false}
                 />
             )}

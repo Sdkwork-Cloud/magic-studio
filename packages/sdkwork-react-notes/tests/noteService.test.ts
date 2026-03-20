@@ -36,7 +36,7 @@ describe('noteService', () => {
     }));
 
     mockGetClient.mockReturnValue({
-      note: { restore, getNoteDetail, getNoteContent },
+      notes: { restore, getNoteDetail, getNoteContent },
     });
 
     const { noteService } = await import('../src/services/noteService');
@@ -54,7 +54,7 @@ describe('noteService', () => {
     }));
 
     mockGetClient.mockReturnValue({
-      note: { move },
+      notes: { move },
     });
 
     const { noteService } = await import('../src/services/noteService');

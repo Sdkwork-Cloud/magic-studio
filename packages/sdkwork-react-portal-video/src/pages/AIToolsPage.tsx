@@ -12,7 +12,8 @@ import {
   Video,
   Wand2,
 } from 'lucide-react';
-import { Button, Input } from '@sdkwork/react-commons';
+import { Button } from '@sdkwork/react-commons';
+import { Input } from '@sdkwork/react-commons/ui';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { ROUTES, useRouter } from '@sdkwork/react-core';
 import { PortalHeader } from '../components/PortalHeader';
@@ -259,7 +260,9 @@ const AIToolsPage: React.FC = () => {
                 <Input
                   type="text"
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchQuery(event.target.value)
+                  }
                   placeholder={t(
                     'portalVideo.page.search_placeholder',
                     'Search AI tools...',
@@ -370,7 +373,7 @@ const ToolCard: React.FC<{
           </span>
         </div>
       </div>
-    </button>
+    </Button>
   );
 };
 

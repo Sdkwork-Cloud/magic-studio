@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { 
     Image, Video, Sparkles, Upload, X, ArrowLeft
 } from 'lucide-react';
@@ -7,9 +7,11 @@ import { promptBusinessService } from '../services';
 import { StyleSelector } from '@sdkwork/react-assets';
 import { IMAGE_STYLES, VIDEO_STYLES } from '@sdkwork/react-commons';
 import { useRouter } from '@sdkwork/react-core';
+import { resolveLocalizedText, useTranslation } from '@sdkwork/react-i18n';
 import type { PromptType, OptimizationMode } from '../types';
 
 export const PromptOptimizerPage: React.FC = () => {
+    const { locale } = useTranslation();
     const {
         currentType,
         currentMode,
@@ -99,7 +101,20 @@ export const PromptOptimizerPage: React.FC = () => {
         navigate('/portal');
     };
     
-    const styles = currentType === 'image' ? IMAGE_STYLES : VIDEO_STYLES;
+    const baseStyles = currentType === 'image' ? IMAGE_STYLES : VIDEO_STYLES;
+    const styles = useMemo(
+        () => baseStyles.map((style) => ({
+            ...style,
+            label: resolveLocalizedText(style.label || style.id, locale),
+            description: style.description ? resolveLocalizedText(style.description, locale) : undefined,
+            usage: Array.isArray(style.usage)
+                ? style.usage.map((item) => resolveLocalizedText(item, locale))
+                : style.usage
+                    ? resolveLocalizedText(style.usage, locale)
+                    : undefined,
+        })),
+        [baseStyles, locale]
+    );
     
     return (
         <div className="flex flex-col h-full bg-[#0a0a0a] text-gray-200">

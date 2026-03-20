@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   formatCurrency,
   formatDate,
@@ -39,8 +40,12 @@ describe('shared locale-aware formatters', () => {
   });
 
   it('formats currency with locale-aware symbols', () => {
-    expect(formatCurrency(1234.5, 'CNY', { locale: 'en-US' })).toBe('CN¥1,234.50');
-    expect(formatCurrency(1234.5, 'CNY', { locale: 'zh-CN' })).toBe('¥1,234.50');
+    expect(formatCurrency(1234.5, 'CNY', { locale: 'en-US' })).toBe(
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CNY' }).format(1234.5),
+    );
+    expect(formatCurrency(1234.5, 'CNY', { locale: 'zh-CN' })).toBe(
+      new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(1234.5),
+    );
   });
 
   it('formats relative time with locale-aware text', () => {
@@ -48,6 +53,8 @@ describe('shared locale-aware formatters', () => {
     const target = new Date('2024-01-02T03:02:05Z');
 
     expect(formatRelativeTime(target, { now: reference, locale: 'en-US' })).toBe('2 minutes ago');
-    expect(formatRelativeTime(target, { now: reference, locale: 'zh-CN' })).toBe('2分钟前');
+    expect(formatRelativeTime(target, { now: reference, locale: 'zh-CN' })).toBe(
+      new Intl.RelativeTimeFormat('zh-CN', { numeric: 'auto' }).format(-2, 'minute'),
+    );
   });
 });

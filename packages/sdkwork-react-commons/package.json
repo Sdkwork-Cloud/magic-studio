@@ -11,6 +11,10 @@
                               "import":  "./src/index.ts",
                               "types":  "./src/index.ts"
                           },
+                    "./ui":  {
+                                 "import":  "./src/components/ui/index.tsx",
+                                 "types":  "./src/components/ui/index.tsx"
+                             },
                     "./components":  {
                                          "import":  "./dist/components/index.js",
                                          "types":  "./dist/components/index.d.ts"

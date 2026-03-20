@@ -287,7 +287,7 @@ const PricingPage: React.FC = () => {
 
                 <Button
                   type="button"
-                  variant="default"
+                  variant="primary"
                   className="mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => void handleSubscribe(plan.id)}
                   disabled={subscribingPlanId !== null || plan.id === PlanTier.FREE}
