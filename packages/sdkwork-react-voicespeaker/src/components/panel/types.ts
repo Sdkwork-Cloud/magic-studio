@@ -2,10 +2,8 @@ import type React from 'react';
 import type {
     VoiceConfig,
     VoiceGenerationMode,
-    VoiceModelPolicy,
     VoiceModeAvailability,
     VoicePanelGenerationRequirement,
-    VoicePanelGenerationRule,
     VoicePanelModeSchema,
     VoicePanelRuntimeState,
     VoiceReferenceInputMethod

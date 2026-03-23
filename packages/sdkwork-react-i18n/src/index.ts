@@ -5,3 +5,4 @@ export * from './localizedText';
 export * from './packageTypes';
 export * from './packageRegistry';
 export * from './registryInstance';
+export * from './services';

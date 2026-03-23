@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthStore } from '@sdkwork/react-auth';
 import { ROUTES, useRouter } from '@sdkwork/react-core';
 import {
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import {
     type UserCenterAddress,
+    type UserCenterAvatarUploadInput,
     type UserCenterProfile,
     type UserCenterSettings,
     type UserCenterUpdateSettingsInput,
@@ -27,6 +28,11 @@ import {
     type SocialContactStats,
     type SocialFriendRequest,
 } from '../services/socialContactService';
+import {
+    buildProfileSnapshot,
+    hasProfileDraftChanges,
+    type ProfileSnapshot,
+} from './profilePageState';
 
 interface AddressFormState {
     name: string;
@@ -66,12 +72,6 @@ interface UserSettingsDraft {
     };
 }
 
-interface ProfileSnapshot {
-    nickname: string;
-    region: string;
-    bio: string;
-}
-
 interface AccountBindingDraft {
     email: string;
     emailCode: string;
@@ -99,6 +99,7 @@ interface ProfileSectionItem {
 }
 
 const HISTORY_PAGE_SIZE = 8;
+const AVATAR_FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
 const PROFILE_SECTION_ITEMS: ProfileSectionItem[] = [
     { key: 'overview', title: 'Profile', description: 'Basic identity information', icon: User },
@@ -321,14 +322,6 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
 }
 
-function buildProfileSnapshot(profile: UserCenterProfile): ProfileSnapshot {
-    return {
-        nickname: (profile.nickname || '').trim(),
-        region: (profile.region || '').trim(),
-        bio: (profile.bio || '').trim(),
-    };
-}
-
 function isAddressPhoneValid(phone: string): boolean {
     return /^[0-9+\-()\s]{6,24}$/.test(phone);
 }
@@ -440,6 +433,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ title, rows, emptyText, key
 export const ProfilePage: React.FC = () => {
     const { user } = useAuthStore();
     const { goBack, navigate } = useRouter();
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
     const [profile, setProfile] = useState<UserCenterProfile | null>(null);
     const [nickname, setNickname] = useState('');
     const [region, setRegion] = useState('');
@@ -455,6 +449,7 @@ export const ProfilePage: React.FC = () => {
         nickname: '',
         region: '',
         bio: '',
+        avatar: '',
     });
     const [addresses, setAddresses] = useState<UserCenterAddress[]>([]);
     const [addressLoading, setAddressLoading] = useState(false);
@@ -466,6 +461,8 @@ export const ProfilePage: React.FC = () => {
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsDraft, setSettingsDraft] = useState<UserSettingsDraft>(() => defaultUserSettingsDraft());
     const [settingsSnapshot, setSettingsSnapshot] = useState<UserSettingsDraft>(() => defaultUserSettingsDraft());
+    const [avatarDraft, setAvatarDraft] = useState<UserCenterAvatarUploadInput | null>(null);
+    const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
     const [bindingDraft, setBindingDraft] = useState<AccountBindingDraft>(() => emptyAccountBindingDraft());
     const [bindingSaving, setBindingSaving] = useState(false);
     const [contactsLoading, setContactsLoading] = useState(false);
@@ -484,6 +481,7 @@ export const ProfilePage: React.FC = () => {
     }), [user]);
 
     const displayProfile = profile || fallbackProfile;
+    const currentAvatarUrl = avatarPreviewUrl || (displayProfile.avatar || '').trim();
 
     const loadAddressAndHistory = useCallback(async () => {
         setAddressLoading(true);
@@ -589,6 +587,8 @@ export const ProfilePage: React.FC = () => {
                     setRegion(next.region || '');
                     setBio(next.bio || '');
                     setProfileSnapshot(buildProfileSnapshot(next));
+                    setAvatarDraft(null);
+                    setAvatarPreviewUrl('');
                     setBindingDraft((prev) => ({
                         ...prev,
                         email: (next.email || '').trim(),
@@ -603,6 +603,8 @@ export const ProfilePage: React.FC = () => {
                     setRegion(next.region || '');
                     setBio(next.bio || '');
                     setProfileSnapshot(buildProfileSnapshot(next));
+                    setAvatarDraft(null);
+                    setAvatarPreviewUrl('');
                     setBindingDraft((prev) => ({
                         ...prev,
                         email: (next.email || '').trim(),
@@ -629,11 +631,17 @@ export const ProfilePage: React.FC = () => {
         setAddressForm(emptyAddressForm());
     };
 
-    const hasProfileChanges = useMemo(() => {
+    const hasPendingAvatarUpload = avatarDraft !== null;
+    const hasTextProfileChanges = useMemo(() => {
         return nickname.trim() !== profileSnapshot.nickname
             || region.trim() !== profileSnapshot.region
             || bio.trim() !== profileSnapshot.bio;
     }, [bio, nickname, profileSnapshot.bio, profileSnapshot.nickname, profileSnapshot.region, region]);
+    const hasProfileChanges = useMemo(() => hasProfileDraftChanges(profileSnapshot, {
+        nickname,
+        region,
+        bio,
+    }, hasPendingAvatarUpload), [bio, hasPendingAvatarUpload, nickname, profileSnapshot, region]);
 
     const hasSettingsChanges = useMemo(() => !areSettingsDraftEqual(settingsDraft, settingsSnapshot), [settingsDraft, settingsSnapshot]);
     const hasAddressDraftChanges = useMemo(
@@ -704,13 +712,26 @@ export const ProfilePage: React.FC = () => {
         if (!currentSectionDirty) {
             return 'No pending changes in this section.';
         }
-        if (activeSection === 'overview') return 'Profile fields changed and not saved.';
+        if (activeSection === 'overview') {
+            return hasPendingAvatarUpload
+                ? 'Profile fields or avatar changed and not saved.'
+                : 'Profile fields changed and not saved.';
+        }
         if (activeSection === 'security') return 'Password inputs are not submitted yet.';
         if (activeSection === 'addresses') return 'Address form has unsaved changes.';
         if (activeSection === 'contacts') return 'Contacts section is synchronized with server.';
         if (activeSection === 'preferences') return 'Preference updates are not saved.';
         return 'Unsaved changes detected.';
-    }, [activeSection, currentSectionDirty]);
+    }, [activeSection, currentSectionDirty, hasPendingAvatarUpload]);
+
+    useEffect(() => {
+        if (!avatarPreviewUrl || !avatarPreviewUrl.startsWith('blob:')) {
+            return;
+        }
+        return () => {
+            URL.revokeObjectURL(avatarPreviewUrl);
+        };
+    }, [avatarPreviewUrl]);
 
     useEffect(() => {
         if (!hasAnyPendingChanges) {
@@ -739,6 +760,50 @@ export const ProfilePage: React.FC = () => {
         setActiveSection(nextSection);
     }, [activeSection, currentSectionDirty]);
 
+    const handleSelectAvatar = useCallback(() => {
+        avatarInputRef.current?.click();
+    }, []);
+
+    const handleAvatarInputChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) {
+            return;
+        }
+        if (file.size <= 0) {
+            setFeedback({ type: 'error', text: 'Selected avatar file is empty.' });
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            setFeedback({ type: 'error', text: 'Please choose an image file for the avatar.' });
+            return;
+        }
+        if (file.size > AVATAR_FILE_SIZE_LIMIT) {
+            setFeedback({ type: 'error', text: 'Avatar image must be 5 MB or smaller.' });
+            return;
+        }
+
+        try {
+            const data = new Uint8Array(await file.arrayBuffer());
+            setAvatarDraft({
+                data,
+                name: file.name,
+                contentType: file.type || undefined,
+            });
+            setAvatarPreviewUrl(URL.createObjectURL(file));
+            setFeedback({ type: 'success', text: 'Avatar selected. Save Profile to upload it.' });
+        } catch (error) {
+            setFeedback({ type: 'error', text: resolveErrorMessage(error, 'Failed to read avatar file') });
+        }
+    }, []);
+
+    const handleClearAvatarDraft = useCallback(() => {
+        setAvatarDraft(null);
+        setAvatarPreviewUrl('');
+        setFeedback({ type: 'success', text: 'Avatar draft cleared.' });
+    }, []);
+
     const handleDiscardCurrentSectionChanges = useCallback(() => {
         if (!currentSectionDirty) {
             return;
@@ -748,6 +813,8 @@ export const ProfilePage: React.FC = () => {
             setNickname(profileSnapshot.nickname);
             setRegion(profileSnapshot.region);
             setBio(profileSnapshot.bio);
+            setAvatarDraft(null);
+            setAvatarPreviewUrl('');
             setFeedback({ type: 'success', text: 'Profile draft reset.' });
             return;
         }
@@ -774,11 +841,13 @@ export const ProfilePage: React.FC = () => {
 
     const handleSaveProfile = async () => {
         const nextNickname = nickname.trim();
+        const nextRegion = region.trim();
+        const nextBio = bio.trim();
         if (nextNickname && nextNickname.length < 2) {
             setFeedback({ type: 'error', text: 'Nickname should contain at least 2 characters.' });
             return;
         }
-        if (bio.trim().length > 200) {
+        if (nextBio.length > 200) {
             setFeedback({ type: 'error', text: 'Bio should be within 200 characters.' });
             return;
         }
@@ -788,17 +857,47 @@ export const ProfilePage: React.FC = () => {
         }
         setSaving(true);
         setFeedback(null);
+
+        let updatedProfile = profile || fallbackProfile;
+        let textProfileSaved = false;
         try {
-            const updated = await userBusinessService.updateUserProfile({
-                nickname: nextNickname || undefined,
-                region: region.trim() || undefined,
-                bio: bio.trim() || undefined,
+            if (hasTextProfileChanges) {
+                updatedProfile = await userBusinessService.updateUserProfile({
+                    nickname: nextNickname || undefined,
+                    region: nextRegion || undefined,
+                    bio: nextBio || undefined,
+                });
+                textProfileSaved = true;
+            }
+
+            if (avatarDraft) {
+                updatedProfile = await userBusinessService.uploadUserAvatar(avatarDraft);
+            }
+
+            setProfile(updatedProfile);
+            setProfileSnapshot(buildProfileSnapshot(updatedProfile));
+            setAvatarDraft(null);
+            setAvatarPreviewUrl('');
+            setFeedback({
+                type: 'success',
+                text: avatarDraft && hasTextProfileChanges
+                    ? 'Profile and avatar updated successfully.'
+                    : avatarDraft
+                        ? 'Avatar updated successfully.'
+                        : 'Profile updated successfully.',
             });
-            setProfile(updated);
-            setProfileSnapshot(buildProfileSnapshot(updated));
-            setFeedback({ type: 'success', text: 'Profile updated successfully.' });
         } catch (error) {
-            setFeedback({ type: 'error', text: resolveErrorMessage(error, 'Failed to update profile') });
+            if (textProfileSaved) {
+                setProfile(updatedProfile);
+                setProfileSnapshot(buildProfileSnapshot(updatedProfile));
+            }
+
+            setFeedback({
+                type: 'error',
+                text: textProfileSaved && avatarDraft
+                    ? `${resolveErrorMessage(error, 'Failed to upload avatar')} Basic profile changes were saved.`
+                    : resolveErrorMessage(error, 'Failed to update profile'),
+            });
         } finally {
             setSaving(false);
         }
@@ -1172,8 +1271,16 @@ export const ProfilePage: React.FC = () => {
                 <div className="rounded-2xl border border-[#27272a] bg-[#1e1e20]/95 p-6 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.9)]">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1c] text-[#d1d5db]">
-                                <User size={30} />
+                            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#1a1a1c] text-[#d1d5db]">
+                                {currentAvatarUrl ? (
+                                    <img
+                                        src={currentAvatarUrl}
+                                        alt={`${displayProfile.nickname || 'User'} avatar`}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <User size={30} />
+                                )}
                             </div>
                             <div>
                                 <h1 className="text-2xl font-semibold text-[#ffffff]">{displayProfile.nickname || 'User'}</h1>
@@ -1321,6 +1428,67 @@ export const ProfilePage: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-lg font-semibold text-[#ffffff]">Profile Overview</h2>
                                     <span className="text-xs text-[#9ca3af]">{hasProfileChanges ? 'Unsaved profile changes' : 'All profile changes saved'}</span>
+                                </div>
+
+                                <input
+                                    ref={avatarInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                        void handleAvatarInputChange(event);
+                                    }}
+                                    className="hidden"
+                                />
+
+                                <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#111113] text-[#d1d5db]">
+                                                {currentAvatarUrl ? (
+                                                    <img
+                                                        src={currentAvatarUrl}
+                                                        alt={`${displayProfile.nickname || 'User'} avatar`}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <User size={34} />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-[#d1d5db]">Avatar</h3>
+                                                <div className="mt-1 text-xs text-[#9ca3af]">
+                                                    {hasPendingAvatarUpload
+                                                        ? 'A new avatar is ready. Save Profile to upload it.'
+                                                        : currentAvatarUrl
+                                                            ? 'Current avatar is synchronized.'
+                                                            : 'No avatar uploaded yet.'}
+                                                </div>
+                                                <div className="mt-2 text-[11px] text-[#6b7280]">
+                                                    Supports image files up to 5 MB.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleSelectAvatar}
+                                                disabled={saving}
+                                                className="rounded-lg border border-[#27272a] bg-[#111113] px-3 py-1.5 text-xs text-[#d1d5db] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {hasPendingAvatarUpload ? 'Replace Avatar' : currentAvatarUrl ? 'Change Avatar' : 'Upload Avatar'}
+                                            </button>
+                                            {hasPendingAvatarUpload ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearAvatarDraft}
+                                                    disabled={saving}
+                                                    className="rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-1.5 text-xs text-[#9ca3af] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    Clear Avatar Draft
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">

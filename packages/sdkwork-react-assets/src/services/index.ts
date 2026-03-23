@@ -3,6 +3,25 @@ export { assetUiStateService } from './assetUiStateService';
 export { assetService, ASSET_CATEGORIES, setMediaAnalysisAdapter } from './assetService';
 export type { MediaAnalysisAdapter, MediaAnalysisResult } from './assetService';
 export {
+  clearCreationCapabilityCache,
+  fetchCreationCapabilities,
+  fetchCreationModelProviders,
+  flattenCreationModels,
+  findCreationModel,
+  normalizeCreationOptions,
+  toCreationModelProviders,
+  getCreationModelDurationOptions,
+  getCreationModelResolutionOptions,
+  getCreationModelAspectRatioOptions,
+  resolveCreationStyleOptions,
+  resolveCreationEntryCapabilityOptions,
+} from './creationCapabilityService';
+export type {
+  CreationCapabilityTarget,
+  CreationCapabilitySnapshot,
+  CreationEntryCapabilityOptions,
+} from './creationCapabilityService';
+export {
   queryAssetsBySdk,
   importAssetBySdk,
   importAssetFromUrlBySdk,

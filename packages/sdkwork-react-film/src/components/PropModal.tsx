@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Box, Image as ImageIcon, Wand2, Upload, Trash2, Sparkles, Grid3X3, Layers, FolderOpen } from 'lucide-react';
-import { ChooseAssetModal, PromptTextInput,Asset } from '@sdkwork/react-assets';
+import { ChooseAssetModal, PromptTextInput, createPromptTextInputCapabilityProps, Asset } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image'; 
 import { genAIService } from '@sdkwork/react-core';
 import { FilmProp, FilmImageMediaResource } from '../entities/film.entity';
@@ -258,6 +258,7 @@ export const PropModal: React.FC<PropModalProps> = ({ isOpen, onClose, onSave, i
                             {/* Description */}
                             <div className="flex-1 flex flex-col min-h-0">
                                 <PromptTextInput
+                                    {...createPromptTextInputCapabilityProps('IMAGE')}
                                     label="Description"
                                     value={description}
                                     onChange={setDescription}
@@ -304,6 +305,7 @@ export const PropModal: React.FC<PropModalProps> = ({ isOpen, onClose, onSave, i
                                 {/* Prompt Panel */}
                                 <div className="w-96 flex flex-col flex-shrink-0">
                                     <PromptTextInput
+                                        {...createPromptTextInputCapabilityProps('IMAGE')}
                                         label={`${currentConfig.label} Prompt`}
                                         value={currentPrompt}
                                         onChange={(value) => setPrompt(activeTab, value)}

@@ -113,6 +113,19 @@ function ensureAppSdkClientCompat(client: SdkworkAppClient): AppSdkClient {
 let appSdkClient: AppSdkClient | null = null;
 let appSdkConfig: AppSdkClientConfig | null = null;
 
+function applySessionTokensToClient(
+    client: AppSdkClient,
+    tokens: {
+        authToken?: string;
+        accessToken?: string;
+    }
+): void {
+    client.setAuthToken(normalizeAuthToken(tokens.authToken));
+    if (tokens.accessToken !== undefined) {
+        client.setAccessToken((tokens.accessToken || '').trim());
+    }
+}
+
 function readEnv(name: string): string | undefined {
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
     return env?.[name];
@@ -280,10 +293,7 @@ export function applyAppSdkSessionTokens(tokens: {
     accessToken?: string;
 }): void {
     const client = getAppSdkClient();
-    client.setAuthToken(normalizeAuthToken(tokens.authToken));
-    if (tokens.accessToken !== undefined) {
-        client.setAccessToken((tokens.accessToken || '').trim());
-    }
+    applySessionTokensToClient(client, tokens);
 }
 
 export function readAppSdkSessionTokens(): AppSdkSessionTokens {
@@ -332,8 +342,25 @@ export function clearAppSdkSessionTokens(): void {
     resetAppSdkClient();
 }
 
+export function createScopedAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
+    const config = createAppSdkClientConfig(overrides);
+    const client = ensureAppSdkClientCompat(createClient(config));
+    const session = readAppSdkSessionTokens();
+
+    applySessionTokensToClient(client, {
+        authToken: session.authToken || '',
+        accessToken: session.accessToken ?? (config.accessToken || '').trim(),
+    });
+
+    return client;
+}
+
 export function getAppSdkClientWithSession(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
-    const client = Object.keys(overrides).length > 0 ? initAppSdkClient(overrides) : getAppSdkClient();
+    if (Object.keys(overrides).length > 0) {
+        return createScopedAppSdkClient(overrides);
+    }
+
+    const client = getAppSdkClient();
     const session = readAppSdkSessionTokens();
     applyAppSdkSessionTokens({
         authToken: session.authToken || '',

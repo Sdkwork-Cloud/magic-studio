@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { User } from 'lucide-react';
 import { ChooseAsset } from '@sdkwork/react-assets';
+import { findByIdOrFirst } from '@sdkwork/react-commons';
 import { SettingInput, SettingSelect } from '@sdkwork/react-settings';
 import { PRESET_VOICES } from '../../constants';
 import type { VoiceGender, VoiceStyle } from '../../entities';
@@ -24,7 +25,7 @@ const STYLE_OPTIONS: Array<{ label: string; value: VoiceStyle }> = [
 const resolveVoiceByGenderAndStyle = (
     gender: VoiceGender,
     style: VoiceStyle
-): string => {
+): string | null => {
     const strictMatch = PRESET_VOICES.find(
         (voice) => voice.gender === gender && voice.style === style
     );
@@ -35,7 +36,7 @@ const resolveVoiceByGenderAndStyle = (
     if (genderMatch) {
         return genderMatch.id;
     }
-    return PRESET_VOICES[0].id;
+    return PRESET_VOICES[0]?.id || null;
 };
 
 export const VoicePersonaSection: React.FC<VoicePersonaSectionProps> = ({
@@ -50,24 +51,34 @@ export const VoicePersonaSection: React.FC<VoicePersonaSectionProps> = ({
     onVoiceIdChange
 }) => {
     const selectedVoice = useMemo(
-        () => PRESET_VOICES.find((voice) => voice.id === voiceId) || PRESET_VOICES[0],
+        () => findByIdOrFirst(PRESET_VOICES, voiceId),
         [voiceId]
     );
 
     const handleGenderChange = (gender: string): void => {
+        if (!selectedVoice) {
+            return;
+        }
         const next = resolveVoiceByGenderAndStyle(
             gender as VoiceGender,
             selectedVoice.style
         );
-        onVoiceIdChange(next);
+        if (next) {
+            onVoiceIdChange(next);
+        }
     };
 
     const handleStyleChange = (style: string): void => {
+        if (!selectedVoice) {
+            return;
+        }
         const next = resolveVoiceByGenderAndStyle(
             selectedVoice.gender,
             style as VoiceStyle
         );
-        onVoiceIdChange(next);
+        if (next) {
+            onVoiceIdChange(next);
+        }
     };
 
     return (
@@ -104,7 +115,7 @@ export const VoicePersonaSection: React.FC<VoicePersonaSectionProps> = ({
                             <div className="grid grid-cols-2 gap-3">
                                 <SettingSelect
                                     label="Gender"
-                                    value={selectedVoice.gender}
+                                    value={selectedVoice?.gender || 'neutral'}
                                     onChange={handleGenderChange}
                                     options={GENDER_OPTIONS}
                                     fullWidth
@@ -112,7 +123,7 @@ export const VoicePersonaSection: React.FC<VoicePersonaSectionProps> = ({
                                 />
                                 <SettingSelect
                                     label="Style"
-                                    value={selectedVoice.style}
+                                    value={selectedVoice?.style || 'neutral'}
                                     onChange={handleStyleChange}
                                     options={STYLE_OPTIONS}
                                     fullWidth

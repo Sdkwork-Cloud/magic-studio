@@ -1,6 +1,13 @@
 import { DriveItem, DriveStats } from '../entities';
 import { Result, type ServiceResult, pathUtils } from '@sdkwork/react-commons';
-import { getAppSdkClientWithSession, platform, uploadViaPresignedUrl } from '@sdkwork/react-core';
+import {
+  encodeTextToBytes,
+  getAppSdkClientWithSession,
+  getPlatformRuntime,
+  platform,
+  uploadViaPresignedUrl,
+  type SdkworkClient,
+} from '@sdkwork/react-core';
 import { vfs } from '@sdkwork/react-fs';
 import { driveService } from './driveService';
 
@@ -9,6 +16,7 @@ type DriveListResult = ServiceResult<DriveItem[]>;
 type DriveStatsResult = ServiceResult<DriveStats>;
 type DriveCapabilityResult = ServiceResult<boolean>;
 type DriveContentResult = ServiceResult<string>;
+type DriveDownloadResult = ServiceResult<string[]>;
 type DriveVoidResult = ServiceResult<void>;
 
 const ROOT_PATH = '/';
@@ -19,6 +27,7 @@ const SUCCESS_CODES = new Set(['0', '200', '2000']);
 const VIRTUAL_STARRED = 'virtual://starred';
 const VIRTUAL_RECENT = 'virtual://recent';
 const VIRTUAL_TRASH = 'virtual://trash';
+const INVALID_FILE_NAME_CHARS = /[<>:"/\\|?*]/;
 
 type ApiEnvelope<T> = {
   code?: string | number;
@@ -79,6 +88,13 @@ type UploadFileRecord = {
   path?: string;
 };
 
+type DownloadTarget = {
+  fileName: string;
+  mimeType: string;
+  url?: string;
+  text?: string;
+};
+
 export interface IDriveBusinessService {
   getDefaultPath(): Promise<ServiceResult<string>>;
   list(path: string): Promise<ServiceResult<DriveItem[]>>;
@@ -96,6 +112,7 @@ export interface IDriveBusinessService {
   toggleStar(path: string, status: boolean): Promise<ServiceResult<void>>;
   touch(path: string): Promise<ServiceResult<void>>;
   move(paths: string[], targetPath: string): Promise<ServiceResult<void>>;
+  downloadItems(items: DriveItem[]): Promise<ServiceResult<string[]>>;
 }
 
 export interface DriveBusinessAdapter {
@@ -115,6 +132,7 @@ export interface DriveBusinessAdapter {
   toggleStar(path: string, status: boolean): Promise<ServiceResult<void>>;
   touch(path: string): Promise<ServiceResult<void>>;
   move(paths: string[], targetPath: string): Promise<ServiceResult<void>>;
+  downloadItems(items: DriveItem[]): Promise<ServiceResult<string[]>>;
 }
 
 const getErrorMessage = (error: unknown): string => {
@@ -164,7 +182,9 @@ const normalizeDrivePath = (value: string): string => {
     return ROOT_PATH;
   }
   const normalizedSlashes = raw.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
-  const withPrefix = normalizedSlashes.startsWith('/') ? normalizedSlashes : `/${normalizedSlashes}`;
+  const withPrefix = normalizedSlashes.startsWith('/')
+    ? normalizedSlashes
+    : `/${normalizedSlashes}`;
   if (withPrefix.length > 1 && withPrefix.endsWith('/')) {
     return withPrefix.slice(0, -1);
   }
@@ -172,7 +192,9 @@ const normalizeDrivePath = (value: string): string => {
 };
 
 const isApiEnvelope = (value: unknown): value is ApiEnvelope<unknown> => {
-  return Boolean(value && typeof value === 'object' && ('code' in value || 'msg' in value) && 'data' in value);
+  return Boolean(
+    value && typeof value === 'object' && ('code' in value || 'msg' in value) && 'data' in value
+  );
 };
 
 const ensureApiSuccess = (value: unknown, fallbackMessage: string): void => {
@@ -278,7 +300,7 @@ const guessMimeType = (filename: string): string => {
     '.csv': 'text/csv',
     '.zip': 'application/zip',
     '.rar': 'application/vnd.rar',
-    '.7z': 'application/x-7z-compressed'
+    '.7z': 'application/x-7z-compressed',
   };
   return map[ext] || 'application/octet-stream';
 };
@@ -301,6 +323,124 @@ const inferUploadType = (mimeType: string): string => {
   return 'OTHER';
 };
 
+const sanitizeFileName = (value: string, fallback = 'download.bin'): string => {
+  const normalized = Array.from(normalizeString(value))
+    .map(character => {
+      const charCode = character.charCodeAt(0);
+      if (charCode < 32 || INVALID_FILE_NAME_CHARS.test(character)) {
+        return '-';
+      }
+      return character;
+    })
+    .join('')
+    .trim();
+  return normalized || fallback;
+};
+
+const splitFileName = (fileName: string): { baseName: string; extension: string } => {
+  const extension = pathUtils.extname(fileName);
+  if (!extension || extension === '.') {
+    return { baseName: fileName, extension: '' };
+  }
+  return {
+    baseName: fileName.slice(0, -extension.length),
+    extension,
+  };
+};
+
+const resolveUniqueDownloadPath = async (fileName: string): Promise<string> => {
+  const runtime = getPlatformRuntime();
+  const downloadDir = await runtime.system.path('downloads');
+  const safeName = sanitizeFileName(fileName);
+  let candidate = pathUtils.join(downloadDir, safeName);
+  if (!(await runtime.fileSystem.exists(candidate))) {
+    return candidate;
+  }
+
+  const { baseName, extension } = splitFileName(safeName);
+  let index = 1;
+  while (index <= 100) {
+    candidate = pathUtils.join(downloadDir, `${baseName} (${index})${extension}`);
+    if (!(await runtime.fileSystem.exists(candidate))) {
+      return candidate;
+    }
+    index += 1;
+  }
+
+  return pathUtils.join(downloadDir, `${baseName}-${Date.now()}${extension}`);
+};
+
+const triggerBrowserDownload = (blob: Blob, fileName: string): string => {
+  if (typeof document === 'undefined') {
+    return sanitizeFileName(fileName);
+  }
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = sanitizeFileName(fileName);
+  anchor.rel = 'noopener';
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  return sanitizeFileName(fileName);
+};
+
+const saveBytesAsDownload = async (
+  fileName: string,
+  bytes: Uint8Array,
+  mimeType: string
+): Promise<string> => {
+  const runtime = getPlatformRuntime();
+  if (runtime.system.kind() === 'desktop') {
+    const destinationPath = await resolveUniqueDownloadPath(fileName);
+    await runtime.fileSystem.writeBinary(destinationPath, bytes);
+    return destinationPath;
+  }
+
+  return triggerBrowserDownload(
+    new Blob([new Uint8Array(bytes)], { type: mimeType || 'application/octet-stream' }),
+    fileName
+  );
+};
+
+const downloadUrlAsFile = async (
+  url: string,
+  fileName: string,
+  mimeType: string
+): Promise<string> => {
+  const runtime = getPlatformRuntime();
+  if (runtime.system.kind() === 'desktop') {
+    const destinationPath = await resolveUniqueDownloadPath(fileName);
+    await runtime.network.downloadToFile(url, destinationPath);
+    return destinationPath;
+  }
+
+  const bytes = await runtime.network.requestBinary(url);
+  return saveBytesAsDownload(fileName, bytes, mimeType);
+};
+
+const extractDriveTextContent = (content: DriveContentRecord): string => {
+  const directText = normalizeString(content.text);
+  if (directText) {
+    return directText;
+  }
+  if (content.contents && typeof content.contents === 'object') {
+    const first = Object.values(content.contents)
+      .map(value => normalizeString(value))
+      .find(value => Boolean(value));
+    if (first) {
+      return first;
+    }
+  }
+  return normalizeString(content.prompt);
+};
+
+const resolveDriveResourceUrl = (record?: DriveItemRecord): string => {
+  return normalizeString(record?.resource?.url || record?.coverImage?.url);
+};
+
 export class LocalDriveBusinessAdapter implements DriveBusinessAdapter {
   async getDefaultPath(): Promise<DrivePathResult> {
     return runDriveOperation(() => driveService.getDefaultPath(), 'Failed to resolve default path');
@@ -311,14 +451,24 @@ export class LocalDriveBusinessAdapter implements DriveBusinessAdapter {
   }
 
   async getStats(): Promise<DriveStatsResult> {
-    return runDriveOperation(() => driveService.getProvider().getStats(), 'Failed to load drive stats');
+    return runDriveOperation(
+      () => driveService.getProvider().getStats(),
+      'Failed to load drive stats'
+    );
   }
 
   async createFolder(name: string, parentPath: string): Promise<DriveVoidResult> {
-    return runDriveVoidOperation(() => driveService.createFolder(name, parentPath), 'Failed to create folder');
+    return runDriveVoidOperation(
+      () => driveService.createFolder(name, parentPath),
+      'Failed to create folder'
+    );
   }
 
-  async uploadFile(parentPath: string, name: string, content: Uint8Array): Promise<DriveVoidResult> {
+  async uploadFile(
+    parentPath: string,
+    name: string,
+    content: Uint8Array
+  ): Promise<DriveVoidResult> {
     return runDriveVoidOperation(
       () => driveService.uploadFile(parentPath, name, content),
       'Failed to upload file'
@@ -368,11 +518,17 @@ export class LocalDriveBusinessAdapter implements DriveBusinessAdapter {
   }
 
   async toggleStar(path: string, status: boolean): Promise<DriveVoidResult> {
-    return runDriveVoidOperation(() => driveService.toggleStar(path, status), 'Failed to update starred state');
+    return runDriveVoidOperation(
+      () => driveService.toggleStar(path, status),
+      'Failed to update starred state'
+    );
   }
 
   async touch(path: string): Promise<DriveVoidResult> {
-    return runDriveVoidOperation(() => driveService.touch(path), 'Failed to update file access time');
+    return runDriveVoidOperation(
+      () => driveService.touch(path),
+      'Failed to update file access time'
+    );
   }
 
   async move(paths: string[], targetPath: string): Promise<DriveVoidResult> {
@@ -380,6 +536,36 @@ export class LocalDriveBusinessAdapter implements DriveBusinessAdapter {
       () => driveService.getProvider().move(paths, targetPath),
       'Failed to move files'
     );
+  }
+
+  async downloadItems(items: DriveItem[]): Promise<DriveDownloadResult> {
+    return runDriveOperation(async () => {
+      const downloadableItems = items.filter(item => item.type === 'file');
+      if (downloadableItems.length === 0) {
+        throw new Error('No downloadable files selected');
+      }
+
+      const savedPaths: string[] = [];
+      for (const item of downloadableItems) {
+        const sourcePath = normalizeString(item.path || item.id);
+        if (!sourcePath) {
+          continue;
+        }
+        const bytes = await vfs.readFileBinary(sourcePath);
+        const savedPath = await saveBytesAsDownload(
+          item.name,
+          bytes,
+          normalizeString(item.mimeType) || guessMimeType(item.name)
+        );
+        savedPaths.push(savedPath);
+      }
+
+      if (savedPaths.length === 0) {
+        throw new Error('No downloadable files selected');
+      }
+
+      return savedPaths;
+    }, 'Failed to download drive items');
   }
 }
 
@@ -391,8 +577,8 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
     this.pathToItemId.set(ROOT_PATH, '');
   }
 
-  private getClient(): any {
-    return getAppSdkClientWithSession() as any;
+  private getClient(): SdkworkClient {
+    return getAppSdkClientWithSession();
   }
 
   private isVirtualPath(path: string): boolean {
@@ -432,9 +618,9 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       includeDeleted: true,
       includeArchived: true,
       sortField: 'updatedAt',
-      sortDirection: 'DESC'
+      sortDirection: 'DESC',
     });
-    const match = records.find((record) => {
+    const match = records.find(record => {
       const path = normalizeDrivePath(normalizeString(record.path));
       const fileType = normalizeString(record.fileType).toUpperCase();
       const isDirectory = record.directory === true || fileType === 'DIRECTORY';
@@ -472,11 +658,11 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       const response = await client.drive.listItems({
         ...params,
         pageNum,
-        pageSize: PAGE_SIZE
+        pageSize: PAGE_SIZE,
       });
       const page = unwrapApiData<DrivePageRecord>(response, 'Failed to list drive items');
       const content = Array.isArray(page.content) ? page.content : [];
-      content.forEach((entry) => {
+      content.forEach(entry => {
         const itemId = normalizeString(entry.itemId);
         if (!itemId || seenItemIds.has(itemId)) {
           return;
@@ -501,7 +687,12 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
     return records;
   }
 
-  private resolveItemPath(record: DriveItemRecord, itemId: string, itemName: string, parentId?: string): string {
+  private resolveItemPath(
+    record: DriveItemRecord,
+    itemId: string,
+    itemName: string,
+    parentId?: string
+  ): string {
     const rawPath = normalizeString(record.path);
     if (rawPath) {
       return normalizeDrivePath(rawPath);
@@ -547,8 +738,53 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
 
   private mapDriveItems(records: DriveItemRecord[]): DriveItem[] {
     return records
-      .map((record) => this.toDriveItem(record))
+      .map(record => this.toDriveItem(record))
       .filter((item): item is DriveItem => Boolean(item));
+  }
+
+  private async resolveDownloadTarget(item: DriveItem): Promise<DownloadTarget> {
+    const defaultFileName = sanitizeFileName(item.name || `drive-item-${item.id}`);
+    const defaultMimeType = normalizeString(item.mimeType) || guessMimeType(defaultFileName);
+    const directUrl = normalizeString(item.previewUrl);
+    if (directUrl) {
+      return {
+        fileName: defaultFileName,
+        mimeType: defaultMimeType,
+        url: directUrl,
+      };
+    }
+
+    const detailResponse = await this.getClient().drive.getItemDetail(item.id);
+    const detail = unwrapApiData<DriveItemRecord>(
+      detailResponse,
+      'Failed to load drive item detail'
+    );
+    const detailUrl = resolveDriveResourceUrl(detail);
+    const resolvedFileName = sanitizeFileName(normalizeString(detail.itemName) || defaultFileName);
+    const resolvedMimeType = normalizeString(detail.mimeType) || defaultMimeType;
+    if (detailUrl) {
+      return {
+        fileName: resolvedFileName,
+        mimeType: resolvedMimeType,
+        url: detailUrl,
+      };
+    }
+
+    const contentResponse = await this.getClient().drive.getItemContent(item.id);
+    const content = unwrapApiData<DriveContentRecord>(
+      contentResponse,
+      'Failed to load drive file content'
+    );
+    const text = extractDriveTextContent(content);
+    if (!text) {
+      throw new Error(`No download source available for ${resolvedFileName}`);
+    }
+
+    return {
+      fileName: resolvedFileName,
+      mimeType: resolvedMimeType,
+      text,
+    };
   }
 
   async getDefaultPath(): Promise<DrivePathResult> {
@@ -572,10 +808,10 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
         includeDeleted: false,
         includeArchived: false,
         sortField: 'name',
-        sortDirection: 'ASC'
+        sortDirection: 'ASC',
       });
 
-      return this.mapDriveItems(records).filter((item) => !item.trashedAt);
+      return this.mapDriveItems(records).filter(item => !item.trashedAt);
     }, 'Failed to list drive path');
   }
 
@@ -588,27 +824,28 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
           includeDeleted: false,
           includeArchived: false,
           sortField: 'updatedAt',
-          sortDirection: 'DESC'
+          sortDirection: 'DESC',
         });
-        return this.mapDriveItems(records).filter((item) => !item.trashedAt);
+        return this.mapDriveItems(records).filter(item => !item.trashedAt);
       case VIRTUAL_RECENT:
         records = await this.listDriveRecords({
           includeDeleted: false,
           includeArchived: false,
           sortField: 'updatedAt',
-          sortDirection: 'DESC'
+          sortDirection: 'DESC',
         });
-        return this.mapDriveItems(records).filter((item) => !item.trashedAt);
+        return this.mapDriveItems(records).filter(item => !item.trashedAt);
       case VIRTUAL_TRASH:
         records = await this.listDriveRecords({
           includeDeleted: true,
           includeArchived: true,
           sortField: 'updatedAt',
-          sortDirection: 'DESC'
+          sortDirection: 'DESC',
         });
-        return this
-          .mapDriveItems(records)
-          .filter((item) => normalizeString(item.status).toUpperCase() === 'DELETED' || Boolean(item.trashedAt));
+        return this.mapDriveItems(records).filter(
+          item =>
+            normalizeString(item.status).toUpperCase() === 'DELETED' || Boolean(item.trashedAt)
+        );
       default:
         return [];
     }
@@ -619,19 +856,25 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       const client = this.getClient();
       try {
         const usageResponse = await client.upload.getStorageUsage();
-        const usage = unwrapApiData<StorageUsageRecord>(usageResponse, 'Failed to load storage usage');
+        const usage = unwrapApiData<StorageUsageRecord>(
+          usageResponse,
+          'Failed to load storage usage'
+        );
         return {
           usedBytes: safeNumber(usage.usedSize),
           totalBytes: safeNumber(usage.totalSize),
-          fileCount: safeNumber(usage.fileCount)
+          fileCount: safeNumber(usage.fileCount),
         };
       } catch {
-        const primaryDiskResponse = await client.fileSystem.getPrimaryDisk();
-        const disk = unwrapApiData<PrimaryDiskRecord>(primaryDiskResponse, 'Failed to load primary disk');
+        const primaryDiskResponse = await client.filesystem.getPrimaryDisk();
+        const disk = unwrapApiData<PrimaryDiskRecord>(
+          primaryDiskResponse,
+          'Failed to load primary disk'
+        );
         return {
           usedBytes: safeNumber(disk.usedSize),
           totalBytes: safeNumber(disk.totalSize),
-          fileCount: safeNumber(disk.fileCount)
+          fileCount: safeNumber(disk.fileCount),
         };
       }
     }, 'Failed to load drive stats');
@@ -642,14 +885,18 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       const parentId = await this.resolveFolderIdByPath(parentPath);
       const response = await this.getClient().drive.createFolder({
         name,
-        ...(parentId ? { parentId } : {})
+        ...(parentId ? { parentId } : {}),
       });
       const created = unwrapApiData<DriveItemRecord>(response, 'Failed to create folder');
       this.toDriveItem(created);
     }, 'Failed to create folder');
   }
 
-  async uploadFile(parentPath: string, name: string, content: Uint8Array): Promise<DriveVoidResult> {
+  async uploadFile(
+    parentPath: string,
+    name: string,
+    content: Uint8Array
+  ): Promise<DriveVoidResult> {
     return runDriveVoidOperation(async () => {
       const parentId = await this.resolveFolderIdByPath(parentPath);
       const mimeType = guessMimeType(name);
@@ -661,13 +908,18 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
         folderId: parentId,
         type: inferUploadType(mimeType),
         path: DEFAULT_UPLOAD_PATH,
-        provider: 'AWS'
+        provider: 'AWS',
       });
-      const uploaded = unwrapApiData<UploadFileRecord>(uploadResult.registerResult, 'Failed to upload file');
+      const uploaded = unwrapApiData<UploadFileRecord>(
+        uploadResult.registerResult,
+        'Failed to upload file'
+      );
       const uploadedId = normalizeString(uploaded.fileId);
       const uploadedPath = normalizeString(uploaded.path);
       if (uploadedId) {
-        const fallbackPath = normalizeDrivePath(pathUtils.join(normalizeDrivePath(parentPath), name));
+        const fallbackPath = normalizeDrivePath(
+          pathUtils.join(normalizeDrivePath(parentPath), name)
+        );
         const normalizedPath = normalizeDrivePath(uploadedPath || fallbackPath);
         this.pathToItemId.set(normalizedPath, uploadedId);
         this.itemIdToPath.set(uploadedId, normalizedPath);
@@ -684,7 +936,10 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
   }
 
   async hasNativeImportCapability(): Promise<DriveCapabilityResult> {
-    return runDriveOperation(async () => platform.getPlatform() === 'desktop', 'Failed to inspect native import capability');
+    return runDriveOperation(
+      async () => platform.getPlatform() === 'desktop',
+      'Failed to inspect native import capability'
+    );
   }
 
   async getFileContent(itemId: string): Promise<DriveContentResult> {
@@ -695,19 +950,7 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       }
       const response = await this.getClient().drive.getItemContent(resolvedId);
       const content = unwrapApiData<DriveContentRecord>(response, 'Failed to load file content');
-      const directText = normalizeString(content.text);
-      if (directText) {
-        return directText;
-      }
-      if (content.contents && typeof content.contents === 'object') {
-        const first = Object.values(content.contents)
-          .map((value) => normalizeString(value))
-          .find((value) => Boolean(value));
-        if (first) {
-          return first;
-        }
-      }
-      return normalizeString(content.prompt);
+      return extractDriveTextContent(content);
     }, 'Failed to read file content');
   }
 
@@ -719,7 +962,7 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
       }
       await this.getClient().drive.updateItemContent(resolvedId, {
         text: content,
-        encoding: 'UTF-8'
+        encoding: 'UTF-8',
       });
     }, 'Failed to update file content');
   }
@@ -727,7 +970,7 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
   async delete(paths: string[]): Promise<DriveVoidResult> {
     return runDriveVoidOperation(async () => {
       const itemIds = paths
-        .map((path) => this.resolveItemId(path))
+        .map(path => this.resolveItemId(path))
         .filter((id): id is string => Boolean(id));
       if (itemIds.length === 0) {
         return;
@@ -743,7 +986,7 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
   async restore(paths: string[]): Promise<DriveVoidResult> {
     return runDriveVoidOperation(async () => {
       const itemIds = paths
-        .map((path) => this.resolveItemId(path))
+        .map(path => this.resolveItemId(path))
         .filter((id): id is string => Boolean(id));
       for (const itemId of itemIds) {
         await this.getClient().drive.restoreItem(itemId);
@@ -753,16 +996,7 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
 
   async emptyTrash(): Promise<DriveVoidResult> {
     return runDriveVoidOperation(async () => {
-      const driveApi = this.getClient().drive as Record<string, unknown>;
-      const candidateMethods = ['clearTrash', 'clearDriveTrash', 'purgeTrash', 'emptyTrash'];
-      for (const methodName of candidateMethods) {
-        const method = driveApi[methodName];
-        if (typeof method === 'function') {
-          await (method as (...args: unknown[]) => Promise<unknown>).call(driveApi);
-          return;
-        }
-      }
-      throw new Error('SDK drive clear-trash method is unavailable. Regenerate app SDK from latest backend OpenAPI schema.');
+      await this.getClient().drive.clearTrash();
     }, 'Failed to empty trash');
   }
 
@@ -800,14 +1034,52 @@ export class SdkDriveBusinessAdapter implements DriveBusinessAdapter {
     return runDriveVoidOperation(async () => {
       const targetFolderId = await this.resolveTargetFolderId(targetPath);
       const itemIds = paths
-        .map((path) => this.resolveItemId(path))
+        .map(path => this.resolveItemId(path))
         .filter((id): id is string => Boolean(id));
       for (const itemId of itemIds) {
         await this.getClient().drive.moveItem(itemId, {
-          ...(targetFolderId ? { targetFolderId } : {})
+          ...(targetFolderId ? { targetFolderId } : {}),
         });
       }
     }, 'Failed to move files');
+  }
+
+  async downloadItems(items: DriveItem[]): Promise<DriveDownloadResult> {
+    return runDriveOperation(async () => {
+      const downloadableItems = items.filter(item => item.type === 'file');
+      if (downloadableItems.length === 0) {
+        throw new Error('No downloadable files selected');
+      }
+
+      const savedPaths: string[] = [];
+      const failures: string[] = [];
+
+      for (const item of downloadableItems) {
+        try {
+          const target = await this.resolveDownloadTarget(item);
+          const savedPath = target.url
+            ? await downloadUrlAsFile(target.url, target.fileName, target.mimeType)
+            : await saveBytesAsDownload(
+                target.fileName,
+                encodeTextToBytes(target.text || ''),
+                target.mimeType
+              );
+          savedPaths.push(savedPath);
+        } catch (error) {
+          failures.push(`${item.name}: ${getErrorMessage(error)}`);
+        }
+      }
+
+      if (savedPaths.length === 0) {
+        throw new Error(failures[0] || 'No downloadable files selected');
+      }
+
+      if (failures.length > 0) {
+        console.warn('[DriveBusinessService] Partial download failures:', failures);
+      }
+
+      return savedPaths;
+    }, 'Failed to download drive items');
   }
 }
 
@@ -842,7 +1114,11 @@ class DriveBusinessService implements IDriveBusinessService {
     return getDriveBusinessAdapter().createFolder(name, parentPath);
   }
 
-  async uploadFile(parentPath: string, name: string, content: Uint8Array): Promise<DriveVoidResult> {
+  async uploadFile(
+    parentPath: string,
+    name: string,
+    content: Uint8Array
+  ): Promise<DriveVoidResult> {
     return getDriveBusinessAdapter().uploadFile(parentPath, name, content);
   }
 
@@ -888,6 +1164,10 @@ class DriveBusinessService implements IDriveBusinessService {
 
   async move(paths: string[], targetPath: string): Promise<DriveVoidResult> {
     return getDriveBusinessAdapter().move(paths, targetPath);
+  }
+
+  async downloadItems(items: DriveItem[]): Promise<DriveDownloadResult> {
+    return getDriveBusinessAdapter().downloadItems(items);
   }
 }
 

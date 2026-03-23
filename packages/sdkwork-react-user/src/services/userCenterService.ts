@@ -16,7 +16,7 @@ import type {
     UserSettingsUpdateForm,
     UserSettingsVO,
 } from '@sdkwork/app-sdk';
-import { getAppSdkClientWithSession } from '@sdkwork/react-core';
+import { getAppSdkClientWithSession, uploadViaPresignedUrl } from '@sdkwork/react-core';
 
 export interface UserCenterProfile {
     userId: string;
@@ -32,6 +32,12 @@ export interface UserCenterProfile {
 }
 
 export interface UserCenterUpdateProfileInput extends UserProfileUpdateForm {}
+
+export interface UserCenterAvatarUploadInput {
+    data: Uint8Array;
+    name: string;
+    contentType?: string;
+}
 
 export interface UserCenterChangePasswordInput {
     oldPassword: string;
@@ -57,16 +63,16 @@ export type UserCenterBindPlatform = 'wechat' | 'qq';
 
 export interface UserCenterThirdPartyBindInput extends ThirdPartyBindForm {}
 
-function unwrapResult<T>(result: { code?: string; msg?: string; data?: T }, fallback: string): T {
-    const code = (result?.code || '').trim();
+function unwrapResult<T>(result: { code?: string | number; msg?: string; data?: T }, fallback: string): T {
+    const code = String(result?.code ?? '').trim();
     if (code && code !== '2000') {
         throw new Error((result?.msg || '').trim() || fallback);
     }
     return (result?.data as T) || ({} as T);
 }
 
-function ensureSuccess(result: { code?: string; msg?: string }, fallback: string): void {
-    const code = (result?.code || '').trim();
+function ensureSuccess(result: { code?: string | number; msg?: string }, fallback: string): void {
+    const code = String(result?.code ?? '').trim();
     if (code && code !== '2000') {
         throw new Error((result?.msg || '').trim() || fallback);
     }
@@ -106,9 +112,27 @@ function isPlainObjectEmpty(value: unknown): boolean {
     return Object.keys(value as Record<string, unknown>).length === 0;
 }
 
+function resolveUploadedFileReference(value: unknown): string {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return '';
+    }
+
+    const record = value as Record<string, unknown>;
+    const candidates = [record.accessUrl, record.previewUrl, record.url, record.path, record.objectKey];
+    for (const candidate of candidates) {
+        const normalized = typeof candidate === 'string' ? candidate.trim() : '';
+        if (normalized) {
+            return normalized;
+        }
+    }
+
+    return '';
+}
+
 export interface IUserCenterService {
     getUserProfile(): Promise<UserCenterProfile | null>;
     updateUserProfile(input: UserCenterUpdateProfileInput): Promise<UserCenterProfile>;
+    uploadUserAvatar(input: UserCenterAvatarUploadInput): Promise<UserCenterProfile>;
     changePassword(input: UserCenterChangePasswordInput): Promise<void>;
     bindEmail(email: string, verifyCode?: string): Promise<UserCenterProfile>;
     unbindEmail(): Promise<UserCenterProfile>;
@@ -141,6 +165,35 @@ class UserCenterServiceImpl implements IUserCenterService {
         const response = await client.user.updateUserProfile(input);
         const data = unwrapResult<UserProfileVO>(response as PlusApiResultUserProfileVO, 'Failed to update user profile');
         return mapProfile(data);
+    }
+
+    async uploadUserAvatar(input: UserCenterAvatarUploadInput): Promise<UserCenterProfile> {
+        if (!(input.data instanceof Uint8Array) || input.data.length === 0) {
+            throw new Error('Avatar file data is empty');
+        }
+
+        const client = getAppSdkClientWithSession();
+        const uploadBytes = new Uint8Array(input.data.byteLength);
+        uploadBytes.set(input.data);
+
+        const uploadResult = await uploadViaPresignedUrl(client, {
+            file: new Blob([uploadBytes]),
+            fileName: input.name,
+            contentType: (input.contentType || '').trim() || undefined,
+            type: 'IMAGE',
+            path: 'users/avatars',
+        });
+
+        const uploadedAvatar =
+            resolveUploadedFileReference((uploadResult.registerResult as { data?: unknown } | undefined)?.data)
+            || resolveUploadedFileReference(uploadResult.registerResult)
+            || String(uploadResult.objectKey || '').trim();
+
+        if (!uploadedAvatar) {
+            throw new Error('Avatar upload completed without a usable file reference');
+        }
+
+        return this.updateUserProfile({ avatar: uploadedAvatar });
     }
 
     async changePassword(input: UserCenterChangePasswordInput): Promise<void> {

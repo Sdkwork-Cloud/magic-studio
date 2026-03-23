@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown, Palette, Settings2, Sparkles } from 'lucide-react';
-import { PromptTextInput, StyleSelector, type InputAttachment } from '@sdkwork/react-assets';
+import { PromptTextInput, StyleSelector, createPromptTextInputCapabilityProps, type InputAttachment } from '@sdkwork/react-assets';
 import { VIDEO_STYLES } from '../../constants';
 import type { VideoConfig } from '../../entities';
 import { VideoPanelLabel } from './VideoPanelLabel';
@@ -51,6 +51,7 @@ export const VideoPromptStyleSection: React.FC<VideoPromptStyleSectionProps> = (
                     Prompt
                 </VideoPanelLabel>
                 <PromptTextInput
+                    {...createPromptTextInputCapabilityProps('VIDEO')}
                     label={null}
                     value={config.prompt}
                     onChange={onPromptChange}
@@ -88,6 +89,7 @@ export const VideoPromptStyleSection: React.FC<VideoPromptStyleSectionProps> = (
                 {showAdvanced && (
                     <div className="animate-in fade-in slide-in-from-top-1 space-y-4 pt-1 pb-2">
                         <PromptTextInput
+                            {...createPromptTextInputCapabilityProps('VIDEO')}
                             label="Negative Prompt"
                             value={config.negativePrompt || ''}
                             onChange={onNegativePromptChange}

@@ -10,6 +10,10 @@ import { downloadService } from '@sdkwork/react-core';
 import { Confirm, useConfirm } from '@sdkwork/react-commons';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { resolveAssetUrlByAssetIdFirst } from '../../utils/assetUrlResolver';
+import {
+    importMagicCutTrackCoverFile,
+    importMagicCutTrackCoverFromUrl,
+} from '../../utils/magicCutTrackCoverImport';
 
 interface MagicCutTrackHeaderProps {
     track: CutTrack;
@@ -85,6 +89,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
     const [coverMenuPos, setCoverMenuPos] = useState<{ x: number, y: number } | null>(null);
     const [candidateFrames, setCandidateFrames] = useState<string[]>([]);
     const [isLoadingFrames, setIsLoadingFrames] = useState(false);
+    const [isSavingCover, setIsSavingCover] = useState(false);
     const selectorRef = useRef<HTMLDivElement>(null);
 
     // Confirm dialog state
@@ -101,6 +106,16 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
     }, [coverMenuPos]);
+
+    useEffect(() => {
+        return () => {
+            candidateFrames.forEach((frame) => {
+                if (frame.startsWith('blob:')) {
+                    URL.revokeObjectURL(frame);
+                }
+            });
+        };
+    }, [candidateFrames]);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -255,9 +270,20 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
         generateTrackKeyframes();
     };
 
-    const handleSelectCover = (url: string) => {
-        updateTrack(track.id, { coverImage: url });
-        setCoverMenuPos(null);
+    const handleSelectCover = async (url: string) => {
+        setIsSavingCover(true);
+        try {
+            const imported = await importMagicCutTrackCoverFromUrl(
+                url,
+                `magiccut_track_cover_${track.id}_${Date.now()}.png`
+            );
+            updateTrack(track.id, { coverImage: imported.url });
+            setCoverMenuPos(null);
+        } catch (error) {
+            console.error('Failed to persist selected track cover', error);
+        } finally {
+            setIsSavingCover(false);
+        }
     };
 
     const handleUploadCover = async (e: React.MouseEvent) => {
@@ -266,16 +292,18 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             const files = await uploadHelper.pickFiles(false, 'image/*');
             if (files.length > 0) {
                 const file = files[0];
-                const blob = new Blob([new Uint8Array(file.data)]);
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64 = reader.result as string;
-                    updateTrack(track.id, { coverImage: base64 });
-                    setCoverMenuPos(null);
-                };
-                reader.readAsDataURL(blob);
+                setIsSavingCover(true);
+                const imported = await importMagicCutTrackCoverFile({
+                    name: file.name || `magiccut_track_cover_${track.id}.png`,
+                    data: new Uint8Array(file.data),
+                });
+                updateTrack(track.id, { coverImage: imported.url });
+                setCoverMenuPos(null);
             }
         } catch (e) { console.error(e); }
+        finally {
+            setIsSavingCover(false);
+        }
     };
 
     const handleDeleteTrack = async (e: React.MouseEvent) => {
@@ -423,9 +451,10 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                         <div className="p-2 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             <button
                                 onClick={handleUploadCover}
+                                disabled={isSavingCover}
                                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-[#252526] hover:bg-[#2a2a2d] text-xs text-gray-300 transition-colors border border-transparent hover:border-[#444] font-medium"
                             >
-                                <Upload size={12} /> Upload Custom
+                                {isSavingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} {isSavingCover ? 'Saving Cover...' : 'Upload Custom'}
                             </button>
 
                             <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pt-1 border-t border-[#333] mt-1">From Track Clips</div>
@@ -435,12 +464,18 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                                     <Loader2 size={16} className="animate-spin text-blue-500" />
                                     <span className="text-[10px]">Scanning content...</span>
                                 </div>
+                            ) : isSavingCover ? (
+                                <div className="flex justify-center py-6 text-gray-500 flex-col items-center gap-2">
+                                    <Loader2 size={16} className="animate-spin text-blue-500" />
+                                    <span className="text-[10px]">Saving cover...</span>
+                                </div>
                             ) : candidateFrames.length > 0 ? (
                                 <div className="grid grid-cols-3 gap-2">
                                     {candidateFrames.map((frame, i) => (
                                         <button
                                             key={i}
                                             onClick={() => handleSelectCover(frame)}
+                                            disabled={isSavingCover}
                                             className="aspect-video rounded overflow-hidden border border-[#333] hover:border-blue-500 transition-all hover:scale-105 bg-black relative group/frame"
                                         >
                                             <img src={frame} className="w-full h-full object-cover" loading="lazy" />

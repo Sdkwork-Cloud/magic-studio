@@ -1,6 +1,7 @@
 import { CanvasElement, SnapLine, Viewport } from '../entities';
 import { calculateSnap } from '../utils/snapping';
 import { getSmartPath } from '../utils/smartPath';
+import { collectAncestorGroupIds } from '../store/canvasGroupGeometry';
 
 export interface MoveElementStartPosition {
     x: number;
@@ -36,7 +37,7 @@ interface PointDelta {
     y: number;
 }
 
-interface MoveDeltaComputationInput {
+export interface MoveDeltaComputationInput {
     pointerDelta: PointDelta;
     viewport: Viewport;
     viewportSize: { width: number; height: number };
@@ -51,14 +52,14 @@ export interface MoveDeltaComputationResult {
     snapLines: SnapLine[];
 }
 
-interface GroupBounds {
+export interface GroupBounds {
     x: number;
     y: number;
     width: number;
     height: number;
 }
 
-interface ConnectionPreviewPath {
+export interface ConnectionPreviewPath {
     id: string;
     path: string;
 }
@@ -83,9 +84,9 @@ export const initializeMoveSession = (
             nodesToMove.add(id);
             const element = elementById.get(id);
             if (!element) return;
-            if (element.groupId) {
-                parentGroups.add(element.groupId);
-            }
+            collectAncestorGroupIds(elements, [id]).forEach((groupId) => {
+                parentGroups.add(groupId);
+            });
             if (element.type === 'group' && element.groupChildren) {
                 collectNodesRecursively(new Set(element.groupChildren));
             }

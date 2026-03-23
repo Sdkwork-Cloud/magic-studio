@@ -17,16 +17,16 @@ export interface SocialFriendRequest extends FriendRequestVO {}
 export interface SocialContactStats extends ContactStatsVO {}
 export interface SocialContactQuery extends QueryParams {}
 
-function unwrapResult<T>(result: { code?: string; msg?: string; data?: T }, fallback: string): T {
-    const code = (result?.code || '').trim();
+function unwrapResult<T>(result: { code?: string | number; msg?: string; data?: T }, fallback: string): T {
+    const code = String(result?.code ?? '').trim();
     if (code && code !== '2000') {
         throw new Error((result?.msg || '').trim() || fallback);
     }
     return (result?.data as T) || ({} as T);
 }
 
-function ensureSuccess(result: { code?: string; msg?: string }, fallback: string): void {
-    const code = (result?.code || '').trim();
+function ensureSuccess(result: { code?: string | number; msg?: string }, fallback: string): void {
+    const code = String(result?.code ?? '').trim();
     if (code && code !== '2000') {
         throw new Error((result?.msg || '').trim() || fallback);
     }

@@ -1,5 +1,5 @@
 
-import { VideoAspectRatio, VideoResolution } from '@sdkwork/react-commons'
+import { findByIdOrFirst, type VideoAspectRatio, type VideoResolution } from '@sdkwork/react-commons'
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Monitor, Smartphone, Square, X, Lock } from 'lucide-react';
 ;
@@ -62,7 +62,7 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen]);
 
-    const activeRatioObj = VIDEO_ASPECT_RATIOS.find(r => r.id === ratio) || VIDEO_ASPECT_RATIOS[0];
+    const activeRatioObj = findByIdOrFirst(VIDEO_ASPECT_RATIOS, ratio);
 
     return (
         <div className="relative z-20" ref={containerRef}>
@@ -92,7 +92,7 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
                         />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-xs font-bold text-gray-200">{activeRatioObj.label}</span>
+                        <span className="text-xs font-bold text-gray-200">{activeRatioObj?.label || ratio}</span>
                         <span className="text-[9px] text-gray-500 font-mono">{w} x {h}</span>
                     </div>
                 </div>

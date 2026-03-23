@@ -1,7 +1,7 @@
 import React from 'react';
 import { Wand2 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
-import { PromptTextInput } from '@sdkwork/react-assets';
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets';
 import { ImagePanelLabel } from './ImagePanelLabel';
 
 interface ImagePromptSectionProps {
@@ -25,6 +25,7 @@ export const ImagePromptSection: React.FC<ImagePromptSectionProps> = ({
                 {t('studio.common.prompt')}
             </ImagePanelLabel>
             <PromptTextInput
+                {...createPromptTextInputCapabilityProps('IMAGE')}
                 label={null}
                 value={prompt}
                 onChange={onPromptChange}

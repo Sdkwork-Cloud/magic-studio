@@ -1,4 +1,5 @@
 export * from './hooks';
+export * from './promptLibraryService';
 export * from './uploadViaPresignedUrl';
 
 import {
@@ -17,6 +18,7 @@ import {
     type NotificationApi,
     type OrderApi,
     type PaymentApi,
+    type PromptApi,
     type ProjectApi,
     type SearchApi,
     type SettingApi,
@@ -60,7 +62,7 @@ export type NotificationModule = NotificationApi;
 export type SettingsModule = SettingApi;
 export type SearchModule = SearchApi;
 export type ModelModule = ModelApi;
-export type PromptModule = GenerationApi;
+export type PromptModule = PromptApi;
 export type FeedbackModule = FeedbackApi;
 export type WorkspaceModule = WorkspaceApi;
 export type AnalyticsModule = AnalyticApi;
@@ -228,7 +230,7 @@ export const sdk = {
         return getSdkworkClient().model;
     },
     get prompt(): PromptModule {
-        return getSdkworkClient().generation;
+        return getSdkworkClient().prompt;
     },
     get feedback(): FeedbackModule {
         return getSdkworkClient().feedback;
@@ -249,6 +251,7 @@ export {
     APP_SDK_ACCESS_TOKEN_STORAGE_KEY,
     APP_SDK_REFRESH_TOKEN_STORAGE_KEY,
     createAppSdkClientConfig,
+    createScopedAppSdkClient,
     initAppSdkClient,
     getAppSdkClient,
     getAppSdkClientConfig,

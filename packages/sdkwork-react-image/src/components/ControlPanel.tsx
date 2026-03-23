@@ -1,5 +1,5 @@
 import { AspectRatio, Button } from '@sdkwork/react-commons'
-import { PromptTextInput } from '@sdkwork/react-assets'
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets'
 import React from 'react';
 import { useImageStore } from '../store/imageStore';
 import { IMAGE_STYLES } from '../constants';
@@ -33,6 +33,7 @@ export const ControlPanel: React.FC = () => {
                 {/* Prompt Section */}
                 <div>
                     <PromptTextInput 
+                        {...createPromptTextInputCapabilityProps('IMAGE')}
                         label="Prompt"
                         placeholder="Describe your imagination..."
                         value={config.prompt}

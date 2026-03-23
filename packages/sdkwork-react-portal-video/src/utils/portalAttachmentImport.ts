@@ -86,7 +86,7 @@ const readOptionalStringProperty = (
 
 export const importPortalAttachmentFromLocalFile = async (
   file: PortalPickedFile,
-  tab: PortalTab
+  _tab: PortalTab
 ): Promise<PortalAttachment> => {
   const fileName = file.name || `portal-attachment-${Date.now()}`;
   const bytes = file.data instanceof Uint8Array ? file.data : new Uint8Array(file.data);

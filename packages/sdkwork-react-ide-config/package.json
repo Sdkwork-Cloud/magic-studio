@@ -24,6 +24,11 @@
                              "react":  "\u003e=18.0.0",
                              "react-dom":  "\u003e=18.0.0"
                          },
+    "dependencies":  {
+                         "@sdkwork/react-commons":  "workspace:*",
+                         "@sdkwork/react-core":  "workspace:*",
+                         "@sdkwork/react-fs":  "workspace:*"
+                     },
     "devDependencies":  {
                             "@types/react":  "catalog:",
                             "@types/react-dom":  "catalog:",

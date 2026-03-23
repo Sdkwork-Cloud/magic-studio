@@ -39,6 +39,15 @@ interface MenuLinkProps {
     onClick: () => void;
 }
 
+interface PortalHeaderAuthSnapshot {
+    user: {
+        name?: string;
+        email?: string;
+        avatar?: string;
+    } | null;
+    logout: () => Promise<void>;
+}
+
 const NAV_ITEMS: NavItem[] = [
     { id: 'home', label: createLocalizedText('Home', '\u9996\u9875'), icon: Home, route: ROUTES.PORTAL_VIDEO },
     { id: 'community', label: createLocalizedText('Community', '\u793e\u533a'), icon: Users, route: ROUTES.PORTAL_COMMUNITY },
@@ -50,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export const PortalHeader: React.FC = () => {
     const { locale } = useTranslation();
-    const { user, logout } = useAuthStore();
+    const { user, logout } = useAuthStore() as PortalHeaderAuthSnapshot;
     const routerContext = useRouter();
     const navigate = routerContext?.navigate || (() => {});
     const currentPath = routerContext?.currentPath || '/';
@@ -100,7 +109,7 @@ export const PortalHeader: React.FC = () => {
     }, []);
 
     const handleLogout = () => {
-        logout();
+        void logout();
         navigate(ROUTES.LOGIN);
     };
 

@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Mic, Bot, Workflow, ChevronDown, Check } from 'lucide-react';
+import { findByIdOrFirst } from '@sdkwork/react-commons';
 import { useTranslation } from '@sdkwork/react-i18n';
 
 export type ChatMode = 'AGENT' | 'PLAN';
@@ -74,8 +75,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, mode, setMode, 
   };
 
   const currentModelName = AVAILABLE_MODELS.find(m => m.id === model)?.name || model;
-  const currentMode = chatModes.find(m => m.id === mode) || chatModes[0];
-  const ModeIcon = currentMode.icon;
+  const currentMode = findByIdOrFirst(chatModes, mode);
+  const ModeIcon = currentMode?.icon || Bot;
 
   return (
     <div className="p-[5px] bg-[#111113]">
@@ -106,8 +107,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled, mode, setMode, 
                         className="flex items-center gap-1.5 text-[11px] font-medium bg-[#27272a] hover:bg-[#333] text-gray-300 px-2 py-1 rounded transition-colors border border-[#333] group shadow-sm"
                         title="Switch Chat Mode"
                       >
-                          <ModeIcon size={12} className={currentMode.color} />
-                          <span>{currentMode.label}</span>
+                          <ModeIcon size={12} className={currentMode?.color || 'text-indigo-400'} />
+                          <span>{currentMode?.label || mode}</span>
                           <ChevronDown size={10} className="opacity-50 group-hover:opacity-100 transition-opacity" />
                       </button>
 

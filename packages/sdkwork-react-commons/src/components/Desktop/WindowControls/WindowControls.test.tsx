@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { WindowControls } from './WindowControls';
+import {
+  resetWindowControlServiceAdapter,
+  setWindowControlServiceAdapter,
+} from '../../../services/windowControlService';
 
 const clearWindow = () => {
   Reflect.deleteProperty(globalThis as Record<string, unknown>, 'window');
@@ -8,6 +12,7 @@ const clearWindow = () => {
 
 describe('WindowControls', () => {
   afterEach(() => {
+    resetWindowControlServiceAdapter();
     clearWindow();
   });
 
@@ -17,13 +22,12 @@ describe('WindowControls', () => {
   });
 
   it('renders desktop window actions when a bridge is available', () => {
-    Reflect.set(globalThis as Record<string, unknown>, 'window', {
-      __sdkworkPlatform: {
-        getPlatform: () => 'desktop',
-        minimizeWindow: () => undefined,
-        maximizeWindow: () => undefined,
-        closeWindow: () => undefined,
-      },
+    setWindowControlServiceAdapter({
+      isAvailable: () => true,
+      isMaximized: async () => false,
+      minimize: async () => undefined,
+      maximize: async () => false,
+      close: async () => undefined,
     });
 
     const html = renderToStaticMarkup(<WindowControls />);

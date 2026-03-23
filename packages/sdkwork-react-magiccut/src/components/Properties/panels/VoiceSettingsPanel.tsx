@@ -5,7 +5,7 @@ import { PRESET_VOICES, voiceBusinessService } from '@sdkwork/react-voicespeaker
 import { AnyMediaResource, MediaResourceType, generateUUID } from '@sdkwork/react-commons';
 import { CutClip } from '../../../entities/magicCut.entity';
 import { useMagicCutStore } from '../../../store/magicCutStore';
-import { PromptTextInput } from '@sdkwork/react-assets';
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets';
 import { genAIService } from '@sdkwork/react-core';
 import { subtitleService } from '../../../services/subtitle/SubtitleService';
 import {
@@ -263,6 +263,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                 </div>
                 
                 <PromptTextInput 
+                    {...createPromptTextInputCapabilityProps('TEXT')}
                     label={null}
                     value={script}
                     onChange={setScript}

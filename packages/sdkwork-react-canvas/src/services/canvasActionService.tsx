@@ -186,4 +186,6 @@ class CanvasActionService {
     }
 }
 
-export const canvasActionService = new CanvasActionService();
+export type CanvasActionServiceApi = Pick<CanvasActionService, 'register' | 'getActions'>;
+
+export const canvasActionService: CanvasActionServiceApi = new CanvasActionService();

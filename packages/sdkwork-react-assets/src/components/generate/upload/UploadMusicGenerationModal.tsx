@@ -8,6 +8,7 @@ import { ImportData } from './types';
 import { SettingInput, SettingToggle } from '@sdkwork/react-settings';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
+import { createPromptTextInputCapabilityProps } from '../../generate/promptCapabilityProps';
 
 interface UploadMusicGenerationModalProps {
     onClose: () => void;
@@ -245,6 +246,7 @@ export const UploadMusicGenerationModal: React.FC<UploadMusicGenerationModalProp
                                         />
                                         
                                         <PromptTextInput 
+                                            {...createPromptTextInputCapabilityProps('MUSIC')}
                                             value={mainPrompt}
                                             onChange={setMainPrompt}
                                             label={t('studio.common.prompt')}

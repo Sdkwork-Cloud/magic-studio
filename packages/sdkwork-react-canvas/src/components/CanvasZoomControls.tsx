@@ -9,6 +9,8 @@ import {
 import { useCanvasStore } from '../store/canvasStore'; 
 import { useRouter, ROUTES, platform, uploadHelper } from '@sdkwork/react-core'; 
 import { CanvasExportModal } from './CanvasExportModal';
+import { getCanvasViewportSize } from '../utils/canvasContainer';
+import { zoomViewportAtCenter } from '../utils/viewport';
 
 export const CanvasZoomControls: React.FC = () => {
     const { viewport, setViewport, activeBoard, elements, importBoard } = useCanvasStore();
@@ -18,9 +20,14 @@ export const CanvasZoomControls: React.FC = () => {
     const [showMenu, setShowMenu] = useState(false);
     const [showMagicCutModal, setShowMagicCutModal] = useState(false);
 
-    const handleZoomIn = () => setViewport({ zoom: Math.min(5, viewport.zoom + 0.1) });
-    const handleZoomOut = () => setViewport({ zoom: Math.max(0.1, viewport.zoom - 0.1) });
-    const handleResetZoom = () => setViewport({ zoom: 1 });
+    const updateZoomAtCanvasCenter = (nextZoom: number) => {
+        const viewportSize = getCanvasViewportSize();
+        setViewport(zoomViewportAtCenter({ viewport, nextZoom, viewportSize }));
+    };
+
+    const handleZoomIn = () => updateZoomAtCanvasCenter(viewport.zoom + 0.1);
+    const handleZoomOut = () => updateZoomAtCanvasCenter(viewport.zoom - 0.1);
+    const handleResetZoom = () => updateZoomAtCanvasCenter(1);
 
     const getExportBoard = (): CanvasBoard => {
         if (activeBoard) {

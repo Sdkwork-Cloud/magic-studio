@@ -3,15 +3,19 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Minimize2, ChevronDown, Sparkles, Check, Clock, Quote, Clapperboard, Video, Image as ImageIcon, Smile, Music, Mic } from 'lucide-react';
 import { resolveLocalizedText, useTranslation } from '@sdkwork/react-i18n';
 import { useFilmStore, FilmStoreProvider } from '@sdkwork/react-film';
-import { inlineDataService, useRouter, ROUTES, uploadHelper, modelInfoService } from '@sdkwork/react-core';
-import { FILM_STYLES, GEN_MODES } from '../constants';
+import { inlineDataService, useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
+import { GEN_MODES } from '../constants';
 import {
     CreationChatInput,
     InputFooterButton,
     StyleSelector,
     ChooseAssetModal,
     clearPortalLaunchSession,
-    savePortalLaunchSession
+    savePortalLaunchSession,
+    fetchCreationCapabilities,
+    toCreationModelProviders,
+    resolveCreationStyleOptions,
+    resolveCreationEntryCapabilityOptions
 } from '@sdkwork/react-assets';
 import type { PortalTab } from '@sdkwork/react-assets';
 import { PortalSidebar } from '../components/PortalSidebar';
@@ -19,7 +23,7 @@ import { PortalHeader } from '../components/PortalHeader';
 import { ToolsGrid } from '../components/ToolsGrid';
 import { CommunityGallery } from '../components/CommunityGallery';
 import { StickyHeroBar } from '../components/StickyHeroBar';
-import { ModelSelector, AspectRatioSelector, Popover, Asset, GenerationType, getIconComponent, ModelProvider } from '@sdkwork/react-commons';
+import { ModelSelector, AspectRatioSelector, Popover, Asset, ModelProvider, findByIdOrFirst } from '@sdkwork/react-commons';
 import {
     importPortalAttachmentFromLocalFile,
     resolvePortalAttachmentFromAsset,
@@ -33,8 +37,9 @@ const ACTIVE_USERS = [
     { name: 'TravelClipper', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jiu' }
 ];
 
-type PortalAspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
-type PortalResolution = '2k' | '4k';
+type PortalAspectRatio = string;
+type PortalResolution = string;
+type CapabilityMap = Partial<Record<PortalTab, Awaited<ReturnType<typeof fetchCreationCapabilities>>>>;
 
 interface EditorLike {
     state: {
@@ -74,6 +79,10 @@ interface FooterControlsProps {
     duration: string;
     setDuration: (duration: string) => void;
     currentProviders: ModelProvider[];
+    styleOptions: Parameters<typeof StyleSelector>[0]['options'];
+    durationOptions: Array<{ label: string; value: string }>;
+    resolutionOptions: Array<{ label: string; value: string }>;
+    aspectRatioOptions: Array<{ label: string; value: string }>;
     onInsertQuote: () => void;
     menuPrefix: string;
 }
@@ -92,6 +101,10 @@ const FooterControls: React.FC<FooterControlsProps> = ({
     duration,
     setDuration,
     currentProviders,
+    styleOptions,
+    durationOptions,
+    resolutionOptions,
+    aspectRatioOptions,
     onInsertQuote,
     menuPrefix,
 }) => {
@@ -115,9 +128,10 @@ const FooterControls: React.FC<FooterControlsProps> = ({
         { id: 'speech', label: 'AI Voice', icon: Mic, color: 'text-teal-400' }
     ];
 
-    const currentMode = tabs.find(t => t.id === activeTab) || tabs[0];
-    const currentGenMode = GEN_MODES.find(m => m.id === genMode) || GEN_MODES[0];
-    const GenModeIcon = currentGenMode.icon;
+    const currentMode = findByIdOrFirst(tabs, activeTab);
+    const currentGenMode = findByIdOrFirst(GEN_MODES, genMode);
+    const CurrentModeIcon = currentMode?.icon || Sparkles;
+    const GenModeIcon = currentGenMode?.icon || Sparkles;
 
     const availableGenModes = useMemo(() => {
         return GEN_MODES.filter(m => m.validTabs.includes(activeTab));
@@ -128,8 +142,8 @@ const FooterControls: React.FC<FooterControlsProps> = ({
             <div className="relative shrink-0">
                 <InputFooterButton 
                     ref={modeButtonRef}
-                    icon={<currentMode.icon size={16} className={currentMode.color} />}
-                    label={resolveLocalizedText(currentMode.label, locale)}
+                    icon={<CurrentModeIcon size={16} className={currentMode?.color || 'text-gray-400'} />}
+                    label={resolveLocalizedText(currentMode?.label || 'Create', locale)}
                     onClick={() => toggleMenu(`${menuPrefix}-mode`)}
                     active={activeMenu === `${menuPrefix}-mode`}
                     suffix={<ChevronDown size={10} className="opacity-50" />}
@@ -196,7 +210,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                     <InputFooterButton
                         ref={genModeButtonRef}
                         icon={<GenModeIcon size={16} className={genMode === 'text' ? 'text-blue-400' : 'text-pink-400'} />}
-                        label={resolveLocalizedText(currentGenMode.label, locale)}
+                        label={resolveLocalizedText(currentGenMode?.label || 'Generation Mode', locale)}
                         onClick={() => toggleMenu(`${menuPrefix}-genMode`)}
                         active={activeMenu === `${menuPrefix}-genMode`}
                         suffix={<ChevronDown size={10} className="opacity-50" />}
@@ -234,7 +248,7 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                 <StyleSelector 
                     value={activeStyle}
                     onChange={setActiveStyle}
-                    options={FILM_STYLES}
+                    options={styleOptions}
                     className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
                     label="Style"
                     disabled={false}
@@ -249,6 +263,8 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                     onChange={setAspectRatio}
                     resolution={resolution}
                     onResolutionChange={setResolution}
+                    resolutionOptions={resolutionOptions}
+                    aspectRatioOptions={aspectRatioOptions}
                     className="border-none bg-transparent hover:bg-[#ffffff08] h-9 text-gray-500 hover:text-white shrink-0"
                     isOpen={activeMenu === `${menuPrefix}-ratio`}
                     onToggle={(open) => toggleMenu(open ? `${menuPrefix}-ratio` : '')}
@@ -273,13 +289,13 @@ const FooterControls: React.FC<FooterControlsProps> = ({
                         width={128}
                         className="p-1"
                     >
-                        {['5s', '10s', '15s', '60s'].map(d => (
+                        {durationOptions.map(d => (
                             <button 
-                                key={d} 
-                                onClick={() => { setDuration(d); setActiveMenu(null); }}
-                                className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d ? 'text-blue-400' : 'text-gray-400'}`}
+                                key={d.value} 
+                                onClick={() => { setDuration(d.value); setActiveMenu(null); }}
+                                className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d.value ? 'text-blue-400' : 'text-gray-400'}`}
                             >
-                                {d}
+                                {d.label}
                             </button>
                         ))}
                     </Popover>
@@ -312,7 +328,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     const [aspectRatio, setAspectRatio] = useState<PortalAspectRatio>('16:9');
     const [resolution, setResolution] = useState<PortalResolution>('2k');
     const [duration, setDuration] = useState('5s');
-    const [activeStyle, setActiveStyle] = useState('realistic');
+    const [activeStyle, setActiveStyle] = useState('');
     const [activeModel, setActiveModel] = useState<string>('');
     const [genMode, setGenMode] = useState<string>('text'); 
     
@@ -321,6 +337,7 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
     const [showAssetModal, setShowAssetModal] = useState(false);
     
     const [currentProviders, setCurrentProviders] = useState<ModelProvider[]>([]);
+    const [capabilityMap, setCapabilityMap] = useState<CapabilityMap>({});
 
     const editorRef = useRef<EditorLike | null>(null); 
     const expandedEditorRef = useRef<EditorLike | null>(null); 
@@ -341,53 +358,110 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
         return () => window.removeEventListener('portal-tab-change', handleTabChange);
     }, []);
 
-    const getGenerationType = (tab: PortalTab): GenerationType => {
-        switch (tab) {
-            case 'short_drama': return GenerationType.FILM;
-            case 'video': return GenerationType.VIDEO;
-            case 'image': return GenerationType.IMAGE;
-            case 'human': return GenerationType.CHARACTER;
-            case 'music': return GenerationType.MUSIC;
-            case 'speech': return GenerationType.SPEECH;
-            case 'one_click': return GenerationType.FILM;
-            default: return GenerationType.VIDEO;
-        }
-    };
-
     useEffect(() => {
-        const loadModels = async () => {
-            const type = getGenerationType(activeTab);
-            const result = await modelInfoService.getModelsByType(type);
-            
-            if (result.success && result.data) {
-                const mappedProviders: ModelProvider[] = result.data.channels.map((ch) => {
-                    const IconComp = getIconComponent(ch.icon || 'Box');
-                    return {
-                        id: ch.name.toLowerCase().replace(/\s+/g, '-'),
-                        name: ch.name,
-                        icon: IconComp ? <IconComp size={14} /> : null,
-                        color: ch.color,
-                        models: ch.models.map(m => ({
-                            id: m.model,
-                            name: m.model.split('-').slice(0, 2).join(' '),
-                            description: m.description,
-                            badge: m.badge,
-                            badgeColor: m.badgeColor
-                        }))
-                    };
-                });
-                
-                setCurrentProviders(mappedProviders);
+        let active = true;
+        const loadCapabilities = async () => {
+            const snapshot = await fetchCreationCapabilities(activeTab);
+            if (!active) {
+                return;
+            }
 
-                const allModels = mappedProviders.flatMap(p => p.models);
-                if (allModels.length > 0) {
-                     const exists = allModels.some(m => m.id === activeModel);
-                     if (!exists) setActiveModel(allModels[0].id);
+            setCapabilityMap((prev) => ({
+                ...prev,
+                [activeTab]: snapshot,
+            }));
+
+            const mappedProviders = toCreationModelProviders(snapshot);
+            setCurrentProviders(mappedProviders);
+
+            const allModels = mappedProviders.flatMap((provider: ModelProvider) => provider.models);
+            if (allModels.length > 0) {
+                const exists = allModels.some((item: ModelProvider['models'][number]) => item.id === activeModel);
+                if (!exists) {
+                    setActiveModel(allModels[0]?.id || '');
                 }
+            } else {
+                setActiveModel('');
+            }
+
+            if (activeTab === 'short_drama') {
+                const resolvedStyleOptions = resolveCreationStyleOptions(snapshot);
+                const firstStyle = resolvedStyleOptions[0]?.id || '';
+                setActiveStyle((current) => {
+                    if (current && resolvedStyleOptions.some((item) => item.id === current)) {
+                        return current;
+                    }
+                    return firstStyle;
+                });
             }
         };
-        loadModels();
+        loadCapabilities().catch((error) => {
+            console.error('Failed to load creation capabilities', error);
+        });
+        return () => {
+            active = false;
+        };
     }, [activeTab]);
+
+    const activeCapabilitySnapshot = capabilityMap[activeTab] || null;
+    const activeStyleOptions = useMemo(() => {
+        if (activeTab !== 'short_drama') {
+            return [];
+        }
+        return resolveCreationStyleOptions(
+            activeCapabilitySnapshot || { target: activeTab, channels: [], styleOptions: [] },
+        );
+    }, [activeCapabilitySnapshot, activeTab]);
+
+    const activeCapabilityOptions = useMemo(() => {
+        return resolveCreationEntryCapabilityOptions(
+            activeCapabilitySnapshot || { target: activeTab, channels: [], styleOptions: [] },
+            activeModel,
+        );
+    }, [activeCapabilitySnapshot, activeModel, activeTab]);
+    const activeDurationOptions = activeCapabilityOptions.durationOptions;
+    const activeResolutionOptions = activeCapabilityOptions.resolutionOptions;
+    const activeAspectRatioOptions = activeCapabilityOptions.aspectRatioOptions;
+
+    useEffect(() => {
+        if (activeTab !== 'short_drama') {
+            return;
+        }
+        if (activeStyleOptions.length === 0) {
+            setActiveStyle('');
+            return;
+        }
+        if (!activeStyleOptions.some((item) => item.id === activeStyle)) {
+            setActiveStyle(activeStyleOptions[0]?.id || '');
+        }
+    }, [activeStyle, activeStyleOptions, activeTab]);
+
+    useEffect(() => {
+        if (activeDurationOptions.length === 0) {
+            return;
+        }
+        if (!activeDurationOptions.some((item: { label: string; value: string }) => item.value === duration)) {
+            setDuration(activeDurationOptions[0]?.value || '5s');
+        }
+    }, [duration, activeDurationOptions]);
+
+    useEffect(() => {
+        if (activeResolutionOptions.length === 0) {
+            return;
+        }
+        if (!activeResolutionOptions.some((item: { label: string; value: string }) => item.value === resolution)) {
+            setResolution(activeResolutionOptions[0]?.value || '2k');
+        }
+    }, [activeResolutionOptions, resolution]);
+
+    useEffect(() => {
+        if (activeAspectRatioOptions.length === 0) {
+            return;
+        }
+        if (!activeAspectRatioOptions.some((item: { label: string; value: string }) => item.value === aspectRatio)) {
+            setAspectRatio((activeAspectRatioOptions[0]?.value || '16:9') as PortalAspectRatio);
+        }
+    }, [activeAspectRatioOptions, aspectRatio]);
 
     useEffect(() => {
         const hasImage = attachments.some(a => a.type === 'image');
@@ -611,6 +685,10 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
             duration={duration}
             setDuration={setDuration}
             currentProviders={currentProviders}
+            styleOptions={activeStyleOptions}
+            durationOptions={activeDurationOptions}
+            resolutionOptions={activeResolutionOptions}
+            aspectRatioOptions={activeAspectRatioOptions}
             onInsertQuote={handleInsertQuote(false)}
             menuPrefix="hero"
         />
@@ -633,6 +711,10 @@ const PortalContentInner: React.FC<PortalContentInnerProps> = ({ navigate }) => 
             duration={duration}
             setDuration={setDuration}
             currentProviders={currentProviders}
+            styleOptions={activeStyleOptions}
+            durationOptions={activeDurationOptions}
+            resolutionOptions={activeResolutionOptions}
+            aspectRatioOptions={activeAspectRatioOptions}
             onInsertQuote={handleInsertQuote(true)}
             menuPrefix="expanded"
         />

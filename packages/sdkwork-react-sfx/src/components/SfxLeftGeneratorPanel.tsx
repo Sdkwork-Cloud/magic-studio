@@ -1,5 +1,5 @@
 
-import { PromptTextInput } from '@sdkwork/react-assets'
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets'
 import React from 'react';
 import { useSfxStore } from '../store/sfxStore';
 import { SfxModelSelector } from './SfxModelSelector';
@@ -34,7 +34,7 @@ export const SfxLeftGeneratorPanel: React.FC = () => {
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                      <div>
                         <Label icon={<Sparkles size={12} className="text-orange-500" />}>Sound Description</Label>
-                        <PromptTextInput label={null} placeholder="Footsteps on gravel, laser blast, ambient rain..." value={config.prompt} onChange={(val) => setConfig({ prompt: val })} disabled={isGenerating} rows={6} className="bg-[#121214]" />
+                        <PromptTextInput {...createPromptTextInputCapabilityProps('AUDIO')} label={null} placeholder="Footsteps on gravel, laser blast, ambient rain..." value={config.prompt} onChange={(val) => setConfig({ prompt: val })} disabled={isGenerating} rows={6} className="bg-[#121214]" />
                     </div>
                     
                     <div>

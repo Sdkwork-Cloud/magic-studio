@@ -1,8 +1,12 @@
 import { canvasBusinessService } from './canvasBusinessService';
+export { NodeFactory } from './nodeFactory';
 
 export * from './canvasBusinessService';
 export type {
   AffectedConnection,
+  ConnectionPreviewPath,
+  GroupBounds,
+  MoveDeltaComputationInput,
   MoveDeltaComputationResult,
   MoveElementStartPosition,
   MoveSessionInitializationResult
@@ -13,7 +17,6 @@ export const canvasHistoryService = canvasBusinessService.canvasHistoryService;
 export const canvasActionService = canvasBusinessService.canvasActionService;
 export const canvasExportService = canvasBusinessService.canvasExportService;
 export const canvasToCutConverter = canvasBusinessService.canvasToCutConverter;
-export const NodeFactory = canvasBusinessService.NodeFactory;
 
 export const canvasInteractionService = canvasBusinessService.canvasInteractionService;
 export const initializeMoveSession = canvasBusinessService.canvasInteractionService.initializeMoveSession;

@@ -25,6 +25,7 @@
                              "react-dom":  "\u003e=18.0.0"
                          },
     "dependencies":  {
+                         "@sdkwork/react-audio":  "workspace:*",
                          "@sdkwork/react-assets":  "workspace:*",
                          "@sdkwork/react-chat":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*",
@@ -32,6 +33,7 @@
                          "@sdkwork/react-fs":  "workspace:*",
                          "@sdkwork/react-image":  "workspace:*",
                          "@sdkwork/react-magiccut":  "workspace:*",
+                         "@sdkwork/react-settings":  "workspace:*",
                          "@sdkwork/react-types":  "workspace:*",
                          "@sdkwork/react-video":  "workspace:*"
                      },

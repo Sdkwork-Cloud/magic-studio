@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchCreationModelProviders } from '@sdkwork/react-assets';
 import { ModelSelector } from '@sdkwork/react-commons';
 import { IMAGE_PROVIDERS } from '../constants';
 
@@ -12,11 +13,31 @@ interface VideoModelSelectorProps {
 }
 
 export const VideoModelSelector: React.FC<VideoModelSelectorProps> = ({ value, onChange, className, disabled, isOpen, onToggle }) => {
+    const [providers, setProviders] = useState(IMAGE_PROVIDERS);
+
+    useEffect(() => {
+        let active = true;
+        fetchCreationModelProviders('image', IMAGE_PROVIDERS)
+            .then((resolvedProviders) => {
+                if (active) {
+                    setProviders(resolvedProviders);
+                }
+            })
+            .catch(() => {
+                if (active) {
+                    setProviders(IMAGE_PROVIDERS);
+                }
+            });
+        return () => {
+            active = false;
+        };
+    }, []);
+
     return (
         <ModelSelector 
             value={value}
             onChange={onChange}
-            providers={IMAGE_PROVIDERS}
+            providers={providers}
             className={className}
             disabled={disabled}
             isOpen={isOpen}

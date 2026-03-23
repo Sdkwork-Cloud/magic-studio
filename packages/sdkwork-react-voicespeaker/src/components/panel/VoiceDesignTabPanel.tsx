@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import { PromptTextInput } from '@sdkwork/react-assets';
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets';
 import { SettingSlider } from '@sdkwork/react-settings';
 import type { VoiceDesignTabPanelProps } from './types';
 import { VoicePanelLabel } from './VoicePanelLabel';
@@ -33,6 +33,7 @@ export const VoiceDesignTabPanel: React.FC<VoiceDesignTabPanelProps> = ({
                     Voice Description
                 </VoicePanelLabel>
                 <PromptTextInput
+                    {...createPromptTextInputCapabilityProps('VOICE_CLONE_WORDS')}
                     label={null}
                     placeholder="Describe the voice: deep, raspy, cheerful, robotic, accent..."
                     value={description || ''}

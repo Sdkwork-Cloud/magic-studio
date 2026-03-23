@@ -11,13 +11,13 @@ import en from './resources/en';
 import zhCN from './resources/zh-CN';
 import { packageI18nRegistry } from './registryInstance';
 import { mapLocaleToSupported } from './packageTypes';
+import { localeStorageService, type StorageLike } from './services';
 
 export const DEFAULT_LOCALE: Locale = 'en-US';
 export const FALLBACK_LOCALE: Locale = 'en-US';
 export const LOCALE_STORAGE_KEY = 'sdkwork_locale';
 export const SUPPORTED_LOCALES: Locale[] = ['en-US', 'zh-CN'];
 
-type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 type DocumentLike = {
   documentElement?: {
     lang?: string;
@@ -29,15 +29,7 @@ type NavigatorLike = {
 };
 
 const readStorage = (): StorageLike | null => {
-  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) {
-    return null;
-  }
-
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return null;
-  }
+  return localeStorageService.getStorage();
 };
 
 const readDocument = (): DocumentLike | null => {
@@ -111,7 +103,7 @@ export function readStoredLocale(
   storageKey: string = LOCALE_STORAGE_KEY,
   storage: StorageLike | null = readStorage(),
 ): Locale | null {
-  const stored = storage?.getItem(storageKey);
+  const stored = storage?.getItem(storageKey) ?? localeStorageService.read(storageKey);
   return resolveKnownLocale(stored);
 }
 
@@ -208,7 +200,7 @@ class I18nService {
   }
 
   private _persistLocale(locale: Locale) {
-    readStorage()?.setItem(LOCALE_STORAGE_KEY, locale);
+    localeStorageService.write(LOCALE_STORAGE_KEY, locale);
   }
 
   private _syncDocumentLanguage(locale: Locale) {

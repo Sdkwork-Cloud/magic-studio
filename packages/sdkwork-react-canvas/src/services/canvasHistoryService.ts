@@ -13,4 +13,20 @@ class CanvasHistoryService extends LocalStorageService<CanvasBoard> {
     }
 }
 
-export const canvasHistoryService = new CanvasHistoryService();
+export type CanvasHistoryServiceApi = Pick<
+    LocalStorageService<CanvasBoard>,
+    | 'findAll'
+    | 'findById'
+    | 'existsById'
+    | 'findAllById'
+    | 'count'
+    | 'save'
+    | 'saveAll'
+    | 'setAll'
+    | 'deleteById'
+    | 'delete'
+    | 'deleteAll'
+    | 'clear'
+>;
+
+export const canvasHistoryService: CanvasHistoryServiceApi = new CanvasHistoryService();

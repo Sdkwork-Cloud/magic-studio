@@ -24,6 +24,10 @@ export { GenerationChatWindow } from './components/generate/GenerationChatWindow
 export type { GenerationTask, GenerationConfig, GenerationChatWindowProps } from './components/generate/GenerationChatWindow';
 export { GenerationHistoryListPane, GENERATION_TABS } from './components/generate/GenerationHistoryListPane';
 export { PromptTextInput } from './components/generate/PromptTextInput';
+export type { PromptTextInputProps } from './components/generate/PromptTextInput';
+export { createPromptTextInputCapabilityProps } from './components/generate/promptCapabilityProps';
+export { PromptPickerDialog } from './components/generate/PromptPickerDialog';
+export { PromptHistoryDialog } from './components/generate/PromptHistoryDialog';
 
 export { useAssetUrl } from './hooks/useAssetUrl';
 export { useAssetCenterShortcuts } from './hooks/useAssetCenterShortcuts';
@@ -35,6 +39,18 @@ export {
     assetService,
     ASSET_CATEGORIES,
     setMediaAnalysisAdapter,
+    clearCreationCapabilityCache,
+    fetchCreationCapabilities,
+    fetchCreationModelProviders,
+    flattenCreationModels,
+    findCreationModel,
+    normalizeCreationOptions,
+    toCreationModelProviders,
+    getCreationModelDurationOptions,
+    getCreationModelResolutionOptions,
+    getCreationModelAspectRatioOptions,
+    resolveCreationStyleOptions,
+    resolveCreationEntryCapabilityOptions,
     queryAssetsBySdk,
     importAssetBySdk,
     importAssetFromUrlBySdk,
@@ -43,6 +59,7 @@ export {
     resolveAssetPrimaryUrlBySdk
 } from './services';
 export type { MediaAnalysisAdapter, MediaAnalysisResult, AssetSdkQueryCategory } from './services';
+export type { CreationCapabilityTarget, CreationCapabilitySnapshot, CreationEntryCapabilityOptions } from './services';
 
 // Enhanced asset services
 export { assetServiceRegistry, initializeAssetServices, getAssetService, hasAssetService, getRegisteredCategories } from './services';

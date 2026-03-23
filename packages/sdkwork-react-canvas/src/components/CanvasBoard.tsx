@@ -13,6 +13,7 @@ import { CanvasConnections } from './layers/CanvasConnections';
 import { CanvasElement, CanvasElementType, ConnectionDraft, DropMenuState, MarqueeState, ContextMenuState } from '../entities';
 import { QuadTree, Rect } from '@sdkwork/react-commons';
 import { getSmartPath } from '../utils/smartPath';
+import { zoomViewportAroundPoint } from '../utils/viewport';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { CanvasAlignmentToolbar } from './CanvasAlignmentToolbar';
 import { CanvasMinimap } from './CanvasMinimap';
@@ -20,12 +21,12 @@ import { CanvasZoomControls } from './CanvasZoomControls';
 import { SelectionOverlay } from './SelectionOverlay';
 import {
     canvasBusinessService,
+    NodeFactory,
     type AffectedConnection,
     type MoveElementStartPosition
 } from '../services';
 
 const {
-    NodeFactory,
     canvasInteractionService: {
         buildMoveCommitUpdates,
         computeConnectionPreviewPaths,
@@ -662,19 +663,17 @@ export const CanvasBoard: React.FC = () => {
             e.preventDefault();
             const zoomSensitivity = 0.001;
             const delta = -e.deltaY * zoomSensitivity;
-            const newZoom = Math.min(Math.max(0.1, viewport.zoom + delta), 5);
+            const nextZoom = viewport.zoom + delta;
             
             const rect = e.currentTarget.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-            
-            const worldX = (mouseX - viewport.x) / viewport.zoom;
-            const worldY = (mouseY - viewport.y) / viewport.zoom;
-            
-            const newX = mouseX - worldX * newZoom;
-            const newY = mouseY - worldY * newZoom;
-            
-            setViewport({ x: newX, y: newY, zoom: newZoom });
+
+            setViewport(zoomViewportAroundPoint({
+                viewport,
+                nextZoom,
+                screenPoint: { x: mouseX, y: mouseY }
+            }));
         } else {
             e.preventDefault();
             setViewport({ x: viewport.x - e.deltaX, y: viewport.y - e.deltaY });

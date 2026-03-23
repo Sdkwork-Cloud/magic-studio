@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Film, FileVideo } from 'lucide-react';
 import { Button, VideoUpload, ImageUpload, generateUUID } from '@sdkwork/react-commons';
@@ -8,6 +8,13 @@ import { ImportData } from './types';
 import { SettingInput, SettingSelect } from '@sdkwork/react-settings';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
+import {
+    fetchCreationCapabilities,
+    findCreationModel,
+    flattenCreationModels,
+    resolveCreationEntryCapabilityOptions
+} from '../../../services/creationCapabilityService';
+import { createPromptTextInputCapabilityProps } from '../../generate/promptCapabilityProps';
 
 interface UploadVideoGenerationModalProps {
     onClose: () => void;
@@ -24,11 +31,115 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
 
     // Configuration
     const [prompt, setPrompt] = useState('');
-    const [model, setModel] = useState('External Source');
+    const [model, setModel] = useState('');
     const [aspectRatio, setAspectRatio] = useState('16:9');
     const [duration, setDuration] = useState('5');
     const [resolution, setResolution] = useState('1080p');
     const [fps, setFps] = useState('30');
+    const [capabilityError, setCapabilityError] = useState<string | null>(null);
+    const [videoCapabilitySnapshot, setVideoCapabilitySnapshot] = useState<Awaited<ReturnType<typeof fetchCreationCapabilities>> | null>(null);
+
+    useEffect(() => {
+        let active = true;
+        fetchCreationCapabilities('video')
+            .then((snapshot) => {
+                if (!active) {
+                    return;
+                }
+                setVideoCapabilitySnapshot(snapshot);
+                const firstModel = flattenCreationModels(snapshot)[0];
+                if (firstModel?.model) {
+                    setModel((current) => current || firstModel.model || '');
+                }
+            })
+            .catch((error) => {
+                if (!active) {
+                    return;
+                }
+                setCapabilityError(error instanceof Error ? error.message : 'Failed to load model capabilities.');
+            });
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    const modelOptions = useMemo(() => {
+        if (!videoCapabilitySnapshot) {
+            return [];
+        }
+        return flattenCreationModels(videoCapabilitySnapshot).map((item) => ({
+            label: item.name || item.model || 'Model',
+            value: item.model || '',
+        })).filter((item) => item.value);
+    }, [videoCapabilitySnapshot]);
+
+    const selectedModel = useMemo(() => {
+        if (!videoCapabilitySnapshot) {
+            return undefined;
+        }
+        return findCreationModel(videoCapabilitySnapshot, model);
+    }, [model, videoCapabilitySnapshot]);
+
+    const capabilityOptions = useMemo(() => {
+        return resolveCreationEntryCapabilityOptions(
+            videoCapabilitySnapshot || { target: 'video', channels: [], styleOptions: [] },
+            selectedModel?.model || model,
+        );
+    }, [model, selectedModel?.model, videoCapabilitySnapshot]);
+
+    const aspectRatioOptions = capabilityOptions.aspectRatioOptions;
+
+    const resolutionOptions = useMemo(() => {
+        if (capabilityOptions.resolutionOptions.length > 0) {
+            return capabilityOptions.resolutionOptions;
+        }
+        return [
+            { label: '720p', value: '720p' },
+            { label: '1080p', value: '1080p' },
+            { label: '4k', value: '4k' },
+        ];
+    }, [capabilityOptions.resolutionOptions]);
+
+    const durationOptions = useMemo(() => {
+        if (capabilityOptions.durationOptions.length > 0) {
+            return capabilityOptions.durationOptions.map((item) => ({
+                label: item.label,
+                value: item.value.replace(/s$/i, ''),
+            }));
+        }
+        return [
+            { label: '5s', value: '5' },
+            { label: '10s', value: '10' },
+            { label: '15s', value: '15' },
+        ];
+    }, [capabilityOptions.durationOptions]);
+
+    useEffect(() => {
+        if (modelOptions.length === 0) {
+            return;
+        }
+        if (!modelOptions.some((item) => item.value === model)) {
+            setModel(modelOptions[0]?.value || '');
+        }
+    }, [model, modelOptions]);
+
+    useEffect(() => {
+        if (resolutionOptions.length > 0 && !resolutionOptions.some((item) => item.value === resolution)) {
+            setResolution(resolutionOptions[0]?.value || '1080p');
+        }
+    }, [resolution, resolutionOptions]);
+
+    useEffect(() => {
+        if (durationOptions.length > 0 && !durationOptions.some((item) => item.value === duration)) {
+            setDuration(durationOptions[0]?.value || '5');
+        }
+    }, [duration, durationOptions]);
+
+    useEffect(() => {
+        if (aspectRatioOptions.length > 0 && !aspectRatioOptions.some((item) => item.value === aspectRatio)) {
+            setAspectRatio(aspectRatioOptions[0]?.value || '16:9');
+        }
+    }, [aspectRatio, aspectRatioOptions]);
     
     const handleImport = () => {
         if (!resultFileUrl) return;
@@ -125,6 +236,7 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Generation Metadata</h4>
                                     
                                     <PromptTextInput 
+                                        {...createPromptTextInputCapabilityProps('VIDEO')}
                                         value={prompt}
                                         onChange={setPrompt}
                                         label={t('studio.common.prompt')}
@@ -137,11 +249,11 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Parameters</h4>
                                     <div className="grid grid-cols-2 gap-6 bg-[#202023] p-6 rounded-xl border border-[#27272a]">
-                                        <SettingInput 
+                                        <SettingSelect 
                                             label={t('studio.common.model')}
                                             value={model}
                                             onChange={setModel}
-                                            placeholder="e.g. Sora, Runway"
+                                            options={modelOptions.length > 0 ? modelOptions : [{ label: 'External Source', value: 'External Source' }]}
                                             layout="vertical"
                                             fullWidth
                                         />
@@ -149,21 +261,15 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
                                             label={t('studio.image.aspect_ratio')}
                                             value={aspectRatio}
                                             onChange={setAspectRatio}
-                                            options={[
-                                                { label: '16:9 Landscape', value: '16:9' },
-                                                { label: '9:16 Portrait', value: '9:16' },
-                                                { label: '1:1 Square', value: '1:1' },
-                                                { label: '4:3 Standard', value: '4:3' },
-                                                { label: '21:9 Cinematic', value: '21:9' },
-                                            ]}
+                                            options={aspectRatioOptions}
                                             layout="vertical"
                                             fullWidth
                                         />
-                                        <SettingInput 
+                                        <SettingSelect 
                                             label="Duration (s)"
                                             value={duration}
                                             onChange={setDuration}
-                                            type="number"
+                                            options={durationOptions}
                                             layout="vertical"
                                             fullWidth
                                         />
@@ -171,11 +277,7 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
                                             label="Resolution"
                                             value={resolution}
                                             onChange={setResolution}
-                                            options={[
-                                                { label: '720p', value: '720p' },
-                                                { label: '1080p', value: '1080p' },
-                                                { label: '4k', value: '4k' },
-                                            ]}
+                                            options={resolutionOptions}
                                             layout="vertical"
                                             fullWidth
                                         />
@@ -188,6 +290,9 @@ export const UploadVideoGenerationModal: React.FC<UploadVideoGenerationModalProp
                                             fullWidth
                                         />
                                     </div>
+                                    {capabilityError ? (
+                                        <p className="text-xs text-amber-400">{capabilityError}</p>
+                                    ) : null}
                                 </div>
 
                             </div>

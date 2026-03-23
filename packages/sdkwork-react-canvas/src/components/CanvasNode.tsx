@@ -9,7 +9,7 @@ import {
 import { useCanvasStore } from '../store/canvasStore';
 import { genAIService, inlineDataService, uploadHelper } from '@sdkwork/react-core';
 import { CanvasElement, CanvasMediaResource } from '../entities';
-import { Popover, AspectRatioSelector } from '@sdkwork/react-commons';
+import { Popover, AspectRatioSelector, findByIdOrFirst } from '@sdkwork/react-commons';
 import {
     assetService,
     CreationChatInput,
@@ -25,6 +25,7 @@ import { VideoModelSelector } from '@sdkwork/react-video';
 import { textRenderer, TextStyle } from '@sdkwork/react-magiccut';
 import { VideoNode } from './nodes/VideoNode';
 import { getCanvasViewportBounds } from '../utils/canvasContainer';
+import { importCanvasReferenceImageFile } from '../utils/canvasReferenceImageImport';
 
 export type LODLevel = 'detail' | 'simplified' | 'block';
 
@@ -47,15 +48,6 @@ const CHAT_INPUT_MIN_OVER_NODE = 40;
 const CHAT_INPUT_VIEWPORT_MARGIN = 24;
 const CHAT_INPUT_MIN_HEIGHT = 64;
 const CHAT_INPUT_MIN_HEIGHT_WITH_ATTACHMENTS = 84;
-
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
 
 const toPositiveNumber = (value: unknown): number | undefined => {
     const parsed = Number(value);
@@ -108,8 +100,8 @@ const VideoModeDropdown: React.FC<{ value: string; onChange: (v: string) => void
         { id: 'all_round', label: 'Universal', icon: Sparkles, isNew: true },
     ];
 
-    const activeMode = modes.find(m => m.id === value) || modes[0];
-    const ActiveIcon = activeMode.icon;
+    const activeMode = findByIdOrFirst(modes, value);
+    const ActiveIcon = activeMode?.icon || Sparkles;
 
     return (
         <>
@@ -118,7 +110,7 @@ const VideoModeDropdown: React.FC<{ value: string; onChange: (v: string) => void
                 onClick={() => setIsOpen(!isOpen)}
                 active={isOpen}
                 icon={<ActiveIcon size={14} className={isOpen ? 'text-white' : 'text-pink-400'} />}
-                label={activeMode.label}
+                label={activeMode?.label || value}
                 suffix={<ChevronDown size={10} className={`opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
                 className="bg-transparent border-transparent hover:bg-[#ffffff08] h-8 text-xs"
             />
@@ -161,6 +153,7 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
     const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
     const [chatInputOffsetX, setChatInputOffsetX] = useState(0);
     const [resolvedUrl, setResolvedUrl] = useState<string>('');
+    const [draftText, setDraftText] = useState('');
     
     const internalRef = useRef<HTMLDivElement>(null);
     const startPosRef = useRef<{x: number, y: number} | null>(null);
@@ -185,6 +178,12 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
 
     const displaySrc = resolvedUrl;
     let textContent = resource?.metadata?.text || '';
+
+    useEffect(() => {
+        if (!isEditing) {
+            setDraftText(textContent);
+        }
+    }, [textContent, isEditing]);
 
     const chatInputWidth = useMemo(() => {
         const viewportBounds = getCanvasViewportBounds();
@@ -249,38 +248,53 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
 
     const handleToolbarCallback = (action: string) => {
         switch (action) {
-            case 'edit-text': setIsEditing(true); break;
+            case 'edit-text':
+                setDraftText(textContent);
+                setIsEditing(true);
+                break;
         }
     };
     
-    const updateTextContent = (text: string) => {
-        if (resource) {
-            const fontSize = resource.metadata?.fontSize || 60;
-            const textStyle: TextStyle = {
-                fontSize,
-                fontFamily: resource.metadata?.fontFamily || 'Inter, sans-serif',
-                fontWeight: resource.metadata?.fontWeight || 'bold',
-                color: '#ffffff',
-                backgroundPadding: 10
-            };
-            const { width: newW, height: newH } = textRenderer.measure(text, textStyle);
-            updateElement(id, { 
-                width: newW, height: newH,
-                resource: { ...resource, metadata: { ...resource.metadata, text } } 
-            }, false);
+    const commitTextEdit = () => {
+        if (!resource) {
+            setIsEditing(false);
+            return;
         }
+
+        const nextText = draftText;
+        const currentText = resource.metadata?.text || '';
+        if (nextText === currentText) {
+            setIsEditing(false);
+            return;
+        }
+
+        const fontSize = resource.metadata?.fontSize || 60;
+        const textStyle: TextStyle = {
+            fontSize,
+            fontFamily: resource.metadata?.fontFamily || 'Inter, sans-serif',
+            fontWeight: resource.metadata?.fontWeight || 'bold',
+            color: '#ffffff',
+            backgroundPadding: 10
+        };
+        const { width: newW, height: newH } = textRenderer.measure(nextText, textStyle);
+        updateElement(id, {
+            width: newW,
+            height: newH,
+            resource: { ...resource, metadata: { ...resource.metadata, text: nextText } }
+        }, true);
+        setIsEditing(false);
     };
 
     const handleAttachmentUpload = async () => {
         try {
             const files = await uploadHelper.pickFiles(true, 'image/*'); 
             if (files.length > 0) {
-                const newImages: string[] = [];
-                for (const file of files) {
-                    const blob = new Blob([new Uint8Array(file.data)], { type: 'image/png' });
-                    const base64 = await blobToBase64(blob);
-                    newImages.push(base64);
-                }
+                const newImages = (await Promise.all(files.map((file) => (
+                    importCanvasReferenceImageFile({
+                        name: file.name,
+                        data: new Uint8Array(file.data),
+                    })
+                )))).filter((url): url is string => typeof url === 'string' && url.length > 0);
                 const currentRefs = data?.referenceImages || [];
                 const updatedRefs = [...currentRefs, ...newImages].slice(0, 5);
                 updateElement(id, { data: { ...data, referenceImages: updatedRefs } }, false);
@@ -562,7 +576,17 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                              <textarea 
                                 autoFocus 
                                 className="w-full h-full bg-transparent resize-none outline-none pointer-events-auto cursor-text text-center flex items-center justify-center overflow-hidden" 
-                                value={textContent} onChange={(e) => updateTextContent(e.target.value)} onBlur={() => setIsEditing(false)} onKeyDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} 
+                                value={draftText}
+                                onChange={(e) => setDraftText(e.target.value)}
+                                onBlur={commitTextEdit}
+                                onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Escape') {
+                                        setDraftText(textContent);
+                                        setIsEditing(false);
+                                    }
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()} 
                                 style={{ fontSize: `${resource?.metadata?.fontSize || 60}px`, fontWeight: resource?.metadata?.fontWeight || 'bold', fontFamily: resource?.metadata?.fontFamily || 'Inter, sans-serif', color: '#ffffff', lineHeight: 1.2 }} 
                             />
                          ) : (
@@ -579,7 +603,22 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                 return (
                     <div className={`${commonClasses} p-4 shadow-lg rounded-lg ${isEditing ? 'cursor-text' : 'cursor-grab'}`} style={{ backgroundColor: color, ...style }}>
                          {isEditing ? (
-                             <textarea autoFocus className="w-full h-full bg-transparent resize-none outline-none text-black pointer-events-auto cursor-text" value={textContent} onChange={(e) => updateTextContent(e.target.value)} onBlur={() => setIsEditing(false)} onKeyDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ fontFamily: 'comic sans ms, sans-serif' }} />
+                             <textarea
+                                autoFocus
+                                className="w-full h-full bg-transparent resize-none outline-none text-black pointer-events-auto cursor-text"
+                                value={draftText}
+                                onChange={(e) => setDraftText(e.target.value)}
+                                onBlur={commitTextEdit}
+                                onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Escape') {
+                                        setDraftText(textContent);
+                                        setIsEditing(false);
+                                    }
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                style={{ fontFamily: 'comic sans ms, sans-serif' }}
+                            />
                          ) : (
                              <div className="w-full h-full whitespace-pre-wrap text-black font-medium select-none" style={{ fontFamily: 'comic sans ms, sans-serif' }}>{textContent}</div>
                          )}
@@ -620,6 +659,7 @@ export const CanvasNode = React.memo(forwardRef<HTMLDivElement, CanvasNodeProps>
                 if (lod === 'detail') {
                     if (type === 'text' || type === 'note') {
                         e.stopPropagation();
+                        setDraftText(textContent);
                         setIsEditing(true);
                     } else if ((type === 'image') && !displaySrc) {
                         e.stopPropagation();

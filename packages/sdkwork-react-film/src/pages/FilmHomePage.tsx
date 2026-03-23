@@ -4,13 +4,19 @@ import { FilmSidebar } from '../components/FilmSidebar';
 import { FilmHeader } from '../components/FilmHeader';
 import { Sparkles, Clock } from 'lucide-react';
 import { useFilmStore, FilmStoreProvider } from '../store/filmStore';
-import { CreationChatInput, PortalTab, InputAttachment, StyleSelector } from '@sdkwork/react-assets';
+import {
+    CreationChatInput,
+    PortalTab,
+    InputAttachment,
+    StyleSelector,
+    fetchCreationCapabilities,
+    toCreationModelProviders,
+    resolveCreationStyleOptions,
+    resolveCreationEntryCapabilityOptions
+} from '@sdkwork/react-assets';
 import { ModelSelector, AspectRatioSelector, GalleryCard, GalleryItem } from '@sdkwork/react-commons';
 import type { Resolution } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
-import { VIDEO_PROVIDERS } from '@sdkwork/react-video';
-import { IMAGE_PROVIDERS } from '@sdkwork/react-image';
-import { FILM_STYLES } from '../constants';
 import { inlineDataService, useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
 import { importFilmAssetFromFile } from '../utils/filmModalAssetImport';
 
@@ -18,7 +24,8 @@ type FilmHomeAttachment = InputAttachment & {
     assetId?: string;
     content?: string;
 };
-type FilmAspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
+type FilmAspectRatio = string;
+type CapabilitySnapshot = Awaited<ReturnType<typeof fetchCreationCapabilities>>;
 
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'svg', 'bmp', 'gif']);
 const VIDEO_EXTS = new Set(['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v']);
@@ -108,6 +115,7 @@ const FilmHomePageContent: React.FC = () => {
     const [activeStyle, setActiveStyle] = useState('realistic');
     const [activeModel, setActiveModel] = useState<string>('');
     const [attachments, setAttachments] = useState<FilmHomeAttachment[]>([]);
+    const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(null);
     
     // Menus
     const [showDurationMenu, setShowDurationMenu] = useState(false);
@@ -115,16 +123,100 @@ const FilmHomePageContent: React.FC = () => {
 
     const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
-    // Determine current providers based on tab
     const currentProviders = useMemo(() => {
-        if (activeTab === 'image') return IMAGE_PROVIDERS;
-        return VIDEO_PROVIDERS; 
+        if (!capabilitySnapshot) {
+            return [];
+        }
+        return toCreationModelProviders(capabilitySnapshot);
+    }, [capabilitySnapshot]);
+
+    const activeStyleOptions = useMemo(() => {
+        return resolveCreationStyleOptions(
+            capabilitySnapshot || { target: activeTab, channels: [], styleOptions: [] },
+        );
+    }, [activeTab, capabilitySnapshot]);
+
+    const activeCapabilityOptions = useMemo(() => {
+        return resolveCreationEntryCapabilityOptions(
+            capabilitySnapshot || { target: activeTab, channels: [], styleOptions: [] },
+            activeModel,
+        );
+    }, [activeModel, activeTab, capabilitySnapshot]);
+    const activeDurationOptions = activeCapabilityOptions.durationOptions;
+    const activeResolutionOptions = activeCapabilityOptions.resolutionOptions;
+    const activeAspectRatioOptions = activeCapabilityOptions.aspectRatioOptions;
+
+    useEffect(() => {
+        let active = true;
+        const loadCapabilities = async () => {
+            const snapshot = await fetchCreationCapabilities(activeTab);
+            if (!active) {
+                return;
+            }
+
+            setCapabilitySnapshot(snapshot);
+        };
+
+        loadCapabilities().catch((error) => {
+            console.error('Failed to load film creation capabilities', error);
+            if (active) {
+                setCapabilitySnapshot(null);
+            }
+        });
+
+        return () => {
+            active = false;
+        };
     }, [activeTab]);
 
     useEffect(() => {
         const firstModel = currentProviders[0]?.models[0]?.id;
-        if (firstModel) setActiveModel(firstModel);
+        if (!firstModel) {
+            setActiveModel('');
+            return;
+        }
+        const exists = currentProviders.some((provider) => provider.models.some((model) => model.id === activeModel));
+        if (!exists) {
+            setActiveModel(firstModel);
+        }
     }, [currentProviders]);
+
+    useEffect(() => {
+        if (activeStyleOptions.length === 0) {
+            setActiveStyle('');
+            return;
+        }
+        if (!activeStyleOptions.some((item) => item.id === activeStyle)) {
+            setActiveStyle(activeStyleOptions[0]?.id || '');
+        }
+    }, [activeStyle, activeStyleOptions]);
+
+    useEffect(() => {
+        if (activeDurationOptions.length === 0) {
+            return;
+        }
+        if (!activeDurationOptions.some((item) => item.value === duration)) {
+            setDuration(activeDurationOptions[0]?.value || '5s');
+        }
+    }, [activeDurationOptions, duration]);
+
+    useEffect(() => {
+        if (activeResolutionOptions.length === 0) {
+            return;
+        }
+        if (!activeResolutionOptions.some((item) => item.value === resolution)) {
+            setResolution(activeResolutionOptions[0]?.value || '2k');
+        }
+    }, [activeResolutionOptions, resolution]);
+
+    useEffect(() => {
+        if (activeAspectRatioOptions.length === 0) {
+            return;
+        }
+        if (!activeAspectRatioOptions.some((item) => item.value === aspectRatio)) {
+            setAspectRatio((activeAspectRatioOptions[0]?.value || '16:9') as FilmAspectRatio);
+        }
+    }, [activeAspectRatioOptions, aspectRatio]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -234,7 +326,7 @@ const FilmHomePageContent: React.FC = () => {
                     <StyleSelector 
                         value={activeStyle}
                         onChange={setActiveStyle}
-                        options={FILM_STYLES}
+                        options={activeStyleOptions}
                         className="bg-[#1a1a1c] border-transparent hover:bg-[#202022] h-[30px] hover:border-[#333]"
                     />
                 )}
@@ -245,6 +337,8 @@ const FilmHomePageContent: React.FC = () => {
                     onChange={(ratio) => setAspectRatio(ratio)}
                     resolution={resolution as Resolution}
                     onResolutionChange={(res) => setResolution(res)}
+                    resolutionOptions={activeResolutionOptions}
+                    aspectRatioOptions={activeAspectRatioOptions}
                     className="bg-[#1a1a1c] hover:bg-[#202022] hover:border-[#333] border-transparent"
                 />
 
@@ -260,13 +354,13 @@ const FilmHomePageContent: React.FC = () => {
                         </button>
                         {showDurationMenu && (
                              <div className="absolute bottom-full left-0 mb-2 w-32 bg-[#18181b] border border-[#27272a] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-75">
-                                {['5s', '10s', '15s', '60s'].map(d => (
+                                {activeDurationOptions.map(d => (
                                     <button 
-                                        key={d} 
-                                        onClick={() => { setDuration(d); setShowDurationMenu(false); }}
-                                        className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d ? 'text-blue-400' : 'text-gray-400'}`}
+                                        key={d.value} 
+                                        onClick={() => { setDuration(d.value); setShowDurationMenu(false); }}
+                                        className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d.value ? 'text-blue-400' : 'text-gray-400'}`}
                                     >
-                                        {d}
+                                        {d.label}
                                     </button>
                                 ))}
                             </div>

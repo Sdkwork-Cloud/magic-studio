@@ -7,7 +7,7 @@ import {
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { i18nService } from '@sdkwork/react-i18n';
 
-interface AuthStoreContextType {
+export interface AuthStoreContextType {
     user: User | null;
     isAuthenticated: boolean;
     authToken: string | null;
@@ -169,7 +169,7 @@ export const AuthStoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     );
 };
 
-export const useAuthStore = () => {
+export const useAuthStore = (): AuthStoreContextType => {
     const context = useContext(AuthStoreContext);
     if (context === null) {
         throw new Error('useAuthStore must be used within a AuthStoreProvider');

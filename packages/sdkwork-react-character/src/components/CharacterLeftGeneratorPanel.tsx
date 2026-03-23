@@ -9,7 +9,7 @@ import {
     Flame
 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
-import { ChooseAsset, PromptTextInput, type Asset } from '@sdkwork/react-assets';
+import { ChooseAsset, PromptTextInput, createPromptTextInputCapabilityProps, type Asset, fetchCreationModelProviders } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal, IMAGE_PROVIDERS, ImageModelSelector } from '@sdkwork/react-image';
 import { genAIService } from '@sdkwork/react-core';
 import { ChooseVoiceSpeaker, PRESET_VOICES } from '@sdkwork/react-voicespeaker';
@@ -22,10 +22,10 @@ interface CharacterAssetAIGeneratorProps {
     onSuccess: (result: string | string[]) => void;
 }
 
-const IMAGE_MODEL_IDS = IMAGE_PROVIDERS.flatMap((provider) =>
+const FALLBACK_IMAGE_MODEL_IDS = IMAGE_PROVIDERS.flatMap((provider) =>
     provider.models.map((model) => model.id)
 );
-const DEFAULT_IMAGE_MODEL = IMAGE_MODEL_IDS[0] || 'gemini-2.5-flash-image';
+const DEFAULT_IMAGE_MODEL = FALLBACK_IMAGE_MODEL_IDS[0] || 'gemini-2.5-flash-image';
 
 const Label: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -53,12 +53,36 @@ export const CharacterLeftGeneratorPanel: React.FC = () => {
     const { t } = useTranslation();
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [imageProviders, setImageProviders] = useState(IMAGE_PROVIDERS);
+    const imageModelIds = useMemo(
+        () => imageProviders.flatMap((provider) => provider.models.map((model) => model.id)),
+        [imageProviders]
+    );
 
     useEffect(() => {
-        if (!config.model || !IMAGE_MODEL_IDS.includes(config.model)) {
-            setConfig({ model: DEFAULT_IMAGE_MODEL });
+        let active = true;
+        fetchCreationModelProviders('image', IMAGE_PROVIDERS)
+            .then((providers) => {
+                if (active) {
+                    setImageProviders(providers);
+                }
+            })
+            .catch(() => {
+                if (active) {
+                    setImageProviders(IMAGE_PROVIDERS);
+                }
+            });
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        const resolvedDefaultModel = imageModelIds[0] || DEFAULT_IMAGE_MODEL;
+        if (!config.model || !imageModelIds.includes(config.model)) {
+            setConfig({ model: resolvedDefaultModel });
         }
-    }, [config.model, setConfig]);
+    }, [config.model, imageModelIds, setConfig]);
 
     const clearError = (field: string) => {
         if (!errors[field]) {
@@ -228,6 +252,7 @@ export const CharacterLeftGeneratorPanel: React.FC = () => {
                     </div>
 
                     <PromptTextInput
+                        {...createPromptTextInputCapabilityProps('IMAGE')}
                         label={null}
                         placeholder="Tall, silver hair, glowing blue eyes, wearing futuristic armor..."
                         value={config.description || ''}

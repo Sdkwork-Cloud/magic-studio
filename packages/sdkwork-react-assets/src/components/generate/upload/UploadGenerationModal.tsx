@@ -6,6 +6,7 @@ import { ImageUpload, VideoUpload } from '@sdkwork/react-commons';
 import { PromptTextInput } from '../PromptTextInput';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { generateUUID } from '@sdkwork/react-commons';
+import { createPromptTextInputCapabilityProps } from '../../generate/promptCapabilityProps';
 
 export interface ImportData {
     id: string;
@@ -110,6 +111,7 @@ export const UploadGenerationModal: React.FC<UploadGenerationModalProps> = ({ on
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Prompt</label>
                                 <PromptTextInput 
+                                    {...createPromptTextInputCapabilityProps(type === 'video' ? 'VIDEO' : 'IMAGE')}
                                     value={prompt}
                                     onChange={setPrompt}
                                     placeholder="Describe the content..."

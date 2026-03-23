@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { X, Save, Clapperboard, Video, Image as ImageIcon, Wand2, MessageSquare, Play, Layers, Grid3x3, ArrowRightLeft, FileImage, Type, Upload, Plus, Trash2, User, Music, Zap, Sparkles, Cpu, Cloud, Brain, Star, Activity, LayoutGrid, ChevronDown } from 'lucide-react';
 import { SettingTextArea, SettingSlider } from '@sdkwork/react-settings';
 import { Button, FilmShot, FilmCharacter, FilmDialogueItem, ModelSelector, ModelProvider, MediaScene, GenerationProduct, AssetAtomicMediaResource, MediaResourceType, Asset } from '@sdkwork/react-commons';
-import { PromptTextInput, ChooseAssetModal, type InputAttachment } from '@sdkwork/react-assets';
+import { PromptTextInput, ChooseAssetModal, createPromptTextInputCapabilityProps, detectAssetTypeByFilename, type InputAttachment } from '@sdkwork/react-assets';
 import { AIImageGeneratorModal } from '@sdkwork/react-image';
 import { genAIService, uploadHelper } from '@sdkwork/react-core';
 import { generateUUID } from '@sdkwork/react-commons';
@@ -13,8 +13,15 @@ import {
     buildAtomicAssetResource,
     resolveAtomicAssetResourceType,
     resolveAtomicAssetResourceUrl,
+    toFilmImportTypeFromResourceType,
     toFilmShotAssetResource
 } from '../utils/filmAtomicAssetAdapters';
+import { applyImportedAssetToShotSlot } from '../utils/filmShotAssetBinding';
+import {
+    importFilmAssetFromFile,
+    importFilmAssetFromUrl,
+    resolveChosenAsset
+} from '../utils/filmModalAssetImport';
 
 interface ShotModalProps {
     isOpen: boolean;
@@ -307,19 +314,28 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
         setShowAssetModal(true);
     };
 
-    const handleAssetSelected = (selectedAssets: Asset[]) => {
+    const handleAssetSelected = async (selectedAssets: Asset[]) => {
         if (selectedAssets.length > 0 && assetModalIndex !== null) {
             const asset = selectedAssets[0];
-            const assetWithLocator = asset as Asset & { remoteUrl?: string; url?: string; name?: string };
-            const resourceType: MediaResourceType = 
-                asset.type === 'video' ? MediaResourceType.VIDEO : 
-                asset.type === 'audio' || asset.type === 'music' || asset.type === 'voice' ? MediaResourceType.AUDIO : MediaResourceType.IMAGE;
-            
-            updateAsset(assetModalIndex, {
-                url: assetWithLocator.remoteUrl || assetWithLocator.url || asset.path,
-                name: assetWithLocator.name,
-                type: resourceType
-            });
+            const selected = await resolveChosenAsset(asset);
+            if (selected) {
+                const resourceType: MediaResourceType =
+                    asset.type === 'video'
+                        ? MediaResourceType.VIDEO
+                        : asset.type === 'audio' || asset.type === 'music' || asset.type === 'voice'
+                        ? MediaResourceType.AUDIO
+                        : MediaResourceType.IMAGE;
+                const currentAsset = assets[assetModalIndex];
+                if (currentAsset) {
+                    updateAsset(
+                        assetModalIndex,
+                        applyImportedAssetToShotSlot(currentAsset, selected, {
+                            name: asset.name || currentAsset.name,
+                            type: resourceType
+                        })
+                    );
+                }
+            }
         }
         setShowAssetModal(false);
         setAssetModalIndex(null);
@@ -348,31 +364,80 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
             const files = await uploadHelper.pickFiles(false, accept);
             if (files.length > 0) {
                 const file = files[0];
-                const blob = new Blob([new Uint8Array(file.data)]);
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64 = reader.result as string;
-                    const fileName = file.name || 'uploaded';
-                    const detectedType = file.name?.endsWith('.mp3') || file.name?.endsWith('.wav') ? MediaResourceType.AUDIO 
-                        : file.name?.endsWith('.mp4') || file.name?.endsWith('.webm') ? MediaResourceType.VIDEO 
+                const currentAsset = assets[index];
+                if (!currentAsset) {
+                    return;
+                }
+                const detectedAssetType = detectAssetTypeByFilename(file.name || '', {
+                    candidates: ['image', 'video', 'audio'],
+                    fallback:
+                        currentAsset.type === MediaResourceType.AUDIO
+                            ? 'audio'
+                            : currentAsset.type === MediaResourceType.VIDEO
+                            ? 'video'
+                            : 'image'
+                });
+                const detectedType =
+                    detectedAssetType === 'video'
+                        ? MediaResourceType.VIDEO
+                        : detectedAssetType === 'audio' || detectedAssetType === 'music' || detectedAssetType === 'voice'
+                        ? MediaResourceType.AUDIO
                         : MediaResourceType.IMAGE;
-                    updateAsset(index, { 
-                        url: base64, 
-                        name: fileName,
+                const imported = await importFilmAssetFromFile(
+                    new File([new Uint8Array(file.data)], file.name || 'uploaded'),
+                    toFilmImportTypeFromResourceType(detectedType),
+                    {
+                        origin: 'upload',
+                        source: 'film-shot-modal-upload',
+                        slotIndex: index,
+                        scene: currentAsset.scene
+                    }
+                );
+                updateAsset(
+                    index,
+                    applyImportedAssetToShotSlot(currentAsset, imported, {
+                        name: file.name || currentAsset.name,
                         type: detectedType
-                    });
-                };
-                reader.readAsDataURL(blob);
+                    })
+                );
             }
         } catch (e) {
             console.error(e);
         }
     };
 
-    const handleAIModalSuccess = (url: string | string[]) => {
+    const handleAIModalSuccess = async (url: string | string[]) => {
         const finalUrl = Array.isArray(url) ? url[0] : url;
         if (activeAssetIndex !== null) {
-            updateAsset(activeAssetIndex, { url: finalUrl });
+            const currentAsset = assets[activeAssetIndex];
+            if (currentAsset) {
+                try {
+                    const detectedType = resolveAtomicAssetResourceType(currentAsset);
+                    const imported = await importFilmAssetFromUrl(
+                        finalUrl,
+                        `film_shot_${String(detectedType).toLowerCase()}_${Date.now()}${
+                            detectedType === MediaResourceType.VIDEO ? '.mp4' : detectedType === MediaResourceType.AUDIO ? '.wav' : '.png'
+                        }`,
+                        toFilmImportTypeFromResourceType(detectedType),
+                        {
+                            origin: 'ai',
+                            source: 'film-shot-modal-ai',
+                            slotIndex: activeAssetIndex,
+                            scene: currentAsset.scene
+                        }
+                    );
+                    updateAsset(
+                        activeAssetIndex,
+                        applyImportedAssetToShotSlot(currentAsset, imported, {
+                            type: detectedType,
+                            name: currentAsset.name
+                        })
+                    );
+                } catch (error) {
+                    console.error('Failed to import AI-generated shot asset', error);
+                    updateAsset(activeAssetIndex, { url: finalUrl });
+                }
+            }
             setActiveAssetIndex(null);
         } else {
             setMediaUrl(finalUrl);
@@ -800,6 +865,7 @@ export const ShotModal: React.FC<ShotModalProps> = ({ isOpen, onClose, onSave, i
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
                         <div>
                              <PromptTextInput 
+                                {...createPromptTextInputCapabilityProps('VIDEO')}
                                 label="\u89c6\u89c9\u63d0\u793a\u8bcd (Visual Prompt)"
                                 value={visualPrompt}
                                 onChange={setVisualPrompt}

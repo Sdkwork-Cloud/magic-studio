@@ -1,8 +1,7 @@
 import type {
     VoiceConfig,
     VoiceGenerationMode,
-    VoiceModelType,
-    VoiceReferenceInputMethod
+    VoiceModelType
 } from './voice.entity';
 
 export type VoicePanelSectionKey =

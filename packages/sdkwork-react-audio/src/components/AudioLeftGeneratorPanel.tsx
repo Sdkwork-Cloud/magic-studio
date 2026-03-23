@@ -1,5 +1,5 @@
 
-import { PromptTextInput } from '@sdkwork/react-assets'
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets'
 import React from 'react';
 import { useAudioStore } from '../store/audioStore';
 import { AudioModelSelector } from './AudioModelSelector';
@@ -37,6 +37,7 @@ export const AudioLeftGeneratorPanel: React.FC = () => {
                      <div>
                         <Label icon={<Type size={12} />}>Script</Label>
                         <PromptTextInput
+                            {...createPromptTextInputCapabilityProps('TEXT')}
                             label={null}
                             placeholder="Enter text to synthesize..."
                             value={config.prompt || ''}

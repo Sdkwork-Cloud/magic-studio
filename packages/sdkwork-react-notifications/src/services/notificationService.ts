@@ -27,9 +27,9 @@ const LEGACY_NOTIFICATION_STORAGE_KEYS = ['open_studio_notifications_v1'] as con
 const MAX_CACHE_SIZE = 50;
 
 function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const random = Math.random() * 16 | 0;
-    const value = char === 'x' ? random : (random & 0x3 | 0x8);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const random = (Math.random() * 16) | 0;
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
     return value.toString(16);
   });
 }
@@ -64,9 +64,9 @@ function unwrapApiData<T>(payload: unknown, fallbackMessage: string): T {
     const code = normalizeCode(envelope.code);
     if (code && !isSuccessCode(code)) {
       throw new Error(
-        (typeof envelope.msg === 'string' && envelope.msg.trim())
-          || (typeof envelope.message === 'string' && envelope.message.trim())
-          || fallbackMessage,
+        (typeof envelope.msg === 'string' && envelope.msg.trim()) ||
+          (typeof envelope.message === 'string' && envelope.message.trim()) ||
+          fallbackMessage
       );
     }
     if ('data' in envelope) {
@@ -134,36 +134,43 @@ function normalizeNotification(raw: unknown): AppNotification | null {
   const now = Date.now();
   const createdAt = toNumber(source.createdAt ?? source.createTime ?? source.createAt, now);
   const updatedAt = toNumber(source.updatedAt ?? source.updateTime ?? source.modifyTime, createdAt);
-  const message = typeof source.message === 'string'
-    ? source.message
-    : typeof source.content === 'string'
-      ? source.content
-      : '';
+  const message =
+    typeof source.message === 'string'
+      ? source.message
+      : typeof source.content === 'string'
+        ? source.content
+        : '';
 
   const readStatusRaw = source.isRead ?? source.read;
-  const isRead = typeof readStatusRaw === 'boolean'
-    ? readStatusRaw
-    : String(readStatusRaw || '').toUpperCase() === 'TRUE';
+  const isRead =
+    typeof readStatusRaw === 'boolean'
+      ? readStatusRaw
+      : String(readStatusRaw || '').toUpperCase() === 'TRUE';
 
   return {
     id: String(idValue),
     uuid: String(source.uuid ?? idValue),
-    title: (typeof source.title === 'string' && source.title.trim()) ? source.title.trim() : 'Notification',
+    title:
+      typeof source.title === 'string' && source.title.trim()
+        ? source.title.trim()
+        : 'Notification',
     message: message.trim(),
     type: normalizeNotificationType(source.type),
     isRead,
     createdAt,
     updatedAt,
-    actionUrl: typeof source.actionUrl === 'string'
-      ? source.actionUrl
-      : typeof source.link === 'string'
-        ? source.link
-        : undefined,
-    actionLabel: typeof source.actionLabel === 'string'
-      ? source.actionLabel
-      : typeof source.actionText === 'string'
-        ? source.actionText
-        : undefined,
+    actionUrl:
+      typeof source.actionUrl === 'string'
+        ? source.actionUrl
+        : typeof source.link === 'string'
+          ? source.link
+          : undefined,
+    actionLabel:
+      typeof source.actionLabel === 'string'
+        ? source.actionLabel
+        : typeof source.actionText === 'string'
+          ? source.actionText
+          : undefined,
   };
 }
 
@@ -221,10 +228,7 @@ class NotificationService {
       return;
     }
     try {
-      const storageKeys = [
-        NOTIFICATION_STORAGE_KEY,
-        ...LEGACY_NOTIFICATION_STORAGE_KEYS,
-      ];
+      const storageKeys = [NOTIFICATION_STORAGE_KEY, ...LEGACY_NOTIFICATION_STORAGE_KEYS];
 
       for (const key of storageKeys) {
         const data = localStorage.getItem(key);
@@ -238,7 +242,7 @@ class NotificationService {
         }
 
         this.cache = parsed
-          .map((item) => normalizeNotification(item))
+          .map(item => normalizeNotification(item))
           .filter((item): item is AppNotification => item !== null);
 
         if (key !== NOTIFICATION_STORAGE_KEY) {
@@ -277,7 +281,10 @@ class NotificationService {
     });
   }
 
-  private getFallbackPage(options?: { page?: number; size?: number }): { content: AppNotification[]; total: number } {
+  private getFallbackPage(options?: { page?: number; size?: number }): {
+    content: AppNotification[];
+    total: number;
+  } {
     const page = options?.page ?? 0;
     const size = options?.size ?? MAX_CACHE_SIZE;
     const start = Math.max(0, page) * Math.max(1, size);
@@ -288,11 +295,14 @@ class NotificationService {
     };
   }
 
-  private async syncSnapshotFromSdk(options?: { page?: number; size?: number }): Promise<{ content: AppNotification[]; total: number }> {
+  private async syncSnapshotFromSdk(options?: {
+    page?: number;
+    size?: number;
+  }): Promise<{ content: AppNotification[]; total: number }> {
     const page = options?.page ?? 0;
     const size = options?.size ?? MAX_CACHE_SIZE;
     const query = {
-      page,
+      page: page + 1,
       pageNo: page + 1,
       pageIndex: page,
       size,
@@ -301,7 +311,7 @@ class NotificationService {
     const response = await getSdkworkClient().notification.listNotifications(query);
     const payload = unwrapApiData<unknown>(response, 'Failed to load notifications');
     const list = extractNotificationList(payload)
-      .map((item) => normalizeNotification(item))
+      .map(item => normalizeNotification(item))
       .filter((item): item is AppNotification => item !== null);
     this.applyRemoteSnapshot(list);
     await this.persistToStorage();
@@ -312,10 +322,12 @@ class NotificationService {
     };
   }
 
-  private async saveLocal(notification: Partial<AppNotification> & { id: string }): Promise<AppNotification> {
+  private async saveLocal(
+    notification: Partial<AppNotification> & { id: string }
+  ): Promise<AppNotification> {
     await this.ensureInitialized();
     const now = Date.now();
-    const existing = this.cache?.find((item) => item.id === notification.id);
+    const existing = this.cache?.find(item => item.id === notification.id);
     if (existing) {
       Object.assign(existing, notification, { updatedAt: now });
       await this.persistToStorage();
@@ -339,20 +351,27 @@ class NotificationService {
     return created;
   }
 
-  async findAll(options?: { page?: number; size?: number }): Promise<ServiceResult<{ content: AppNotification[]; total: number }>> {
+  async findAll(options?: {
+    page?: number;
+    size?: number;
+  }): Promise<ServiceResult<{ content: AppNotification[]; total: number }>> {
     await this.ensureInitialized();
     try {
       const pageData = await this.syncSnapshotFromSdk(options);
       return Result.success(pageData);
     } catch (error) {
       if (!isDevMode()) {
-        return Result.error(error instanceof Error ? error.message : 'Failed to load notifications');
+        return Result.error(
+          error instanceof Error ? error.message : 'Failed to load notifications'
+        );
       }
       return Result.success(this.getFallbackPage(options));
     }
   }
 
-  async save(notification: Partial<AppNotification> & { id: string }): Promise<ServiceResult<AppNotification>> {
+  async save(
+    notification: Partial<AppNotification> & { id: string }
+  ): Promise<ServiceResult<AppNotification>> {
     const data = await this.saveLocal(notification);
     return Result.success(data);
   }
@@ -361,7 +380,7 @@ class NotificationService {
     title: string,
     message: string,
     type: NotificationType = NotificationType.INFO,
-    options?: { actionUrl?: string; actionLabel?: string },
+    options?: { actionUrl?: string; actionLabel?: string }
   ): Promise<ServiceResult<AppNotification>> {
     try {
       const payload = {
@@ -405,25 +424,23 @@ class NotificationService {
       const response = await getSdkworkClient().notification.markAsRead(id);
       unwrapApiData(response, 'Failed to mark notification as read');
       if (this.cache) {
-        this.cache = this.cache.map((item) => (
-          item.id === id
-            ? { ...item, isRead: true, updatedAt: Date.now() }
-            : item
-        ));
+        this.cache = this.cache.map(item =>
+          item.id === id ? { ...item, isRead: true, updatedAt: Date.now() } : item
+        );
       }
       await this.persistToStorage();
       return Result.success(undefined);
     } catch (error) {
       if (!isDevMode()) {
-        return Result.error(error instanceof Error ? error.message : 'Failed to mark notification as read');
+        return Result.error(
+          error instanceof Error ? error.message : 'Failed to mark notification as read'
+        );
       }
 
       if (this.cache) {
-        this.cache = this.cache.map((item) => (
-          item.id === id
-            ? { ...item, isRead: true, updatedAt: Date.now() }
-            : item
-        ));
+        this.cache = this.cache.map(item =>
+          item.id === id ? { ...item, isRead: true, updatedAt: Date.now() } : item
+        );
       }
       await this.persistToStorage();
       return Result.success(undefined);
@@ -437,13 +454,15 @@ class NotificationService {
       unwrapApiData(response, 'Failed to mark all notifications as read');
     } catch (error) {
       if (!isDevMode()) {
-        return Result.error(error instanceof Error ? error.message : 'Failed to mark all notifications as read');
+        return Result.error(
+          error instanceof Error ? error.message : 'Failed to mark all notifications as read'
+        );
       }
     }
 
     if (this.cache) {
       const now = Date.now();
-      this.cache = this.cache.map((item) => ({ ...item, isRead: true, updatedAt: now }));
+      this.cache = this.cache.map(item => ({ ...item, isRead: true, updatedAt: now }));
       await this.persistToStorage();
     }
     return Result.success(undefined);
@@ -476,7 +495,7 @@ class NotificationService {
     }
 
     await this.ensureInitialized();
-    return this.cache?.filter((item) => !item.isRead).length || 0;
+    return this.cache?.filter(item => !item.isRead).length || 0;
   }
 
   async prune(): Promise<void> {
@@ -497,16 +516,18 @@ class NotificationService {
 
     try {
       const client = getSdkworkClient();
-      await Promise.all(ids.map((id) => client.notification.deleteNotification(id)));
+      await Promise.all(ids.map(id => client.notification.deleteNotification(id)));
     } catch (error) {
       if (!isDevMode()) {
-        return Result.error(error instanceof Error ? error.message : 'Failed to delete notifications');
+        return Result.error(
+          error instanceof Error ? error.message : 'Failed to delete notifications'
+        );
       }
     }
 
     if (this.cache) {
-      const idSet = new Set(ids.map((id) => String(id)));
-      this.cache = this.cache.filter((item) => !idSet.has(item.id));
+      const idSet = new Set(ids.map(id => String(id)));
+      this.cache = this.cache.filter(item => !idSet.has(item.id));
       await this.persistToStorage();
     }
     return Result.success(undefined);

@@ -18,6 +18,7 @@ type PresignedData = {
   url?: string;
   previewUrl?: string;
   objectKey?: string;
+  headers?: Record<string, string>;
 };
 
 type HttpClientLike = {
@@ -26,6 +27,7 @@ type HttpClientLike = {
 
 type UploadApiLike = {
   getPresignedUrl?: (body: unknown) => Promise<unknown>;
+  registerPresigned?: (body: unknown) => Promise<unknown>;
   registerPresignedUpload?: (body: unknown) => Promise<unknown>;
 };
 
@@ -174,10 +176,14 @@ export async function uploadViaPresignedUrl(
     throw new Error('Presigned upload URL is empty.');
   }
   const finalObjectKey = String(presignedData.objectKey || objectKey).trim() || objectKey;
+  const uploadHeaders = {
+    ...(presignedData.headers || {}),
+    ...(explicitContentType ? { 'Content-Type': explicitContentType } : {}),
+  };
 
   const uploadResponse = await fetch(uploadUrl, {
     method: 'PUT',
-    headers: explicitContentType ? { 'Content-Type': explicitContentType } : undefined,
+    headers: Object.keys(uploadHeaders).length > 0 ? uploadHeaders : undefined,
     body: blob
   });
   if (!uploadResponse.ok) {
@@ -201,7 +207,9 @@ export async function uploadViaPresignedUrl(
   }
 
   let registerRaw: unknown;
-  if (typeof uploadApi.registerPresignedUpload === 'function') {
+  if (typeof uploadApi.registerPresigned === 'function') {
+    registerRaw = await uploadApi.registerPresigned(registerPayload);
+  } else if (typeof uploadApi.registerPresignedUpload === 'function') {
     registerRaw = await uploadApi.registerPresignedUpload(registerPayload);
   } else {
     const http = (client as { http?: HttpClientLike }).http;

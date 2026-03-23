@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown, Settings2 } from 'lucide-react';
-import { PromptTextInput } from '@sdkwork/react-assets';
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets';
 
 interface ImageAdvancedSettingsSectionProps {
     showAdvanced: boolean;
@@ -29,6 +29,7 @@ export const ImageAdvancedSettingsSection: React.FC<ImageAdvancedSettingsSection
             {showAdvanced && (
                 <div className="animate-in fade-in slide-in-from-top-1">
                     <PromptTextInput
+                        {...createPromptTextInputCapabilityProps('IMAGE')}
                         label="Negative Prompt"
                         value={negativePrompt || ''}
                         onChange={onNegativePromptChange}

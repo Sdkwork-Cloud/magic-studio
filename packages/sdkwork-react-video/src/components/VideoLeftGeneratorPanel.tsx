@@ -6,7 +6,7 @@ import {
     resolveAssetUrlByAssetIdFirst,
     type InputAttachment
 } from '@sdkwork/react-assets';
-import type { Asset } from '@sdkwork/react-commons';
+import { findByIdOrFirst, type Asset } from '@sdkwork/react-commons';
 import { genAIService } from '@sdkwork/react-core';
 import {
     buildVideoModeAvailabilityByModel,
@@ -70,8 +70,8 @@ export const VideoLeftGeneratorPanel: React.FC = () => {
         resolver: resolveAssetUrlByAssetIdFirst
     });
 
-    const activeModel = VIDEO_MODELS.find((item) => item.id === config.model) || VIDEO_MODELS[0];
-    const maxAssets = activeModel.maxAssetsCount || 5;
+    const activeModel = findByIdOrFirst(VIDEO_MODELS, config.model);
+    const maxAssets = activeModel?.maxAssetsCount ?? 5;
     const modeAvailability = useMemo(
         () => buildVideoModeAvailabilityByModel(config.model),
         [config.model]

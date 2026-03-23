@@ -1,10 +1,21 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Check, Sparkles, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { platform } from '@sdkwork/react-core';
+import { Copy, Check, Sparkles, Loader2, ChevronLeft, ChevronRight, BookOpen, History } from 'lucide-react';
+import {
+    platform,
+    promptLibraryService,
+    type PromptHistoryRecord,
+    type PromptLibraryRecord,
+    type PromptRecordBizType,
+    type PromptRecordType,
+    type ScopedSdkInstance,
+} from '@sdkwork/react-core';
 import { InputAttachment } from '../CreationChatInput/types'; // Shared types
 import { MentionPreviewPopover } from '../CreationChatInput/components/MentionPreviewPopover';
 import { getSuggestionConfig } from '../CreationChatInput/suggestion';
+import { PromptHistoryDialog } from './PromptHistoryDialog';
+import { PromptPickerDialog } from './PromptPickerDialog';
+import { applyPromptSelection, resolvePromptHistoryContent, type PromptApplyMode } from './promptPickerUtils';
 
 // Tiptap
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -12,7 +23,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Mention from '@tiptap/extension-mention';
 
-interface PromptTextInputProps {
+export interface PromptTextInputProps {
     value: string;
     onChange?: (value: string) => void;
     
@@ -39,6 +50,14 @@ interface PromptTextInputProps {
 
     // Asset Integration
     assets?: InputAttachment[];
+
+    // Prompt Capabilities
+    enablePromptLibrary?: boolean;
+    enablePromptHistory?: boolean;
+    promptBizType?: PromptRecordBizType;
+    promptType?: PromptRecordType;
+    promptInstance?: ScopedSdkInstance;
+    promptApplyMode?: PromptApplyMode;
 }
 
 // CSS to style the internal editor content and mention chips
@@ -120,11 +139,19 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
     rows = 4,
     minHeight,
     maxHeight = 300,
-    assets = []
+    assets = [],
+    enablePromptLibrary = false,
+    enablePromptHistory = false,
+    promptBizType,
+    promptType,
+    promptInstance,
+    promptApplyMode = 'replace',
 }) => {
     const [copied, setCopied] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [localIsEnhancing, setLocalIsEnhancing] = useState(false);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [isPromptHistoryOpen, setIsPromptHistoryOpen] = useState(false);
     
     // History State
     const [history, setHistory] = useState<string[]>([value]);
@@ -280,6 +307,29 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
         }
     };
 
+    const applyResolvedPrompt = (nextText: string) => {
+        const currentText = editor?.getText() || value;
+        const resolvedText = applyPromptSelection(currentText, nextText, promptApplyMode);
+        editor?.commands.setContent(resolvedText);
+        onChange?.(resolvedText);
+    };
+
+    const handlePromptLibrarySelect = async (record: PromptLibraryRecord) => {
+        applyResolvedPrompt(record.content);
+        setIsPromptLibraryOpen(false);
+
+        try {
+            await promptLibraryService.usePrompt(record.id, promptInstance);
+        } catch (error) {
+            console.error('Failed to record prompt usage', error);
+        }
+    };
+
+    const handlePromptHistorySelect = (record: PromptHistoryRecord) => {
+        applyResolvedPrompt(resolvePromptHistoryContent(record));
+        setIsPromptHistoryOpen(false);
+    };
+
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
             <style>{EDITOR_STYLES}</style>
@@ -310,6 +360,34 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                 {/* Bottom Actions Bar */}
                 <div className="flex items-center justify-between px-3 py-2 border-t border-[#27272a] bg-[#1e1e20]/50 select-none backdrop-blur-sm">
                     <div className="flex items-center gap-2">
+                        {!readOnly && !disabled && (enablePromptLibrary || enablePromptHistory) && (
+                            <div className="flex items-center gap-1">
+                                {enablePromptLibrary && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPromptLibraryOpen(true)}
+                                        className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-sky-400 transition-colors hover:border-sky-500/20 hover:bg-sky-500/10 hover:text-white"
+                                        title="Browse prompt library"
+                                    >
+                                        <BookOpen size={12} />
+                                        Library
+                                    </button>
+                                )}
+
+                                {enablePromptHistory && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPromptHistoryOpen(true)}
+                                        className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-orange-300 transition-colors hover:border-orange-500/20 hover:bg-orange-500/10 hover:text-white"
+                                        title="Browse prompt history"
+                                    >
+                                        <History size={12} />
+                                        History
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
                         {/* AI Enhance Button */}
                         {onEnhance && enableEnhance && !readOnly && !disabled && (
                             <div className="flex items-center gap-1">
@@ -393,6 +471,24 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                     setPreviewAnchor(null);
                     setPreviewAsset(null);
                 }}
+            />
+
+            <PromptPickerDialog
+                open={isPromptLibraryOpen}
+                onOpenChange={setIsPromptLibraryOpen}
+                onSelect={(record) => {
+                    void handlePromptLibrarySelect(record);
+                }}
+                promptBizType={promptBizType}
+                promptType={promptType}
+                promptInstance={promptInstance}
+            />
+
+            <PromptHistoryDialog
+                open={isPromptHistoryOpen}
+                onOpenChange={setIsPromptHistoryOpen}
+                onSelect={handlePromptHistorySelect}
+                promptInstance={promptInstance}
             />
         </div>
     );

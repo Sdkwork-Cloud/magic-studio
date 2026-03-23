@@ -1,0 +1,4 @@
+interface:
+  display_name: "Magic Studio App SDK Real Logic"
+  short_description: "Standardize Magic Studio on generated app SDKs."
+  default_prompt: "Use $magic-studio-app-sdk-real-logic to standardize Magic Studio modules on spring-ai-plus-app-api and close missing app-sdk contracts end to end."

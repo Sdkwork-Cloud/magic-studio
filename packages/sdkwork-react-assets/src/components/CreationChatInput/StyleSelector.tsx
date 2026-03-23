@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { Palette, ChevronDown, Check, Sparkles, Image as ImageIcon, User, ScanFace, LayoutTemplate, Search, X, Copy } from 'lucide-react';
-import { Popover } from '@sdkwork/react-commons';
+import { Popover, findByIdOrFirst } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
 import { resolveLocalizedText, type LocalizedTextLike, useTranslation } from '@sdkwork/react-i18n';
 
@@ -63,14 +63,22 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
     
     const [hoveredStyleId, setHoveredStyleId] = useState<string | null>(null);
 
-    const activeOption = options.find(o => o.id === value) || options[0];
+    const activeOption = findByIdOrFirst(options, value);
+    const hoveredOption = hoveredStyleId
+        ? options.find((option) => option.id === hoveredStyleId) || null
+        : null;
+    const displayOption = hoveredOption || activeOption;
+    const noStylesAvailableLabel = t('styleSelector.noStylesAvailable', 'No styles available right now.');
+    const scenePreviewUrl = displayOption?.assets?.scene?.url;
+    const portraitPreviewUrl = displayOption?.assets?.portrait?.url;
+    const sheetPreviewUrl = displayOption?.assets?.sheet?.url;
     
-    const getLocalizedLabel = (option?: StyleOption) => {
+    const getLocalizedLabel = (option?: StyleOption | null) => {
         if (!option) return '';
         return t(`portalVideo.styles.${option.id}.label`, resolveLocalizedText(option.label || option.id, locale));
     };
 
-    const getLocalizedDescription = (option?: StyleOption) => {
+    const getLocalizedDescription = (option?: StyleOption | null) => {
         if (!option) return '';
         if (option.description) {
             return t(`portalVideo.styles.${option.id}.description`, resolveLocalizedText(option.description, locale));
@@ -83,8 +91,6 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
         const q = searchQuery.toLowerCase();
         return options.filter(opt => getLocalizedLabel(opt).toLowerCase().includes(q));
     }, [locale, options, searchQuery]);
-
-    const displayOption = options.find(o => o.id === hoveredStyleId) || activeOption || options[0];
 
     const handleToggle = () => {
         if (!disabled) {
@@ -103,6 +109,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
     };
 
     const getCurrentPrompt = () => {
+        if (!displayOption) return '';
         if (promptLang === 'zh' && displayOption.prompt_zh) return displayOption.prompt_zh;
         return displayOption.prompt || '';
     };
@@ -184,9 +191,9 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pb-12">
                         <div className="grid grid-cols-4 gap-2">
-                            {filteredOptions.map((style) => {
+                                {filteredOptions.map((style) => {
                                 const isActive = style.id === value;
-                                const isHovered = style.id === displayOption.id;
+                                const isHovered = style.id === displayOption?.id;
                                 const thumbnail = style.assets?.scene?.url || style.assets?.portrait?.url;
                                 
                                 return (
@@ -235,7 +242,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                         {filteredOptions.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-10 text-gray-500">
                                 <Search size={24} className="opacity-20 mb-2" />
-                                <p className="text-xs">{t('styleSelector.noStylesFound')}</p>
+                                <p className="text-xs">{options.length === 0 ? noStylesAvailableLabel : t('styleSelector.noStylesFound')}</p>
                             </div>
                         )}
                     </div>
@@ -247,16 +254,18 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                         <div className="flex justify-between items-start gap-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                                    {getLocalizedLabel(displayOption)}
-                                    {displayOption.isCustom && <span className="text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider align-middle relative -top-0.5">{t('styleSelector.custom')}</span>}
+                                    {getLocalizedLabel(displayOption) || label}
+                                    {displayOption?.isCustom && <span className="text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider align-middle relative -top-0.5">{t('styleSelector.custom')}</span>}
                                 </h2>
                                 <p className="text-sm text-gray-400 mt-2 leading-relaxed max-w-md">
-                                    {getLocalizedDescription(displayOption) || t('styleSelector.defaultDescription')}
+                                    {displayOption
+                                        ? getLocalizedDescription(displayOption) || t('styleSelector.defaultDescription')
+                                        : noStylesAvailableLabel}
                                 </p>
                             </div>
                         </div>
                         
-                        {(displayOption.prompt || displayOption.prompt_zh) && (
+                        {displayOption && (displayOption.prompt || displayOption.prompt_zh) && (
                             <div className="mt-5 p-3 bg-[#131315] border border-[#27272a] rounded-lg group relative">
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="flex items-center gap-3">
@@ -302,10 +311,10 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                                  <div className="absolute top-3 left-3 z-10 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-200 border border-white/10 flex items-center gap-1.5 shadow-sm">
                                     <ImageIcon size={12} className="text-indigo-400" /> {t('styleSelector.sceneConcept')}
                                  </div>
-                                 {displayOption.assets?.scene?.url ? (
-                                    <img src={displayOption.assets.scene.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Scene" />
+                                 {scenePreviewUrl ? (
+                                    <img src={scenePreviewUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Scene" />
                                  ) : (
-                                    <EmptyState icon={<ImageIcon size={32} />} label={t('styleSelector.noScenePreview')} />
+                                    <EmptyState icon={<ImageIcon size={32} />} label={displayOption ? t('styleSelector.noScenePreview') : noStylesAvailableLabel} />
                                  )}
                             </div>
 
@@ -313,12 +322,12 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                                 <div className="absolute top-3 left-3 z-10 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-200 border border-white/10 flex items-center gap-1.5 shadow-sm">
                                     <User size={12} className="text-blue-400" /> {t('styleSelector.avatar')}
                                  </div>
-                                 {displayOption.assets?.portrait?.url ? (
-                                    <img src={displayOption.assets.portrait.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Portrait" />
-                                 ) : displayOption.assets?.scene?.url ? (
-                                    <img src={displayOption.assets.scene.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: 'center 20%' }} alt="Portrait Fallback" />
+                                 {portraitPreviewUrl ? (
+                                    <img src={portraitPreviewUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Portrait" />
+                                 ) : scenePreviewUrl ? (
+                                    <img src={scenePreviewUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: 'center 20%' }} alt="Portrait Fallback" />
                                  ) : (
-                                    <EmptyState icon={<User size={24} />} label={t('styleSelector.noPortrait')} />
+                                    <EmptyState icon={<User size={24} />} label={displayOption ? t('styleSelector.noPortrait') : noStylesAvailableLabel} />
                                  )}
                             </div>
 
@@ -326,10 +335,10 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                                  <div className="absolute top-3 left-3 z-10 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-200 border border-white/10 flex items-center gap-1.5 shadow-sm">
                                     <ScanFace size={12} className="text-green-400" /> {t('styleSelector.characterSheet')}
                                  </div>
-                                 {displayOption.assets?.sheet?.url ? (
-                                    <img src={displayOption.assets.sheet.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Sheet" />
+                                 {sheetPreviewUrl ? (
+                                    <img src={sheetPreviewUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Sheet" />
                                  ) : (
-                                    <EmptyState icon={<LayoutTemplate size={24} />} label={t('styleSelector.noSheetData')} />
+                                    <EmptyState icon={<LayoutTemplate size={24} />} label={displayOption ? t('styleSelector.noSheetData') : noStylesAvailableLabel} />
                                  )}
                             </div>
 

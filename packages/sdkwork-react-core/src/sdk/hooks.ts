@@ -163,7 +163,7 @@ export function useModel() {
 }
 
 export function usePrompt() {
-    return useSdkworkModule((c) => c.generation);
+    return useSdkworkModule((c) => c.prompt);
 }
 
 export function useFeedback() {

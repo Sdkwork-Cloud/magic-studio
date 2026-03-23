@@ -32,9 +32,29 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
     const [isResizing, setIsResizing] = useState(false);
     const [resizeHandle, setResizeHandle] = useState<string | null>(null);
     const [isEditingLabel, setIsEditingLabel] = useState(false);
+    const [draftLabel, setDraftLabel] = useState(data?.label || 'Group');
+    const [previewRect, setPreviewRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     
     const resizeStartRef = useRef<{ x: number, y: number, w: number, h: number, mouseX: number, mouseY: number, ratio: number } | null>(null);
+    const previewRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
     const labelInputRef = useRef<HTMLInputElement>(null);
+    const displayRect = previewRect ?? { x, y, width, height };
+
+    useEffect(() => {
+        previewRectRef.current = previewRect;
+    }, [previewRect]);
+
+    useEffect(() => {
+        if (!isResizing) {
+            setPreviewRect(null);
+        }
+    }, [isResizing, x, y, width, height]);
+
+    useEffect(() => {
+        if (!isEditingLabel) {
+            setDraftLabel(data?.label || 'Group');
+        }
+    }, [data?.label, isEditingLabel]);
 
     useEffect(() => {
         if (isEditingLabel && labelInputRef.current) {
@@ -44,6 +64,12 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
     }, [isEditingLabel]);
 
     const handleLabelCommit = () => {
+        const nextLabel = draftLabel.trim() || 'Group';
+        const currentLabel = data?.label || 'Group';
+        if (nextLabel !== currentLabel) {
+            updateElement(id, { data: { ...data, label: nextLabel } }, true);
+        }
+        setDraftLabel(nextLabel);
         setIsEditingLabel(false);
     };
 
@@ -126,15 +152,27 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
                 }
             }
             
-            updateElement(id, { x: newX, y: newY, width: newW, height: newH }, false);
+            setPreviewRect({ x: newX, y: newY, width: newW, height: newH });
         };
 
         const handleGlobalMouseUp = () => {
+            const nextRect = previewRectRef.current;
             setIsResizing(false);
             setResizeHandle(null);
             resizeStartRef.current = null;
             document.body.style.cursor = 'default';
-            updateElement(id, {}, true); // Commit history
+            if (
+                nextRect &&
+                (
+                    nextRect.x !== x ||
+                    nextRect.y !== y ||
+                    nextRect.width !== width ||
+                    nextRect.height !== height
+                )
+            ) {
+                updateElement(id, nextRect, true);
+            }
+            setPreviewRect(null);
         };
 
         window.addEventListener('mousemove', handleGlobalMouseMove);
@@ -157,6 +195,7 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
             mouseY: e.clientY,
             ratio: width / height
         };
+        setPreviewRect({ x, y, width, height });
         
         let cursor = 'default';
         if (handle === 'nw' || handle === 'se') cursor = 'nwse-resize';
@@ -203,7 +242,7 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
             ref={internalRef}
             className="absolute select-none group/group pointer-events-auto will-change-transform"
             style={{ 
-                left: x, top: y, width, height, 
+                left: displayRect.x, top: displayRect.y, width: displayRect.width, height: displayRect.height, 
                 zIndex: computedZIndex,
                 transform: 'translate3d(0,0,0)' 
             }}
@@ -240,7 +279,7 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
                                 inline-flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors cursor-grab active:cursor-grabbing
                                 ${selected ? 'text-blue-400 font-bold' : 'text-gray-500 group-hover/group:text-gray-300 font-medium'}
                             `}
-                            onDoubleClick={(e) => { e.stopPropagation(); setIsEditingLabel(true); }}
+                            onDoubleClick={(e) => { e.stopPropagation(); setDraftLabel(data?.label || 'Group'); setIsEditingLabel(true); }}
                             onMouseDown={(e) => e.stopPropagation()} 
                         >
                             {selected ? <FolderOpen size={16} /> : <Folder size={16} />}
@@ -249,10 +288,16 @@ export const CanvasGroupPanel = React.memo(forwardRef<HTMLDivElement, CanvasGrou
                                 <input 
                                     ref={labelInputRef}
                                     className="bg-[#18181b] border border-blue-500 rounded px-1 outline-none text-xs font-bold text-white min-w-[60px] w-auto max-w-[200px]"
-                                    value={data?.label || 'Group'}
-                                    onChange={(e) => updateElement(id, { data: { ...data, label: e.target.value } }, false)}
+                                    value={draftLabel}
+                                    onChange={(e) => setDraftLabel(e.target.value)}
                                     onBlur={handleLabelCommit}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleLabelCommit()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleLabelCommit();
+                                        if (e.key === 'Escape') {
+                                            setDraftLabel(data?.label || 'Group');
+                                            setIsEditingLabel(false);
+                                        }
+                                    }}
                                     onClick={(e) => e.stopPropagation()}
                                     onMouseDown={(e) => e.stopPropagation()}
                                 />

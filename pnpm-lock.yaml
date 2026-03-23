@@ -713,6 +713,9 @@ importers:
       '@sdkwork/react-assets':
         specifier: workspace:*
         version: link:../sdkwork-react-assets
+      '@sdkwork/react-audio':
+        specifier: workspace:*
+        version: link:../sdkwork-react-audio
       '@sdkwork/react-chat':
         specifier: workspace:*
         version: link:../sdkwork-react-chat
@@ -731,6 +734,9 @@ importers:
       '@sdkwork/react-magiccut':
         specifier: workspace:*
         version: link:../sdkwork-react-magiccut
+      '@sdkwork/react-settings':
+        specifier: workspace:*
+        version: link:../sdkwork-react-settings
       '@sdkwork/react-types':
         specifier: workspace:*
         version: link:../sdkwork-react-types
@@ -1302,6 +1308,16 @@ importers:
         version: 4.5.4(@types/node@25.3.5)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.3.5))
 
   packages/sdkwork-react-ide-config:
+    dependencies:
+      '@sdkwork/react-commons':
+        specifier: workspace:*
+        version: link:../sdkwork-react-commons
+      '@sdkwork/react-core':
+        specifier: workspace:*
+        version: link:../sdkwork-react-core
+      '@sdkwork/react-fs':
+        specifier: workspace:*
+        version: link:../sdkwork-react-fs
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -1403,6 +1419,9 @@ importers:
       '@sdkwork/react-music':
         specifier: workspace:*
         version: link:../sdkwork-react-music
+      '@sdkwork/react-settings':
+        specifier: workspace:*
+        version: link:../sdkwork-react-settings
       '@sdkwork/react-sfx':
         specifier: workspace:*
         version: link:../sdkwork-react-sfx

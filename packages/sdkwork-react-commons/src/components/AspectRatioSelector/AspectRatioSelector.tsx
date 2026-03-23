@@ -3,14 +3,21 @@ import { ChevronDown, Monitor, Smartphone, Square, LayoutTemplate, Film, Link as
 import { Popover } from '../Popover';
 import { useTranslation } from '@sdkwork/react-i18n';
 
-export type AspectRatio = '21:9' | '16:9' | '3:2' | '4:3' | '1:1' | '3:4' | '2:3' | '9:16';
-export type Resolution = '2k' | '4k';
+export type AspectRatio = string;
+export type Resolution = string;
+
+interface SelectorOption {
+    label: string;
+    value: string;
+}
 
 interface AspectRatioSelectorProps {
     value: AspectRatio;
     onChange: (ratio: AspectRatio) => void;
     resolution?: Resolution;
     onResolutionChange?: (res: Resolution) => void;
+    aspectRatioOptions?: SelectorOption[];
+    resolutionOptions?: SelectorOption[];
     disabled?: boolean;
     className?: string;
     
@@ -29,11 +36,91 @@ const RATIO_CONFIG: Record<AspectRatio, { label: string, w: number, h: number, i
     '9:16': { label: '9:16', w: 9,  h: 16, icon: Smartphone },
 };
 
+const DEFAULT_RESOLUTION_OPTIONS: SelectorOption[] = [
+    { label: '2K', value: '2k' },
+    { label: '4K', value: '4k' },
+];
+
+interface ResolutionProfile {
+    shortEdge: number;
+    longEdge: number;
+}
+
+const parseAspectRatio = (ratio: string): { label: string; w: number; h: number; icon: any } => {
+    const normalized = typeof ratio === 'string' ? ratio.trim() : '';
+    if (normalized in RATIO_CONFIG) {
+        return RATIO_CONFIG[normalized as keyof typeof RATIO_CONFIG];
+    }
+
+    const [wToken, hToken] = normalized.split(':');
+    const w = Number(wToken);
+    const h = Number(hToken);
+    if (Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0) {
+        const icon = w > h ? Monitor : h > w ? Smartphone : Square;
+        return {
+            label: normalized,
+            w,
+            h,
+            icon,
+        };
+    }
+
+    return RATIO_CONFIG['16:9'];
+};
+
+const RESOLUTION_PROFILE_MAP: Record<string, ResolutionProfile> = {
+    '480p': { shortEdge: 480, longEdge: 854 },
+    '720p': { shortEdge: 720, longEdge: 1280 },
+    '1080p': { shortEdge: 1080, longEdge: 1920 },
+    '1440p': { shortEdge: 1440, longEdge: 2560 },
+    '2k': { shortEdge: 1440, longEdge: 2560 },
+    '2160p': { shortEdge: 2160, longEdge: 3840 },
+    '4k': { shortEdge: 2160, longEdge: 3840 },
+    '4320p': { shortEdge: 4320, longEdge: 7680 },
+    '8k': { shortEdge: 4320, longEdge: 7680 },
+};
+
+const resolveResolutionProfile = (resolution: string): ResolutionProfile => {
+    const normalized = resolution.trim().toLowerCase();
+    if (!normalized) {
+        return { shortEdge: 1440, longEdge: 2560 };
+    }
+    if (RESOLUTION_PROFILE_MAP[normalized]) {
+        return RESOLUTION_PROFILE_MAP[normalized];
+    }
+
+    const match = normalized.match(/^(\d+)\s*(p|k)$/);
+    if (!match) {
+        return { shortEdge: 1440, longEdge: 2560 };
+    }
+
+    const numeric = Number(match[1]);
+    const unit = match[2];
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return { shortEdge: 1440, longEdge: 2560 };
+    }
+
+    if (unit === 'p') {
+        return {
+            shortEdge: numeric,
+            longEdge: Math.round(numeric * 16 / 9),
+        };
+    }
+
+    const longEdge = numeric * 1280;
+    return {
+        shortEdge: Math.round(longEdge * 9 / 16),
+        longEdge,
+    };
+};
+
 export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
     value,
     onChange,
     resolution = '2k',
     onResolutionChange,
+    aspectRatioOptions,
+    resolutionOptions = DEFAULT_RESOLUTION_OPTIONS,
     disabled = false,
     className = '',
     isOpen: controlledIsOpen,
@@ -57,15 +144,26 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
         else setInternalIsOpen(false);
     };
 
-    const baseSize = resolution === '4k' ? 3840 : 2560;
-    const config = RATIO_CONFIG[value] || RATIO_CONFIG['16:9'];
+    const config = parseAspectRatio(value);
+    const resolutionProfile = resolveResolutionProfile(resolution);
     
-    const widthPx = config.w >= config.h ? baseSize : Math.round(baseSize * (config.w / config.h));
-    const heightPx = config.h > config.w ? baseSize : Math.round(baseSize * (config.h / config.w));
+    const widthPx = config.w >= config.h
+        ? Math.round(resolutionProfile.shortEdge * (config.w / config.h))
+        : resolutionProfile.shortEdge;
+    const heightPx = config.h > config.w
+        ? Math.round(resolutionProfile.shortEdge * (config.h / config.w))
+        : resolutionProfile.shortEdge;
+    const ratioChoices = (aspectRatioOptions && aspectRatioOptions.length > 0
+        ? aspectRatioOptions
+        : (Object.keys(RATIO_CONFIG) as AspectRatio[]).map((ratio) => ({
+            label: ratio,
+            value: ratio,
+        }))
+    ).filter((option) => option.value);
 
-    const RatioButton = ({ ratio }: { ratio: AspectRatio }) => {
-        const isActive = value === ratio;
-        const c = RATIO_CONFIG[ratio];
+    const RatioButton = ({ ratio }: { ratio: SelectorOption }) => {
+        const isActive = value === ratio.value;
+        const c = parseAspectRatio(ratio.value);
         
         const iconStyle: React.CSSProperties = {
             width: c.w >= c.h ? '20px' : `${20 * (c.w/c.h)}px`,
@@ -77,7 +175,7 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
 
         return (
             <button
-                onClick={() => { onChange(ratio); }}
+                onClick={() => { onChange(ratio.value); }}
                 className={`
                     group flex flex-col items-center justify-center gap-2 p-2 rounded-xl border transition-all duration-200
                     ${isActive 
@@ -133,34 +231,35 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({
                 className="p-4 flex flex-col gap-5 bg-[#0e0e10]"
             >
                 <div>
-                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">
                         {t('aspectRatio.selectRatio')}
                     </div>
                     <div className="grid grid-cols-4 gap-1">
-                        {(Object.keys(RATIO_CONFIG) as AspectRatio[]).map(r => (
-                            <RatioButton key={r} ratio={r} />
+                        {ratioChoices.map((ratio) => (
+                            <RatioButton key={ratio.value} ratio={ratio} />
                         ))}
                     </div>
                 </div>
 
-                {onResolutionChange && (
+                {onResolutionChange && resolutionOptions.length > 0 && (
                     <div>
                         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 pl-1">
                             {t('aspectRatio.selectResolution')}
                         </div>
-                        <div className="flex bg-[#18181b] p-1 rounded-xl border border-[#27272a]">
-                            <button
-                                onClick={() => onResolutionChange('2k')}
-                                className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${resolution === '2k' ? 'bg-[#27272a] text-white shadow-sm ring-1 ring-white/5' : 'text-gray-500 hover:text-gray-300'}`}
-                            >
-                                {t('aspectRatio.hd2k')}
-                            </button>
-                            <button
-                                onClick={() => onResolutionChange('4k')}
-                                className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1 ${resolution === '4k' ? 'bg-[#27272a] text-white shadow-sm ring-1 ring-white/5' : 'text-gray-500 hover:text-gray-300'}`}
-                            >
-                                {t('aspectRatio.uhd4k')} <Sparkles size={10} className="text-yellow-500" />
-                            </button>
+                        <div className="flex bg-[#18181b] p-1 rounded-xl border border-[#27272a] gap-1">
+                            {resolutionOptions.map((option) => {
+                                const isPremium = option.value.trim().toLowerCase() === '4k';
+                                return (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => onResolutionChange(option.value)}
+                                        className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1 ${resolution === option.value ? 'bg-[#27272a] text-white shadow-sm ring-1 ring-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        {option.label}
+                                        {isPremium && <Sparkles size={10} className="text-yellow-500" />}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

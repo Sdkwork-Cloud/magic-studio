@@ -6,11 +6,11 @@
     "type":  "module",
     "main":  "./dist/index.js",
     "module":  "./dist/index.js",
-    "types":  "./dist/index.d.ts",
+    "types":  "./dist/apps/magic-studio-v2/packages/sdkwork-react-auth/src/index.d.ts",
     "exports":  {
                     ".":  {
                               "import":  "./dist/index.js",
-                              "types":  "./dist/index.d.ts"
+                              "types":  "./dist/apps/magic-studio-v2/packages/sdkwork-react-auth/src/index.d.ts"
                           }
                 },
     "files":  [

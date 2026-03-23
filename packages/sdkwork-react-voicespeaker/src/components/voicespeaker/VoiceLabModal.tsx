@@ -15,7 +15,7 @@ import {
     Pause,
     Trash2
 } from 'lucide-react';
-import { Button, AudioUpload } from '@sdkwork/react-commons';
+import { Button, AudioUpload, findByIdOrFirst } from '@sdkwork/react-commons';
 import {
     Dialog,
     DialogContent,
@@ -167,7 +167,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
 
     const avatarUrl = useMemo(() => avatarAsset?.path || avatarAsset?.id || undefined, [avatarAsset]);
     const activeAvatarView = useMemo(
-        () => AVATAR_VIEW_OPTIONS.find((item) => item.id === avatarViewMode) || AVATAR_VIEW_OPTIONS[0],
+        () => findByIdOrFirst(AVATAR_VIEW_OPTIONS, avatarViewMode),
         [avatarViewMode]
     );
     const resolveAvatarModeLabel = (value: AvatarViewMode): string => {
@@ -197,8 +197,12 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
         }
         return t('voice.common.gender.neutral', 'Neutral');
     };
-    const activeAvatarLabel = resolveAvatarModeLabel(activeAvatarView.id);
-    const activeAvatarHelper = resolveAvatarModeHelper(activeAvatarView.id);
+    const activeAvatarLabel = activeAvatarView
+        ? resolveAvatarModeLabel(activeAvatarView.id)
+        : t('voice.lab.avatarMode.unavailable', 'Unavailable');
+    const activeAvatarHelper = activeAvatarView
+        ? resolveAvatarModeHelper(activeAvatarView.id)
+        : t('voice.lab.avatarMode.unavailableHelper', 'Avatar presets are temporarily unavailable.');
     const canSave = name.trim().length > 0 && (mode === 'design' || !!referenceAsset);
 
     const avatarContextText = useMemo(() => {
@@ -216,7 +220,7 @@ export const VoiceLabModal: React.FC<VoiceLabModalProps> = ({
     const AvatarAIGenerator: React.FC<AssetAIGeneratorProps> = ({ contextText, onClose: handleClose, onSuccess }) => (
         <AIImageGeneratorModal
             contextText={contextText}
-            config={{ aspectRatio: activeAvatarView.aspectRatio }}
+            config={{ aspectRatio: activeAvatarView?.aspectRatio || '1:1' }}
             onClose={handleClose}
             onSuccess={(result) => onSuccess(result)}
         />

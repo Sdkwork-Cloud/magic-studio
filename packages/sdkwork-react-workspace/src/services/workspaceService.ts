@@ -1,6 +1,6 @@
-import { storageConfig, APP_ROOT_DIR, DIR_NAMES } from '@sdkwork/react-fs';
+import { APP_ROOT_DIR, DIR_NAMES } from '@sdkwork/react-fs';
 import { vfs } from '@sdkwork/react-fs';
-import { platform, getAppSdkClientWithSession } from '@sdkwork/react-core';
+import { platform, getAppSdkClientWithSession, uploadViaPresignedUrl } from '@sdkwork/react-core';
 import {
   StudioWorkspace,
   StudioProject,
@@ -13,8 +13,7 @@ import {
   Result,
   IBaseService,
   Page,
-  PageRequest,
-  logger
+  PageRequest
 } from '@sdkwork/react-commons';
 
 interface ApiEnvelope<T> {
@@ -43,6 +42,7 @@ interface SdkProjectVO {
   projectDescription?: string;
   projectType?: string;
   projectIcon?: string;
+  coverImageUrl?: string;
   workspaceId?: string | number;
   createdAt?: string | number;
   updatedAt?: string | number;
@@ -104,40 +104,6 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
     'NOTES',
     'CUT'
   ]);
-
-  private isAbsolutePath(path: string): boolean {
-    if (!path) {
-      return false;
-    }
-    return (
-      path.startsWith('/') ||
-      path.startsWith('\\') ||
-      /^[a-zA-Z]:[\\/]/.test(path) ||
-      /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(path)
-    );
-  }
-
-  private resolveChildPath(parentPath: string, entryPath: string): string {
-    if (!entryPath) {
-      return parentPath;
-    }
-    const normalizedParent = pathUtils.normalize(parentPath);
-    const normalizedEntry = pathUtils.normalize(entryPath);
-
-    if (this.isAbsolutePath(normalizedEntry) || normalizedEntry.startsWith(normalizedParent)) {
-      return normalizedEntry;
-    }
-
-    return pathUtils.join(normalizedParent, normalizedEntry);
-  }
-
-  private isFileNotFoundError(error: unknown): boolean {
-    if (error instanceof Error && typeof error.message === 'string') {
-      const message = error.message.toLowerCase();
-      return message.includes('file not found') || message.includes('enoent');
-    }
-    return false;
-  }
 
   private toTimestamp(value: unknown): number {
     if (typeof value === 'number' && Number.isFinite(value)) {
@@ -256,6 +222,7 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
   private mapProjectVo(vo: SdkProjectVO, workspaceIdFromContext?: string): StudioProject {
     const projectId = this.toIdString(vo.projectId ?? vo.id, generateUUID());
     const workspaceId = this.toIdString(vo.workspaceId, workspaceIdFromContext || '');
+    const coverImageUrl = String(vo.coverImageUrl || vo.projectIcon || '').trim();
 
     return {
       id: projectId,
@@ -264,10 +231,61 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
       description: vo.projectDescription || '',
       type: this.toProjectType(vo.projectType),
       workspaceId,
-      coverImage: this.buildCoverImageResource(vo.projectIcon),
+      coverImage: this.buildCoverImageResource(coverImageUrl),
       createdAt: this.toTimestamp(vo.createdAt ?? vo.createTime),
       updatedAt: this.toTimestamp(vo.updatedAt ?? vo.updateTime)
     };
+  }
+
+  private resolveUploadedFileReference(value: unknown): string | undefined {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const record = value as Record<string, unknown>;
+    const candidates = [
+      record.accessUrl,
+      record.previewUrl,
+      record.url,
+      record.path,
+      record.objectKey
+    ];
+
+    for (const candidate of candidates) {
+      const normalized = String(candidate || '').trim();
+      if (normalized) {
+        return normalized;
+      }
+    }
+
+    return undefined;
+  }
+
+  private async uploadProjectCoverImage(
+    sdkClient: SdkClientLike,
+    coverImage: { data: Uint8Array; name: string }
+  ): Promise<string> {
+    const uploadBytes = new Uint8Array(coverImage.data.byteLength);
+    uploadBytes.set(coverImage.data);
+
+    const uploadResult = await uploadViaPresignedUrl(sdkClient as Parameters<typeof uploadViaPresignedUrl>[0], {
+      file: new Blob([uploadBytes]),
+      fileName: coverImage.name,
+      type: 'IMAGE',
+      path: 'workspaces/projects'
+    });
+
+    const registeredData = this.unwrapApiData<Record<string, unknown>>(uploadResult.registerResult);
+    const uploadedReference =
+      this.resolveUploadedFileReference(registeredData) ||
+      this.resolveUploadedFileReference(uploadResult.registerResult) ||
+      String(uploadResult.objectKey || '').trim();
+
+    if (!uploadedReference) {
+      throw new Error('Project cover upload completed without a usable file reference.');
+    }
+
+    return uploadedReference;
   }
 
   private async loadProjectsForWorkspaceFromSdk(
@@ -414,7 +432,9 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
     const sdkClient = this.getSdkClient();
     const workspaceApi = sdkClient?.workspaces;
 
-    const projectIconName = coverImage?.name;
+    const uploadedProjectIcon = coverImage
+      ? await this.uploadProjectCoverImage(sdkClient, coverImage)
+      : undefined;
 
     if (workspaceApi && typeof workspaceApi.createProject === 'function') {
       const response = await workspaceApi.createProject(workspaceId, {
@@ -422,13 +442,20 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
         projectName: name,
         projectDescription: description,
         projectType: type,
-        projectIcon: projectIconName
+        projectIcon: uploadedProjectIcon
       });
       const projectVo = this.unwrapApiData<SdkProjectVO>(response);
       if (!projectVo) {
         return Result.error('SDK returned empty project create result');
       }
-      return Result.success(this.mapProjectVo(projectVo, workspaceId));
+
+      const normalizedProjectVo = {
+        ...projectVo,
+        projectIcon: projectVo.projectIcon || uploadedProjectIcon,
+        coverImageUrl: projectVo.coverImageUrl || uploadedProjectIcon
+      };
+
+      return Result.success(this.mapProjectVo(normalizedProjectVo, workspaceId));
     }
 
     return Result.error('SDK project create API is unavailable');
@@ -455,212 +482,6 @@ export class WorkspaceService implements IBaseService<StudioWorkspace> {
     }
 
     return Result.error('SDK project delete API is unavailable');
-  }
-
-  private async findAllFromLocal(pageRequest?: PageRequest): Promise<ServiceResult<Page<StudioWorkspace>>> {
-    const docRoot = await platform.getPath('documents');
-    const workspacesRoot = pathUtils.join(docRoot, APP_ROOT_DIR, DIR_NAMES.WORKSPACES);
-    try {
-      await vfs.createDir(workspacesRoot);
-    } catch {
-      // Keep reading if directory already exists.
-    }
-
-    const entries = await vfs.readdir(workspacesRoot);
-    let workspaces: StudioWorkspace[] = [];
-
-    for (const entry of entries) {
-      const entryPath = this.resolveChildPath(workspacesRoot, entry);
-      const configPath = pathUtils.join(entryPath, 'workspace.json');
-      try {
-        const stat = await vfs.stat(entryPath);
-        if (!stat.isDirectory) {
-          continue;
-        }
-
-        const content = await vfs.readFile(configPath);
-        const workspaceData = JSON.parse(content) as StudioWorkspace;
-
-        const projectsDir = pathUtils.join(entryPath, 'projects');
-        const projects: StudioProject[] = [];
-        try {
-          const projectEntries = await vfs.readdir(projectsDir);
-          for (const projectEntry of projectEntries) {
-            const projectEntryPath = this.resolveChildPath(projectsDir, projectEntry);
-            const projectConfigPath = pathUtils.join(projectEntryPath, 'project.json');
-            try {
-              const projectStat = await vfs.stat(projectEntryPath);
-              if (!projectStat.isDirectory) {
-                continue;
-              }
-
-              const projectContent = await vfs.readFile(projectConfigPath);
-              const projectData = JSON.parse(projectContent) as StudioProject;
-              projects.push({ ...projectData, path: projectEntryPath });
-            } catch (error) {
-              if (!this.isFileNotFoundError(error)) {
-                logger.warn('[WorkspaceService] Failed to load project config', projectConfigPath, error);
-              }
-            }
-          }
-        } catch (error) {
-          logger.warn('[WorkspaceService] Failed to read projects directory', projectsDir, error);
-        }
-
-        workspaces.push({ ...workspaceData, projects, path: entryPath });
-      } catch (error) {
-        if (!this.isFileNotFoundError(error)) {
-          logger.warn('[WorkspaceService] Failed to load workspace', entryPath, error);
-        }
-      }
-    }
-
-    if (pageRequest?.keyword) {
-      const keyword = pageRequest.keyword.toLowerCase();
-      workspaces = workspaces.filter((workspace) => workspace.name.toLowerCase().includes(keyword));
-    }
-
-    workspaces.sort((left, right) => {
-      const leftTime = this.toTimestamp(left.createdAt);
-      const rightTime = this.toTimestamp(right.createdAt);
-      return rightTime - leftTime;
-    });
-
-    if (workspaces.length === 0) {
-      await this.createWorkspaceLocal('Default Workspace', 'My first workspace');
-      return this.findAllFromLocal(pageRequest);
-    }
-
-    return Result.success(this.buildPage(workspaces, pageRequest));
-  }
-
-  private async saveWorkspaceToLocal(entity: Partial<StudioWorkspace>): Promise<ServiceResult<StudioWorkspace>> {
-    if (!entity.uuid) {
-      return Result.error('UUID required for update');
-    }
-
-    const docRoot = await platform.getPath('documents');
-    const paths = storageConfig.workspace(entity.uuid);
-    const configPath = pathUtils.join(docRoot, paths.configFile);
-
-    const content = await vfs.readFile(configPath);
-    const current = JSON.parse(content) as StudioWorkspace;
-    const updated: StudioWorkspace = {
-      ...current,
-      ...entity,
-      createdAt: current.createdAt,
-      updatedAt: Date.now()
-    };
-
-    await vfs.writeFile(configPath, JSON.stringify(updated, null, 2));
-    return Result.success(updated);
-  }
-
-  private async createWorkspaceLocal(name: string, description?: string, icon?: string): Promise<ServiceResult<StudioWorkspace>> {
-    const uuid = generateUUID();
-    const docRoot = await platform.getPath('documents');
-    const paths = storageConfig.workspace(uuid);
-    const fullRoot = pathUtils.join(docRoot, paths.root);
-    const projectsDir = pathUtils.join(docRoot, paths.projectsDir);
-
-    await vfs.createDir(fullRoot);
-    await vfs.createDir(projectsDir);
-
-    const workspaceData: StudioWorkspace = {
-      id: uuid,
-      uuid,
-      name,
-      description: description || '',
-      icon,
-      projects: [],
-      path: fullRoot,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-
-    await vfs.writeFile(pathUtils.join(docRoot, paths.configFile), JSON.stringify(workspaceData, null, 2));
-    return Result.success(workspaceData);
-  }
-
-  private async createProjectLocal(
-    workspaceId: string,
-    name: string,
-    type: ProjectType,
-    description: string,
-    coverImage?: { data: Uint8Array; name: string }
-  ): Promise<ServiceResult<StudioProject>> {
-    const uuid = generateUUID();
-    const docRoot = await platform.getPath('documents');
-    const paths = storageConfig.project(workspaceId, uuid);
-    const projectRoot = pathUtils.join(docRoot, paths.root);
-    const projectsDir = pathUtils.dirname(projectRoot);
-
-    try {
-      await vfs.createDir(projectsDir);
-    } catch {
-      // Keep running if directory already exists.
-    }
-
-    await vfs.createDir(projectRoot);
-    const assetsPath = pathUtils.join(docRoot, paths.assets);
-    await vfs.createDir(assetsPath);
-    await vfs.createDir(pathUtils.join(docRoot, paths.exports));
-    await vfs.createDir(pathUtils.join(docRoot, paths.cache));
-
-    let coverResource: ImageMediaResource | undefined;
-
-    if (coverImage) {
-      const ext = pathUtils.extname(coverImage.name) || '.png';
-      const coverFileName = `cover${ext}`;
-      const coverPath = pathUtils.join(assetsPath, coverFileName);
-
-      await vfs.writeFileBinary(coverPath, coverImage.data);
-
-      coverResource = {
-        id: generateUUID(),
-        uuid: generateUUID(),
-        type: MediaResourceType.IMAGE,
-        name: coverFileName,
-        localFile: { path: coverPath },
-        url: '',
-        origin: 'upload',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        size: coverImage.data.length,
-        extension: ext.replace('.', '')
-      };
-    }
-
-    const projectData: StudioProject = {
-      id: uuid,
-      uuid,
-      name,
-      type,
-      description,
-      workspaceId,
-      coverImage: coverResource,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-
-    await vfs.writeFile(pathUtils.join(docRoot, paths.file), JSON.stringify(projectData, null, 2));
-    return Result.success({ ...projectData, path: projectRoot });
-  }
-
-  private async deleteWorkspaceFromLocal(workspaceId: string): Promise<ServiceResult<void>> {
-    const docRoot = await platform.getPath('documents');
-    const paths = storageConfig.workspace(workspaceId);
-    const fullPath = pathUtils.join(docRoot, paths.root);
-    await vfs.delete(fullPath);
-    return Result.success(undefined);
-  }
-
-  private async deleteProjectFromLocal(workspaceId: string, projectId: string): Promise<ServiceResult<void>> {
-    const docRoot = await platform.getPath('documents');
-    const paths = storageConfig.project(workspaceId, projectId);
-    const fullPath = pathUtils.join(docRoot, paths.root);
-    await vfs.delete(fullPath);
-    return Result.success(undefined);
   }
 
   async initialize(): Promise<void> {

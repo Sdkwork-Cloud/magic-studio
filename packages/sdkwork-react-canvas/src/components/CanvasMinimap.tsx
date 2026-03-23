@@ -2,6 +2,7 @@
 import { CanvasElement } from '../entities'
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useCanvasStore } from '../store/canvasStore'; 
+import { centerViewportOnWorldPoint } from '../utils/viewport';
 
 // --- Smart Path Logic (Keep existing helpers) ---
 type Point = { x: number; y: number };
@@ -178,10 +179,20 @@ export const CanvasMinimap: React.FC<CanvasMinimapProps> = ({ viewportSize }) =>
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const viewportRef = useRef(viewport);
+    const viewportSizeRef = useRef(viewportSize);
 
     const WIDTH = 220; 
     const HEIGHT = 140;
     const _PADDING = 5000; 
+
+    useEffect(() => {
+        viewportRef.current = viewport;
+    }, [viewport]);
+
+    useEffect(() => {
+        viewportSizeRef.current = viewportSize;
+    }, [viewportSize]);
 
     // Helper to calculate world bounds of all elements
     const getBounds = useCallback(() => {
@@ -386,12 +397,12 @@ export const CanvasMinimap: React.FC<CanvasMinimapProps> = ({ viewportSize }) =>
     }, [draw]);
 
     // --- Interaction Logic ---
-    const handleInteraction = (e: React.MouseEvent) => {
+    const handleInteractionAtClientPoint = useCallback((clientX: number, clientY: number) => {
         if (!canvasRef.current) return;
         
         const rect = canvasRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
 
         const bounds = getBounds();
         const scaleX = WIDTH / bounds.width;
@@ -405,22 +416,33 @@ export const CanvasMinimap: React.FC<CanvasMinimapProps> = ({ viewportSize }) =>
         const worldX = ((mouseX - offsetX) / mapScale) + bounds.minX;
         const worldY = ((mouseY - offsetY) / mapScale) + bounds.minY;
 
-        // Center viewport on World Coord
-        const screenW = viewportSize.width;
-        const screenH = viewportSize.height;
-        
-        // formula: viewportX = screenCenter - worldX * zoom
-        const newViewportX = (screenW / 2) - (worldX * viewport.zoom);
-        const newViewportY = (screenH / 2) - (worldY * viewport.zoom);
+        const currentViewport = viewportRef.current;
+        const currentViewportSize = viewportSizeRef.current;
+        setViewport(centerViewportOnWorldPoint({
+            worldPoint: { x: worldX, y: worldY },
+            viewportSize: currentViewportSize,
+            zoom: currentViewport.zoom
+        }));
+    }, [getBounds, setViewport]);
 
-        setViewport({ x: newViewportX, y: newViewportY });
-    };
+    useEffect(() => {
+        if (!isDragging) return;
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if(isDragging) {
-            handleInteraction(e);
-        }
-    }
+        const handleWindowMouseMove = (event: MouseEvent) => {
+            handleInteractionAtClientPoint(event.clientX, event.clientY);
+        };
+
+        const handleWindowMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+        };
+    }, [isDragging, handleInteractionAtClientPoint]);
 
     if (elements.length === 0) return null;
 
@@ -438,10 +460,7 @@ export const CanvasMinimap: React.FC<CanvasMinimapProps> = ({ viewportSize }) =>
                 ref={canvasRef}
                 className="rounded-lg cursor-crosshair backdrop-blur-md shadow-xl transition-all duration-200"
                 style={{ width: WIDTH, height: HEIGHT }}
-                onMouseDown={(e) => { setIsDragging(true); handleInteraction(e); }}
-                onMouseUp={() => setIsDragging(false)}
-                onMouseLeave={() => setIsDragging(false)}
-                onMouseMove={handleMouseMove}
+                onMouseDown={(e) => { setIsDragging(true); handleInteractionAtClientPoint(e.clientX, e.clientY); }}
             />
         </div>
     );

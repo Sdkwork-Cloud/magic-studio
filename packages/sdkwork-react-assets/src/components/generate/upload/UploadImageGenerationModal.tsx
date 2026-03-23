@@ -8,6 +8,7 @@ import { ImportData } from './types';
 import { SettingInput, SettingSelect } from '@sdkwork/react-settings';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
+import { createPromptTextInputCapabilityProps } from '../../generate/promptCapabilityProps';
 
 interface UploadImageGenerationModalProps {
     onClose: () => void;
@@ -108,6 +109,7 @@ export const UploadImageGenerationModal: React.FC<UploadImageGenerationModalProp
                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Generation Metadata</h4>
                                     
                                     <PromptTextInput 
+                                        {...createPromptTextInputCapabilityProps('IMAGE')}
                                         value={prompt}
                                         onChange={setPrompt}
                                         label={t('studio.common.prompt')}

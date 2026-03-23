@@ -1,12 +1,15 @@
 import { createServiceAdapterController } from '@sdkwork/react-commons';
-import { canvasActionService } from './canvasActionService';
+import { canvasActionService, type CanvasActionServiceApi } from './canvasActionService';
 import { canvasExportService } from './canvasExportService';
-import { canvasHistoryService } from './canvasHistoryService';
+import { canvasHistoryService, type CanvasHistoryServiceApi } from './canvasHistoryService';
 import {
   buildMoveCommitUpdates,
+  type ConnectionPreviewPath,
   computeConnectionPreviewPaths,
   computeGroupPreviewBounds,
   computeMoveDeltaWithSnap,
+  type MoveDeltaComputationInput,
+  type MoveDeltaComputationResult,
   hasMoveCommitChanges,
   initializeMoveSession
 } from './canvasInteractionService';
@@ -20,7 +23,20 @@ import { canvasService } from './canvasService';
 import { canvasToCutConverter } from './canvasToCutConverter';
 import { NodeFactory } from './nodeFactory';
 
-const canvasInteractionService = {
+export interface CanvasInteractionServiceApi {
+  initializeMoveSession: typeof initializeMoveSession;
+  computeMoveDeltaWithSnap: (input: MoveDeltaComputationInput) => MoveDeltaComputationResult;
+  buildMoveCommitUpdates: typeof buildMoveCommitUpdates;
+  hasMoveCommitChanges: typeof hasMoveCommitChanges;
+  computeGroupPreviewBounds: typeof computeGroupPreviewBounds;
+  computeConnectionPreviewPaths: (
+    affectedConnections: Parameters<typeof computeConnectionPreviewPaths>[0],
+    worldDx: number,
+    worldDy: number
+  ) => ConnectionPreviewPath[];
+}
+
+const canvasInteractionService: CanvasInteractionServiceApi = {
   initializeMoveSession,
   computeMoveDeltaWithSnap,
   buildMoveCommitUpdates,
@@ -38,12 +54,12 @@ const canvasHierarchyService = {
 
 export interface CanvasBusinessAdapter {
   canvasService: typeof canvasService;
-  canvasHistoryService: typeof canvasHistoryService;
-  canvasActionService: typeof canvasActionService;
+  canvasHistoryService: CanvasHistoryServiceApi;
+  canvasActionService: CanvasActionServiceApi;
   canvasExportService: typeof canvasExportService;
   canvasToCutConverter: typeof canvasToCutConverter;
   NodeFactory: typeof NodeFactory;
-  canvasInteractionService: typeof canvasInteractionService;
+  canvasInteractionService: CanvasInteractionServiceApi;
   canvasHierarchyService: typeof canvasHierarchyService;
 }
 

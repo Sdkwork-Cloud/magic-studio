@@ -12,6 +12,9 @@ export * from './CreationChatInput';
 // Generation components
 export { GenerationHistoryListPane, GENERATION_TABS } from './generate/GenerationHistoryListPane';
 export { PromptTextInput } from './generate/PromptTextInput';
+export { createPromptTextInputCapabilityProps } from './generate/promptCapabilityProps';
+export { PromptPickerDialog } from './generate/PromptPickerDialog';
+export { PromptHistoryDialog } from './generate/PromptHistoryDialog';
 export { UploadGenerationModal } from './generate/upload/UploadGenerationModal';
 export { UploadImageGenerationModal } from './generate/upload/UploadImageGenerationModal';
 export { UploadMusicGenerationModal } from './generate/upload/UploadMusicGenerationModal';

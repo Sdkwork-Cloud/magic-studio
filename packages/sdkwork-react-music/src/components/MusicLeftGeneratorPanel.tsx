@@ -1,5 +1,5 @@
 
-import { PromptTextInput } from '@sdkwork/react-assets'
+import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets'
 import React from 'react';
 import { useMusicStore } from '../store/musicStore';
 import { MusicModelSelector } from './MusicModelSelector';
@@ -58,7 +58,7 @@ export const MusicLeftGeneratorPanel: React.FC = () => {
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                          <div>
                             <Label icon={<Sparkles size={12} className="text-yellow-500" />}>{t('studio.music.description')}</Label>
-                            <PromptTextInput label={null} placeholder="A chill lofi beat to study to, raining outside, cozy vibes..." value={config.prompt} onChange={(val) => setConfig({ prompt: val })} disabled={isGenerating} rows={6} className="bg-[#121214]" />
+                            <PromptTextInput {...createPromptTextInputCapabilityProps('MUSIC')} label={null} placeholder="A chill lofi beat to study to, raining outside, cozy vibes..." value={config.prompt} onChange={(val) => setConfig({ prompt: val })} disabled={isGenerating} rows={6} className="bg-[#121214]" />
                         </div>
                         <div className="flex items-center justify-between px-3 py-2.5 bg-[#18181b] border border-[#27272a] rounded-xl">
                             <span className="text-xs font-medium text-gray-300">{t('studio.music.instrumental')}</span>

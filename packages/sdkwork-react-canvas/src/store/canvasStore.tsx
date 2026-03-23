@@ -4,6 +4,7 @@ import { produceWithPatches, applyPatches, enablePatches, Patch } from 'immer';
 import { CanvasBoard, CanvasElement, Viewport, SnapLine, CanvasNodeData } from '../entities';
 import { generateUUID } from '@sdkwork/react-commons';
 import { canvasBusinessService } from '../services';
+import { collectAncestorGroupIds, fitGroupsToChildren } from './canvasGroupGeometry';
 
 const { canvasService, canvasHierarchyService } = canvasBusinessService;
 
@@ -278,6 +279,71 @@ const reportCanvasIntegrity = (elements: CanvasElement[], context: string): void
     console.error(`[CanvasStore][Integrity] ${context} detected ${issues.length} issue(s).`, preview);
 };
 
+const doesUpdateAffectLayout = (updates: Partial<CanvasElement>): boolean => {
+    return (
+        'x' in updates ||
+        'y' in updates ||
+        'width' in updates ||
+        'height' in updates ||
+        'groupId' in updates
+    );
+};
+
+const applyAncestorGroupFit = (
+    draft: CanvasElement[],
+    referenceElements: CanvasElement[],
+    changedElementIds: Iterable<string>,
+    additionalGroupIds: Iterable<string> = []
+): void => {
+    const groupIdsToFit = new Set<string>(additionalGroupIds);
+    collectAncestorGroupIds(referenceElements, changedElementIds).forEach((groupId) => {
+        groupIdsToFit.add(groupId);
+    });
+    if (groupIdsToFit.size === 0) return;
+    fitGroupsToChildren(draft, groupIdsToFit);
+};
+
+const collectMovableSelectionRoots = (state: {
+    elements: CanvasElement[];
+    selectedIds: Set<string>;
+}): { rootIds: string[]; descendantIdsByRoot: Map<string, string[]> } => {
+    const rootIds = canvasHierarchyService.collectSelectedGroupRoots(state);
+    const descendantIdsByRoot = new Map<string, string[]>();
+
+    rootIds.forEach((rootId) => {
+        const descendantIds = canvasHierarchyService
+            .collectSelectionWithHierarchyAndConnectors(state.elements, new Set([rootId]))
+            .filter((element) => element.type !== 'connector')
+            .map((element) => element.id);
+        descendantIdsByRoot.set(rootId, descendantIds);
+    });
+
+    return { rootIds, descendantIdsByRoot };
+};
+
+const applyRootTranslationsToDraft = (
+    draft: CanvasElement[],
+    descendantIdsByRoot: Map<string, string[]>,
+    deltaByRoot: Map<string, { dx: number; dy: number }>
+): void => {
+    const deltaByElement = new Map<string, { dx: number; dy: number }>();
+
+    descendantIdsByRoot.forEach((descendantIds, rootId) => {
+        const delta = deltaByRoot.get(rootId);
+        if (!delta) return;
+        descendantIds.forEach((elementId) => {
+            deltaByElement.set(elementId, delta);
+        });
+    });
+
+    draft.forEach((element) => {
+        const delta = deltaByElement.get(element.id);
+        if (!delta) return;
+        element.x += delta.dx;
+        element.y += delta.dy;
+    });
+};
+
 export const useCanvasStore = create<CanvasState>((set, get) => ({
     boards: [],
     activeBoardId: null,
@@ -404,10 +470,15 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
     
     updateElement: (id, updates, isFinal = true) => {
-        const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
+        const referenceElements = get().elements;
+        const shouldFitAncestorGroups = isFinal && doesUpdateAffectLayout(updates);
+        const [nextElements, patches, inversePatches] = produceWithPatches(referenceElements, draft => {
             const idx = draft.findIndex(el => el.id === id);
             if (idx !== -1) {
                 Object.assign(draft[idx], updates);
+            }
+            if (shouldFitAncestorGroups) {
+                applyAncestorGroupFit(draft, referenceElements, [id]);
             }
         });
         if (patches.length === 0) return;
@@ -423,7 +494,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
 
     updateElementsPosition: (updates, isFinal, groupIdsToFit = []) => {
-        const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
+        const referenceElements = get().elements;
+        const changedIds = updates.map((update) => update.id);
+        const [nextElements, patches, inversePatches] = produceWithPatches(referenceElements, draft => {
             const map = new Map<string, { x: number, y: number }>();
             updates.forEach(u => map.set(u.id, u));
             draft.forEach(el => {
@@ -434,42 +507,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 }
             });
 
-            if (groupIdsToFit.length > 0) {
-                const targetGroupIds = new Set(groupIdsToFit);
-                const elementMap = new Map<string, CanvasElement>();
-                draft.forEach((element) => {
-                    elementMap.set(element.id, element);
-                });
-
-                const PADDING = 20;
-                targetGroupIds.forEach((groupId) => {
-                    const group = elementMap.get(groupId);
-                    if (!group || group.type !== 'group' || !group.groupChildren || group.groupChildren.length === 0) {
-                        return;
-                    }
-
-                    let minX = Infinity;
-                    let minY = Infinity;
-                    let maxX = -Infinity;
-                    let maxY = -Infinity;
-                    let hasChild = false;
-
-                    group.groupChildren.forEach((childId) => {
-                        const child = elementMap.get(childId);
-                        if (!child) return;
-                        hasChild = true;
-                        minX = Math.min(minX, child.x);
-                        minY = Math.min(minY, child.y);
-                        maxX = Math.max(maxX, child.x + child.width);
-                        maxY = Math.max(maxY, child.y + child.height);
-                    });
-
-                    if (!hasChild) return;
-                    group.x = minX - PADDING;
-                    group.y = minY - PADDING;
-                    group.width = (maxX - minX) + (PADDING * 2);
-                    group.height = (maxY - minY) + (PADDING * 2);
-                });
+            if (isFinal) {
+                applyAncestorGroupFit(draft, referenceElements, changedIds, groupIdsToFit);
             }
         });
         if (patches.length === 0) return;
@@ -485,9 +524,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
     
     deleteElement: (id) => {
+        const referenceElements = get().elements;
         const removedIds = new Set([id]);
-        const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
+        const affectedAncestorGroupIds = collectAncestorGroupIds(referenceElements, removedIds);
+        const [nextElements, patches, inversePatches] = produceWithPatches(referenceElements, draft => {
             normalizeElementRelations(draft, removedIds);
+            fitGroupsToChildren(draft, affectedAncestorGroupIds);
         });
         if (patches.length === 0) return;
         reportCanvasIntegrity(nextElements, 'deleteElement');
@@ -534,10 +576,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     selectAll: () => set(state => ({ selectedIds: new Set(state.elements.map(e => e.id)) })),
     
     removeSelected: () => {
+        const referenceElements = get().elements;
         const removedIds = new Set(get().selectedIds);
         if (removedIds.size === 0) return;
-        const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
+        const affectedAncestorGroupIds = collectAncestorGroupIds(referenceElements, removedIds);
+        const [nextElements, patches, inversePatches] = produceWithPatches(referenceElements, draft => {
             normalizeElementRelations(draft, removedIds);
+            fitGroupsToChildren(draft, affectedAncestorGroupIds);
         });
         if (patches.length === 0) return;
         reportCanvasIntegrity(nextElements, 'removeSelected');
@@ -706,13 +751,15 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     nudgeSelection: (dx, dy) => {
         const state = get();
         if (state.selectedIds.size === 0) return;
-        const [nextElements, patches, inversePatches] = produceWithPatches(get().elements, draft => {
-            draft.forEach(el => {
-                if (state.selectedIds.has(el.id)) {
-                    el.x += dx;
-                    el.y += dy;
-                }
-            });
+        const { rootIds, descendantIdsByRoot } = collectMovableSelectionRoots(state);
+        if (rootIds.length === 0) return;
+        const deltaByRoot = new Map<string, { dx: number; dy: number }>();
+        rootIds.forEach((rootId) => {
+            deltaByRoot.set(rootId, { dx, dy });
+        });
+        const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
+            applyRootTranslationsToDraft(draft, descendantIdsByRoot, deltaByRoot);
+            applyAncestorGroupFit(draft, state.elements, rootIds);
         });
         if (patches.length === 0) return;
         
@@ -729,6 +776,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const rootIds = canvasHierarchyService.collectSelectedGroupRoots(state);
         if (rootIds.length < 2) return;
         const rootIdSet = new Set(rootIds);
+        const affectedAncestorGroupIds = collectAncestorGroupIds(state.elements, rootIdSet);
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
             const selectedEls = draft.filter(e => rootIdSet.has(e.id));
@@ -763,6 +811,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             });
             
             draft.push(group);
+            fitGroupsToChildren(draft, affectedAncestorGroupIds);
         });
         if (patches.length === 0) return;
         reportCanvasIntegrity(nextElements, 'groupSelected');
@@ -784,6 +833,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         
         const groupIds = new Set(groups.map(g => g!.id));
         const childrenIds = Array.from(new Set(groups.flatMap(g => g!.groupChildren || [])));
+        const affectedAncestorGroupIds = collectAncestorGroupIds(state.elements, groupIds);
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
             canvasHierarchyService.detachChildrenFromGroups(draft, groupIds);
@@ -798,6 +848,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                     }
                 }
             }
+            fitGroupsToChildren(draft, affectedAncestorGroupIds);
         });
         if (patches.length === 0) return;
         reportCanvasIntegrity(nextElements, 'ungroupSelected');
@@ -815,52 +866,23 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const group = state.elements.find(e => e.id === groupId);
         if (!group || !group.groupChildren || group.groupChildren.length === 0) return;
         
-        const children = state.elements.filter(e => group.groupChildren!.includes(e.id));
-        if (children.length === 0) return;
-        
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        children.forEach(el => {
-            minX = Math.min(minX, el.x);
-            minY = Math.min(minY, el.y);
-            maxX = Math.max(maxX, el.x + el.width);
-            maxY = Math.max(maxY, el.y + el.height);
+        const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
+            fitGroupsToChildren(draft, [groupId]);
         });
+        if (patches.length === 0) return;
+        reportCanvasIntegrity(nextElements, 'fitGroupToChildren');
         
-        const padding = 20;
-        const newX = minX - padding;
-        const newY = minY - padding;
-        const newW = (maxX - minX) + (padding * 2);
-        const newH = (maxY - minY) + (padding * 2);
-        
-        if (
-            Math.abs(newX - group.x) > 1 || 
-            Math.abs(newY - group.y) > 1 || 
-            Math.abs(newW - group.width) > 1 || 
-            Math.abs(newH - group.height) > 1
-        ) {
-            const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-                const idx = draft.findIndex(el => el.id === groupId);
-                if (idx !== -1) {
-                    draft[idx].x = newX;
-                    draft[idx].y = newY;
-                    draft[idx].width = newW;
-                    draft[idx].height = newH;
-                }
-            });
-            if (patches.length === 0) return;
-            reportCanvasIntegrity(nextElements, 'fitGroupToChildren');
-            
-            set(state => ({
-                elements: nextElements,
-                past: state.past.length >= 50 ? [...state.past.slice(1), { patches, inversePatches }] : [...state.past, { patches, inversePatches }],
-                future: []
-            }));
-        }
+        set(state => ({
+            elements: nextElements,
+            past: state.past.length >= 50 ? [...state.past.slice(1), { patches, inversePatches }] : [...state.past, { patches, inversePatches }],
+            future: []
+        }));
     },
     
     alignSelected: (alignment) => {
         const state = get();
-        const selected = state.elements.filter(e => state.selectedIds.has(e.id));
+        const { rootIds, descendantIdsByRoot } = collectMovableSelectionRoots(state);
+        const selected = state.elements.filter(e => rootIds.includes(e.id));
         if (selected.length < 2) return;
         
         let targetVal = 0;
@@ -880,15 +902,20 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         }
         
         const [nextElements, patches, inversePatches] = produceWithPatches(state.elements, draft => {
-            draft.forEach(el => {
-                if (!state.selectedIds.has(el.id)) return;
-                if (alignment === 'left') el.x = targetVal;
-                if (alignment === 'right') el.x = targetVal - el.width;
-                if (alignment === 'top') el.y = targetVal;
-                if (alignment === 'bottom') el.y = targetVal - el.height;
-                if (alignment === 'center') el.x = targetVal - el.width / 2;
-                if (alignment === 'middle') el.y = targetVal - el.height / 2;
+            const deltaByRoot = new Map<string, { dx: number; dy: number }>();
+            selected.forEach((element) => {
+                let dx = 0;
+                let dy = 0;
+                if (alignment === 'left') dx = targetVal - element.x;
+                if (alignment === 'right') dx = targetVal - (element.x + element.width);
+                if (alignment === 'top') dy = targetVal - element.y;
+                if (alignment === 'bottom') dy = targetVal - (element.y + element.height);
+                if (alignment === 'center') dx = targetVal - (element.x + element.width / 2);
+                if (alignment === 'middle') dy = targetVal - (element.y + element.height / 2);
+                deltaByRoot.set(element.id, { dx, dy });
             });
+            applyRootTranslationsToDraft(draft, descendantIdsByRoot, deltaByRoot);
+            applyAncestorGroupFit(draft, state.elements, rootIds);
         });
         if (patches.length === 0) return;
         
@@ -901,7 +928,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     
     distributeSelected: (direction) => {
         const state = get();
-        const selected = state.elements.filter(e => state.selectedIds.has(e.id));
+        const { rootIds, descendantIdsByRoot } = collectMovableSelectionRoots(state);
+        const selected = state.elements.filter(e => rootIds.includes(e.id));
         if (selected.length < 3) return;
 
         const sorted = [...selected].sort((a, b) => direction === 'horizontal' ? a.x - b.x : a.y - b.y);
@@ -939,15 +967,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 });
             }
 
-            draft.forEach((element) => {
+            const deltaByRoot = new Map<string, { dx: number; dy: number }>();
+            selected.forEach((element) => {
                 const nextValue = nextPositionMap.get(element.id);
                 if (nextValue === undefined) return;
-                if (direction === 'horizontal') {
-                    element.x = nextValue;
-                } else {
-                    element.y = nextValue;
-                }
+                deltaByRoot.set(
+                    element.id,
+                    direction === 'horizontal'
+                        ? { dx: nextValue - element.x, dy: 0 }
+                        : { dx: 0, dy: nextValue - element.y }
+                );
             });
+            applyRootTranslationsToDraft(draft, descendantIdsByRoot, deltaByRoot);
+            applyAncestorGroupFit(draft, state.elements, rootIds);
         });
         if (patches.length === 0) return;
         

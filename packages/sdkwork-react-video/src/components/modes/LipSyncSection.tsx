@@ -1,6 +1,6 @@
 import React from 'react';
 import { AudioWaveform, Image, Mic, SlidersHorizontal, Sparkles, Video } from 'lucide-react';
-import { ChooseAsset, PromptTextInput } from '@sdkwork/react-assets';
+import { ChooseAsset, PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/react-assets';
 import type { Asset } from '@sdkwork/react-commons';
 import type { VideoConfig } from '../../entities';
 
@@ -137,6 +137,7 @@ export const LipSyncSection: React.FC<LipSyncSectionProps> = ({
                     />
                 ) : (
                     <PromptTextInput
+                        {...createPromptTextInputCapabilityProps('TEXT')}
                         label="Speech Script"
                         value={config.prompt}
                         onChange={(value) => onConfigChange({ prompt: value })}
