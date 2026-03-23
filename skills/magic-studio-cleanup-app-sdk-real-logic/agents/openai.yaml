@@ -1,0 +1,4 @@
+interface:
+  display_name: "Magic Studio Cleanup App SDK Real Logic"
+  short_description: "Keep cleanup workspace aligned with generated app SDKs."
+  default_prompt: "Use $magic-studio-cleanup-app-sdk-real-logic to standardize the cleanup workspace on spring-ai-plus-app-api and close missing app-sdk contracts end to end."
