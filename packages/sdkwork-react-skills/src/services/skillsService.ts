@@ -1,7 +1,7 @@
 import type {
+  PlusApiResultBoolean,
   PlusApiResultListMapStringObject,
   PlusApiResultMapStringObject,
-  PlusApiResultVoid,
 } from '@sdkwork/app-sdk';
 import { getAppSdkClientWithSession } from '@sdkwork/react-core';
 import type { AgentSkill, SkillCategory } from '../constants';
@@ -13,8 +13,9 @@ const DEFAULT_PAGE_SIZE = 60;
 const CATEGORY_CACHE_TTL_MS = 60_000;
 
 type ApiResult<T = unknown> = {
-  code?: string;
+  code?: string | number;
   msg?: string;
+  message?: string;
   data?: T;
 };
 
@@ -105,7 +106,7 @@ function normalizeStringArray(value: unknown): string[] {
 function unwrapData<T>(result: ApiResult<T>, fallbackMessage: string): T {
   const code = normalizeText(result?.code);
   if (code && code !== SUCCESS_CODE) {
-    throw new Error(normalizeText(result?.msg) || fallbackMessage);
+    throw new Error(normalizeText(result?.msg) || normalizeText(result?.message) || fallbackMessage);
   }
   return result?.data as T;
 }
@@ -516,8 +517,8 @@ async function enableSkill(skillId: string | number): Promise<void> {
 async function disableSkill(skillId: string | number): Promise<void> {
   const client = getAppSdkClientWithSession();
   const response = await client.skill.disable(skillId);
-  unwrapData<unknown>(
-    response as PlusApiResultVoid,
+  unwrapData<boolean>(
+    response as PlusApiResultBoolean,
     'Failed to disable skill',
   );
 }
