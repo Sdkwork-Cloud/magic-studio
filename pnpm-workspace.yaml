@@ -1,8 +1,5 @@
 packages:
   - 'packages/*'
-  - '!packages/sdkwork-app-sdk-typescript'
-  - '../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript'
-  - '../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript'
 
 catalog:
   react: ^19.2.4
