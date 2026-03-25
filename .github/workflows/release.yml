@@ -47,8 +47,7 @@ jobs:
           deps_root="$(cd "$GITHUB_WORKSPACE/../.." && pwd)"
           source_root="$deps_root/spring-ai-plus2-source"
           rm -rf "$source_root" "$deps_root/spring-ai-plus-app-api" "$deps_root/sdk"
-          git clone --depth 1 --filter=blob:none --sparse https://gitee.com/zowalk/spring-ai-plus2.git "$source_root"
-          git -C "$source_root" sparse-checkout set spring-ai-plus-business/spring-ai-plus-app-api spring-ai-plus-business/sdk
+          git clone --depth 1 https://gitee.com/zowalk/spring-ai-plus2.git "$source_root"
           mkdir -p "$deps_root/spring-ai-plus-app-api" "$deps_root/sdk"
           cp -R "$source_root/spring-ai-plus-business/spring-ai-plus-app-api/." "$deps_root/spring-ai-plus-app-api/"
           cp -R "$source_root/spring-ai-plus-business/sdk/." "$deps_root/sdk/"
