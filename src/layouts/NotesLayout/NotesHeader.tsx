@@ -29,8 +29,8 @@ export const NotesHeader: React.FC = () => {
                         <BookOpen size={16} fill="currentColor" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-sm text-white leading-none tracking-tight">Notes</h1>
-                        <span className="text-[10px] text-gray-500 font-medium">Knowledge Base</span>
+                        <h1 className="font-bold text-sm text-white leading-none tracking-tight">{t('notes.header.title')}</h1>
+                        <span className="text-[10px] text-gray-500 font-medium">{t('notes.header.subtitle')}</span>
                     </div>
                 </div>
             </div>

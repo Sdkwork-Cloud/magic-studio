@@ -307,6 +307,8 @@ const TradeSidebar: React.FC = () => {
   const { navigate, currentPath } = useRouter();
   const { logout } = useAuthStore();
   const [showPricing, setShowPricing] = useState(false);
+  const brandName = t('appShell.brand');
+  const brandTagline = t('appShell.tagline');
 
   const sidebarNavGroups: SidebarGroup[] = React.useMemo(
     () => ([
@@ -361,8 +363,8 @@ const TradeSidebar: React.FC = () => {
             <Sparkles size={16} className="text-white relative z-10" fill="currentColor" />
           </div>
           <div className="flex flex-col justify-center">
-            <span className="text-lg font-bold text-white tracking-tight leading-none">Magic Studio</span>
-            <span className="text-[9px] text-gray-500 font-medium tracking-[0.2em] mt-0.5 group-hover:text-indigo-400 transition-colors">CREATIVE</span>
+            <span className="text-lg font-bold text-white tracking-tight leading-none">{brandName}</span>
+            <span className="text-[9px] text-gray-500 font-medium tracking-[0.2em] mt-0.5 group-hover:text-indigo-400 transition-colors">{brandTagline}</span>
           </div>
         </div>
       </div>
@@ -432,7 +434,7 @@ const TradeSidebar: React.FC = () => {
               <Crown size={14} className="text-yellow-500 fill-yellow-500/20" />
             </div>
             <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-gray-400 group-hover:text-white transition-colors">
-              PRO
+              {t('market.nav.badges.pro')}
             </div>
           </div>
 

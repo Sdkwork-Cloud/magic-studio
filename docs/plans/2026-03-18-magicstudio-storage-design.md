@@ -8,10 +8,10 @@ Unify all new storage under `MagicStudio`, make desktop-local project media the 
 
 ### 1. Product and Storage Naming
 
-- All new filesystem naming changes from `OpenStudio` to `MagicStudio`.
+- All filesystem naming is standardized on `MagicStudio`.
 - The default storage root becomes `~/.sdkwork/magicstudio`.
 - On Windows the equivalent default root is `%USERPROFILE%\.sdkwork\magicstudio`.
-- Existing `open-studio` / `OpenStudio` paths are treated as legacy inputs for migration only.
+- Existing off-spec roots are treated as legacy inputs for cleanup only.
 
 ### 2. Storage Philosophy
 
@@ -354,8 +354,8 @@ Migration must be silent, idempotent, and conservative.
 
 ### Legacy Sources
 
-- `open-studio`
-- `OpenStudio`
+- any prior non-canonical branded root
+- any pre-standardization storage alias
 - current library and workspace roots derived from old constants
 
 ### Migration Rules
@@ -445,7 +445,7 @@ Future cleanup tooling should be able to:
 Implementation is successful when:
 
 - new defaults write under `~/.sdkwork/magicstudio`
-- no new default path writes under `open-studio`
+- no new default path writes outside `magicstudio`
 - desktop Magic Cut local upload writes into active project `media/originals/*`
 - imported assets resolve correctly from local managed paths
 - settings center allows changing root overrides

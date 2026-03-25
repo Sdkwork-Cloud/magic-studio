@@ -7,11 +7,15 @@ export const audioZhCN: I18nNamespaceResource = {
         generate: '生成语音',
         creating: '生成中...',
     },
+    actions: {
+        addToTimeline: '添加到时间线',
+    },
     page: {
         script: '文本脚本',
         duration: '时长',
         settings: '设置',
         speed: '语速',
+        placeholder: '输入要合成的文本...',
     },
     message: {
         noHistory: '暂无历史记录',

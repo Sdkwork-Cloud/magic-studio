@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { ImageTask, MediaType, PromptText, formatLocaleDateTime, useAssetUrl } from '@sdkwork/react-commons';
 import { platform } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 type GeneratedResult = NonNullable<ImageTask['results']>[number] & {
     modelId?: string;
@@ -25,6 +26,7 @@ interface GenerationItemProps {
 export const GenerationItem: React.FC<GenerationItemProps> = ({ 
     task, onDelete, onReuse, onPreview, onSelect, selectedItems = [], onSaveToAssets
 }) => {
+    const { t } = useTranslation();
     const results = (task.results || []) as GeneratedResult[];
     const mediaType = task.config.mediaType || 'image';
     const aspectRatio = task.config.aspectRatio || '1:1';
@@ -49,10 +51,16 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
             for (const res of results) {
                 await onSaveToAssets(res.url, mediaType);
             }
-            await platform.notify('Saved', `${results.length} assets saved to library.`);
+            await platform.notify(
+                t('generationHistory.item.notifySavedTitle'),
+                t('generationHistory.item.notifySavedBody', { count: String(results.length) }),
+            );
         } catch (e) {
             console.error("Failed to save asset", e);
-            await platform.notify('Error', 'Failed to save to assets.');
+            await platform.notify(
+                t('generationHistory.item.notifyErrorTitle'),
+                t('generationHistory.item.notifyErrorBody'),
+            );
         } finally {
             setIsSaving(false);
         }
@@ -95,11 +103,11 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
                 {task.status === 'pending' ? (
                     <div className="w-full h-32 bg-[#111] rounded-lg border border-[#27272a] border-dashed flex flex-col items-center justify-center text-purple-400 gap-3">
                         <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-medium animate-pulse">Generating...</span>
+                        <span className="text-xs font-medium animate-pulse">{t('generationHistory.item.generating')}</span>
                     </div>
                 ) : task.status === 'failed' ? (
                     <div className="w-full h-24 bg-red-900/10 border border-red-900/30 rounded-lg flex items-center justify-center text-red-400 gap-2">
-                         <span className="text-xs">{task.error || 'Generation failed'}</span>
+                         <span className="text-xs">{task.error || t('generationHistory.item.generationFailed')}</span>
                     </div>
                 ) : (
                     <MediaGrid 
@@ -115,7 +123,7 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
             <div className="px-3 py-2 flex items-center justify-between gap-2 bg-[#18181b] border-t border-[#27272a]">
                 <div className="flex items-center gap-2">
                     <button onClick={() => onReuse(task)} className="text-xs text-gray-500 hover:text-blue-400 flex items-center gap-1.5 transition-colors px-2 py-1 hover:bg-[#252526] rounded">
-                        <Repeat2 size={12} /> Regenerate
+                        <Repeat2 size={12} /> {t('generationHistory.item.regenerate')}
                     </button>
                     {task.status === 'completed' && onSaveToAssets && (
                          <button 
@@ -124,16 +132,16 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
                             className={`text-xs flex items-center gap-1.5 transition-colors px-2 py-1 rounded ${isSaving ? 'text-green-600' : 'text-gray-500 hover:text-green-400 hover:bg-[#252526]'}`}
                         >
                             {isSaving ? <Check size={12} /> : <Save size={12} />} 
-                            {isSaving ? 'Saved' : 'Save to Assets'}
+                            {isSaving ? t('generationHistory.item.saved') : t('generationHistory.item.saveToAssets')}
                         </button>
                     )}
                 </div>
                 <div className="flex items-center gap-1">
-                     <button onClick={handleCopyPrompt} className="p-1.5 text-gray-500 hover:text-white hover:bg-[#2d2d2d] rounded transition-colors" title="Copy Prompt">
+                     <button onClick={handleCopyPrompt} className="p-1.5 text-gray-500 hover:text-white hover:bg-[#2d2d2d] rounded transition-colors" title={t('generationHistory.item.copyPrompt')}>
                         <Copy size={13} />
                      </button>
                      <div className="w-[1px] h-3 bg-[#333] mx-1" />
-                     <button onClick={() => onDelete(task.id)} className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-[#2d2d2d] rounded transition-colors" title="Delete">
+                     <button onClick={() => onDelete(task.id)} className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-[#2d2d2d] rounded transition-colors" title={t('generationHistory.item.delete')}>
                         <Trash2 size={13} />
                      </button>
                 </div>
@@ -143,14 +151,15 @@ export const GenerationItem: React.FC<GenerationItemProps> = ({
 };
 
 const MediaTypeBadge: React.FC<{ type: MediaType }> = ({ type }) => {
+    const { t } = useTranslation();
     const config = {
-        image: { icon: ImageIcon, label: 'Image', color: 'text-purple-400' },
-        video: { icon: Film, label: 'Video', color: 'text-pink-400' },
-        audio: { icon: Mic, label: 'Audio', color: 'text-orange-400' },
-        voice: { icon: Mic, label: 'Voice', color: 'text-green-400' },
-        music: { icon: Music, label: 'Music', color: 'text-indigo-400' },
-        speech: { icon: Volume2, label: 'Speech', color: 'text-teal-400' },
-    }[type] || { icon: ImageIcon, label: 'Media', color: 'text-gray-400' };
+        image: { icon: ImageIcon, label: t('generationHistory.mediaTypes.image'), color: 'text-purple-400' },
+        video: { icon: Film, label: t('generationHistory.mediaTypes.video'), color: 'text-pink-400' },
+        audio: { icon: Mic, label: t('generationHistory.mediaTypes.audio'), color: 'text-orange-400' },
+        voice: { icon: Mic, label: t('generationHistory.mediaTypes.voice'), color: 'text-green-400' },
+        music: { icon: Music, label: t('generationHistory.mediaTypes.music'), color: 'text-indigo-400' },
+        speech: { icon: Volume2, label: t('generationHistory.mediaTypes.speech'), color: 'text-teal-400' },
+    }[type] || { icon: ImageIcon, label: t('generationHistory.mediaTypes.media'), color: 'text-gray-400' };
 
     const Icon = config.icon;
     return (
@@ -162,6 +171,7 @@ const MediaTypeBadge: React.FC<{ type: MediaType }> = ({ type }) => {
 };
 
 const VideoThumbnail: React.FC<{ result: GeneratedResult, isSelected: boolean, onClick: (url: string) => void }> = ({ result, isSelected, onClick }) => {
+    const { t } = useTranslation();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const { url: videoSrc } = useAssetUrl(result.url);
@@ -193,7 +203,7 @@ const VideoThumbnail: React.FC<{ result: GeneratedResult, isSelected: boolean, o
                 <img 
                     src={posterSrc} 
                     className="absolute inset-0 w-full h-full object-contain z-10" 
-                    alt="Video Thumbnail"
+                    alt={t('generationHistory.item.video')}
                 />
             )}
 
@@ -226,7 +236,7 @@ const VideoThumbnail: React.FC<{ result: GeneratedResult, isSelected: boolean, o
 
             <div className="absolute bottom-2 right-2 pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity z-20">
                  <span className="bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded backdrop-blur-sm border border-white/10">
-                     {isPlaying ? 'PREVIEW' : 'VIDEO'}
+                     {isPlaying ? t('generationHistory.item.preview') : t('generationHistory.item.video')}
                  </span>
             </div>
 

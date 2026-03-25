@@ -16,6 +16,7 @@ import {
     buildVoiceGenerationConfig,
     resolveGeneratedVoiceUpdates
 } from '../../../domain/voice/voiceGeneration';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface VoiceSettingsPanelProps {
     clip: CutClip;
@@ -25,6 +26,7 @@ interface VoiceSettingsPanelProps {
 }
 
 export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, resource, onUpdate, onUpdateResource }) => {
+    const { t, tpr } = useMagicCutTranslation();
     const {
         project,
         state,
@@ -61,8 +63,8 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
 
     // Load initial script from clip content or metadata
     useEffect(() => {
-        setScript(clip.content || meta.text || "Hello World");
-    }, [clip.id, clip.content, meta.text]);
+        setScript(clip.content || meta.text || t('voiceSettings.defaults.script'));
+    }, [clip.id, clip.content, meta.text, t]);
 
     const handleRegenerate = async () => {
         const normalizedScript = script.trim();
@@ -84,7 +86,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             const primaryResult = rawResults[0];
 
             if (!primaryResult) {
-                throw new Error('Voice generation returned no playable result.');
+                throw new Error(t('voiceSettings.errors.noPlayableResult'));
             }
 
             const persistedResult = await voiceBusinessService.voiceSpeakerService.persistGeneratedVoiceResult({
@@ -105,10 +107,13 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             onUpdate(clipUpdates);
             onUpdateResource(resourceUpdates);
             setLastGenerationSummary(
-                `${persistedResult.speakerName} • ${persistedResult.duration.toFixed(1)}s source`
+                t('voiceSettings.summary', {
+                    speakerName: persistedResult.speakerName,
+                    duration: persistedResult.duration.toFixed(1),
+                })
             );
         } catch (error) {
-            setGenerationError(error instanceof Error ? error.message : 'Voice generation failed.');
+            setGenerationError(error instanceof Error ? error.message : t('voiceSettings.errors.generationFailed'));
         } finally {
             setIsGenerating(false);
         }
@@ -141,7 +146,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                 endTime: cue.endTime,
                 text: cue.text
             })),
-            `${(resource.name || 'voice').replace(/\.[^.]+$/, '')}.srt`
+            `${(resource.name || t('voiceSettings.defaults.voiceAssetName')).replace(/\.[^.]+$/, '')}.srt`
         );
     };
 
@@ -160,7 +165,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             const trackPlacement = resolveVoiceCaptionTrackPlacement(timelineTracks, clip.track.id);
             const subtitleTrackId =
                 trackPlacement.trackId ||
-                addTrack('subtitle', 'Captions', false, trackPlacement.insertIndex);
+                addTrack('subtitle', t('voiceSettings.defaults.captionTrackName'), false, trackPlacement.insertIndex);
 
             if (!subtitleTrackId) return;
 
@@ -199,7 +204,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                     id: resourceId,
                     uuid: generateUUID(),
                     type: MediaResourceType.SUBTITLE,
-                    name: `Caption ${cue.index}`,
+                    name: t('voiceSettings.defaults.captionName', { index: cue.index }),
                     extension: 'srt',
                     metadata: {
                         text: cue.text,
@@ -258,7 +263,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             <div className="p-3 border-b border-[#1f1f22] bg-[#141414]">
                 <div className="flex items-center justify-between mb-2">
                      <div className="flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-wider">
-                        <Type size={12} /> Script
+                        <Type size={12} /> {t('voiceSettings.sections.script')}
                     </div>
                 </div>
                 
@@ -268,7 +273,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                     value={script}
                     onChange={setScript}
                     className="bg-[#09090b]"
-                    placeholder="Enter text to speak..."
+                    placeholder={t('voiceSettings.placeholders.textToSpeak')}
                     rows={4}
                     onEnhance={handleEnhanceScript}
                     isEnhancing={isEnhancing}
@@ -283,14 +288,14 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                         {generationError ? (
                             <>
                                 <div className="text-[10px] font-semibold uppercase tracking-wider text-red-100">
-                                    Generation failed
+                                    {t('voiceSettings.status.generationFailed')}
                                 </div>
                                 <p className="mt-1 text-[10px] leading-4 text-red-100/75">{generationError}</p>
                             </>
                         ) : (
                             <>
                                 <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">
-                                    Voice regenerated
+                                    {t('voiceSettings.status.voiceRegenerated')}
                                 </div>
                                 <p className="mt-1 text-[10px] leading-4 text-emerald-100/75">{lastGenerationSummary}</p>
                             </>
@@ -300,7 +305,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
 
                 <div className="mt-2">
                     <ActionButton 
-                        label="Generate Audio" 
+                        label={t('voiceSettings.actions.generateAudio')} 
                         icon={<RefreshCw />} 
                         onClick={handleRegenerate} 
                         isLoading={isGenerating}
@@ -311,9 +316,9 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             </div>
 
             {/* 2. Voice Persona */}
-            <PropertySection title="Speaker">
+            <PropertySection title={t('voiceSettings.sections.speaker')}>
                 <Dropdown 
-                    label="Voice ID"
+                    label={t('voiceSettings.fields.voiceId')}
                     value={voiceId as string}
                     onChange={(v: string) => onUpdateResource({ 
                          metadata: { ...meta, voiceId: v } 
@@ -323,23 +328,23 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             </PropertySection>
 
             {/* 3. Audio Properties */}
-            <PropertySection title="Properties">
+            <PropertySection title={t('voiceSettings.sections.properties')}>
                 <div className="space-y-3">
                     <ScrubbableInput 
-                        label="Speed" 
+                        label={t('voiceSettings.fields.speed')} 
                         value={speed} 
                         onChange={(v) => setClipSpeed(clip.id, v)} 
                         step={0.1} min={0.5} max={3.0} 
                         suffix="x"
                     />
                     <ScrubbableInput 
-                        label="Pitch" 
+                        label={t('voiceSettings.fields.pitch')} 
                         value={pitch} 
                         onChange={(v) => onUpdateResource({ metadata: { ...meta, pitch: v } })} 
                         step={0.1} min={0.5} max={2.0} 
                     />
                     <ScrubbableInput 
-                        label="Volume" 
+                        label={tpr('volume')} 
                         value={clip.volume || 1} 
                         onChange={(v) => onUpdate({ volume: v })} 
                         step={0.1} min={0} max={2} 
@@ -348,24 +353,24 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
             </PropertySection>
             
             {/* 4. Subtitles */}
-            <PropertySection title="Captions">
+            <PropertySection title={t('voiceSettings.sections.captions')}>
                  <div className="space-y-3">
                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-3">
                          <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">
-                             Timeline captions
+                             {t('voiceSettings.captions.title')}
                          </div>
                          <p className="mt-1 text-[10px] leading-4 text-emerald-100/75">
-                             Auto-Caption creates linked subtitle clips on a subtitle track. Export SRT downloads the same cue timing.
+                             {t('voiceSettings.captions.description')}
                          </p>
                          <div className="mt-2 text-[10px] text-emerald-100/65">
                              {captionCues.length > 0
-                                ? `${captionCues.length} cues ready from the current script`
-                                : 'Enter a script to prepare caption cues.'}
+                                ? t('voiceSettings.captions.ready', { count: captionCues.length })
+                                : t('voiceSettings.captions.empty')}
                          </div>
                      </div>
                      <div className="flex gap-2">
                          <ActionButton
-                            label="Auto-Caption"
+                            label={t('voiceSettings.actions.autoCaption')}
                             icon={<Captions />}
                             onClick={handleAutoCaption}
                             isLoading={isCaptioning}
@@ -373,7 +378,7 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, re
                             className="flex-1"
                          />
                          <ActionButton
-                            label="Export SRT"
+                            label={t('voiceSettings.actions.exportSrt')}
                             icon={<Settings2 />}
                             onClick={handleExportSrt}
                             disabled={captionCues.length === 0 && generatedCaptions.length === 0}

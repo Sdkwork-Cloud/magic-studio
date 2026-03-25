@@ -5,6 +5,7 @@ import { CreationChatInputProps, InputAttachment } from './types';
 import { AttachmentGrid } from './components/AttachmentGrid';
 import { MentionPreviewPopover } from './components/MentionPreviewPopover';
 import { Popover } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // TipTap Imports
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -77,11 +78,12 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
     value, onChange, onGenerate, onStop, isGenerating,
     attachments = [], onRemoveAttachment, onUpload,
     header, footerControls, rightControls, actionButton, cost,
-    placeholder = "Describe your idea...", autoFocus, className = '',
+    placeholder: placeholderProp, autoFocus, className = '',
     textareaClassName = '', glowClassName,
     width, maxHeight = 400, minHeight = 48, variant: _variant = 'default',
     editorInstanceRef
 }) => {
+    const { t } = useTranslation();
     const [isFocused, setIsFocused] = useState(false);
     
     // Popover State for Mentions
@@ -95,6 +97,7 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
 
     const containerRef = useRef<HTMLDivElement>(null);
     const attachmentsRef = useRef(attachments);
+    const placeholder = placeholderProp || t('assetCenter.creationInput.placeholder');
 
     // Keep ref updated for the suggestion closure
     useEffect(() => {
@@ -307,7 +310,7 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
                                                 : 'border-transparent text-gray-400 hover:text-white hover:bg-[#27272a] hover:border-[#333]'
                                             }
                                         `}
-                                        title="Attach media"
+                                        title={t('assetCenter.creationInput.actions.attachMedia')}
                                         tabIndex={-1}
                                         onClick={(e) => { e.stopPropagation(); setIsUploadMenuOpen(true); }}
                                     >
@@ -330,7 +333,7 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
                                         onMouseLeave={handleUploadLeave}
                                     >
                                         <div className="px-2 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex justify-between items-center">
-                                            <span>Add Content</span>
+                                            <span>{t('assetCenter.creationInput.menu.title')}</span>
                                         </div>
                                         <button 
                                             onClick={() => { onUpload('local'); setIsUploadMenuOpen(false); }}
@@ -340,8 +343,8 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
                                                 <UploadCloud size={14} />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-medium">Local Upload</span>
-                                                <span className="text-[9px] text-gray-500 group-hover:text-gray-400">From your computer</span>
+                                                <span className="font-medium">{t('assetCenter.creationInput.menu.localUpload.title')}</span>
+                                                <span className="text-[9px] text-gray-500 group-hover:text-gray-400">{t('assetCenter.creationInput.menu.localUpload.description')}</span>
                                             </div>
                                         </button>
                                         <button 
@@ -352,8 +355,8 @@ export const CreationChatInput: React.FC<CreationChatInputProps> = ({
                                                 <FolderOpen size={14} />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-medium">Asset Library</span>
-                                                <span className="text-[9px] text-gray-500 group-hover:text-gray-400">Reuse existing files</span>
+                                                <span className="font-medium">{t('assetCenter.creationInput.menu.assetLibrary.title')}</span>
+                                                <span className="text-[9px] text-gray-500 group-hover:text-gray-400">{t('assetCenter.creationInput.menu.assetLibrary.description')}</span>
                                             </div>
                                         </button>
                                     </div>

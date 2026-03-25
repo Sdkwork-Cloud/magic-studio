@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useMenuLogic } from './useMenuLogic';
 import { MenuState } from './types';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface TimelineContextMenuProps {
     menuState: MenuState;
@@ -12,6 +13,7 @@ export const TimelineContextMenu: React.FC<TimelineContextMenuProps> = ({ menuSt
     const { x, y, type, targetId, time } = menuState;
     const menuRef = useRef<HTMLDivElement>(null);
     const { actions, handleAction } = useMenuLogic(type, targetId, time, onClose);
+    const { t } = useMagicCutTranslation();
 
     // Close on click outside
     useEffect(() => {
@@ -32,9 +34,9 @@ export const TimelineContextMenu: React.FC<TimelineContextMenuProps> = ({ menuSt
 
     // Header Title
     const getHeader = () => {
-        if (type === 'clip') return 'Selected Clip';
-        if (type === 'track') return 'Track Options';
-        return 'Timeline';
+        if (type === 'clip') return t('contextMenu.headers.selectedClip');
+        if (type === 'track') return t('contextMenu.headers.trackOptions');
+        return t('contextMenu.headers.timeline');
     };
 
     return (

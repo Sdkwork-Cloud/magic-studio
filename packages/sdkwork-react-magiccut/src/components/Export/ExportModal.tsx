@@ -28,6 +28,7 @@ import {
 } from '../../services';
 import {
     estimateAudioOnlyExportSizeMb,
+    type AudioOnlyExportCard,
     isAudioOnlyExportRequest,
     resolveAudioOnlyExportCard,
 } from '../../domain/export/audioOnlyExport';
@@ -37,6 +38,7 @@ import {
     type ExportRuntimePresentation as ExportRuntimeViewModel,
 } from '../../domain/export/exportRuntimePresentation';
 import { validateExportRequest } from '../../domain/export/exportValidation';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 import { useMagicCutStore } from '../../store/magicCutStore';
 
 interface ExportModalProps {
@@ -46,11 +48,7 @@ interface ExportModalProps {
 
 const RESOLUTIONS: ExportResolution[] = ['480p', '720p', '1080p', '2k', '4k'];
 const FRAME_RATES: ExportFrameRate[] = [24, 25, 30, 50, 60];
-const BITRATES: { label: string; value: ExportBitrate }[] = [
-    { label: 'Low (Smaller File)', value: 'lower' },
-    { label: 'Recommended', value: 'recommended' },
-    { label: 'High (Better Quality)', value: 'higher' },
-];
+const BITRATES: ExportBitrate[] = ['lower', 'recommended', 'higher'];
 
 const estimateSize = (
     duration: number,
@@ -82,9 +80,10 @@ const resolveExportDuration = (
 
 type ExportFormatCardOption =
     | ExportRuntimeViewModel['formatOptions'][number]
-    | ReturnType<typeof resolveAudioOnlyExportCard>;
+    | AudioOnlyExportCard;
 
 export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
+    const { t, tc, te } = useMagicCutTranslation();
     const { project, state, activeTimeline, totalDuration, getResource, inPoint, outPoint } = useMagicCutStore();
     const [isExporting, setIsExporting] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -106,6 +105,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     const [runtimePresentation, setRuntimePresentation] = useState<ExportRuntimeViewModel | null>(null);
     const [runtimeLoading, setRuntimeLoading] = useState(false);
     const [runtimeError, setRuntimeError] = useState<string | null>(null);
+    const bitrateOptions = useMemo(() => ([
+        { value: 'lower' as ExportBitrate, label: te('qualityOptions.lower') },
+        { value: 'recommended' as ExportBitrate, label: te('qualityOptions.recommended') },
+        { value: 'higher' as ExportBitrate, label: te('qualityOptions.higher') },
+    ]), [te]);
 
     useEffect(() => {
         setDomReady(true);
@@ -145,13 +149,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             .then((support) => {
                 if (!active) return;
 
-                const presentation = resolveExportRuntimePresentation(support);
+                const presentation = resolveExportRuntimePresentation(support, t);
                 setRuntimePresentation(presentation);
                 setFormat((currentFormat) => resolvePreferredAvailableFormat(currentFormat, presentation) ?? currentFormat);
             })
             .catch((error) => {
                 if (!active) return;
-                setRuntimeError(error instanceof Error ? error.message : 'Failed to inspect export runtime.');
+                setRuntimeError(error instanceof Error ? error.message : te('runtime.inspectFailed'));
                 setRuntimePresentation(null);
             })
             .finally(() => {
@@ -163,7 +167,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         return () => {
             active = false;
         };
-    }, [isOpen]);
+    }, [isOpen, t, te]);
 
     useEffect(() => {
         if (!videoEnabled && smartHdr) {
@@ -216,7 +220,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         return null;
     }, [activeTimeline, state, getResource]);
 
-    const audioOnlyFormatOption = useMemo(() => resolveAudioOnlyExportCard(), []);
+    const audioOnlyFormatOption = useMemo(() => resolveAudioOnlyExportCard(t), [t]);
     const isAudioOnly = isAudioOnlyExportRequest({
         exportVideo: videoEnabled,
         exportAudio: audioEnabled,
@@ -265,15 +269,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
     const exportBlockedReason = useMemo(() => {
         if (!videoEnabled && !audioEnabled) {
-            return 'Enable video or audio before exporting.';
+            return te('validation.enableVideoOrAudio');
         }
 
         if (isAudioOnly) {
-            return format === 'wav' ? null : 'Audio-only export currently supports WAV only.';
+            return format === 'wav' ? null : te('validation.audioOnlyWav');
         }
 
         if (runtimeLoading) {
-            return 'Inspecting runtime export capabilities...';
+            return te('runtime.inspecting');
         }
 
         if (runtimeError) {
@@ -293,11 +297,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         }
 
         return null;
-    }, [audioEnabled, format, isAudioOnly, runtimeLoading, runtimeError, runtimePresentation, selectedFormatOption, videoEnabled]);
+    }, [audioEnabled, format, isAudioOnly, runtimeLoading, runtimeError, runtimePresentation, selectedFormatOption, te, videoEnabled]);
 
     const footerMessage = isExporting
-        ? (isAudioOnly ? 'Rendering and encoding the final audio mixdown...' : 'Rendering and muxing the final timeline...')
-        : exportBlockedReason || activeFormatOption?.description || (isAudioOnly ? 'Ready to export a standalone WAV mixdown.' : 'Ready to export with the selected runtime path.');
+        ? (isAudioOnly ? te('footer.renderingAudio') : te('footer.renderingVideo'))
+        : exportBlockedReason || activeFormatOption?.description || (isAudioOnly ? te('footer.readyStandalone') : te('footer.readyRuntime'));
 
     const handleBrowsePath = async () => {
         try {
@@ -324,12 +328,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
         const safeFileName = fileName.trim();
         if (!safeFileName) {
-            await platform.notify('Export Failed', 'Please enter a file name.');
+            await platform.notify(te('failed'), te('validation.missingFileName'));
             return;
         }
 
         if (exportBlockedReason) {
-            await platform.notify('Export Failed', exportBlockedReason);
+            await platform.notify(te('failed'), exportBlockedReason);
             return;
         }
 
@@ -337,19 +341,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             exportVideo: videoEnabled,
             exportAudio: audioEnabled,
             format,
+            translate: t,
         });
         if (exportValidationError) {
-            await platform.notify('Export Failed', exportValidationError);
+            await platform.notify(te('failed'), exportValidationError);
             return;
         }
 
         if (smartHdr && runtimePresentation && !runtimePresentation.smartHdrSupported) {
-            await platform.notify('Export Failed', runtimePresentation.smartHdrReason);
+            await platform.notify(te('failed'), runtimePresentation.smartHdrReason);
             return;
         }
 
         if (inPoint !== null && outPoint !== null && outPoint <= inPoint) {
-            await platform.notify('Export Failed', 'Out point must be greater than In point.');
+            await platform.notify(te('failed'), te('validation.invalidRange'));
             return;
         }
 
@@ -389,7 +394,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         } catch (error: any) {
             if (error.message !== 'Export cancelled') {
                 logger.error('Export error', error);
-                await platform.notify('Export Failed', error.message || 'Unknown error');
+                await platform.notify(te('failed'), error.message || te('validation.unknownError'));
             }
         } finally {
             if (!controller.signal.aborted) {
@@ -409,7 +414,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             >
                 <div className="w-[40%] bg-[#09090b] flex flex-col relative border-r border-[#27272a] hidden md:flex">
                     <div className="h-16 flex items-center justify-center border-b border-[#27272a]/50 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                        Preview
+                        {te('modal.preview')}
                     </div>
 
                     <div className="flex-1 flex items-center justify-center p-8 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
@@ -424,21 +429,21 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                             }}
                         >
                             {coverImage ? (
-                                <img src={coverImage} className="w-full h-full object-cover opacity-85" alt="Export preview" />
+                                <img src={coverImage} className="w-full h-full object-cover opacity-85" alt={te('modal.previewAlt')} />
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-[#1e1e1e]">
                                     <MonitorPlay size={48} className="opacity-20 mb-2" />
-                                    <span className="text-[10px] uppercase font-bold tracking-widest">No Cover Frame</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-widest">{te('modal.noCoverFrame')}</span>
                                 </div>
                             )}
 
                             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
                                 <span className="px-2.5 py-1 rounded-full bg-black/55 border border-white/10 text-[10px] font-semibold tracking-[0.18em] text-white/70 uppercase">
-                                    Cover Frame
+                                    {te('modal.coverFrame')}
                                 </span>
                                 {hasExportRange && (
                                     <span className="px-2.5 py-1 rounded-full bg-cyan-400/15 border border-cyan-300/30 text-[10px] font-semibold tracking-[0.18em] text-cyan-100 uppercase">
-                                        In/Out Range
+                                        {te('modal.inOutRange')}
                                     </span>
                                 )}
                             </div>
@@ -446,20 +451,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                             <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
                                 <div className="text-[10px] uppercase tracking-[0.22em] text-white/55 font-semibold">
                                     {isAudioOnly
-                                        ? 'Audio mixdown'
+                                        ? te('previewCard.audioMixdown')
                                         : activeFormatOption?.route === 'webcodecs'
-                                        ? 'WebCodecs export'
+                                        ? te('routeLabels.webcodecs')
                                         : activeFormatOption?.route === 'browser-media-recorder'
-                                            ? 'MediaRecorder export'
+                                            ? te('routeLabels.mediaRecorder')
                                             : activeFormatOption?.route === 'audio-buffer'
-                                                ? 'PCM WAV export'
-                                            : 'Export preview'}
+                                                ? te('routeLabels.offlinePcm')
+                                            : te('modal.exportPreview')}
                                 </div>
                                 <div className="mt-2 text-lg font-semibold text-white">
-                                    {activeFormatOption?.label || format.toUpperCase()} • {isAudioOnly ? '48 kHz PCM' : resolution}
+                                    {activeFormatOption?.label || format.toUpperCase()} • {isAudioOnly ? te('previewCard.pcm48Khz') : resolution}
                                 </div>
                                 <div className="mt-1 text-sm text-white/65">
-                                    {exportDuration.toFixed(1)}s timeline • {isAudioOnly ? 'Standalone WAV audio' : `${aspectRatio} canvas`}
+                                    {te('previewCard.timelineDuration', { duration: exportDuration.toFixed(1) })} • {isAudioOnly ? te('previewCard.standaloneAudio') : te('previewCard.canvas', { aspectRatio })}
                                 </div>
                             </div>
                         </div>
@@ -467,10 +472,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
                     <div className="p-8 border-t border-[#27272a] bg-[#121214]">
                         <div className="grid grid-cols-2 gap-6">
-                            <StatItem label="Estimated Size" value={`~${estimatedSize} MB`} icon={<HardDrive size={14} className="text-blue-500" />} />
-                            <StatItem label="Duration" value={`${exportDuration.toFixed(1)}s`} icon={<Clock size={14} className="text-green-500" />} />
-                            <StatItem label={isAudioOnly ? 'Audio Mode' : 'Resolution'} value={isAudioOnly ? '48 kHz / Stereo' : resolution} icon={isAudioOnly ? <Music size={14} className="text-cyan-400" /> : <MonitorPlay size={14} className="text-cyan-400" />} />
-                            <StatItem label="Format" value={(activeFormatOption?.label || format).toUpperCase()} icon={isAudioOnly ? <Music size={14} className="text-orange-500" /> : <FileVideo size={14} className="text-orange-500" />} />
+                            <StatItem label={te('estimatedSize')} value={`~${estimatedSize} MB`} icon={<HardDrive size={14} className="text-blue-500" />} />
+                            <StatItem label={te('duration')} value={`${exportDuration.toFixed(1)}s`} icon={<Clock size={14} className="text-green-500" />} />
+                            <StatItem label={isAudioOnly ? te('modal.audioMode') : te('resolution')} value={isAudioOnly ? te('previewCard.stereo48Khz') : resolution} icon={isAudioOnly ? <Music size={14} className="text-cyan-400" /> : <MonitorPlay size={14} className="text-cyan-400" />} />
+                            <StatItem label={te('format')} value={(activeFormatOption?.label || format).toUpperCase()} icon={isAudioOnly ? <Music size={14} className="text-orange-500" /> : <FileVideo size={14} className="text-orange-500" />} />
                         </div>
                     </div>
                 </div>
@@ -478,8 +483,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                 <div className="flex-1 flex flex-col bg-[#18181b] min-w-0">
                     <div className="flex-none h-20 px-8 flex items-center justify-between border-b border-[#27272a] bg-[#18181b]">
                         <div>
-                            <h2 className="text-xl font-bold text-white tracking-tight">Export Project</h2>
-                            <p className="text-xs text-gray-500 mt-1">Configure output settings based on the current runtime.</p>
+                            <h2 className="text-xl font-bold text-white tracking-tight">{te('modal.title')}</h2>
+                            <p className="text-xs text-gray-500 mt-1">{te('modal.subtitle')}</p>
                         </div>
                         <button
                             onClick={handleCancel}
@@ -492,11 +497,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                     <div className={`flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar ${isExporting ? 'opacity-50 pointer-events-none' : ''}`}>
                         <div className="space-y-4">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <Settings2 size={14} /> File Settings
+                                <Settings2 size={14} /> {te('modal.fileSettings')}
                             </h3>
                             <div className="space-y-5 bg-[#202023] p-6 rounded-xl border border-[#27272a]">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs text-gray-400 font-medium">File Name</label>
+                                    <label className="text-xs text-gray-400 font-medium">{te('fileName')}</label>
                                     <input
                                         type="text"
                                         value={fileName}
@@ -507,7 +512,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
                                 {isDesktop && (
                                     <div className="space-y-1.5">
-                                        <label className="text-xs text-gray-400 font-medium">Export Location</label>
+                                        <label className="text-xs text-gray-400 font-medium">{te('modal.exportLocation')}</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
@@ -530,10 +535,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                    <FileVideo size={14} /> Video Settings
+                                    <FileVideo size={14} /> {te('modal.videoSettings')}
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500">{videoEnabled ? 'Enabled' : 'Disabled'}</span>
+                                    <span className="text-xs text-gray-500">{videoEnabled ? tc('enabled') : tc('disabled')}</span>
                                     <Toggle checked={videoEnabled} onChange={handleVideoToggle} />
                                 </div>
                             </div>
@@ -547,23 +552,23 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                                     />
                                 ) : (
                                     <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-4 text-xs text-cyan-100/80">
-                                        Video rendering is disabled. The export switches to a standalone WAV audio mixdown with the current In/Out range.
+                                        {te('modal.audioRenderingDisabled')}
                                     </div>
                                 )}
 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-1.5">
-                                        <label className="text-xs text-gray-400 font-medium">Resolution</label>
+                                        <label className="text-xs text-gray-400 font-medium">{te('resolution')}</label>
                                         <Select value={resolution} onChange={(value) => setResolution(value as ExportResolution)} options={RESOLUTIONS} disabled={!videoEnabled} />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-xs text-gray-400 font-medium">Frame Rate</label>
+                                        <label className="text-xs text-gray-400 font-medium">{te('frameRate')}</label>
                                         <Select value={fps.toString()} onChange={(value) => setFps(parseInt(value, 10) as ExportFrameRate)} options={FRAME_RATES.map(String)} suffix="fps" disabled={!videoEnabled} />
                                     </div>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-xs text-gray-400 font-medium">Format</label>
+                                    <label className="text-xs text-gray-400 font-medium">{te('format')}</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         {formatOptions.map((option) => (
                                             <FormatCard
@@ -584,21 +589,24 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-1.5">
-                                        <label className="text-xs text-gray-400 font-medium">Quality</label>
+                                        <label className="text-xs text-gray-400 font-medium">{te('modal.quality')}</label>
                                         <Select
                                             value={bitrate}
                                             onChange={(value) => setBitrate(value as ExportBitrate)}
-                                            options={BITRATES.map((item) => item.value)}
-                                            labels={BITRATES.map((item) => item.label)}
+                                            options={BITRATES}
+                                            labels={bitrateOptions.map((item) => item.label)}
                                             disabled={!videoEnabled}
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-xs text-gray-400 font-medium">Range</label>
+                                        <label className="text-xs text-gray-400 font-medium">{te('modal.range')}</label>
                                         <div className="rounded-lg border border-[#333] bg-[#121214] px-4 py-3 text-sm text-gray-300">
                                             {hasExportRange
-                                                ? `In ${inPoint?.toFixed(1) ?? '0.0'}s -> Out ${(outPoint ?? totalDuration).toFixed(1)}s`
-                                                : 'Full timeline'}
+                                                ? te('modal.rangeValue', {
+                                                    start: inPoint?.toFixed(1) ?? '0.0',
+                                                    end: (outPoint ?? totalDuration).toFixed(1),
+                                                })
+                                                : te('modal.fullTimeline')}
                                         </div>
                                     </div>
                                 </div>
@@ -606,12 +614,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                                 <div className="flex items-start justify-between gap-4 pt-2 border-t border-[#333]/50">
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-300">Smart HDR</span>
+                                            <span className="text-xs text-gray-300">{te('modal.smartHdr')}</span>
                                         </div>
                                         <p className="text-xs leading-5 text-gray-500">
                                             {videoEnabled
-                                                ? (runtimePresentation?.smartHdrReason || 'Checking HDR export support...')
-                                                : 'Audio-only WAV mixdown does not include HDR metadata.'}
+                                                ? (runtimePresentation?.smartHdrReason || te('modal.checkingHdr'))
+                                                : te('modal.audioOnlyHdr')}
                                         </p>
                                     </div>
                                     <Toggle
@@ -627,22 +635,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                    <Music size={14} /> Audio Settings
+                                    <Music size={14} /> {te('modal.audioSettings')}
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500">{audioEnabled ? (isAudioOnly ? 'Master' : 'Included') : 'Muted'}</span>
+                                    <span className="text-xs text-gray-500">{audioEnabled ? (isAudioOnly ? te('modal.audioStatusMaster') : te('modal.audioStatusIncluded')) : te('modal.audioStatusMuted')}</span>
                                     <Toggle checked={audioEnabled} onChange={handleAudioToggle} />
                                 </div>
                             </div>
                             <div className="bg-[#202023] p-6 rounded-xl border border-[#27272a] transition-all">
                                 <div className="space-y-2">
-                                    <label className="text-xs text-gray-400 font-medium">{isAudioOnly ? 'Standalone Mixdown' : 'Embedded Audio'}</label>
+                                    <label className="text-xs text-gray-400 font-medium">{isAudioOnly ? te('modal.standaloneMixdown') : te('modal.embeddedAudio')}</label>
                                     <p className="text-xs leading-5 text-gray-500">
                                         {isAudioOnly
-                                            ? 'Exports a standalone uncompressed WAV master using the current timeline mix, clip effects, fades, and In/Out range.'
+                                            ? te('modal.standaloneAudioDescription')
                                             : audioEnabled
-                                                ? 'Audio is embedded into the selected video container. Disable video to switch into standalone WAV export.'
-                                                : 'The current export will mute timeline audio. Enable audio to embed it in video or export a standalone WAV mixdown.'}
+                                                ? te('modal.embeddedAudioDescription')
+                                                : te('modal.mutedAudioDescription')}
                                     </p>
                                 </div>
                             </div>
@@ -671,14 +679,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                             onClick={handleCancel}
                             className="flex-shrink-0 bg-[#252526] border-[#333] hover:bg-[#333] text-gray-300 h-12 text-sm"
                         >
-                            Cancel
+                            {tc('cancel')}
                         </Button>
                         <Button
                             onClick={handleExport}
                             disabled={isExporting || !!exportBlockedReason}
                             className="flex-shrink-0 w-40 h-12 text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isExporting ? <Loader2 size={16} className="animate-spin" /> : (isAudioOnly ? 'Export Audio' : 'Export Video')}
+                            {isExporting ? <Loader2 size={16} className="animate-spin" /> : (isAudioOnly ? te('exportAudio') : te('exportVideo'))}
                         </Button>
                     </div>
                 </div>
@@ -693,10 +701,11 @@ const RuntimeNotice: React.FC<{
     error: string | null;
     presentation: ExportRuntimeViewModel | null;
 }> = ({ loading, error, presentation }) => {
+    const { te } = useMagicCutTranslation();
     if (loading) {
         return (
             <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-4 text-xs text-gray-400">
-                Checking export runtime capabilities...
+                {te('runtime.inspecting')}
             </div>
         );
     }
@@ -707,7 +716,7 @@ const RuntimeNotice: React.FC<{
                 <div className="flex items-start gap-3">
                     <AlertTriangle size={16} className="mt-0.5 text-amber-300" />
                     <div>
-                        <div className="text-xs font-semibold text-amber-100">Runtime inspection failed</div>
+                        <div className="text-xs font-semibold text-amber-100">{te('runtime.inspectionFailedTitle')}</div>
                         <p className="mt-1 text-xs leading-5 text-amber-100/70">{error}</p>
                     </div>
                 </div>
@@ -729,7 +738,7 @@ const RuntimeNotice: React.FC<{
                 )}
                 <div>
                     <div className={`text-xs font-semibold ${blocked ? 'text-amber-100' : 'text-emerald-100'}`}>
-                        {blocked ? 'Runtime export unavailable' : 'Runtime export verified'}
+                        {blocked ? te('runtime.unavailable') : te('runtime.verified')}
                     </div>
                     <p className={`mt-1 text-xs leading-5 ${blocked ? 'text-amber-100/75' : 'text-emerald-100/70'}`}>
                         {presentation.blockingReason || presentation.runtimeSummary}
@@ -744,45 +753,50 @@ const FormatCard: React.FC<{
     option: ExportFormatCardOption;
     selected: boolean;
     onSelect: (format: ExportFormat) => void;
-}> = ({ option, selected, onSelect }) => (
-    <button
-        type="button"
-        onClick={() => option.available && onSelect(option.format)}
-        disabled={!option.available}
-        className={`rounded-xl border p-4 text-left transition-all ${
-            option.available
-                ? selected
-                    ? 'border-cyan-400/60 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(34,211,238,0.15)]'
-                    : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
-                : 'border-white/8 bg-white/[0.02] opacity-55 cursor-not-allowed'
-        }`}
-    >
-        <div className="flex items-start justify-between gap-3">
-            <div>
-                <div className="text-sm font-semibold text-white">{option.label}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-gray-500">
-                    {option.route === 'webcodecs'
-                        ? 'WebCodecs'
-                        : option.route === 'browser-media-recorder'
-                            ? 'MediaRecorder'
-                            : option.route === 'audio-buffer'
-                                ? 'Offline PCM'
-                            : 'Not available'}
+}> = ({ option, selected, onSelect }) => {
+    const { te } = useMagicCutTranslation();
+    const routeLabel = option.route === 'webcodecs'
+        ? te('routeLabels.webcodecs')
+        : option.route === 'browser-media-recorder'
+            ? te('routeLabels.mediaRecorder')
+            : option.route === 'audio-buffer'
+                ? te('routeLabels.offlinePcm')
+                : te('routeLabels.notAvailable');
+
+    return (
+        <button
+            type="button"
+            onClick={() => option.available && onSelect(option.format)}
+            disabled={!option.available}
+            className={`rounded-xl border p-4 text-left transition-all ${
+                option.available
+                    ? selected
+                        ? 'border-cyan-400/60 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(34,211,238,0.15)]'
+                        : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
+                    : 'border-white/8 bg-white/[0.02] opacity-55 cursor-not-allowed'
+            }`}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <div className="text-sm font-semibold text-white">{option.label}</div>
+                    <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                        {routeLabel}
+                    </div>
                 </div>
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase ${
+                    option.available && option.recommended
+                        ? 'bg-emerald-400/15 text-emerald-100 border border-emerald-300/25'
+                        : option.available
+                            ? 'bg-white/10 text-white/70 border border-white/10'
+                            : 'bg-white/6 text-white/45 border border-white/8'
+                }`}>
+                    {option.badge}
+                </span>
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase ${
-                option.available && option.recommended
-                    ? 'bg-emerald-400/15 text-emerald-100 border border-emerald-300/25'
-                    : option.available
-                        ? 'bg-white/10 text-white/70 border border-white/10'
-                        : 'bg-white/6 text-white/45 border border-white/8'
-            }`}>
-                {option.badge}
-            </span>
-        </div>
-        <p className="mt-3 text-xs leading-5 text-gray-400">{option.description}</p>
-    </button>
-);
+            <p className="mt-3 text-xs leading-5 text-gray-400">{option.description}</p>
+        </button>
+    );
+};
 
 const StatItem: React.FC<{ label: string; value: string; icon: React.ReactNode }> = ({ label, value, icon }) => (
     <div className="flex items-center gap-3">

@@ -7,6 +7,7 @@ import { AudioLeftGeneratorPanel } from './AudioLeftGeneratorPanel';
 import { AudioStoreProvider, useAudioStore } from '../store';
 import { X, Check } from 'lucide-react';
 import { GenerationHistoryListPane, GENERATION_TABS } from '@sdkwork/react-assets';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AudioGeneratorModalProps {
     onClose: () => void;
@@ -14,10 +15,12 @@ interface AudioGeneratorModalProps {
     actionLabel?: string;
 }
 
-const AudioGeneratorContent: React.FC<AudioGeneratorModalProps> = ({ onClose, onSuccess, actionLabel = "Add to Timeline" }: AudioGeneratorModalProps) => {
+const AudioGeneratorContent: React.FC<AudioGeneratorModalProps> = ({ onClose, onSuccess, actionLabel }: AudioGeneratorModalProps) => {
+    const { t } = useTranslation();
     const { history, deleteTask, setConfig } = useAudioStore();
     const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
     const [selectedDuration, setSelectedDuration] = useState<number | undefined>(undefined);
+    const resolvedActionLabel = actionLabel || t('audio.actions.addToTimeline');
 
     const handleSelect = (url: string, task?: AudioTask) => {
         setSelectedUrl(url);
@@ -53,7 +56,7 @@ const AudioGeneratorContent: React.FC<AudioGeneratorModalProps> = ({ onClose, on
                     {selectedUrl && (
                         <div className="flex items-center gap-2 bg-[#1e1e1e]/90 backdrop-blur-md border border-[#333] rounded-lg p-1 animate-in fade-in zoom-in shadow-xl">
                             <Button size="sm" onClick={handleConfirm} className="h-7 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-500 border-0">
-                                <Check size={12} /> {actionLabel}
+                                <Check size={12} /> {resolvedActionLabel}
                             </Button>
                         </div>
                     )}

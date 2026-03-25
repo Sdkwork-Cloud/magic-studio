@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Magic Studio** (also known as **Open Studio** or **SDKWork React**) is a comprehensive AI-powered media generation and editing platform built as a React + TypeScript monorepo. The project supports both web and desktop (Tauri) deployments and provides various AI media generation capabilities including image, video, audio, music, and voice synthesis.
+**Magic Studio** is a comprehensive AI-powered media generation and editing platform built as a React + TypeScript monorepo. The project supports both web and desktop (Tauri) deployments and provides various AI media generation capabilities including image, video, audio, music, and voice synthesis.
 
 ### Key Technologies
 

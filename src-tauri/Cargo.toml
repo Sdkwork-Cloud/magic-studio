@@ -1,9 +1,9 @@
 
 [package]
-name = "open-studio"
+name = "magic-studio"
 version = "0.1.0"
 description = "A cross-platform terminal application"
-authors = ["OpenStudio Team"]
+authors = ["SDKWork"]
 edition = "2021"
 
 [build-dependencies]

@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Box, Video, Music, Check, AlertCircle } from 'lucide-react';
 import { ProjectType, Button, ImageUpload } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { SettingInput, SettingTextArea } from '@sdkwork/react-settings';
 
@@ -12,38 +13,50 @@ interface CreateProjectModalProps {
     initialType?: ProjectType;
 }
 
-const PROJECT_TYPES: {
-    id: ProjectType;
-    label: string;
-    icon: React.ElementType;
-    desc: string;
-    color: string;
-}[] = [
-    { id: 'APP', label: 'Application', icon: Box, desc: 'Full-stack web or desktop app', color: 'text-blue-500' },
-    { id: 'VIDEO', label: 'Video Project', icon: Video, desc: 'AI video generation & editing', color: 'text-pink-500' },
-    { id: 'AUDIO', label: 'Audio Project', icon: Music, desc: 'Music & speech generation', color: 'text-indigo-500' },
-];
-
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, initialType = 'APP' }) => {
     const { addProject, currentWorkspace } = useWorkspaceStore();
+    const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [type, setType] = useState<ProjectType>(initialType);
     const [coverFile, setCoverFile] = useState<{ data: Uint8Array | File, name: string, url: string } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const projectTypes = useMemo(() => ([
+        {
+            id: 'APP' as ProjectType,
+            label: t('workspaceDialogs.createProject.types.application.label'),
+            icon: Box,
+            desc: t('workspaceDialogs.createProject.types.application.description'),
+            color: 'text-blue-500',
+        },
+        {
+            id: 'VIDEO' as ProjectType,
+            label: t('workspaceDialogs.createProject.types.video.label'),
+            icon: Video,
+            desc: t('workspaceDialogs.createProject.types.video.description'),
+            color: 'text-pink-500',
+        },
+        {
+            id: 'AUDIO' as ProjectType,
+            label: t('workspaceDialogs.createProject.types.audio.label'),
+            icon: Music,
+            desc: t('workspaceDialogs.createProject.types.audio.description'),
+            color: 'text-indigo-500',
+        },
+    ]), [t]);
 
     useEffect(() => {
         if (isOpen) {
             // Default to APP if initialType was one of the removed types
-            const validType = PROJECT_TYPES.find(t => t.id === initialType) ? initialType : 'APP';
+            const validType = projectTypes.find(projectType => projectType.id === initialType) ? initialType : 'APP';
             setType(validType);
             setName('');
             setDescription('');
             setCoverFile(null);
             setError(null);
         }
-    }, [isOpen, initialType]);
+    }, [initialType, isOpen, projectTypes]);
 
     if (!isOpen) return null;
 
@@ -71,7 +84,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
             onClose();
         } catch (error: unknown) {
             console.error("Create project failed:", error);
-            setError(error instanceof Error ? error.message : "Failed to create project");
+            setError(error instanceof Error ? error.message : t('workspaceDialogs.createProject.createFailed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -93,9 +106,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                             <Box size={20} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-base">New Project</h3>
+                            <h3 className="text-white font-bold text-base">{t('workspaceDialogs.createProject.title')}</h3>
                             <p className="text-xs text-gray-500">
-                                In {currentWorkspace?.name || 'Workspace'}
+                                {t('workspaceDialogs.createProject.subtitle', {
+                                    workspace: currentWorkspace?.name || t('workspaceDialogs.createProject.workspaceFallback'),
+                                })}
                             </p>
                         </div>
                     </div>
@@ -109,28 +124,28 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                     
                     {/* Project Type Grid */}
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Project Type</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">{t('workspaceDialogs.createProject.typeLabel')}</label>
                         <div className="grid grid-cols-2 gap-3">
-                            {PROJECT_TYPES.map(t => (
+                            {projectTypes.map(projectType => (
                                 <button
-                                    key={t.id}
-                                    onClick={() => setType(t.id)}
+                                    key={projectType.id}
+                                    onClick={() => setType(projectType.id)}
                                     className={`
                                         flex items-start gap-3 p-3 rounded-xl border text-left transition-all
-                                        ${type === t.id 
+                                        ${type === projectType.id 
                                             ? 'bg-blue-600/10 border-blue-500/50 ring-1 ring-blue-500/20' 
                                             : 'bg-[#252526] border-[#333] hover:border-[#555] hover:bg-[#2a2a2d]'
                                         }
                                     `}
                                 >
-                                    <div className={`p-2 rounded-lg bg-[#1e1e1e] border border-[#333] ${t.color}`}>
-                                        <t.icon size={18} />
+                                    <div className={`p-2 rounded-lg bg-[#1e1e1e] border border-[#333] ${projectType.color}`}>
+                                        <projectType.icon size={18} />
                                     </div>
                                     <div className="min-w-0">
-                                        <div className={`text-sm font-bold mb-0.5 ${type === t.id ? 'text-white' : 'text-gray-300'}`}>{t.label}</div>
-                                        <div className="text-[10px] text-gray-500 leading-tight">{t.desc}</div>
+                                        <div className={`text-sm font-bold mb-0.5 ${type === projectType.id ? 'text-white' : 'text-gray-300'}`}>{projectType.label}</div>
+                                        <div className="text-[10px] text-gray-500 leading-tight">{projectType.desc}</div>
                                     </div>
-                                    {type === t.id && <div className="ml-auto text-blue-500"><Check size={16} /></div>}
+                                    {type === projectType.id && <div className="ml-auto text-blue-500"><Check size={16} /></div>}
                                 </button>
                             ))}
                         </div>
@@ -140,31 +155,31 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                         <div className="flex gap-4">
                             <div className="flex-1 space-y-4">
                                 <SettingInput 
-                                    label="Project Name" 
+                                    label={t('workspaceDialogs.createProject.nameLabel')} 
                                     value={name} 
                                     onChange={setName} 
                                     fullWidth 
-                                    placeholder="e.g. NextGen Dashboard"
+                                    placeholder={t('workspaceDialogs.createProject.namePlaceholder')}
                                     autoFocus
                                 />
                                 <SettingTextArea 
-                                    label="Description (Optional)" 
+                                    label={t('workspaceDialogs.createProject.descriptionLabel')} 
                                     value={description} 
                                     onChange={setDescription} 
                                     rows={2} 
                                     fullWidth 
-                                    placeholder="Briefly describe your project..."
+                                    placeholder={t('workspaceDialogs.createProject.descriptionPlaceholder')}
                                 />
                             </div>
                             <div className="w-[180px]">
-                                <label className="block text-sm font-medium leading-none text-gray-400 mb-2">Cover Image</label>
+                                <label className="block text-sm font-medium leading-none text-gray-400 mb-2">{t('workspaceDialogs.createProject.coverLabel')}</label>
                                 <div className="aspect-video w-full">
                                     <ImageUpload
                                         value={coverFile?.url}
                                         onChange={(f) => setCoverFile(f)}
                                         onRemove={() => setCoverFile(null)}
                                         className="h-full bg-[#111] border border-[#333]"
-                                        label="Upload Cover"
+                                        label={t('workspaceDialogs.createProject.uploadCover')}
                                         aspectRatio="aspect-video"
                                     />
                                 </div>
@@ -182,13 +197,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
                 {/* Footer */}
                 <div className="flex-none px-6 py-4 border-t border-white/5 bg-[#1e1e20] flex justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose} disabled={isSubmitting} className="bg-white/5 hover:bg-white/10 border-white/10 text-gray-300">Cancel</Button>
+                    <Button variant="secondary" onClick={onClose} disabled={isSubmitting} className="bg-white/5 hover:bg-white/10 border-white/10 text-gray-300">{t('common.actions.cancel')}</Button>
                     <Button 
                         onClick={handleSubmit} 
                         disabled={!name.trim() || isSubmitting}
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 text-white shadow-lg shadow-purple-900/20"
                     >
-                        {isSubmitting ? 'Creating...' : <><Check size={16} className="mr-2" /> Create Project</>}
+                        {isSubmitting ? t('workspaceDialogs.createProject.creating') : <><Check size={16} className="mr-2" /> {t('workspaceDialogs.createProject.confirm')}</>}
                     </Button>
                 </div>
             </div>

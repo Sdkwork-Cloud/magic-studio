@@ -4,6 +4,7 @@ import { X, FileText, Image as ImageIcon, Video, Mic, Paperclip, FileCode } from
 import type { InputAttachmentData } from '@sdkwork/react-commons';
 import { getAssetLabel } from '@sdkwork/react-commons';
 import { useAssetUrl } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AttachmentGridProps {
     attachments: InputAttachmentData[];
@@ -30,6 +31,7 @@ export const AttachmentGrid: React.FC<AttachmentGridProps> = ({ attachments, onR
 };
 
 const AttachmentCard: React.FC<{ file: InputAttachmentData; index: number; onRemove: () => void }> = ({ file, index, onRemove }) => {
+    const { t } = useTranslation();
     const isVisual = file.type === 'image' || file.type === 'video';
     const label = getAssetLabel(index);
 
@@ -92,7 +94,7 @@ const AttachmentCard: React.FC<{ file: InputAttachmentData; index: number; onRem
                 <button 
                     onClick={(e) => { e.stopPropagation(); onRemove(); }}
                     className="absolute top-2 right-2 z-30 p-1.5 bg-black/50 hover:bg-red-500/90 text-white/70 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md transform scale-90 group-hover:scale-100 border border-white/5"
-                    title="Remove"
+                    title={t('assetCenter.creationInput.actions.removeAttachment')}
                 >
                     <X size={12} strokeWidth={2.5} />
                 </button>
@@ -105,7 +107,7 @@ const AttachmentCard: React.FC<{ file: InputAttachmentData; index: number; onRem
                     </span>
                     {isVisual && file.type === 'video' && (
                         <span className="bg-pink-500/20 border border-pink-500/30 text-[8px] font-bold text-pink-300 px-1.5 py-0.5 rounded uppercase">
-                            Video
+                            {t('assetCenter.creationInput.preview.types.video')}
                         </span>
                     )}
                 </div>

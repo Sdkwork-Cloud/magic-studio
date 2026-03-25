@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, LayoutGrid, Check } from 'lucide-react';
 import { Button } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { SettingInput, SettingTextArea } from '@sdkwork/react-settings';
 
@@ -13,6 +14,7 @@ interface CreateWorkspaceModalProps {
 
 export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOpen, onClose }) => {
     const { addWorkspace } = useWorkspaceStore();
+    const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,8 +50,8 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
                             <LayoutGrid size={20} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-base">New Workspace</h3>
-                            <p className="text-xs text-gray-500">Organize your projects and assets</p>
+                            <h3 className="text-white font-bold text-base">{t('workspaceDialogs.createWorkspace.title')}</h3>
+                            <p className="text-xs text-gray-500">{t('workspaceDialogs.createWorkspace.subtitle')}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
@@ -60,32 +62,32 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
                 {/* Body */}
                 <div className="p-6 space-y-6">
                     <SettingInput 
-                        label="Workspace Name" 
+                        label={t('workspaceDialogs.createWorkspace.nameLabel')} 
                         value={name} 
                         onChange={setName} 
                         fullWidth 
-                        placeholder="e.g. My Creative Studio"
+                        placeholder={t('workspaceDialogs.createWorkspace.namePlaceholder')}
                         autoFocus
                     />
                     <SettingTextArea 
-                        label="Description (Optional)" 
+                        label={t('workspaceDialogs.createWorkspace.descriptionLabel')} 
                         value={description} 
                         onChange={setDescription} 
                         rows={3} 
                         fullWidth 
-                        placeholder="What is this workspace for?"
+                        placeholder={t('workspaceDialogs.createWorkspace.descriptionPlaceholder')}
                     />
                 </div>
 
                 {/* Footer */}
                 <div className="flex-none px-6 py-4 border-t border-white/5 bg-[#1e1e20] flex justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose} className="bg-white/5 hover:bg-white/10 border-white/10 text-gray-300">Cancel</Button>
+                    <Button variant="secondary" onClick={onClose} className="bg-white/5 hover:bg-white/10 border-white/10 text-gray-300">{t('common.actions.cancel')}</Button>
                     <Button 
                         onClick={handleSubmit} 
                         disabled={!name.trim() || isSubmitting}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 text-white shadow-lg shadow-blue-900/20"
                     >
-                        {isSubmitting ? 'Creating...' : <><Check size={16} className="mr-2" /> Create Workspace</>}
+                        {isSubmitting ? t('workspaceDialogs.createWorkspace.creating') : <><Check size={16} className="mr-2" /> {t('workspaceDialogs.createWorkspace.confirm')}</>}
                     </Button>
                 </div>
             </div>

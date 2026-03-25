@@ -24,6 +24,7 @@ import type { LinkedClipMove } from '../domain/timeline/linkedMove';
 import { TIMELINE_CONSTANTS } from '../constants';
 ;
 import { inlineDataService, uploadHelper } from '@sdkwork/react-core';
+import { i18nService } from '@sdkwork/react-i18n';
 import type { AssetContentKey } from '@sdkwork/react-types';
 import { textRenderer, DEFAULT_TEXT_STYLE } from '../engine/text/TextRenderer';
 import {
@@ -2202,7 +2203,7 @@ function createDefaultProject(): CutProject {
             resourceViews: {},
             resources: {},
             timelines: {
-                [tid]: { id: tid, uuid: tid, type: 'CutTimeline', name: 'Sequence 1', fps: 30, duration: 60, tracks: [{ id: mainTrack.id, uuid: mainTrack.uuid, type: 'CutTrack' }], createdAt: Date.now(), updatedAt: Date.now() }
+                [tid]: { id: tid, uuid: tid, type: 'CutTimeline', name: i18nService.t('magicCut.timeline.sequenceDefault', { index: '1' }), fps: 30, duration: 60, tracks: [{ id: mainTrack.id, uuid: mainTrack.uuid, type: 'CutTrack' }], createdAt: Date.now(), updatedAt: Date.now() }
             },
             tracks: { [mainTrack.id]: mainTrack },
             clips: {},

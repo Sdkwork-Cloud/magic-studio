@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ImageTask, MediaResourceType, GalleryItem, PromptText, formatLocaleDate, useAssetUrl } from '@sdkwork/react-commons';
 import { platform, useRouter, ROUTES, remixService } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type PreviewMode = 'creation' | 'view';
 
@@ -42,6 +43,7 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
     editors = {}
 }) => {
     const { navigate } = useRouter();
+    const { t } = useTranslation();
     
     const [activeIndex, setActiveIndex] = useState(0);
     const [isZoomed, setIsZoomed] = useState(false);
@@ -173,7 +175,9 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
             
             <div className={`w-[80px] xl:w-[280px] flex-none bg-[#09090b]/80 border-r border-white/5 flex flex-col hidden md:flex transition-all duration-300`}>
                 <div className="h-16 flex items-center px-4 xl:px-6 border-b border-white/5 font-bold text-xs text-gray-500 uppercase tracking-wider bg-[#09090b]">
-                    {mode === 'creation' ? 'History' : 'More from Gallery'}
+                    {mode === 'creation'
+                        ? t('generationHistory.preview.history')
+                        : t('generationHistory.preview.moreFromGallery')}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 xl:p-3 space-y-2 custom-scrollbar">
                     {items.map(item => {
@@ -202,10 +206,10 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                      </div>
 
                      <div className="flex items-center gap-2 pointer-events-auto">
-                         <TooltipButton icon={<ThumbsUp size={18} />} tooltip="Like" />
+                         <TooltipButton icon={<ThumbsUp size={18} />} tooltip={t('generationHistory.preview.like')} />
                          <div className="w-[1px] h-6 bg-white/10 mx-1" />
-                         <TooltipButton icon={<Download size={18} />} onClick={() => { }} tooltip="Download" />
-                         <TooltipButton icon={<Share2 size={18} />} tooltip="Share" />
+                         <TooltipButton icon={<Download size={18} />} onClick={() => { }} tooltip={t('generationHistory.preview.download')} />
+                         <TooltipButton icon={<Share2 size={18} />} tooltip={t('generationHistory.preview.share')} />
                      </div>
                 </div>
 
@@ -231,13 +235,13 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                                 <img 
                                     src={displayUrl} 
                                     className={`max-w-full max-h-[85vh] object-contain shadow-2xl shadow-black/50 rounded-lg ${!isZoomed ? 'cursor-zoom-in' : ''}`}
-                                    alt="Preview"
+                                    alt={t('generationHistory.item.preview')}
                                 />
                             )
                         ) : (
                             <div className="flex flex-col items-center gap-2 text-gray-500">
                                 <ImageIcon size={48} className="opacity-20" />
-                                <span>Loading preview...</span>
+                                <span>{t('generationHistory.preview.loadingPreview')}</span>
                             </div>
                         )}
                     </div>
@@ -256,7 +260,7 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                 <div className="flex-none h-16 flex items-center justify-between px-6 border-b border-white/5">
                     <div className="flex items-center gap-2 text-gray-300">
                         <Info size={16} />
-                        <span className="text-xs font-bold uppercase tracking-wider">Info</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">{t('generationHistory.preview.info')}</span>
                     </div>
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg">
                         <X size={20} />
@@ -278,12 +282,12 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                                      </div>
                                      <div>
                                          <h4 className="font-bold text-white text-sm">{(currentItem as GalleryItem).author.name}</h4>
-                                         <p className="text-[10px] text-gray-500">{(currentItem as GalleryItem).author.followers || 'Creator'}</p>
+                                         <p className="text-[10px] text-gray-500">{(currentItem as GalleryItem).author.followers || t('generationHistory.preview.creator')}</p>
                                      </div>
                                  </div>
                                  {!isOwner && (
                                      <button className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-bold text-white transition-colors border border-white/5 flex items-center gap-1">
-                                         <UserPlus size={12} /> Follow
+                                         <UserPlus size={12} /> {t('generationHistory.preview.follow')}
                                      </button>
                                  )}
                              </div>
@@ -291,9 +295,9 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                              <div className="mt-6">
                                  <h2 className="text-xl font-bold text-white mb-2">{(currentItem as GalleryItem).title}</h2>
                                  <div className="flex gap-4 text-[11px] text-gray-400 font-medium">
-                                     <span>{(currentItem as GalleryItem).stats.views} Views</span>
-                                     <span>{(currentItem as GalleryItem).stats.likes} Likes</span>
-                                     <span>{(currentItem as GalleryItem).stats.comments || 0} Comments</span>
+                                     <span>{(currentItem as GalleryItem).stats.views} {t('generationHistory.preview.views')}</span>
+                                     <span>{(currentItem as GalleryItem).stats.likes} {t('generationHistory.preview.likes')}</span>
+                                     <span>{(currentItem as GalleryItem).stats.comments || 0} {t('generationHistory.preview.comments')}</span>
                                  </div>
                              </div>
                         </div>
@@ -301,20 +305,29 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
 
                     <div className="p-6 border-b border-white/5">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Prompt</span>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('generationHistory.preview.prompt')}</span>
                             <button onClick={() => platform.copy(displayPrompt)} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                                <Copy size={12} /> Copy
+                                <Copy size={12} /> {t('generationHistory.preview.copy')}
                             </button>
                         </div>
                         <PromptText text={displayPrompt} compact={false} className="bg-[#0a0a0c] border-white/5" />
                     </div>
 
                     <div className="p-6">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-4">Generation Details</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-4">{t('generationHistory.preview.details')}</span>
                         <div className="grid grid-cols-2 gap-y-4 gap-x-4">
-                            <ParamItem label="Model" value={mode === 'creation' ? ((currentItem as any).config.model || 'Unknown') : ((currentItem as any).model)} highlight />
-                            <ParamItem label="Aspect Ratio" value={mode === 'creation' ? ((currentItem as any).config.aspectRatio) : ((currentItem as any).aspectRatio)} />
-                            <ParamItem label="Created" value={formatLocaleDate(currentItem.createdAt)} />
+                            <ParamItem
+                                label={t('generationHistory.preview.model')}
+                                value={mode === 'creation'
+                                    ? ((currentItem as any).config.model || t('generationHistory.preview.unknown'))
+                                    : (((currentItem as any).model as string | undefined) || t('generationHistory.preview.unknown'))}
+                                highlight
+                            />
+                            <ParamItem
+                                label={t('generationHistory.preview.aspectRatio')}
+                                value={mode === 'creation' ? ((currentItem as any).config.aspectRatio) : ((currentItem as any).aspectRatio)}
+                            />
+                            <ParamItem label={t('generationHistory.preview.created')} value={formatLocaleDate(currentItem.createdAt)} />
                         </div>
                     </div>
 
@@ -326,15 +339,15 @@ export const GenerationPreview: React.FC<GenerationPreviewProps> = ({
                         className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 group"
                     >
                         <Repeat2 size={16} className="group-hover:rotate-180 transition-transform duration-500" />
-                        Remix this {isVideo ? 'Video' : 'Image'}
+                        {isVideo ? t('generationHistory.preview.remixVideo') : t('generationHistory.preview.remixImage')}
                     </button>
                     {isOwner && (
                         <div className="mt-3 text-center flex justify-center gap-4">
                              <button className="text-[10px] text-gray-500 hover:text-white transition-colors flex items-center gap-1">
-                                 <Edit3 size={10} /> Edit Details
+                                 <Edit3 size={10} /> {t('generationHistory.preview.editDetails')}
                              </button>
                              <button className="text-[10px] text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1">
-                                 <Trash2 size={10} /> Delete
+                                 <Trash2 size={10} /> {t('generationHistory.preview.delete')}
                              </button>
                         </div>
                     )}

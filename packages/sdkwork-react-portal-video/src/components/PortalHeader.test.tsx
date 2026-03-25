@@ -13,6 +13,7 @@ let mockPlatformMode: 'web' | 'desktop' = 'web';
 vi.mock('@sdkwork/react-core', () => ({
   useRouter: () => mockUseRouter(),
   ROUTES: {
+    PORTAL: '/portal',
     LOGIN: '/login',
     PROFILE: '/profile',
     SETTINGS: '/settings',
@@ -54,9 +55,6 @@ vi.mock('@sdkwork/react-commons', () => ({
 
 vi.mock('@sdkwork/react-i18n', () => ({
   useTranslation: () => mockUseTranslation(),
-  createLocalizedText: (en: string, zh: string) => ({ en, zh }),
-  resolveLocalizedText: (label: { en: string; zh: string }, locale: string) =>
-    locale === 'zh-CN' ? label.zh : label.en,
 }));
 
 describe('PortalHeader', () => {
@@ -75,6 +73,28 @@ describe('PortalHeader', () => {
     });
     mockUseTranslation.mockReturnValue({
       locale: 'en-US',
+      t: (key: string, params?: Record<string, string>) => {
+        const translations: Record<string, string> = {
+          'sidebar.download_app_title': 'Download App',
+          'market.nav.sign_in': 'Sign In',
+          'market.nav.sign_out': 'Sign Out',
+          'market.nav.my_profile': 'My Profile',
+          'market.nav.my_tasks': 'My Tasks',
+          'market.nav.billing_plans': 'Billing & Plans',
+          'market.nav.switch_workspace': 'Switch Workspace',
+          'market.nav.preferences': 'Preferences',
+          'market.nav.home': 'Home',
+          'market.nav.community': 'Community',
+          'market.nav.theater': 'Theater',
+          'market.nav.skills': 'Skills',
+          'market.nav.plugins': 'Plugins',
+          'market.nav.task_market': 'Task Market',
+          'market.nav.credits': `${params?.count || '0'} Credits`,
+          'header.breadcrumbs.user': 'User',
+        };
+
+        return translations[key] ?? key;
+      },
     });
   });
 
@@ -100,5 +120,48 @@ describe('PortalHeader', () => {
 
     expect(html).toContain('overflow-x-auto');
     expect(html).toContain('whitespace-nowrap');
+  });
+
+  it('shows a download app action on the portal home header', () => {
+    mockUseRouter.mockReturnValue({
+      navigate: vi.fn(),
+      currentPath: '/portal/video',
+    });
+
+    const html = renderToStaticMarkup(<PortalHeader />);
+
+    expect(html).toContain('Download App');
+    expect(html).toContain(
+      'href="https://clawstudio.sdkwork.com/download/app/mobile"'
+    );
+  });
+
+  it('shows the download app action on the desktop portal root route', () => {
+    mockPlatformMode = 'desktop';
+    mockUseRouter.mockReturnValue({
+      navigate: vi.fn(),
+      currentPath: '/portal',
+    });
+
+    const html = renderToStaticMarkup(<PortalHeader />);
+
+    expect(html).toContain('Download App');
+    expect(html).toContain(
+      'href="https://clawstudio.sdkwork.com/download/app/mobile"'
+    );
+  });
+
+  it('shows the download app action on non-home portal headers too', () => {
+    mockUseRouter.mockReturnValue({
+      navigate: vi.fn(),
+      currentPath: '/portal/community',
+    });
+
+    const html = renderToStaticMarkup(<PortalHeader />);
+
+    expect(html).toContain('Download App');
+    expect(html).toContain(
+      'href="https://clawstudio.sdkwork.com/download/app/mobile"'
+    );
   });
 });

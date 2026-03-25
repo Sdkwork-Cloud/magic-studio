@@ -1,6 +1,7 @@
 
 import React, { forwardRef, useMemo, useCallback } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 interface SearchInputProps {
     value: string;
@@ -14,11 +15,13 @@ interface SearchInputProps {
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(({
     value,
     onChange,
-    placeholder = 'Search...',
+    placeholder,
     isLoading = false,
     onClear,
     className = ''
 }, ref) => {
+    const { tc } = useMagicCutTranslation();
+    const resolvedPlaceholder = placeholder ?? tc('searchPlaceholder');
     const handleClear = useCallback(() => {
         onChange('');
         onClear?.();
@@ -35,7 +38,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(({
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
+                placeholder={resolvedPlaceholder}
                 className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-8 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
             />
             {isLoading && (

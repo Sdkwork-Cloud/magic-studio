@@ -2,8 +2,10 @@ import { Button } from '@sdkwork/react-commons';
 import React from 'react';
 import { FileViewerProps } from '../types';
 import { FileText, Download, AlertTriangle } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const DocViewer: React.FC<FileViewerProps> = ({ item, url }) => {
+  const { t } = useTranslation();
   const isPdf = item.mimeType === 'application/pdf' || item.name.endsWith('.pdf');
   const isOffice = /\.(docx|xlsx|pptx|doc|xls|ppt)$/i.test(item.name);
 
@@ -24,14 +26,13 @@ export const DocViewer: React.FC<FileViewerProps> = ({ item, url }) => {
 
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{item.name}</h2>
         <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8">
-          Previewing this document type requires external conversion. Please download it to view or
-          edit in your native application.
+          {t('drive.preview.externalConversion')}
         </p>
 
         <div className="flex gap-4">
           <a href={url} download={item.name} className="no-underline">
             <Button className="gap-2 shadow-lg shadow-blue-500/20">
-              <Download size={16} /> Download
+              <Download size={16} /> {t('drive.preview.actions.download')}
             </Button>
           </a>
         </div>
@@ -43,7 +44,7 @@ export const DocViewer: React.FC<FileViewerProps> = ({ item, url }) => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
       <AlertTriangle size={48} className="mb-4 opacity-50" />
-      <p>No preview available for this file type.</p>
+      <p>{t('drive.preview.unavailable')}</p>
     </div>
   );
 };

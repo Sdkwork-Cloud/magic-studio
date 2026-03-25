@@ -13,6 +13,7 @@ import {
     toggleAudioEnhancement,
     updateEqBandGain
 } from '../../../domain/audio/audioEffectState';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface AudioSettingsPanelProps {
     clip: CutClip;
@@ -20,6 +21,7 @@ interface AudioSettingsPanelProps {
 }
 
 export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, onUpdate }) => {
+    const { t } = useMagicCutTranslation();
     // Access store actions directly to use specific business logic (speed recalculation)
     const { setClipSpeed } = useMagicCutStore();
     const [equalizerOpen, setEqualizerOpen] = useState(false);
@@ -77,7 +79,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
     return (
         <>
             {/* Main Audio Controls */}
-            <PropertySection title="Mixer" defaultOpen>
+            <PropertySection title={t('audioSettings.sections.mixer')} defaultOpen>
                 <div className="space-y-4">
                     {/* Volume & Mute Row */}
                     <div className="flex items-center gap-3">
@@ -85,7 +87,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                              <div className="flex justify-between text-[11px] text-gray-400 font-medium">
                                 <span className="flex items-center gap-1.5">
                                     <Volume2 size={12} className={isAmplified ? "text-yellow-500" : ""} /> 
-                                    Volume
+                                    {t('audioSettings.fields.volume')}
                                 </span>
                                 <span className={`font-mono ${isAmplified ? "text-yellow-400 font-bold" : ""}`}>
                                     {Math.round(volume * 100)}%
@@ -133,7 +135,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                                     : 'bg-[#252526] border-[#333] text-gray-400 hover:text-white'
                                 }
                             `}
-                            title={isMuted ? "Unmute" : "Mute"}
+                            title={isMuted ? t('audioSettings.actions.unmute') : t('audioSettings.actions.mute')}
                          >
                              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                          </button>
@@ -144,7 +146,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                     {/* Fades */}
                     <div className="grid grid-cols-2 gap-3">
                         <ScrubbableInput 
-                            label="Fade In" 
+                            label={t('audioSettings.fields.fadeIn')} 
                             value={fadeIn} 
                             onChange={(v) => onUpdate({ fadeIn: Math.max(0, v) })} 
                             step={0.1} min={0} max={clip.duration / 2} 
@@ -152,7 +154,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                             icon={<Activity size={10} className="text-gray-500" />}
                         />
                         <ScrubbableInput 
-                            label="Fade Out" 
+                            label={t('audioSettings.fields.fadeOut')} 
                             value={fadeOut} 
                             onChange={(v) => onUpdate({ fadeOut: Math.max(0, v) })} 
                             step={0.1} min={0} max={clip.duration / 2} 
@@ -164,14 +166,14 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
             </PropertySection>
 
             {/* AI Audio Tools */}
-            <PropertySection title="AI Enhance">
+            <PropertySection title={t('audioSettings.sections.enhance')}>
                  <div className="space-y-2">
                      <button 
                         onClick={() => toggleEnhancement('denoise')}
                         className={`w-full flex items-center justify-between p-2 rounded-lg border transition-all ${isDenoiseEnabled ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' : 'bg-[#1a1a1c] border-[#27272a] text-gray-400'}`}
                      >
                          <span className="text-[10px] font-medium flex items-center gap-2">
-                             <Zap size={12} className={isDenoiseEnabled ? "fill-purple-500" : ""} /> AI Denoise
+                             <Zap size={12} className={isDenoiseEnabled ? "fill-purple-500" : ""} /> {t('audioSettings.fields.denoise')}
                          </span>
                          <div className={`w-2 h-2 rounded-full ${isDenoiseEnabled ? 'bg-purple-500 shadow-sm' : 'bg-[#333]'}`} />
                      </button>
@@ -181,7 +183,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                         className={`w-full flex items-center justify-between p-2 rounded-lg border transition-all ${isNormalizeEnabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' : 'bg-[#1a1a1c] border-[#27272a] text-gray-400'}`}
                      >
                          <span className="text-[10px] font-medium flex items-center gap-2">
-                             <BarChart2 size={12} /> Normalize Loudness
+                             <BarChart2 size={12} /> {t('audioSettings.fields.normalize')}
                          </span>
                          <div className={`w-2 h-2 rounded-full ${isNormalizeEnabled ? 'bg-blue-500 shadow-sm' : 'bg-[#333]'}`} />
                      </button>
@@ -189,13 +191,13 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
             </PropertySection>
 
             {/* Speed & Properties */}
-            <PropertySection title="Properties">
+            <PropertySection title={t('audioSettings.sections.properties')}>
                 <div className="space-y-4">
                     {/* Rich Speed Control - USING setClipSpeed from Store */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                                <Clock size={12} /> Speed
+                                <Clock size={12} /> {t('audioSettings.fields.speed')}
                             </label>
                             <div className="w-16">
                                 <ScrubbableInput 
@@ -257,7 +259,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                     {/* Precise numeric volume control for advanced users */}
                     <div className="pt-2 border-t border-[#1f1f22]">
                         <ScrubbableInput 
-                            label="Gain (Numeric)" 
+                            label={t('audioSettings.fields.gainNumeric')} 
                             value={volume} 
                             onChange={(v) => onUpdate({ volume: Math.max(0, Math.min(5, v)) })} 
                             step={0.01} min={0} max={5} 
@@ -268,7 +270,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                     </div>
 
                     <ActionButton 
-                        label={eqSettings.enabled ? 'Equalizer Enabled' : 'Open Equalizer'} 
+                        label={eqSettings.enabled ? t('audioSettings.fields.equalizerEnabled') : t('audioSettings.fields.openEqualizer')} 
                         icon={<SlidersHorizontal />} 
                         onClick={toggleEqualizerPanel}
                         variant={eqSettings.enabled ? 'primary' : 'secondary'}
@@ -280,23 +282,23 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-100">
-                                        Three-band EQ
+                                        {t('audioSettings.eq.title')}
                                     </div>
                                     <p className="mt-1 text-[10px] leading-4 text-blue-100/70">
-                                        This EQ writes directly to the clip audio effect chain used by preview and export.
+                                        {t('audioSettings.eq.description')}
                                     </p>
                                 </div>
                                 <button
                                     onClick={closeEqualizer}
                                     className="rounded-md border border-blue-400/20 px-2 py-1 text-[10px] font-medium text-blue-100/80 transition-colors hover:bg-blue-400/10"
                                 >
-                                    Bypass
+                                    {t('audioSettings.actions.bypass')}
                                 </button>
                             </div>
 
                             <div className="mt-3 space-y-3">
                                 <SliderRow
-                                    label="Low"
+                                    label={t('audioSettings.fields.low')}
                                     value={eqSettings.lowGain}
                                     onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'lowGain', value))}
                                     min={-12}
@@ -305,7 +307,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                                     defaultValue={0}
                                 />
                                 <SliderRow
-                                    label="Mid"
+                                    label={t('audioSettings.fields.mid')}
                                     value={eqSettings.midGain}
                                     onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'midGain', value))}
                                     min={-12}
@@ -314,7 +316,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                                     defaultValue={0}
                                 />
                                 <SliderRow
-                                    label="High"
+                                    label={t('audioSettings.fields.high')}
                                     value={eqSettings.highGain}
                                     onChange={(value) => updateAudioEffects(updateEqBandGain(audioEffects, 'highGain', value))}
                                     min={-12}
@@ -329,7 +331,7 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ clip, on
                                     onClick={() => updateAudioEffects(resetEqSettings(audioEffects))}
                                     className="rounded-md border border-white/10 px-2 py-1 text-[10px] font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
                                 >
-                                    Reset EQ
+                                    {t('audioSettings.actions.resetEq')}
                                 </button>
                             </div>
                         </div>

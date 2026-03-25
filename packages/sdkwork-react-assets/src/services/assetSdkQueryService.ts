@@ -55,8 +55,9 @@ interface RawApiResultPageAssetVO {
 }
 
 interface RawApiResultVoid {
-  code?: string;
+  code?: string | number;
   msg?: string;
+  message?: string;
 }
 
 interface RawFileVO {
@@ -317,9 +318,9 @@ function toPageResult(rawPage: RawPageAssetVO | undefined, request: PageRequest)
 }
 
 function assertApiSuccess(response: RawApiResultVoid | undefined, fallbackMessage: string): void {
-  const code = String(response?.code || '').trim();
+  const code = String(response?.code ?? '').trim();
   if (code && code !== SUCCESS_CODE) {
-    throw new Error(String(response?.msg || fallbackMessage));
+    throw new Error(String(response?.msg || response?.message || fallbackMessage));
   }
 }
 

@@ -20,6 +20,8 @@ export const PortalSidebar: React.FC = () => {
     const { t } = useTranslation();
     const [showPricing, setShowPricing] = useState(false);
     const isDesktopRuntime = platform.getPlatform() === 'desktop';
+    const brandName = t('appShell.brand');
+    const brandTagline = t('appShell.tagline');
 
     interface NavItem {
         id: string;
@@ -48,11 +50,11 @@ export const PortalSidebar: React.FC = () => {
         {
             title: t('sidebar.group_studio'),
             items: [
-                { id: 'quick-short', label: t('sidebar.quick_short'), icon: Zap, route: ROUTES.FILM, badge: 'Hot', accent: 'text-orange-400' },
-                { id: 'magic-cut', label: t('sidebar.magic_cut'), icon: Scissors, route: ROUTES.MAGIC_CUT, badge: 'New', accent: 'text-red-400' },
-                { id: 'canvas', label: t('canvas.title'), icon: Layout, route: ROUTES.CANVAS, badge: 'Beta', accent: 'text-blue-400' },
+                { id: 'quick-short', label: t('sidebar.quick_short'), icon: Zap, route: ROUTES.FILM, badge: t('market.nav.badges.hot'), accent: 'text-orange-400' },
+                { id: 'magic-cut', label: t('sidebar.magic_cut'), icon: Scissors, route: ROUTES.MAGIC_CUT, badge: t('market.nav.badges.new'), accent: 'text-red-400' },
+                { id: 'canvas', label: t('canvas.title'), icon: Layout, route: ROUTES.CANVAS, badge: t('market.nav.badges.beta'), accent: 'text-blue-400' },
                 { id: 'notes', label: t('sidebar.notes'), icon: BookOpen, route: ROUTES.NOTES },
-                { id: 'prompt', label: t('sidebar.prompt_optimizer'), icon: Wand2, route: ROUTES.PROMPT, badge: 'New', accent: 'text-purple-400' },
+                { id: 'prompt', label: t('sidebar.prompt_optimizer'), icon: Wand2, route: ROUTES.PROMPT, badge: t('market.nav.badges.new'), accent: 'text-purple-400' },
             ]
         },
         {
@@ -82,8 +84,8 @@ export const PortalSidebar: React.FC = () => {
                          <Sparkles size={16} className="text-white relative z-10" fill="currentColor" />
                      </div>
                      <div className="flex flex-col justify-center">
-                         <span className="text-lg font-bold text-white tracking-tight leading-none">Magic Studio</span>
-                         <span className="text-[9px] text-gray-500 font-medium tracking-[0.2em] mt-0.5 group-hover:text-indigo-400 transition-colors">CREATIVE</span>
+                         <span className="text-lg font-bold text-white tracking-tight leading-none">{brandName}</span>
+                         <span className="text-[9px] text-gray-500 font-medium tracking-[0.2em] mt-0.5 group-hover:text-indigo-400 transition-colors">{brandTagline}</span>
                      </div>
                  </div>
             </div>
@@ -173,7 +175,7 @@ export const PortalSidebar: React.FC = () => {
                             <Crown size={14} className="text-yellow-500 fill-yellow-500/20" />
                         </div>
                         <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-gray-400 group-hover:text-white transition-colors">
-                            PRO
+                            {t('market.nav.badges.pro')}
                         </div>
                     </div>
                     
@@ -187,7 +189,7 @@ export const PortalSidebar: React.FC = () => {
                             onClick={(e) => { e.stopPropagation(); setShowPricing(true); }}
                             className="w-full py-1.5 bg-white text-black text-[10px] font-bold rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center gap-1 shadow-md group-hover:shadow-lg hover:scale-[1.02] active:scale-95 duration-200"
                         >
-                            Upgrade Now <ChevronRight size={10} />
+                            {t('market.nav.upgrade_now')} <ChevronRight size={10} />
                         </button>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Gift, Check, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface InviteCodeInputProps {
     value: string;
@@ -23,6 +24,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
     error,
     className = '',
 }) => {
+    const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(false);
     const [validation, setValidation] = useState<ValidationState>({ status: 'idle' });
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -37,11 +39,11 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
         const newChar = char.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (!newChar) return;
 
-        const newValue = [...localValue];
-        newValue[index] = newChar;
-        setLocalValue(newValue);
+        const nextValue = [...localValue];
+        nextValue[index] = newChar;
+        setLocalValue(nextValue);
 
-        const codeString = newValue.join('').replace(/\s/g, '');
+        const codeString = nextValue.join('').replace(/\s/g, '');
         onChange(codeString);
 
         if (index < 5) {
@@ -58,23 +60,25 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
     const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
         if (e.key === 'Backspace') {
             e.preventDefault();
-            const newValue = [...localValue];
+            const nextValue = [...localValue];
             if (localValue[index]) {
-                newValue[index] = '';
-                setLocalValue(newValue);
-                onChange(newValue.join('').replace(/\s/g, ''));
+                nextValue[index] = '';
+                setLocalValue(nextValue);
+                onChange(nextValue.join('').replace(/\s/g, ''));
                 setValidation({ status: 'idle' });
                 return;
             }
+
             if (index > 0) {
                 inputRefs.current[index - 1]?.focus();
-                newValue[index - 1] = '';
-                setLocalValue(newValue);
-                onChange(newValue.join('').replace(/\s/g, ''));
+                nextValue[index - 1] = '';
+                setLocalValue(nextValue);
+                onChange(nextValue.join('').replace(/\s/g, ''));
                 setValidation({ status: 'idle' });
             }
             return;
         }
+
         if (e.key === 'ArrowLeft' && index > 0) {
             inputRefs.current[index - 1]?.focus();
         } else if (e.key === 'ArrowRight' && index < 5) {
@@ -86,8 +90,8 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
         e.preventDefault();
         const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
 
-        const newValue = pasted.split('').concat(Array(6 - pasted.length).fill(''));
-        setLocalValue(newValue);
+        const nextValue = pasted.split('').concat(Array(6 - pasted.length).fill(''));
+        setLocalValue(nextValue);
         onChange(pasted);
 
         if (pasted.length === 6) {
@@ -106,11 +110,12 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
         if (isValid) {
             const mockData = {
                 inviter: `User${Math.floor(Math.random() * 10000)}`,
-                reward: '7-day VIP',
+                reward: t('auth.bindInvite.rewards.vipDays'),
             };
+
             setValidation({
                 status: 'valid',
-                message: 'Invite code is valid.',
+                message: t('auth.bindInvite.validation.valid'),
                 inviter: mockData.inviter,
                 reward: mockData.reward,
             });
@@ -120,7 +125,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
 
         setValidation({
             status: 'invalid',
-            message: 'Invite code is invalid or expired.',
+            message: t('auth.bindInvite.validation.invalid'),
         });
         onValidate?.(false);
     };
@@ -141,7 +146,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-dashed border-[#333] bg-[#111]/50 text-gray-400 hover:text-gray-300 hover:border-[#444] hover:bg-[#18181b] transition-all group"
                 >
                     <Gift size={18} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm">Have an invite code? Enter to claim rewards</span>
+                    <span className="text-sm">{t('auth.bindInvite.input.collapsed')}</span>
                     <Sparkles size={14} className="text-yellow-500/70" />
                 </button>
             </div>
@@ -153,11 +158,11 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
             <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-gray-400 flex items-center gap-2">
                     <Gift size={14} className="text-yellow-500" />
-                    Invite code
+                    {t('auth.bindInvite.input.label')}
                     {validation.status === 'valid' && (
                         <span className="flex items-center gap-1 text-green-400">
                             <Check size={12} />
-                            Verified
+                            {t('auth.bindInvite.input.verified')}
                         </span>
                     )}
                 </label>
@@ -169,7 +174,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                     }}
                     className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
                 >
-                    Skip
+                    {t('auth.bindInvite.input.skip')}
                 </button>
             </div>
 
@@ -201,9 +206,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                                 ${validation.status === 'validating' ? 'animate-pulse' : ''}
                             `}
                         />
-                        {index === 2 && (
-                            <span className="text-gray-600 font-bold">-</span>
-                        )}
+                        {index === 2 && <span className="text-gray-600 font-bold">-</span>}
                     </React.Fragment>
                 ))}
             </div>
@@ -211,7 +214,7 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
             {validation.status === 'validating' && (
                 <div className="flex items-center gap-2 text-sm text-blue-400">
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Validating invite code...</span>
+                    <span>{t('auth.bindInvite.validation.validating')}</span>
                 </div>
             )}
 
@@ -219,13 +222,13 @@ export const InviteCodeInput: React.FC<InviteCodeInputProps> = ({
                 <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20">
                     <div className="flex items-center gap-2 text-green-400 text-sm mb-1">
                         <Check size={16} />
-                        <span className="font-medium">Invite code verified</span>
+                        <span className="font-medium">{t('auth.bindInvite.validation.verified')}</span>
                     </div>
                     <p className="text-xs text-gray-400">
-                        Inviter: <span className="text-gray-300">{validation.inviter}</span>
+                        {t('auth.bindInvite.input.inviter')}: <span className="text-gray-300">{validation.inviter}</span>
                     </p>
                     <p className="text-xs text-green-400/80 mt-1">
-                        Reward after sign-up: <span className="font-medium">{validation.reward}</span>
+                        {t('auth.bindInvite.input.reward')}: <span className="font-medium">{validation.reward}</span>
                     </p>
                 </div>
             )}

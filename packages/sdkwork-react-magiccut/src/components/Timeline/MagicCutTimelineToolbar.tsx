@@ -25,6 +25,7 @@ import { TIMELINE_CONSTANTS } from '../../constants';
 import { MediaResourceType, type AnyMediaResource } from '@sdkwork/react-commons';
 import type { AssetContentKey } from '@sdkwork/react-types';
 import { normalizeResourceForTimeline } from '../../utils/assetReferenceNormalization';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 // --- Constants & Math Helpers ---
 const LOG_MIN = Math.log(TIMELINE_CONSTANTS.MIN_ZOOM);
@@ -110,7 +111,8 @@ const toMagiccutImportedResource = async (
 const ZoomSlider: React.FC<{
     currentZoom: number;
     onZoomChange: (level: number) => void;
-}> = ({ currentZoom, onZoomChange }) => {
+    title: string;
+}> = ({ currentZoom, onZoomChange, title }) => {
     // Local state for buttery smooth UI updates, independent of parent render cycles
     const [localValue, setLocalValue] = useState(zoomToSlider(currentZoom));
     const [isDragging, setIsDragging] = useState(false);
@@ -210,7 +212,7 @@ const ZoomSlider: React.FC<{
             ref={containerRef}
             onMouseDown={handleMouseDown}
             onDoubleClick={handleDoubleClick}
-            title="Zoom Timeline (Drag to zoom, Shift+Drag for precision, DblClick to reset)"
+            title={title}
         >
             {/* Track Background */}
             <div className="absolute left-0 right-0 h-1 bg-[#27272a] rounded-full overflow-hidden pointer-events-none group-hover:bg-[#333] transition-colors">
@@ -270,6 +272,7 @@ const ToolbarButton: React.FC<{
 
 export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
     const bus = useMagicCutBus();
+    const { t, tc, tl } = useMagicCutTranslation();
     const [showImageGen, setShowImageGen] = useState(false);
     const [showVideoGen, setShowVideoGen] = useState(false);
     const [showAudioGen, setShowAudioGen] = useState(false);
@@ -301,17 +304,25 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
 
     const isVisualTrack = trackType === 'video' || trackType === 'ai';
     const isAudioTrack = trackType === 'audio';
+    const aiLabels = {
+        image: t('toolbar.ai.image'),
+        video: t('toolbar.ai.video'),
+        speech: t('toolbar.ai.speech'),
+        sfx: t('toolbar.ai.sfx'),
+        music: t('toolbar.ai.music'),
+    };
+    const withShortcut = (label: string, shortcut: string) => `${label} (${shortcut})`;
 
     const getVisualTooltip = (action: string) => {
-        if (!selectedTrackId) return "Select a track first";
-        if (!isVisualTrack) return `Cannot generate ${action} on an Audio track`;
-        return `Generate AI ${action} at Playhead`;
+        if (!selectedTrackId) return t('toolbar.messages.selectTrackFirst');
+        if (!isVisualTrack) return t('toolbar.messages.cannotGenerateVisualOnAudio', { action });
+        return t('toolbar.messages.generateAtPlayhead', { action });
     };
 
     const getAudioTooltip = (action: string) => {
-        if (!selectedTrackId) return "Select a track first";
-        if (!isAudioTrack) return `Cannot generate ${action} on a Video track`;
-        return `Generate AI ${action} at Playhead`;
+        if (!selectedTrackId) return t('toolbar.messages.selectTrackFirst');
+        if (!isAudioTrack) return t('toolbar.messages.cannotGenerateAudioOnVideo', { action });
+        return t('toolbar.messages.generateAtPlayhead', { action });
     };
 
     // --- Action Handlers (Pure Event Emitters) ---
@@ -476,8 +487,8 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                 <div className="flex items-center gap-2">
 
                     <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
-                        <ToolbarButton onClick={handleUndo} disabled={!canUndo} icon={Undo} title="Undo (Ctrl+Z)" />
-                        <ToolbarButton onClick={handleRedo} disabled={!canRedo} icon={Redo} title="Redo (Ctrl+Shift+Z)" />
+                        <ToolbarButton onClick={handleUndo} disabled={!canUndo} icon={Undo} title={withShortcut(tc('undo'), 'Ctrl+Z')} />
+                        <ToolbarButton onClick={handleRedo} disabled={!canRedo} icon={Redo} title={withShortcut(tc('redo'), 'Ctrl+Shift+Z')} />
                     </div>
 
                     <div className="w-[1px] h-4 bg-[#27272a]" />
@@ -486,27 +497,27 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         <ToolbarButton
                             onClick={handleSplit}
                             icon={Scissors}
-                            title="Split Clip (Ctrl+B)"
+                            title={withShortcut(tl('splitClip'), 'Ctrl+B')}
                             disabled={!hasSelection}
                             hoverColor="hover:text-blue-400"
                         />
                         <ToolbarButton
                             onClick={handleTrimStart}
                             icon={ArrowLeftToLine}
-                            title="Trim Start to Playhead (Q)"
+                            title={withShortcut(tl('trimStartToPlayhead'), 'Q')}
                             disabled={!hasSelection}
                         />
                         <ToolbarButton
                             onClick={handleTrimEnd}
                             icon={ArrowRightToLine}
-                            title="Trim End to Playhead (W)"
+                            title={withShortcut(tl('trimEndToPlayhead'), 'W')}
                             disabled={!hasSelection}
                         />
                         <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
                         <ToolbarButton
                             onClick={handleDelete}
                             icon={Trash2}
-                            title="Delete Selected (Del)"
+                            title={withShortcut(t('shortcuts.delete'), 'Del')}
                             hoverColor="hover:text-red-400"
                             disabled={!hasSelection}
                         />
@@ -518,43 +529,43 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         <ToolbarButton
                             onClick={() => setEditTool('select')}
                             icon={MousePointer2}
-                            title="Selection Tool (V)"
+                            title={withShortcut(t('shortcuts.toolSelect'), 'V')}
                             isActive={editMode.currentTool === 'select'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('trim')}
                             icon={Scissors}
-                            title="Trim Tool (T)"
+                            title={withShortcut(t('shortcuts.toolTrim'), 'T')}
                             isActive={editMode.currentTool === 'trim'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('ripple')}
                             icon={GitBranch}
-                            title="Ripple Edit (R)"
+                            title={withShortcut(t('shortcuts.toolRipple'), 'R')}
                             isActive={editMode.currentTool === 'ripple'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('roll')}
                             icon={ArrowRightLeft}
-                            title="Roll Edit (E)"
+                            title={withShortcut(t('shortcuts.toolRoll'), 'E')}
                             isActive={editMode.currentTool === 'roll'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('slip')}
                             icon={MoveHorizontal}
-                            title="Slip Tool (Y)"
+                            title={withShortcut(t('shortcuts.toolSlip'), 'Y')}
                             isActive={editMode.currentTool === 'slip'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('slide')}
                             icon={Eraser}
-                            title="Slide Tool (U)"
+                            title={withShortcut(t('shortcuts.toolSlide'), 'U')}
                             isActive={editMode.currentTool === 'slide'}
                         />
                         <ToolbarButton
                             onClick={() => setEditTool('razor')}
                             icon={Slice}
-                            title="Razor Tool (C)"
+                            title={withShortcut(t('shortcuts.toolRazor'), 'C')}
                             isActive={editMode.currentTool === 'razor'}
                         />
                     </div>
@@ -565,28 +576,28 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         <ToolbarButton
                             onClick={handleAddMarker}
                             icon={MapPin}
-                            title="Add Marker (M)"
+                            title={withShortcut(tl('addMarker'), 'M')}
                             hoverColor="hover:text-yellow-400"
                         />
                         <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
                         <ToolbarButton
                             onClick={handleToggleSnap}
                             icon={Magnet}
-                            title="Snapping (N)"
+                            title={withShortcut(tl('snapping'), 'N')}
                             isActive={isSnappingEnabled}
                             activeColor="text-blue-400 bg-blue-500/10"
                         />
                         <ToolbarButton
                             onClick={handleToggleSkim}
                             icon={ScanLine}
-                            title="Skimming (S)"
+                            title={withShortcut(tl('skimming'), 'S')}
                             isActive={isSkimmingEnabled}
                             activeColor="text-pink-400 bg-pink-500/10"
                         />
                         <ToolbarButton
                             onClick={toggleLinkedSelection}
                             icon={Link2}
-                            title="Linked Selection (Shift+L)"
+                            title={withShortcut(tl('linkedSelection'), 'Shift+L')}
                             isActive={editMode.linkedSelection}
                             activeColor="text-emerald-400 bg-emerald-500/10"
                         />
@@ -605,10 +616,10 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                                 : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
                             }
                         `}
-                        title={getVisualTooltip("Image")}
+                        title={getVisualTooltip(aiLabels.image)}
                     >
                         <Sparkles size={12} className={isVisualTrack ? "text-purple-500" : ""} />
-                        Image
+                        {aiLabels.image}
                     </button>
 
                     <button
@@ -621,10 +632,10 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                                 : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
                             }
                         `}
-                        title={getVisualTooltip("Video")}
+                        title={getVisualTooltip(aiLabels.video)}
                     >
                         <Film size={12} className={isVisualTrack ? "text-pink-500" : ""} />
-                        Video
+                        {aiLabels.video}
                     </button>
 
                     <button
@@ -637,10 +648,10 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                                 : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
                             }
                         `}
-                        title={getAudioTooltip("Speech")}
+                        title={getAudioTooltip(aiLabels.speech)}
                     >
                         <Mic size={12} className={isAudioTrack ? "text-emerald-500" : ""} />
-                        Speech
+                        {aiLabels.speech}
                     </button>
 
                     <button
@@ -653,10 +664,10 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                                 : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
                             }
                         `}
-                        title={getAudioTooltip("SFX")}
+                        title={getAudioTooltip(aiLabels.sfx)}
                     >
                         <AudioWaveform size={12} className={isAudioTrack ? "text-orange-500" : ""} />
-                        SFX
+                        {aiLabels.sfx}
                     </button>
 
                     <button
@@ -669,10 +680,10 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                                 : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
                             }
                         `}
-                        title={getAudioTooltip("Music")}
+                        title={getAudioTooltip(aiLabels.music)}
                     >
                         <Music size={12} className={isAudioTrack ? "text-indigo-500" : ""} />
-                        Music
+                        {aiLabels.music}
                     </button>
                 </div>
 
@@ -681,7 +692,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                     <button
                         onClick={handleFit}
                         className="flex items-center justify-center p-1.5 hover:bg-[#18181b] rounded-md text-gray-400 hover:text-white transition-colors border border-transparent hover:border-[#27272a]"
-                        title="Fit to Screen (Shift+Z)"
+                        title={withShortcut(tl('fitToView'), 'Shift+Z')}
                     >
                         <Minimize2 size={14} />
                     </button>
@@ -690,7 +701,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         <button
                             onClick={() => stepZoom(-1)}
                             className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
-                            title="Zoom Out"
+                            title={tl('zoomOut')}
                         >
                             <ZoomOut size={13} />
                         </button>
@@ -698,12 +709,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         <ZoomSlider
                             currentZoom={zoomLevel}
                             onZoomChange={handleZoomChange}
+                            title={tl('zoomTimelineHelp')}
                         />
 
                         <button
                             onClick={() => stepZoom(1)}
                             className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
-                            title="Zoom In"
+                            title={tl('zoomIn')}
                         >
                             <ZoomIn size={13} />
                         </button>

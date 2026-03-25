@@ -67,7 +67,7 @@ export const sidebar = {
     voice_lab: "\u58f0\u97f3\u5b9e\u9a8c\u5ba4",
     speech_studio: "\u8bed\u97f3\u5de5\u4f5c\u5ba4",
     chat_ppt: "Chat PPT",
-    magic_cut: "Magic Cut",
+    magic_cut: "魔映",
 
     mcp_market: "MCP \u5e02\u573a",
 

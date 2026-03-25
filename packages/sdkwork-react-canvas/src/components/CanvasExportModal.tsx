@@ -1,5 +1,6 @@
 
 import { Button } from '@sdkwork/react-commons'
+import { useTranslation } from '@sdkwork/react-i18n';
 import { CanvasExportMode } from '../entities'
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -12,6 +13,7 @@ interface CanvasExportModalProps {
 
 export const CanvasExportModal: React.FC<CanvasExportModalProps> = ({ isOpen, onClose, onConfirm }) => {
     const [selectedMode, setSelectedMode] = useState<CanvasExportMode>('video_only');
+    const { t } = useTranslation();
 
     if (!isOpen) return null;
 
@@ -36,8 +38,8 @@ export const CanvasExportModal: React.FC<CanvasExportModalProps> = ({ isOpen, on
                              <Clapperboard size={20} />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-lg leading-tight">Export to Magic Cut</h3>
-                            <p className="text-xs text-gray-400">Convert canvas to timeline</p>
+                            <h3 className="text-white font-bold text-lg leading-tight">{t('canvas.export.modal.title')}</h3>
+                            <p className="text-xs text-gray-400">{t('canvas.export.modal.subtitle')}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-[#333] rounded-lg">
@@ -47,29 +49,29 @@ export const CanvasExportModal: React.FC<CanvasExportModalProps> = ({ isOpen, on
 
                 {/* Body */}
                 <div className="p-6 space-y-4">
-                    <p className="text-sm text-gray-300 font-medium mb-2">Select content to export:</p>
+                    <p className="text-sm text-gray-300 font-medium mb-2">{t('canvas.export.modal.select_content')}</p>
                     
                     <div className="space-y-3">
                         <ExportOption 
                             mode="video_only" 
-                            label="Video Only" 
-                            description="Filter only video elements for the timeline."
+                            label={t('canvas.export.modal.options.video_only.label')} 
+                            description={t('canvas.export.modal.options.video_only.description')}
                             icon={<Video size={18} />}
                             isSelected={selectedMode === 'video_only'}
                             onSelect={() => setSelectedMode('video_only')}
                         />
                         <ExportOption 
                             mode="mixed" 
-                            label="Images & Videos" 
-                            description="Include all visual media elements."
+                            label={t('canvas.export.modal.options.mixed.label')} 
+                            description={t('canvas.export.modal.options.mixed.description')}
                             icon={<Layers size={18} />}
                             isSelected={selectedMode === 'mixed'}
                             onSelect={() => setSelectedMode('mixed')}
                         />
                         <ExportOption 
                             mode="image_only" 
-                            label="Images Only" 
-                            description="Create a slideshow from image elements."
+                            label={t('canvas.export.modal.options.image_only.label')} 
+                            description={t('canvas.export.modal.options.image_only.description')}
                             icon={<ImageIcon size={18} />}
                             isSelected={selectedMode === 'image_only'}
                             onSelect={() => setSelectedMode('image_only')}
@@ -79,12 +81,12 @@ export const CanvasExportModal: React.FC<CanvasExportModalProps> = ({ isOpen, on
 
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-[#27272a] bg-[#252526] flex justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose} className="bg-[#333] border-[#444] text-white hover:bg-[#444]">Cancel</Button>
+                    <Button variant="secondary" onClick={onClose} className="bg-[#333] border-[#444] text-white hover:bg-[#444]">{t('common.actions.cancel')}</Button>
                     <Button 
                         onClick={handleConfirm}
                         className="bg-pink-600 hover:bg-pink-500 text-white font-bold border-0 shadow-lg shadow-pink-900/20 gap-2"
                     >
-                        Export <ArrowRight size={16} />
+                        {t('canvas.export.confirm')} <ArrowRight size={16} />
                     </Button>
                 </div>
             </div>

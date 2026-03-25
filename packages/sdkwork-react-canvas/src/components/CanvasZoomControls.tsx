@@ -6,6 +6,7 @@ import {
     Minus, Plus, FileJson, Clapperboard, MoreHorizontal,
     Loader2, FileUp 
 } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { useCanvasStore } from '../store/canvasStore'; 
 import { useRouter, ROUTES, platform, uploadHelper } from '@sdkwork/react-core'; 
 import { CanvasExportModal } from './CanvasExportModal';
@@ -15,6 +16,7 @@ import { zoomViewportAtCenter } from '../utils/viewport';
 export const CanvasZoomControls: React.FC = () => {
     const { viewport, setViewport, activeBoard, elements, importBoard } = useCanvasStore();
     const { navigate } = useRouter();
+    const { t } = useTranslation();
     
     const [isExporting, setIsExporting] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
@@ -39,7 +41,7 @@ export const CanvasZoomControls: React.FC = () => {
             id: 'scratchpad-' + Date.now(),
             uuid: 'scratchpad-' + Date.now(),
             type: 'CANVAS_BOARD',
-            title: 'Untitled Canvas',
+            title: t('canvas.export.default_board_title'),
             elements: elements,
             createdAt: Date.now(),
             updatedAt: Date.now()
@@ -53,11 +55,19 @@ export const CanvasZoomControls: React.FC = () => {
                 const content = new TextDecoder().decode(files[0].data);
                 const board = await canvasBusinessService.canvasExportService.importFromJson(content);
                 importBoard(board);
-                await platform.notify("Import Successful", `Board "${board.title}" imported.`);
+                await platform.notify(
+                    t('canvas.export.notify.import_success_title'),
+                    t('canvas.export.notify.import_success_message', { title: board.title }),
+                );
             }
         } catch (e: any) {
             console.error("Import failed", e);
-            await platform.notify("Import Failed", e.message);
+            await platform.notify(
+                t('canvas.export.notify.import_failed_title'),
+                typeof e?.message === 'string' && e.message.trim()
+                    ? e.message
+                    : t('canvas.export.notify.unknown_error'),
+            );
         }
         setShowMenu(false);
     };
@@ -65,7 +75,10 @@ export const CanvasZoomControls: React.FC = () => {
     const handleExportJson = async () => {
         const board = getExportBoard();
         if (board.elements.length === 0) {
-             await platform.notify("Export Failed", "Canvas is empty.");
+             await platform.notify(
+                 t('canvas.export.notify.export_failed_title'),
+                 t('canvas.export.notify.empty_canvas'),
+             );
              return;
         }
 
@@ -89,7 +102,10 @@ export const CanvasZoomControls: React.FC = () => {
     const handleMagicCutClick = () => {
         const board = getExportBoard();
         if (board.elements.length === 0) {
-             platform.notify("Export Failed", "Canvas is empty. Add some media elements first.");
+             platform.notify(
+                 t('canvas.export.notify.export_failed_title'),
+                 t('canvas.export.notify.empty_canvas_hint'),
+             );
              return;
         }
         setShowMagicCutModal(true);
@@ -104,13 +120,21 @@ export const CanvasZoomControls: React.FC = () => {
             // Pass board title explicitly and the selected mode
             const projectId = await canvasBusinessService.canvasExportService.exportToMagicCut(board, board.title, mode);
             
-            await platform.notify("Export Successful", "Project created in Magic Cut");
+            await platform.notify(
+                t('canvas.export.notify.export_success_title'),
+                t('canvas.export.notify.export_success_message'),
+            );
             
             // Navigate to Magic Cut with project ID AND source query param
             navigate(ROUTES.MAGIC_CUT, `projectId=${projectId}&from=canvas`);
         } catch (e: any) {
             console.error("Export failed", e);
-            await platform.notify("Export Failed", e.message || "Unknown error");
+            await platform.notify(
+                t('canvas.export.notify.export_failed_title'),
+                typeof e?.message === 'string' && e.message.trim()
+                    ? e.message
+                    : t('canvas.export.notify.unknown_error'),
+            );
         } finally {
             // Critical: Ensure this runs even on error to unblock UI
             setIsExporting(false);
@@ -128,7 +152,7 @@ export const CanvasZoomControls: React.FC = () => {
                     {showMenu && (
                         <div className="absolute bottom-full right-0 mb-2 w-52 bg-[#18181b] border border-[#333] rounded-xl shadow-2xl p-1 animate-in fade-in slide-in-from-bottom-2 duration-150 overflow-hidden">
                             <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-[#27272a] mb-1">
-                                Actions
+                                {t('canvas.export.actions')}
                             </div>
                             
                             <button 
@@ -136,7 +160,7 @@ export const CanvasZoomControls: React.FC = () => {
                                 className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-200 hover:text-white hover:bg-[#27272a] rounded-lg transition-colors group"
                             >
                                 <FileUp size={14} className="text-green-400" />
-                                <span>Import Board (JSON)</span>
+                                <span>{t('canvas.export.import_json')}</span>
                             </button>
                             
                             <div className="h-px bg-[#27272a] my-1" />
@@ -147,7 +171,7 @@ export const CanvasZoomControls: React.FC = () => {
                                 className={`w-full flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-colors group ${!hasContent ? 'opacity-50 cursor-not-allowed text-gray-500' : 'text-gray-200 hover:text-white hover:bg-blue-600'}`}
                             >
                                 {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Clapperboard size={14} className="text-pink-400 group-hover:text-white" />}
-                                <span>{isExporting ? 'Exporting...' : 'Export to Magic Cut'}</span>
+                                <span>{isExporting ? t('canvas.export.exporting') : t('canvas.export.to_magic_cut')}</span>
                             </button>
                             <button 
                                 onClick={handleExportJson}
@@ -155,7 +179,7 @@ export const CanvasZoomControls: React.FC = () => {
                                 className={`w-full flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-colors group ${!hasContent ? 'opacity-50 cursor-not-allowed text-gray-500' : 'text-gray-200 hover:text-white hover:bg-[#27272a]'}`}
                             >
                                 <FileJson size={14} className="text-yellow-400" />
-                                <span>Export JSON</span>
+                                <span>{t('canvas.export.export_json')}</span>
                             </button>
                         </div>
                     )}
@@ -168,7 +192,7 @@ export const CanvasZoomControls: React.FC = () => {
                         `}
                     >
                         <MoreHorizontal size={14} />
-                        <span>Menu</span>
+                        <span>{t('canvas.export.menu')}</span>
                     </button>
                 </div>
 
@@ -184,7 +208,7 @@ export const CanvasZoomControls: React.FC = () => {
                     <button 
                         onClick={handleResetZoom}
                         className="w-12 text-center text-xs font-mono text-gray-300 hover:text-white transition-colors"
-                        title="Reset Zoom"
+                        title={t('canvas.export.reset_zoom')}
                     >
                         {Math.round(viewport.zoom * 100)}%
                     </button>

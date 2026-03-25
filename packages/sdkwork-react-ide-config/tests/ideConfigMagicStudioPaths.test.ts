@@ -44,15 +44,15 @@ describe('IDE config MagicStudio paths', () => {
     );
   });
 
-  it('contains no legacy openstudio directories in global integration definitions', () => {
-    const legacyPath = '.openstudio';
+  it('keeps global integration definitions anchored under the MagicStudio root variable', () => {
+    const requiredRootPrefix = '${MAGICSTUDIO_ROOT}/system/integrations/';
     const managedDefinitions = ['skill-manager', 'mcp-manager', 'plugin-manager'];
 
     for (const definitionId of managedDefinitions) {
       const definition = findDefinition(definitionId);
       for (const platformConfig of Object.values(definition.platforms)) {
-        expect(platformConfig.install || '').not.toContain(legacyPath);
-        expect(platformConfig.config || '').not.toContain(legacyPath);
+        expect(platformConfig.install || '').toContain(requiredRootPrefix);
+        expect(platformConfig.config || '').toContain(requiredRootPrefix);
       }
     }
   });

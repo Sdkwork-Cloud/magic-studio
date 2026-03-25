@@ -3,11 +3,13 @@ import { PromptTextInput, createPromptTextInputCapabilityProps } from '@sdkwork/
 import React from 'react';
 import { useAudioStore } from '../store/audioStore';
 import { AudioModelSelector } from './AudioModelSelector';
+import { useTranslation } from '@sdkwork/react-i18n';
 import {
     Volume2, Loader2, Play, Settings2, Type
 } from 'lucide-react';
 
 export const AudioLeftGeneratorPanel: React.FC = () => {
+    const { t } = useTranslation();
     const { config, setConfig, generate, isGenerating } = useAudioStore();
 
     return (
@@ -19,8 +21,8 @@ export const AudioLeftGeneratorPanel: React.FC = () => {
                             <Volume2 size={16} fill="currentColor" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-sm text-white leading-none">Speech Studio</h2>
-                            <span className="text-[10px] text-gray-500 font-medium">Text to Speech</span>
+                            <h2 className="font-bold text-sm text-white leading-none">{t('audio.common.title')}</h2>
+                            <span className="text-[10px] text-gray-500 font-medium">{t('audio.common.subtitle')}</span>
                         </div>
                     </div>
                     
@@ -35,11 +37,11 @@ export const AudioLeftGeneratorPanel: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#09090b]">
                 <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                      <div>
-                        <Label icon={<Type size={12} />}>Script</Label>
+                        <Label icon={<Type size={12} />}>{t('audio.page.script')}</Label>
                         <PromptTextInput
                             {...createPromptTextInputCapabilityProps('TEXT')}
                             label={null}
-                            placeholder="Enter text to synthesize..."
+                            placeholder={t('audio.page.placeholder')}
                             value={config.prompt || ''}
                             onChange={(val) => setConfig({ prompt: val })}
                             disabled={isGenerating}
@@ -51,12 +53,12 @@ export const AudioLeftGeneratorPanel: React.FC = () => {
                     <div className="p-4 bg-[#18181b] border border-[#27272a] rounded-xl space-y-4">
                         <div className="flex items-center gap-2 mb-1">
                             <Settings2 size={12} className="text-gray-500" />
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Settings</span>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('audio.page.settings')}</span>
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between text-xs text-gray-400">
-                                <span>Duration</span>
+                                <span>{t('audio.page.duration')}</span>
                                 <span className="font-mono text-gray-300">{config.duration || 10}s</span>
                             </div>
                             <input
@@ -85,12 +87,12 @@ export const AudioLeftGeneratorPanel: React.FC = () => {
                     {isGenerating ? (
                         <>
                             <Loader2 size={18} className="animate-spin" />
-                            <span>Generating...</span>
+                            <span>{t('audio.common.creating')}</span>
                         </>
                     ) : (
                         <>
                             <Play size={16} fill="currentColor" />
-                            <span>Generate Speech</span>
+                            <span>{t('audio.common.generate')}</span>
                         </>
                     )}
                 </button>

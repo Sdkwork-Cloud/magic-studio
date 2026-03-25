@@ -2,13 +2,15 @@ import type { ExportFormat } from '../../services/export/types';
 
 export interface AudioOnlyExportCard {
   format: 'wav';
-  label: 'WAV';
+  label: string;
   available: true;
   recommended: true;
   route: 'audio-buffer';
-  badge: 'Master';
+  badge: string;
   description: string;
 }
+
+type Translate = (key: string, params?: Record<string, any>) => string;
 
 export function isAudioOnlyExportRequest({
   exportVideo,
@@ -35,14 +37,14 @@ export function estimateAudioOnlyExportSizeMb(
   return Math.max(1, Math.round(totalBytes / (1024 * 1024)));
 }
 
-export function resolveAudioOnlyExportCard(): AudioOnlyExportCard {
+export function resolveAudioOnlyExportCard(translate: Translate): AudioOnlyExportCard {
   return {
     format: 'wav',
     label: 'WAV',
     available: true,
     recommended: true,
     route: 'audio-buffer',
-    badge: 'Master',
-    description: 'Uncompressed PCM WAV audio mixdown for standalone delivery.',
+    badge: translate('export.formatBadges.master'),
+    description: translate('export.formatDescriptions.audioOnly'),
   };
 }

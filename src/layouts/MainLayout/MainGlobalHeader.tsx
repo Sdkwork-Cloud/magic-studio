@@ -83,32 +83,32 @@ const MainGlobalHeader: React.FC = () => {
               </Suspense>
            )}
 
-           {/* Developer Tools Toggle */}
+           {/* Debug Menu Toggle */}
            {settings.general.developerMode && (
                <div className="h-full flex items-center border-r border-gray-200 dark:border-[#1a1a1a] px-0" ref={devRef}>
                    <div className="relative h-full">
                       <button 
                           onClick={() => setShowDevMenu(!showDevMenu)}
                           className={`h-full w-[46px] flex items-center justify-center text-gray-400 hover:bg-[#2d2d2d] hover:text-green-400 transition-colors focus:outline-none ${showDevMenu ? 'bg-[#2d2d2d] text-green-400' : ''}`}
-                          title="Developer Tools"
+                          title={t('header.developer_tools')}
                       >
                           <Bug size={14} />
                       </button>
                       
                       {showDevMenu && (
                           <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-[#1a1a1a] rounded-lg shadow-2xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75">
-                              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Developer</div>
+                              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('header.developer_menu')}</div>
                               <button 
                                   onClick={() => { platform.restartApp(); setShowDevMenu(false); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
-                                  <RefreshCw size={14} className="text-blue-500" /> Reload App
+                                  <RefreshCw size={14} className="text-blue-500" /> {t('header.reload_app')}
                               </button>
                               <button 
                                   onClick={() => { platform.toggleDevTools(); setShowDevMenu(false); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
-                                  <Terminal size={14} className="text-green-500" /> Toggle DevTools
+                                  <Terminal size={14} className="text-green-500" /> {t('header.toggle_devtools')}
                               </button>
                           </div>
                       )}

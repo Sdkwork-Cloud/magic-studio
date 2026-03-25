@@ -47,7 +47,18 @@ describe('MagicCutLayoutHeader', () => {
       currentQuery: '',
     });
     mockUseTranslation.mockReturnValue({
-      t: (key: string) => key,
+      t: (key: string) => ({
+        'magicCut.header.back.portal': '门户',
+        'magicCut.header.back.canvas': '画布',
+        'magicCut.header.brand': '魔映',
+        'magicCut.header.beta': '测试版',
+        'magicCut.header.subtitle': 'AI 原生视频编辑器',
+        'magicCut.header.saved': '已保存',
+        'magicCut.header.share': '分享',
+        'magicCut.header.export': '导出',
+        'magicCut.header.exportVideo': '导出视频',
+        'magicCut.header.exportJsonProject': '导出 JSON 项目',
+      }[key] ?? key),
     });
     mockUseMagicCutStore.mockReturnValue({
       project: {
@@ -62,5 +73,16 @@ describe('MagicCutLayoutHeader', () => {
 
     expect(matches).toHaveLength(1);
     expect(html).toContain('data-testid="window-controls"');
+  });
+
+  it('renders the localized Magic Cut shell copy instead of hardcoded English strings', () => {
+    const html = renderToStaticMarkup(<MagicCutLayoutHeader />);
+
+    expect(html).toContain('魔映');
+    expect(html).toContain('测试版');
+    expect(html).toContain('AI 原生视频编辑器');
+    expect(html).toContain('已保存');
+    expect(html).toContain('分享');
+    expect(html).toContain('导出');
   });
 });

@@ -2,10 +2,12 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useRouter, ROUTES } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { ProjectList } from './ProjectList';
 
 export const FilmSidebar: React.FC = () => {
     const { navigate } = useRouter();
+    const { t } = useTranslation();
     
     return (
         <div className="w-[260px] h-full flex flex-col bg-[#08080a] shrink-0">
@@ -14,16 +16,16 @@ export const FilmSidebar: React.FC = () => {
                 <button 
                     onClick={() => navigate(ROUTES.HOME)}
                     className="flex items-center gap-2 px-2 py-1.5 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors w-full"
-                    title="Back to Home"
+                    title={t('common.actions.back_home')}
                 >
                     <ChevronLeft size={16} />
-                    <span className="text-xs font-medium">Back to Home</span>
+                    <span className="text-xs font-medium">{t('common.actions.back_home')}</span>
                 </button>
             </div>
             {/* Sidebar Title */}
             <div className="px-4 py-3 border-b border-[#1a1a1a]">
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    Production List
+                    {t('film.sidebar.production_list')}
                 </span>
             </div>
             <ProjectList />

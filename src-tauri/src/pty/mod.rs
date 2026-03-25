@@ -76,7 +76,7 @@ impl PtyState {
         }
 
         cmd.env("COLORTERM", "truecolor");
-        cmd.env("TERM_PROGRAM", "OpenStudio");
+        cmd.env("TERM_PROGRAM", "MagicStudio");
         cmd.env("TERM_PROGRAM_VERSION", "0.1.0");
 
         #[cfg(not(target_os = "windows"))]

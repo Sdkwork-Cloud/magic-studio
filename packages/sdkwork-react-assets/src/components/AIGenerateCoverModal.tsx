@@ -3,6 +3,7 @@ import { Button } from '@sdkwork/react-commons'
 import React, { useState, useEffect } from 'react';
 import { Sparkles, X, Wand2, RefreshCw, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
 import { genAIService } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface AIGenerateCoverModalProps {
     contextText: string;
@@ -13,6 +14,7 @@ interface AIGenerateCoverModalProps {
 type Step = 'analyzing' | 'selection' | 'generating' | 'preview';
 
 export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ contextText, onClose, onSuccess }) => {
+    const { t } = useTranslation();
     const [step, setStep] = useState<Step>('analyzing');
     const [prompts, setPrompts] = useState<string[]>([]);
     const [selectedPrompt, setSelectedPrompt] = useState<string>('');
@@ -27,16 +29,16 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
         setStep('analyzing');
         setError(null);
         try {
-            const suggestions = await genAIService.generateCoverPrompts(contextText || "General topic");
+            const suggestions = await genAIService.generateCoverPrompts(contextText || t('assetCenter.coverGenerator.defaults.context'));
             setPrompts(suggestions);
             setStep('selection');
         } catch (e: any) {
-            setError(e.message || "Failed to analyze content");
+            setError(e.message || t('assetCenter.coverGenerator.errors.analyze'));
             // Fallback prompts
             setPrompts([
-                "A modern minimalist abstract composition, high quality, 4k",
-                "A futuristic digital landscape, neon colors, synthwave style",
-                "A professional clean workspace with technology elements, photorealistic"
+                t('assetCenter.coverGenerator.fallbackPrompts.abstract'),
+                t('assetCenter.coverGenerator.fallbackPrompts.futuristic'),
+                t('assetCenter.coverGenerator.fallbackPrompts.workspace'),
             ]);
             setStep('selection');
         }
@@ -51,7 +53,7 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
             setGeneratedImage(imageUrl);
             setStep('preview');
         } catch (e: any) {
-            setError(e.message || "Failed to generate image");
+            setError(e.message || t('assetCenter.coverGenerator.errors.generate'));
             setStep('selection');
         }
     };
@@ -73,7 +75,7 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                 <div className="px-6 py-4 border-b border-[#333] bg-[#252526] flex justify-between items-center">
                     <div className="flex items-center gap-2 text-white font-bold">
                         <Sparkles size={18} className="text-purple-500" />
-                        <span>AI Cover Generator</span>
+                        <span>{t('assetCenter.coverGenerator.title')}</span>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
                         <X size={18} />
@@ -92,8 +94,8 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                                  </div>
                              </div>
                              <div>
-                                 <h3 className="text-lg font-medium text-white mb-1">Analyzing Context...</h3>
-                                 <p className="text-sm text-gray-500">Generating creative concepts based on your content.</p>
+                                 <h3 className="text-lg font-medium text-white mb-1">{t('assetCenter.coverGenerator.steps.analyzing.title')}</h3>
+                                 <p className="text-sm text-gray-500">{t('assetCenter.coverGenerator.steps.analyzing.description')}</p>
                              </div>
                         </div>
                     )}
@@ -101,7 +103,7 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                     {/* STEP 2: SELECTION */}
                     {step === 'selection' && (
                         <div className="flex-1 flex flex-col">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Select a Style Concept</h3>
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t('assetCenter.coverGenerator.steps.selection.title')}</h3>
                             {error && (
                                 <div className="mb-4 p-3 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-xs flex items-center gap-2">
                                     <X size={14} /> {error}
@@ -124,9 +126,9 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                             </div>
                             <div className="mt-4 flex justify-between items-center border-t border-[#333] pt-4">
                                 <button onClick={analyzeContent} className="text-xs text-gray-500 hover:text-white flex items-center gap-1.5 transition-colors">
-                                    <RefreshCw size={12} /> Regenerate Ideas
+                                    <RefreshCw size={12} /> {t('assetCenter.coverGenerator.actions.regenerateIdeas')}
                                 </button>
-                                <span className="text-xs text-gray-600">Powered by Gemini</span>
+                                <span className="text-xs text-gray-600">{t('assetCenter.coverGenerator.poweredBy', { model: 'Gemini' })}</span>
                             </div>
                         </div>
                     )}
@@ -139,7 +141,7 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                                  <Loader2 size={32} className="text-purple-500 animate-spin relative z-10" />
                              </div>
                              <div className="max-w-sm">
-                                 <h3 className="text-white font-medium mb-2">Dreaming...</h3>
+                                 <h3 className="text-white font-medium mb-2">{t('assetCenter.coverGenerator.steps.generating.title')}</h3>
                                  <p className="text-xs text-gray-500 italic px-4">"{selectedPrompt}"</p>
                              </div>
                         </div>
@@ -149,12 +151,12 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
                     {step === 'preview' && (
                         <div className="flex-1 flex flex-col h-full">
                              <div className="flex-1 bg-[#111] rounded-xl border border-[#333] overflow-hidden relative group mb-6 flex items-center justify-center min-h-[250px]">
-                                 <img src={generatedImage} className="max-w-full max-h-[350px] object-contain shadow-2xl" alt="Generated Cover" />
+                                 <img src={generatedImage} className="max-w-full max-h-[350px] object-contain shadow-2xl" alt={t('assetCenter.coverGenerator.preview.imageAlt')} />
                                  <div className="absolute bottom-3 right-3 flex gap-2">
                                      <button 
                                         onClick={() => generateImage(selectedPrompt)}
                                         className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-md transition-colors border border-white/10"
-                                        title="Regenerate"
+                                        title={t('assetCenter.coverGenerator.actions.regenerate')}
                                     >
                                          <RefreshCw size={16} />
                                      </button>
@@ -163,10 +165,10 @@ export const AIGenerateCoverModal: React.FC<AIGenerateCoverModalProps> = ({ cont
 
                              <div className="flex gap-3">
                                  <Button variant="secondary" onClick={() => setStep('selection')} className="flex-1">
-                                     <ArrowLeft size={16} className="mr-2" /> Back
+                                     <ArrowLeft size={16} className="mr-2" /> {t('common.actions.back')}
                                  </Button>
                                  <Button onClick={handleConfirm} className="flex-[2] bg-gradient-to-r from-purple-600 to-blue-600 border-0">
-                                     <CheckCircle2 size={16} className="mr-2" /> Use Cover
+                                     <CheckCircle2 size={16} className="mr-2" /> {t('assetCenter.coverGenerator.actions.useCover')}
                                  </Button>
                              </div>
                         </div>

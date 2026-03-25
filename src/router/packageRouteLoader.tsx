@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { ROUTES, RoutePath } from './routes';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export type LayoutType = 'main' | 'none' | 'blank' | 'generation' | 'vibe' | 'magic-cut' | 'creation' | 'notes';
 
@@ -11,14 +12,18 @@ export interface RouteDefinition {
     provider?: React.ComponentType<any>;
 }
 
-const PageLoadingFallback = () => (
-    <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-            <span className="text-gray-400 text-sm">Loading...</span>
+const PageLoadingFallback = () => {
+    const { t } = useTranslation();
+
+    return (
+        <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+                <span className="text-gray-400 text-sm">{t('appShell.loading')}</span>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const PanelLoadingFallback = () => (
     <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">

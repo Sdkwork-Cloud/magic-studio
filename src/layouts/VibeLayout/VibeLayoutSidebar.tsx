@@ -4,16 +4,17 @@ import React from 'react';
 import { 
     Home, Presentation, ChevronLeft, Layout 
 } from 'lucide-react';
-;
+import { useTranslation } from '@sdkwork/react-i18n';
 import { ROUTES } from '../../router/routes';
 
 export const VibeLayoutSidebar: React.FC = () => {
     const { navigate, currentPath } = useRouter();
+    const { t } = useTranslation();
 
     const TOOLS = [
-        { id: 'home', route: ROUTES.HOME, icon: Home, label: 'Home' },
-        { id: 'ppt', route: ROUTES.CHAT_PPT, icon: Presentation, label: 'Chat PPT' },
-        { id: 'canvas', route: ROUTES.CANVAS, icon: Layout, label: 'Infinite Canvas' },
+        { id: 'home', route: ROUTES.HOME, icon: Home, label: t('sidebar.home') },
+        { id: 'ppt', route: ROUTES.CHAT_PPT, icon: Presentation, label: t('sidebar.chat_ppt') },
+        { id: 'canvas', route: ROUTES.CANVAS, icon: Layout, label: t('vibeLayout.tools.canvas') },
     ];
 
     return (
@@ -22,7 +23,7 @@ export const VibeLayoutSidebar: React.FC = () => {
             <button 
                 onClick={() => navigate(ROUTES.HOME)}
                 className="p-3 mb-6 text-gray-400 hover:text-white hover:bg-[#1a1a1c] rounded-xl transition-colors"
-                title="Back to Home"
+                title={t('common.actions.back_home')}
             >
                 <ChevronLeft size={20} />
             </button>

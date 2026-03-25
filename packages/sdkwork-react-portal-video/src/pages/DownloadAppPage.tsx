@@ -150,13 +150,10 @@ export const DownloadAppPage: React.FC = () => {
             <div className="relative z-10 mx-auto max-w-6xl px-8 py-16">
               <div className="mb-12 text-center">
                 <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl">
-                  {t('download.title', 'Download Magic Studio')}
+                  {t('download.title')}
                 </h1>
                 <p className="mx-auto max-w-2xl text-lg text-gray-400">
-                  {t(
-                    'download.subtitle',
-                    'Choose the best version for your device and start creating with AI right away.',
-                  )}
+                  {t('download.subtitle')}
                 </p>
               </div>
 
@@ -179,8 +176,8 @@ export const DownloadAppPage: React.FC = () => {
           <div className="mx-auto max-w-6xl px-8 py-12">
             <SectionHeader
               icon={<Monitor size={20} className="text-blue-400" />}
-              title={t('download.pc_title', 'Desktop Download')}
-              subtitle={t('download.pc_subtitle', 'Full features, best performance')}
+              title={t('download.pc_title')}
+              subtitle={t('download.pc_subtitle')}
               iconBackground="bg-blue-500/20"
             />
 
@@ -196,7 +193,7 @@ export const DownloadAppPage: React.FC = () => {
                 >
                   {option.isPrimary ? (
                     <div className="absolute -top-3 left-6 rounded-full bg-indigo-500 px-3 py-1 text-xs font-bold text-white">
-                      {t('download.recommended', 'Recommended')}
+                      {t('download.recommended')}
                     </div>
                   ) : null}
 
@@ -218,7 +215,7 @@ export const DownloadAppPage: React.FC = () => {
                   </p>
 
                   <p className="mb-4 text-xs text-gray-600">
-                    {t('download.requirements', 'System Requirements')}:{' '}
+                    {t('download.requirements')}:{' '}
                     {t(`download.desktop.${option.id}.requirements`)}
                   </p>
 
@@ -232,7 +229,7 @@ export const DownloadAppPage: React.FC = () => {
                     }`}
                   >
                     <Download size={18} />
-                    {t('download.download_now', 'Download Now')}
+                    {t('download.download_now')}
                   </button>
                 </div>
               ))}

@@ -3,6 +3,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { MagicCutEditor, MagicCutEditorProps } from './MagicCutEditor';
 import { X } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface MagicCutModalProps extends MagicCutEditorProps {
     onClose: () => void;
@@ -12,6 +13,8 @@ interface MagicCutModalProps extends MagicCutEditorProps {
 export const MagicCutModal: React.FC<MagicCutModalProps> = ({ 
     isOpen, onClose, ...editorProps 
 }) => {
+    const { t } = useTranslation();
+
     if (!isOpen) return null;
 
     return createPortal(
@@ -20,7 +23,7 @@ export const MagicCutModal: React.FC<MagicCutModalProps> = ({
                 
                 {/* Modal Header */}
                 <div className="h-10 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between px-4 select-none">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Magic Cut Editor</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('magicCut.modal.editorTitle')}</span>
                     <button onClick={onClose} className="p-1 hover:bg-[#333] rounded text-gray-500 hover:text-white transition-colors">
                         <X size={16} />
                     </button>

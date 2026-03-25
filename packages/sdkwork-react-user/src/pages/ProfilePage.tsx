@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthStore } from '@sdkwork/react-auth';
 import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { useTranslation } from '@sdkwork/react-i18n';
 import {
     ArrowLeft,
     History,
@@ -93,21 +94,23 @@ interface FeedbackState {
 
 interface ProfileSectionItem {
     key: ProfileSectionKey;
-    title: string;
-    description: string;
+    titleKey: string;
+    descriptionKey: string;
     icon: LucideIcon;
 }
+
+type TranslationFn = (key: string, paramsOrDefault?: Record<string, string> | string) => string;
 
 const HISTORY_PAGE_SIZE = 8;
 const AVATAR_FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
 const PROFILE_SECTION_ITEMS: ProfileSectionItem[] = [
-    { key: 'overview', title: 'Profile', description: 'Basic identity information', icon: User },
-    { key: 'security', title: 'Security', description: 'Password and login records', icon: ShieldCheck },
-    { key: 'addresses', title: 'Address Book', description: 'Shipping and contact addresses', icon: MapPin },
-    { key: 'contacts', title: 'Contacts', description: 'Friends and contact requests', icon: Users },
-    { key: 'preferences', title: 'Preferences', description: 'Personalized experience settings', icon: Settings2 },
-    { key: 'activity', title: 'Activity', description: 'Recent operation timeline', icon: History },
+    { key: 'overview', titleKey: 'profilePage.sections.overview.title', descriptionKey: 'profilePage.sections.overview.description', icon: User },
+    { key: 'security', titleKey: 'profilePage.sections.security.title', descriptionKey: 'profilePage.sections.security.description', icon: ShieldCheck },
+    { key: 'addresses', titleKey: 'profilePage.sections.addresses.title', descriptionKey: 'profilePage.sections.addresses.description', icon: MapPin },
+    { key: 'contacts', titleKey: 'profilePage.sections.contacts.title', descriptionKey: 'profilePage.sections.contacts.description', icon: Users },
+    { key: 'preferences', titleKey: 'profilePage.sections.preferences.title', descriptionKey: 'profilePage.sections.preferences.description', icon: Settings2 },
+    { key: 'activity', titleKey: 'profilePage.sections.activity.title', descriptionKey: 'profilePage.sections.activity.description', icon: History },
 ];
 
 function safeString(value: unknown): string {
@@ -346,10 +349,14 @@ interface PasswordStrength {
     hint: string;
 }
 
-function getPasswordStrength(password: string): PasswordStrength {
+function getPasswordStrength(password: string, t: TranslationFn): PasswordStrength {
     const text = password.trim();
     if (!text) {
-        return { score: 0, label: 'Not set', hint: 'Use 8+ chars with mixed character types.' };
+        return {
+            score: 0,
+            label: t('profilePage.passwordStrength.notSet.label'),
+            hint: t('profilePage.passwordStrength.notSet.hint'),
+        };
     }
 
     let score = 0;
@@ -359,15 +366,31 @@ function getPasswordStrength(password: string): PasswordStrength {
     if (/[^A-Za-z0-9]/.test(text) || text.length >= 12) score += 1;
 
     if (score <= 1) {
-        return { score, label: 'Weak', hint: 'Add uppercase, numbers, and symbols.' };
+        return {
+            score,
+            label: t('profilePage.passwordStrength.weak.label'),
+            hint: t('profilePage.passwordStrength.weak.hint'),
+        };
     }
     if (score === 2) {
-        return { score, label: 'Fair', hint: 'Add one more character type for better security.' };
+        return {
+            score,
+            label: t('profilePage.passwordStrength.fair.label'),
+            hint: t('profilePage.passwordStrength.fair.hint'),
+        };
     }
     if (score === 3) {
-        return { score, label: 'Strong', hint: 'Good. Consider using 12+ characters.' };
+        return {
+            score,
+            label: t('profilePage.passwordStrength.strong.label'),
+            hint: t('profilePage.passwordStrength.strong.hint'),
+        };
     }
-    return { score, label: 'Very strong', hint: 'Excellent password strength.' };
+    return {
+        score,
+        label: t('profilePage.passwordStrength.veryStrong.label'),
+        hint: t('profilePage.passwordStrength.veryStrong.hint'),
+    };
 }
 
 interface StatCardProps {
@@ -431,6 +454,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ title, rows, emptyText, key
 );
 
 export const ProfilePage: React.FC = () => {
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const { goBack, navigate } = useRouter();
     const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -694,7 +718,7 @@ export const ProfilePage: React.FC = () => {
     const contactOnlineCount = Number(contactStats?.online || contacts.filter((item) => !!item.isOnline).length || 0);
     const contactNewTodayCount = Number(contactStats?.newToday || pendingFriendRequests.length || 0);
     const passwordEditing = !!oldPassword || !!newPassword || !!confirmPassword;
-    const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+    const passwordStrength = useMemo(() => getPasswordStrength(newPassword, t), [newPassword, t]);
     const hasAnyPendingChanges = hasProfileChanges || hasSettingsChanges || passwordEditing || hasAddressDraftChanges;
 
     const isSectionDirty = useCallback((section: ProfileSectionKey): boolean => {
@@ -752,13 +776,13 @@ export const ProfilePage: React.FC = () => {
             return;
         }
         if (currentSectionDirty) {
-            const confirmed = window.confirm('Current section has unsaved changes. Leave this section anyway?');
+            const confirmed = window.confirm(t('profilePage.dialogs.unsavedSection'));
             if (!confirmed) {
                 return;
             }
         }
         setActiveSection(nextSection);
-    }, [activeSection, currentSectionDirty]);
+    }, [activeSection, currentSectionDirty, t]);
 
     const handleSelectAvatar = useCallback(() => {
         avatarInputRef.current?.click();
@@ -1125,7 +1149,7 @@ export const ProfilePage: React.FC = () => {
         if (addressId === undefined || addressId === null) {
             return;
         }
-        const confirmed = window.confirm('Delete this address?');
+        const confirmed = window.confirm(t('profilePage.dialogs.deleteAddress'));
         if (!confirmed) {
             return;
         }
@@ -1209,7 +1233,7 @@ export const ProfilePage: React.FC = () => {
         if (!contactId) {
             return;
         }
-        const confirmed = window.confirm('Delete this contact?');
+        const confirmed = window.confirm(t('profilePage.dialogs.deleteContact'));
         if (!confirmed) {
             return;
         }
@@ -1248,12 +1272,16 @@ export const ProfilePage: React.FC = () => {
     };
 
     const quickSaveButtonLabel = (() => {
-        if (activeSection === 'overview') return 'Save Profile';
-        if (activeSection === 'security') return 'Update Password';
-        if (activeSection === 'addresses') return editingAddressId ? 'Update Address' : 'Add Address';
-        if (activeSection === 'contacts') return 'Refresh Contacts';
-        if (activeSection === 'preferences') return 'Save Preferences';
-        return 'Save';
+        if (activeSection === 'overview') return t('profilePage.actions.saveProfile');
+        if (activeSection === 'security') return t('profilePage.security.actions.updatePassword');
+        if (activeSection === 'addresses') {
+            return editingAddressId
+                ? t('profilePage.addresses.actions.update')
+                : t('profilePage.addresses.actions.add');
+        }
+        if (activeSection === 'contacts') return t('profilePage.contacts.actions.refresh');
+        if (activeSection === 'preferences') return t('profilePage.actions.savePreferences');
+        return t('profilePage.common.save');
     })();
 
     const isPermissionOrAuthError = feedback?.type === 'error'
@@ -1284,8 +1312,8 @@ export const ProfilePage: React.FC = () => {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-semibold text-[#ffffff]">{displayProfile.nickname || 'User'}</h1>
-                                <p className="mt-1 text-sm text-[#9ca3af]">{displayProfile.email || 'No email bound'}</p>
-                                <p className="text-xs text-[#6b7280]">{displayProfile.phone || 'No phone bound'}</p>
+                                <p className="mt-1 text-sm text-[#9ca3af]">{displayProfile.email || t('profilePage.overview.noEmailBound')}</p>
+                                <p className="text-xs text-[#6b7280]">{displayProfile.phone || t('profilePage.overview.noPhoneBound')}</p>
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -1295,7 +1323,7 @@ export const ProfilePage: React.FC = () => {
                                 className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#27272a] bg-[#1a1a1c] px-4 text-sm text-[#d1d5db] transition hover:bg-[#27272a]"
                             >
                                 <ArrowLeft size={15} />
-                                Back
+                                {t('profilePage.actions.back')}
                             </button>
                             <button
                                 type="button"
@@ -1307,24 +1335,34 @@ export const ProfilePage: React.FC = () => {
                                 className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#27272a] bg-[#1a1a1c] px-4 text-sm text-[#d1d5db] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
-                                {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+                                {isRefreshing ? t('profilePage.common.refreshing') : t('profilePage.common.refreshData')}
                             </button>
                         </div>
                     </div>
 
                     <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <StatCard title="Profile Completion" value={`${profileCompletion}%`} hint="Complete key fields to improve recommendations." />
                         <StatCard
-                            title="Address Book"
-                            value={`${addresses.length}`}
-                            hint={defaultAddress ? `Default: ${getAddressText(defaultAddress, 'name') || 'Set'}` : 'No default address yet.'}
+                            title={t('profilePage.stats.profileCompletion.title')}
+                            value={`${profileCompletion}%`}
+                            hint={t('profilePage.stats.profileCompletion.hint')}
                         />
-                        <StatCard title="Recent Activity" value={activityCountText} hint="Combined login and generation records." />
+                        <StatCard
+                            title={t('profilePage.sections.addresses.title')}
+                            value={`${addresses.length}`}
+                            hint={defaultAddress
+                                ? t('profilePage.addresses.defaultHint', { name: getAddressText(defaultAddress, 'name') || t('profilePage.addresses.defaultFallback') })
+                                : t('profilePage.addresses.noDefault')}
+                        />
+                        <StatCard
+                            title={t('profilePage.stats.recentActivity.title')}
+                            value={activityCountText}
+                            hint={t('profilePage.stats.recentActivity.hint')}
+                        />
                     </div>
 
                     <div className="mt-4">
                         <div className="flex items-center justify-between text-xs text-[#9ca3af]">
-                            <span>Profile progress</span>
+                            <span>{t('profilePage.navigation.progress')}</span>
                             <span>{profileCompletion}%</span>
                         </div>
                         <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#27272a]">
@@ -1343,7 +1381,7 @@ export const ProfilePage: React.FC = () => {
                     <aside className="rounded-2xl border border-[#1a1a1c] bg-[#050505] p-4">
                         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#d1d5db]">
                             <LayoutGrid size={16} />
-                            Account Navigation
+                            {t('profilePage.navigation.title')}
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
                             {PROFILE_SECTION_ITEMS.map((item) => {
@@ -1365,12 +1403,12 @@ export const ProfilePage: React.FC = () => {
                                             <Icon size={16} className={active ? 'text-[#2563eb]' : 'text-[#6b7280]'} />
                                             <div>
                                                 <div className="flex items-center gap-1.5 text-sm font-medium">
-                                                    <span>{item.title}</span>
+                                                    <span>{t(item.titleKey)}</span>
                                                     {hasPending ? (
                                                         <span className="h-2 w-2 rounded-full bg-[#2563eb]" />
                                                     ) : null}
                                                 </div>
-                                                <div className="mt-1 text-[11px] leading-4 text-[#6b7280]">{item.description}</div>
+                                                <div className="mt-1 text-[11px] leading-4 text-[#6b7280]">{t(item.descriptionKey)}</div>
                                             </div>
                                         </div>
                                     </button>
@@ -1382,7 +1420,7 @@ export const ProfilePage: React.FC = () => {
                     <section className="rounded-2xl border border-[#1a1a1c] bg-[#050505] p-4 md:p-5">
                         {loading ? (
                             <div className="rounded-xl border border-dashed border-[#27272a] bg-[#1a1a1c] px-4 py-8 text-center text-sm text-[#9ca3af]">
-                                Loading profile...
+                                {t('profilePage.states.loadingProfile')}
                             </div>
                         ) : null}
 
@@ -1408,7 +1446,7 @@ export const ProfilePage: React.FC = () => {
                                             }
                                             className="rounded-lg bg-[#2563eb] px-3 py-1.5 text-xs text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            {saving ? 'Saving...' : quickSaveButtonLabel}
+                                            {saving ? t('profilePage.states.saving') : quickSaveButtonLabel}
                                         </button>
                                         <button
                                             type="button"
@@ -1416,7 +1454,7 @@ export const ProfilePage: React.FC = () => {
                                             disabled={saving || !currentSectionDirty}
                                             className="rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-1.5 text-xs text-[#d1d5db] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            Discard Changes
+                                            {t('profilePage.common.discardChanges')}
                                         </button>
                                     </div>
                                 </div>
@@ -1426,8 +1464,10 @@ export const ProfilePage: React.FC = () => {
                         {!loading && activeSection === 'overview' ? (
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-[#ffffff]">Profile Overview</h2>
-                                    <span className="text-xs text-[#9ca3af]">{hasProfileChanges ? 'Unsaved profile changes' : 'All profile changes saved'}</span>
+                                    <h2 className="text-lg font-semibold text-[#ffffff]">{t('profilePage.overview.title')}</h2>
+                                    <span className="text-xs text-[#9ca3af]">
+                                        {hasProfileChanges ? t('profilePage.overview.unsaved') : t('profilePage.overview.saved')}
+                                    </span>
                                 </div>
 
                                 <input
@@ -1455,16 +1495,16 @@ export const ProfilePage: React.FC = () => {
                                                 )}
                                             </div>
                                             <div>
-                                                <h3 className="text-sm font-semibold text-[#d1d5db]">Avatar</h3>
+                                                <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.overview.avatarTitle')}</h3>
                                                 <div className="mt-1 text-xs text-[#9ca3af]">
                                                     {hasPendingAvatarUpload
-                                                        ? 'A new avatar is ready. Save Profile to upload it.'
+                                                        ? t('profilePage.avatar.pendingUpload')
                                                         : currentAvatarUrl
-                                                            ? 'Current avatar is synchronized.'
-                                                            : 'No avatar uploaded yet.'}
+                                                            ? t('profilePage.avatar.keepCurrent')
+                                                            : t('profilePage.avatar.empty')}
                                                 </div>
                                                 <div className="mt-2 text-[11px] text-[#6b7280]">
-                                                    Supports image files up to 5 MB.
+                                                    {t('profilePage.overview.avatarSupport')}
                                                 </div>
                                             </div>
                                         </div>
@@ -1475,7 +1515,11 @@ export const ProfilePage: React.FC = () => {
                                                 disabled={saving}
                                                 className="rounded-lg border border-[#27272a] bg-[#111113] px-3 py-1.5 text-xs text-[#d1d5db] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                {hasPendingAvatarUpload ? 'Replace Avatar' : currentAvatarUrl ? 'Change Avatar' : 'Upload Avatar'}
+                                                {hasPendingAvatarUpload
+                                                    ? t('profilePage.actions.replaceAvatar')
+                                                    : currentAvatarUrl
+                                                        ? t('profilePage.actions.changeAvatar')
+                                                        : t('profilePage.actions.uploadAvatar')}
                                             </button>
                                             {hasPendingAvatarUpload ? (
                                                 <button
@@ -1484,7 +1528,7 @@ export const ProfilePage: React.FC = () => {
                                                     disabled={saving}
                                                     className="rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-1.5 text-xs text-[#9ca3af] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
-                                                    Clear Avatar Draft
+                                                    {t('profilePage.overview.clearAvatarDraft')}
                                                 </button>
                                             ) : null}
                                         </div>
@@ -1495,58 +1539,58 @@ export const ProfilePage: React.FC = () => {
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] px-3 py-3">
                                         <div className="mb-2 inline-flex items-center gap-2 text-xs text-[#9ca3af]">
                                             <Mail size={14} />
-                                            Email
+                                            {t('profilePage.overview.email')}
                                         </div>
-                                        <div className="text-sm text-[#ffffff]">{displayProfile.email || 'Not bound'}</div>
+                                        <div className="text-sm text-[#ffffff]">{displayProfile.email || t('profilePage.overview.notBound')}</div>
                                     </div>
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] px-3 py-3">
                                         <div className="mb-2 inline-flex items-center gap-2 text-xs text-[#9ca3af]">
                                             <Phone size={14} />
-                                            Phone
+                                            {t('profilePage.overview.phone')}
                                         </div>
-                                        <div className="text-sm text-[#ffffff]">{displayProfile.phone || 'Not bound'}</div>
+                                        <div className="text-sm text-[#ffffff]">{displayProfile.phone || t('profilePage.overview.notBound')}</div>
                                     </div>
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] px-3 py-3">
                                         <div className="mb-2 inline-flex items-center gap-2 text-xs text-[#9ca3af]">
                                             <MapPin size={14} />
-                                            Region
+                                            {t('profilePage.overview.region')}
                                         </div>
-                                        <div className="text-sm text-[#ffffff]">{region.trim() || 'Not set'}</div>
+                                        <div className="text-sm text-[#ffffff]">{region.trim() || t('profilePage.overview.notSet')}</div>
                                     </div>
                                 </div>
 
                                 <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
-                                    <h3 className="text-sm font-semibold text-[#d1d5db]">Edit Basic Information</h3>
+                                    <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.overview.editBasicInformation')}</h3>
                                     <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                                         <label className="text-xs text-[#9ca3af]">
-                                            Nickname
+                                            {t('profilePage.overview.nickname')}
                                             <input
                                                 value={nickname}
                                                 onChange={(event) => setNickname(event.target.value)}
                                                 className="mt-1 h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
-                                                placeholder="Your nickname"
+                                                placeholder={t('profilePage.overview.nicknamePlaceholder')}
                                             />
                                             {nickname.trim().length > 0 && nickname.trim().length < 2 ? (
-                                                <div className="mt-1 text-[11px] text-[#d1d5db]">Use at least 2 characters.</div>
+                                                <div className="mt-1 text-[11px] text-[#d1d5db]">{t('profilePage.overview.nicknameHint')}</div>
                                             ) : null}
                                         </label>
                                         <label className="text-xs text-[#9ca3af]">
-                                            Region
+                                            {t('profilePage.overview.region')}
                                             <input
                                                 value={region}
                                                 onChange={(event) => setRegion(event.target.value)}
                                                 className="mt-1 h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
-                                                placeholder="Your region"
+                                                placeholder={t('profilePage.overview.regionPlaceholder')}
                                             />
                                         </label>
                                     </div>
                                     <label className="mt-3 block text-xs text-[#9ca3af]">
-                                        Bio
+                                        {t('profilePage.overview.bio')}
                                         <textarea
                                             value={bio}
                                             onChange={(event) => setBio(event.target.value)}
                                             className="mt-1 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-2 text-sm text-[#ffffff]"
-                                            placeholder="Write a short self-introduction"
+                                            placeholder={t('profilePage.overview.bioPlaceholder')}
                                             rows={3}
                                         />
                                         <div className={`mt-1 text-[11px] ${bio.trim().length > 200 ? 'text-[#d1d5db]' : 'text-[#9ca3af]'}`}>
@@ -1560,7 +1604,7 @@ export const ProfilePage: React.FC = () => {
                                             disabled={saving || !hasProfileChanges}
                                             className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            {saving ? 'Saving...' : 'Save Profile'}
+                                            {saving ? t('profilePage.states.saving') : t('profilePage.actions.saveProfile')}
                                         </button>
                                         {!hasProfileChanges ? (
                                             <span className="text-xs text-[#9ca3af]">No pending profile edits</span>
@@ -1573,8 +1617,8 @@ export const ProfilePage: React.FC = () => {
                         {!loading && activeSection === 'security' ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-[#ffffff]">Security Center</h2>
-                                    <span className="text-xs text-[#9ca3af]">{securityScore}/100 security score</span>
+                                    <h2 className="text-lg font-semibold text-[#ffffff]">{t('profilePage.security.title')}</h2>
+                                    <span className="text-xs text-[#9ca3af]">{securityScore}/100 {t('profilePage.security.scoreSuffix')}</span>
                                 </div>
 
                                 <div className="h-2 overflow-hidden rounded-full bg-[#27272a]">
@@ -1585,7 +1629,7 @@ export const ProfilePage: React.FC = () => {
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
                                         <div className="mb-3 flex items-center gap-2">
                                             <ShieldCheck size={16} className="text-[#2563eb]" />
-                                            <h3 className="text-sm font-semibold text-[#d1d5db]">Change Password</h3>
+                                            <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.security.changePassword')}</h3>
                                         </div>
                                         <div className="space-y-2.5">
                                             <input
@@ -1593,26 +1637,26 @@ export const ProfilePage: React.FC = () => {
                                                 value={oldPassword}
                                                 onChange={(event) => setOldPassword(event.target.value)}
                                                 className="h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
-                                                placeholder="Current password"
+                                                placeholder={t('profilePage.security.currentPassword')}
                                             />
                                             <input
                                                 type="password"
                                                 value={newPassword}
                                                 onChange={(event) => setNewPassword(event.target.value)}
                                                 className="h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
-                                                placeholder="New password (8+ chars)"
+                                                placeholder={t('profilePage.security.newPassword')}
                                             />
                                             <input
                                                 type="password"
                                                 value={confirmPassword}
                                                 onChange={(event) => setConfirmPassword(event.target.value)}
                                                 className="h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
-                                                placeholder="Confirm new password"
+                                                placeholder={t('profilePage.fields.confirmNewPassword')}
                                             />
                                         </div>
                                         <div className="mt-3 rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-2.5">
                                             <div className="flex items-center justify-between text-xs text-[#9ca3af]">
-                                                <span>Password Strength</span>
+                                                <span>{t('profilePage.security.passwordStrength')}</span>
                                                 <span>{passwordStrength.label}</span>
                                             </div>
                                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#27272a]">
@@ -1655,15 +1699,15 @@ export const ProfilePage: React.FC = () => {
                                         <div className="space-y-3">
                                             <div className="rounded-lg border border-[#27272a] bg-[#1a1a1c] p-3">
                                                 <div className="flex items-center justify-between text-xs text-[#9ca3af]">
-                                                    <span>Email</span>
-                                                    <span>{displayProfile.email || 'Not bound'}</span>
+                                                    <span>{t('profilePage.overview.email')}</span>
+                                                    <span>{displayProfile.email || t('profilePage.overview.notBound')}</span>
                                                 </div>
                                                 <div className="mt-2 space-y-2">
                                                     <input
                                                         value={bindingDraft.email}
                                                         onChange={(event) => setBindingDraft((prev) => ({ ...prev, email: event.target.value }))}
                                                         className="h-9 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-xs text-[#ffffff]"
-                                                        placeholder="Email address"
+                                                        placeholder={t('profilePage.security.emailPlaceholder')}
                                                     />
                                                     <input
                                                         value={bindingDraft.emailCode}
@@ -1694,15 +1738,15 @@ export const ProfilePage: React.FC = () => {
 
                                             <div className="rounded-lg border border-[#27272a] bg-[#1a1a1c] p-3">
                                                 <div className="flex items-center justify-between text-xs text-[#9ca3af]">
-                                                    <span>Phone</span>
-                                                    <span>{displayProfile.phone || 'Not bound'}</span>
+                                                    <span>{t('profilePage.overview.phone')}</span>
+                                                    <span>{displayProfile.phone || t('profilePage.overview.notBound')}</span>
                                                 </div>
                                                 <div className="mt-2 space-y-2">
                                                     <input
                                                         value={bindingDraft.phone}
                                                         onChange={(event) => setBindingDraft((prev) => ({ ...prev, phone: event.target.value }))}
                                                         className="h-9 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-xs text-[#ffffff]"
-                                                        placeholder="Phone number"
+                                                        placeholder={t('profilePage.security.phonePlaceholder')}
                                                     />
                                                     <input
                                                         value={bindingDraft.phoneCode}
@@ -1808,9 +1852,9 @@ export const ProfilePage: React.FC = () => {
                                     </div>
 
                                     <HistoryPanel
-                                        title="Login History"
+                                        title={t('profilePage.history.loginTitle')}
                                         rows={loginHistory}
-                                        emptyText="No login records."
+                                        emptyText={t('profilePage.history.noLoginRecords')}
                                         keyPrefix="security-login"
                                     />
                                 </div>
@@ -1909,11 +1953,11 @@ export const ProfilePage: React.FC = () => {
 
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
                                         <div className="mb-3 flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-[#d1d5db]">Saved Addresses</h3>
+                                            <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.addresses.savedTitle')}</h3>
                                             {addressLoading ? (
-                                                <span className="text-xs text-[#9ca3af]">Loading...</span>
+                                                <span className="text-xs text-[#9ca3af]">{t('common.status.loading')}</span>
                                             ) : (
-                                                <span className="text-xs text-[#9ca3af]">{addresses.length} records</span>
+                                                <span className="text-xs text-[#9ca3af]">{addresses.length} {t('profilePage.common.records')}</span>
                                             )}
                                         </div>
                                         <div className="space-y-2.5">
@@ -1971,28 +2015,28 @@ export const ProfilePage: React.FC = () => {
                         {!loading && activeSection === 'contacts' ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-[#ffffff]">Contacts</h2>
+                                    <h2 className="text-lg font-semibold text-[#ffffff]">{t('profilePage.sections.contacts.title')}</h2>
                                     <button
                                         type="button"
                                         onClick={() => void handleRefreshContacts()}
                                         disabled={contactsLoading}
                                         className="rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-1.5 text-xs text-[#d1d5db] transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-60"
                                     >
-                                        {contactsLoading ? 'Refreshing...' : 'Refresh Contacts'}
+                                        {contactsLoading ? t('profilePage.contacts.actions.refreshing') : t('profilePage.contacts.actions.refresh')}
                                     </button>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    <StatCard title="Total Contacts" value={`${contactTotalCount}`} hint="Total friend contacts in your account." />
-                                    <StatCard title="Online Now" value={`${contactOnlineCount}`} hint="Contacts currently online." />
-                                    <StatCard title="New Requests" value={`${contactNewTodayCount}`} hint="Pending requests for your review." />
+                                    <StatCard title={t('profilePage.stats.totalContacts.title')} value={`${contactTotalCount}`} hint={t('profilePage.stats.totalContacts.hint')} />
+                                    <StatCard title={t('profilePage.stats.onlineNow.title')} value={`${contactOnlineCount}`} hint={t('profilePage.stats.onlineNow.hint')} />
+                                    <StatCard title={t('profilePage.stats.newRequests.title')} value={`${contactNewTodayCount}`} hint={t('profilePage.stats.newRequests.hint')} />
                                 </div>
 
                                 <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <h3 className="text-sm font-semibold text-[#d1d5db]">Search Contacts</h3>
-                                            <p className="text-xs text-[#9ca3af]">Filter by nickname, username or region.</p>
+                                            <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.contacts.searchTitle')}</h3>
+                                            <p className="text-xs text-[#9ca3af]">{t('profilePage.contacts.searchHint')}</p>
                                         </div>
                                         <div className="flex w-full gap-2 sm:w-auto">
                                             <input
@@ -2053,12 +2097,12 @@ export const ProfilePage: React.FC = () => {
 
                                     <div className="rounded-xl border border-[#27272a] bg-[#1a1a1c] p-4">
                                         <div className="mb-3 flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-[#d1d5db]">Friend Requests</h3>
-                                            <span className="text-xs text-[#9ca3af]">{friendRequests.length} records</span>
+                                            <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.contacts.friendRequestsTitle')}</h3>
+                                            <span className="text-xs text-[#9ca3af]">{friendRequests.length} {t('profilePage.common.records')}</span>
                                         </div>
                                         <div className="space-y-2.5">
                                             {friendRequests.length === 0 ? (
-                                                <div className="rounded-lg border border-dashed border-[#27272a] px-3 py-4 text-xs text-[#9ca3af]">No friend requests.</div>
+                                                <div className="rounded-lg border border-dashed border-[#27272a] px-3 py-4 text-xs text-[#9ca3af]">{t('profilePage.contacts.noFriendRequests')}</div>
                                             ) : friendRequests.map((request, index) => {
                                                 const rawRequestId = safeString(request.id);
                                                 const requestId = rawRequestId || `request-${index + 1}`;
@@ -2104,25 +2148,29 @@ export const ProfilePage: React.FC = () => {
                         {!loading && activeSection === 'preferences' ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-[#ffffff]">User Preferences</h2>
-                                    <span className="text-xs text-[#9ca3af]">{hasSettingsChanges ? 'Unsaved preference changes' : 'Preferences are synchronized'}</span>
+                                    <h2 className="text-lg font-semibold text-[#ffffff]">{t('profilePage.headings.userPreferences')}</h2>
+                                    <span className="text-xs text-[#9ca3af]">
+                                        {hasSettingsChanges
+                                            ? t('profilePage.preferences.states.unsaved')
+                                            : t('profilePage.preferences.states.synced')}
+                                    </span>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <label className="text-xs text-[#9ca3af]">
-                                        Theme
+                                        {t('profilePage.preferences.theme')}
                                         <select
                                             value={settingsDraft.theme}
                                             onChange={(event) => setSettingsDraft((prev) => ({ ...prev, theme: event.target.value }))}
                                             className="mt-1 h-10 w-full rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 text-sm text-[#ffffff]"
                                         >
-                                            <option value="system">System</option>
-                                            <option value="light">Light</option>
-                                            <option value="dark">Dark</option>
+                                            <option value="system">{t('profilePage.preferences.themeOptions.system')}</option>
+                                            <option value="light">{t('profilePage.preferences.themeOptions.light')}</option>
+                                            <option value="dark">{t('profilePage.preferences.themeOptions.dark')}</option>
                                         </select>
                                     </label>
                                     <label className="text-xs text-[#9ca3af]">
-                                        Language
+                                        {t('profilePage.preferences.language')}
                                         <select
                                             value={settingsDraft.language}
                                             onChange={(event) => setSettingsDraft((prev) => ({ ...prev, language: event.target.value }))}
@@ -2136,10 +2184,10 @@ export const ProfilePage: React.FC = () => {
 
                                 <div className="grid gap-3 xl:grid-cols-3">
                                     <div className="space-y-2.5">
-                                        <h3 className="text-sm font-semibold text-[#d1d5db]">Notifications</h3>
+                                        <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.preferences.notificationsTitle')}</h3>
                                         <ToggleCard
-                                            label="System Notifications"
-                                            description="Receive important system updates."
+                                            label={t('profilePage.preferences.notificationLabels.system')}
+                                            description={t('profilePage.preferences.notificationDescriptions.system')}
                                             checked={settingsDraft.notificationSettings.system}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2147,8 +2195,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Message Notifications"
-                                            description="Show notifications for direct messages."
+                                            label={t('profilePage.preferences.notificationLabels.message')}
+                                            description={t('profilePage.preferences.notificationDescriptions.message')}
                                             checked={settingsDraft.notificationSettings.message}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2156,8 +2204,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Activity Notifications"
-                                            description="Keep track of account activity."
+                                            label={t('profilePage.preferences.notificationLabels.activity')}
+                                            description={t('profilePage.preferences.notificationDescriptions.activity')}
                                             checked={settingsDraft.notificationSettings.activity}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2165,8 +2213,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Promotion Notifications"
-                                            description="Receive offers and campaign updates."
+                                            label={t('profilePage.preferences.notificationLabels.promotion')}
+                                            description={t('profilePage.preferences.notificationDescriptions.promotion')}
                                             checked={settingsDraft.notificationSettings.promotion}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2174,8 +2222,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Sound Alerts"
-                                            description="Play sound for incoming notifications."
+                                            label={t('profilePage.preferences.notificationLabels.sound')}
+                                            description={t('profilePage.preferences.notificationDescriptions.sound')}
                                             checked={settingsDraft.notificationSettings.sound}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2183,8 +2231,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Vibration Alerts"
-                                            description="Use vibration for key alerts."
+                                            label={t('profilePage.preferences.notificationLabels.vibration')}
+                                            description={t('profilePage.preferences.notificationDescriptions.vibration')}
                                             checked={settingsDraft.notificationSettings.vibration}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2194,10 +2242,10 @@ export const ProfilePage: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2.5">
-                                        <h3 className="text-sm font-semibold text-[#d1d5db]">Privacy</h3>
+                                        <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.preferences.privacyTitle')}</h3>
                                         <ToggleCard
-                                            label="Public Profile"
-                                            description="Allow others to view your profile."
+                                            label={t('profilePage.preferences.privacyLabels.publicProfile')}
+                                            description={t('profilePage.preferences.privacyDescriptions.publicProfile')}
                                             checked={settingsDraft.privacySettings.publicProfile}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2205,8 +2253,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Allow Search"
-                                            description="Enable profile discovery in search results."
+                                            label={t('profilePage.preferences.privacyLabels.allowSearch')}
+                                            description={t('profilePage.preferences.privacyDescriptions.allowSearch')}
                                             checked={settingsDraft.privacySettings.allowSearch}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2214,8 +2262,8 @@ export const ProfilePage: React.FC = () => {
                                             }))}
                                         />
                                         <ToggleCard
-                                            label="Allow Friend Request"
-                                            description="Permit new friend requests."
+                                            label={t('profilePage.preferences.privacyLabels.allowFriendRequest')}
+                                            description={t('profilePage.preferences.privacyDescriptions.allowFriendRequest')}
                                             checked={settingsDraft.privacySettings.allowFriendRequest}
                                             onChange={(value) => setSettingsDraft((prev) => ({
                                                 ...prev,
@@ -2225,22 +2273,22 @@ export const ProfilePage: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2.5">
-                                        <h3 className="text-sm font-semibold text-[#d1d5db]">Playback & Data</h3>
+                                        <h3 className="text-sm font-semibold text-[#d1d5db]">{t('profilePage.preferences.playbackTitle')}</h3>
                                         <ToggleCard
-                                            label="Auto Play"
-                                            description="Auto-play generated previews."
+                                            label={t('profilePage.preferences.playbackLabels.autoPlay')}
+                                            description={t('profilePage.preferences.playbackDescriptions.autoPlay')}
                                             checked={settingsDraft.autoPlay}
                                             onChange={(value) => setSettingsDraft((prev) => ({ ...prev, autoPlay: value }))}
                                         />
                                         <ToggleCard
-                                            label="High Quality"
-                                            description="Prefer high quality output."
+                                            label={t('profilePage.preferences.playbackLabels.highQuality')}
+                                            description={t('profilePage.preferences.playbackDescriptions.highQuality')}
                                             checked={settingsDraft.highQuality}
                                             onChange={(value) => setSettingsDraft((prev) => ({ ...prev, highQuality: value }))}
                                         />
                                         <ToggleCard
-                                            label="Data Saver"
-                                            description="Reduce network consumption when possible."
+                                            label={t('profilePage.preferences.playbackLabels.dataSaver')}
+                                            description={t('profilePage.preferences.playbackDescriptions.dataSaver')}
                                             checked={settingsDraft.dataSaver}
                                             onChange={(value) => setSettingsDraft((prev) => ({ ...prev, dataSaver: value }))}
                                         />
@@ -2253,7 +2301,7 @@ export const ProfilePage: React.FC = () => {
                                     disabled={saving || !hasSettingsChanges}
                                     className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    {saving ? 'Saving...' : 'Save Preferences'}
+                                    {saving ? t('profilePage.states.saving') : t('profilePage.actions.savePreferences')}
                                 </button>
                             </div>
                         ) : null}
@@ -2261,33 +2309,33 @@ export const ProfilePage: React.FC = () => {
                         {!loading && activeSection === 'activity' ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-[#ffffff]">Recent Activity</h2>
+                                    <h2 className="text-lg font-semibold text-[#ffffff]">{t('profilePage.headings.recentActivity')}</h2>
                                     <button
                                         type="button"
                                         onClick={() => void loadAddressAndHistory()}
                                         className="rounded-lg border border-[#27272a] bg-[#1a1a1c] px-3 py-1.5 text-xs text-[#d1d5db] transition hover:bg-[#27272a]"
                                     >
-                                        Refresh Activity
+                                        {t('profilePage.actions.refreshActivity')}
                                     </button>
                                 </div>
 
                                 {historyLoading ? (
                                     <div className="rounded-xl border border-dashed border-[#27272a] px-4 py-5 text-sm text-[#9ca3af]">
-                                        Loading history...
+                                        {t('profilePage.states.loadingHistory')}
                                     </div>
                                 ) : null}
 
                                 <div className="grid gap-4 xl:grid-cols-2">
                                     <HistoryPanel
-                                        title="Login History"
+                                        title={t('profilePage.history.loginTitle')}
                                         rows={loginHistory}
-                                        emptyText="No login records."
+                                        emptyText={t('profilePage.history.noLoginRecords')}
                                         keyPrefix="activity-login"
                                     />
                                     <HistoryPanel
-                                        title="Generation History"
+                                        title={t('profilePage.history.generationTitle')}
                                         rows={generationHistory}
-                                        emptyText="No generation records."
+                                        emptyText={t('profilePage.history.noGenerationRecords')}
                                         keyPrefix="activity-generation"
                                     />
                                 </div>

@@ -4,12 +4,14 @@ import { useMagicCutStore } from '../store/magicCutStore';
 import { audioEngine } from '../engine/AudioEngine';
 import { buildMasterMeterBars, buildTrackMeterLevel } from '../domain/audio/audioMixerMeters';
 import { resolveAudibleTrackIds } from '../domain/audio/trackAudibility';
+import { useMagicCutTranslation } from '../hooks/useMagicCutTranslation';
 
 interface AudioMixerProps {
     className?: string;
 }
 
 export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
+    const { t, tl } = useMagicCutTranslation();
     const { 
         state, 
         activeTimeline, 
@@ -83,7 +85,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
         <div className={`bg-[#09090b] border-l border-[#27272a] flex flex-col ${className || ''}`}>
             <div className="h-10 border-b border-[#27272a] flex items-center px-3 bg-[#18181b]">
                 <Speaker size={14} className="text-emerald-400 mr-2" />
-                <span className="text-xs font-semibold text-white">Audio Mixer</span>
+                <span className="text-xs font-semibold text-white">{t('audioMixer.title')}</span>
             </div>
             
             <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -120,7 +122,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                 <div className="flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${isMuted ? 'bg-gray-500' : 'bg-emerald-400'}`} />
                                     <span className="text-xs font-medium text-gray-300 truncate max-w-[100px]">
-                                        {track.name || `${track.trackType === 'audio' ? 'Audio' : 'Video'} Track`}
+                                        {track.name || (track.trackType === 'audio' ? tl('audioTrack') : tl('videoTrack'))}
                                     </span>
                                 </div>
                                 
@@ -132,7 +134,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                                 ? 'bg-red-500/20 text-red-400' 
                                                 : 'hover:bg-[#27272a] text-gray-400'
                                         }`}
-                                        title="Mute (M)"
+                                        title={`${t('audioMixer.mute')} (M)`}
                                     >
                                         {track.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                                     </button>
@@ -144,7 +146,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                                 ? 'bg-yellow-500/20 text-yellow-400' 
                                                 : 'hover:bg-[#27272a] text-gray-400'
                                         }`}
-                                        title="Solo (S)"
+                                        title={`${t('audioMixer.solo')} (S)`}
                                     >
                                         <Headphones size={14} />
                                     </button>
@@ -210,7 +212,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                             
                             {trackClips.length > 0 && (
                                 <div className="mt-3 pt-2 border-t border-[#27272a]">
-                                    <div className="text-[9px] text-gray-500 mb-1">Clips ({trackClips.length})</div>
+                                    <div className="text-[9px] text-gray-500 mb-1">{t('audioMixer.clips', { count: trackClips.length })}</div>
                                     <div className="flex flex-wrap gap-1">
                                         {trackClips.slice(0, 4).map(clip => (
                                             <div 
@@ -220,14 +222,17 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                                                         ? 'bg-white text-black' 
                                                         : 'bg-[#27272a] text-gray-400 hover:bg-[#3f3f46]'
                                                 }`}
-                                                title={`${clip.content || 'Clip'} - Vol: ${Math.round((clip.volume ?? 1) * 100)}%`}
+                                                title={t('audioMixer.clipVolume', {
+                                                    name: clip.content || t('audioMixer.clipFallback'),
+                                                    volume: Math.round((clip.volume ?? 1) * 100),
+                                                })}
                                             >
                                                 {(clip.volume ?? 1) * 100}%
                                             </div>
                                         ))}
                                         {trackClips.length > 4 && (
                                             <span className="text-[8px] text-gray-500 px-1">
-                                                +{trackClips.length - 4} more
+                                                {t('audioMixer.more', { count: trackClips.length - 4 })}
                                             </span>
                                         )}
                                     </div>
@@ -239,14 +244,14 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                 
                 {audioTracks.length === 0 && (
                     <div className="text-center py-8 text-gray-500 text-xs">
-                        No audio tracks available
+                        {t('audioMixer.noAudioTracks')}
                     </div>
                 )}
             </div>
             
             {selectedClip && (
                 <div className="border-t border-[#27272a] p-3 bg-[#18181b]">
-                    <div className="text-[10px] text-gray-400 mb-2">Selected Clip</div>
+                    <div className="text-[10px] text-gray-400 mb-2">{t('audioMixer.selectedClip')}</div>
                     <div className="flex items-center gap-2">
                         <Volume2 size={12} className="text-gray-500" />
                         <input
@@ -270,7 +275,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                     </div>
                     
                     <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[9px] text-gray-500">Fade In:</span>
+                        <span className="text-[9px] text-gray-500">{t('audioMixer.fadeIn')}:</span>
                         <input
                             type="range"
                             min="0"
@@ -289,7 +294,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
                     </div>
                     
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[9px] text-gray-500">Fade Out:</span>
+                        <span className="text-[9px] text-gray-500">{t('audioMixer.fadeOut')}:</span>
                         <input
                             type="range"
                             min="0"
@@ -312,7 +317,7 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({ className }) => {
             <div className="h-8 border-t border-[#27272a] flex items-center justify-center gap-4 bg-[#18181b]">
                 <div className="flex items-center gap-1">
                     <Gauge size={10} className="text-emerald-400" />
-                    <span className="text-[9px] text-gray-400">Master</span>
+                    <span className="text-[9px] text-gray-400">{t('audioMixer.master')}</span>
                 </div>
                 <div className="flex gap-1">
                     {masterBars.map((level, i) => (

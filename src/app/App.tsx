@@ -1,5 +1,6 @@
 
 import { useRouter } from '@sdkwork/react-core'
+import { useTranslation } from '@sdkwork/react-i18n';
 import React, { Suspense, useEffect, useMemo } from 'react';
 import { AppProvider } from './AppProvider';
 ;
@@ -28,12 +29,16 @@ const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.Re
     none: BlankLayout,
 };
 
-const RouteLoadingFallback: React.FC = () => (
-  <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
-    <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-    <span className="text-xs font-medium">Loading Route...</span>
-  </div>
-);
+const RouteLoadingFallback: React.FC = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
+      <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+      <span className="text-xs font-medium">{t('appShell.loading_route')}</span>
+    </div>
+  );
+};
 const HomePage = React.lazy(() => import('../pages/HomePage'));
 
 const matchRoute = (routePath: string, currentPath: string): { matched: boolean; params: Record<string, string> } => {

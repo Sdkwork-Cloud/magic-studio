@@ -4,7 +4,7 @@ import {
     Scissors, Trash2, ArrowLeftToLine, ArrowRightToLine, 
     Copy, MapPin, Minimize2, ZoomIn, Clipboard
 } from 'lucide-react';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 interface MagicCutContextMenuProps {
     x: number;
@@ -20,7 +20,7 @@ export const MagicCutContextMenu: React.FC<MagicCutContextMenuProps> = ({
     x, y, targetType, targetId, onClose, onAction, canPaste 
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { t } = useTranslation();
+    const { t, tc, tl } = useMagicCutTranslation();
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -48,48 +48,48 @@ export const MagicCutContextMenu: React.FC<MagicCutContextMenuProps> = ({
             {targetType === 'clip' ? (
                 <>
                     <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
-                        Selected Clip
+                        {t('contextMenu.headers.selectedClip')}
                     </div>
-                    <MenuItem onClick={() => onAction('split')} icon={<Scissors size={14} />} label="Split" shortcut="Ctrl+B" />
-                    <MenuItem onClick={() => onAction('trim-start')} icon={<ArrowLeftToLine size={14} />} label="Trim Start" shortcut="Q" />
-                    <MenuItem onClick={() => onAction('trim-end')} icon={<ArrowRightToLine size={14} />} label="Trim End" shortcut="W" />
+                    <MenuItem onClick={() => onAction('split')} icon={<Scissors size={14} />} label={t('contextMenu.actions.split')} shortcut="Ctrl+B" />
+                    <MenuItem onClick={() => onAction('trim-start')} icon={<ArrowLeftToLine size={14} />} label={tl('trimStartToPlayhead')} shortcut="Q" />
+                    <MenuItem onClick={() => onAction('trim-end')} icon={<ArrowRightToLine size={14} />} label={tl('trimEndToPlayhead')} shortcut="W" />
                     <div className="h-[1px] bg-[#454545] my-1 mx-2" />
-                    <MenuItem onClick={() => onAction('copy')} icon={<Copy size={14} />} label="Copy" shortcut="Ctrl+C" />
+                    <MenuItem onClick={() => onAction('copy')} icon={<Copy size={14} />} label={tc('copy')} shortcut="Ctrl+C" />
                     <div className="h-[1px] bg-[#454545] my-1 mx-2" />
-                    <MenuItem onClick={() => onAction('delete')} icon={<Trash2 size={14} />} label="Delete" danger shortcut="Del" />
+                    <MenuItem onClick={() => onAction('delete')} icon={<Trash2 size={14} />} label={tc('delete')} danger shortcut="Del" />
                 </>
             ) : targetType === 'track' ? (
                 <>
                     <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
-                        Track Options
+                        {t('contextMenu.headers.trackOptions')}
                     </div>
                     <MenuItem 
                         onClick={() => onAction('paste')} 
                         icon={<Clipboard size={14} />} 
-                        label="Paste" 
+                        label={tc('paste')} 
                         shortcut="Ctrl+V" 
                         disabled={!canPaste}
                     />
                     <div className="h-[1px] bg-[#454545] my-1 mx-2" />
-                    <MenuItem onClick={() => onAction('delete-track')} icon={<Trash2 size={14} />} label="Delete Track" danger />
+                    <MenuItem onClick={() => onAction('delete-track')} icon={<Trash2 size={14} />} label={tl('deleteTrack')} danger />
                 </>
             ) : (
                 <>
                     <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
-                        Timeline
+                        {t('contextMenu.headers.timeline')}
                     </div>
                     <MenuItem 
                         onClick={() => onAction('paste')} 
                         icon={<Clipboard size={14} />} 
-                        label="Paste" 
+                        label={tc('paste')} 
                         shortcut="Ctrl+V" 
                         disabled={!canPaste}
                     />
                     <div className="h-[1px] bg-[#454545] my-1 mx-2" />
-                    <MenuItem onClick={() => onAction('add-marker')} icon={<MapPin size={14} />} label="Add Marker" shortcut="M" />
+                    <MenuItem onClick={() => onAction('add-marker')} icon={<MapPin size={14} />} label={tl('addMarker')} shortcut="M" />
                     <div className="h-[1px] bg-[#454545] my-1 mx-2" />
-                    <MenuItem onClick={() => onAction('fit-view')} icon={<Minimize2 size={14} />} label="Fit to View" shortcut="Shift+Z" />
-                    <MenuItem onClick={() => onAction('zoom-in')} icon={<ZoomIn size={14} />} label="Zoom In" />
+                    <MenuItem onClick={() => onAction('fit-view')} icon={<Minimize2 size={14} />} label={tl('fitToView')} shortcut="Shift+Z" />
+                    <MenuItem onClick={() => onAction('zoom-in')} icon={<ZoomIn size={14} />} label={tl('zoomIn')} />
                 </>
             )}
         </div>

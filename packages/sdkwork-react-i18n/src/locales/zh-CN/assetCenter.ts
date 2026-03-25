@@ -32,7 +32,7 @@ export const assetCenter = {
         "audio-studio": "音频工作室",
         music: "音乐",
         "voice-speaker": "语音播报",
-        magiccut: "智能剪辑",
+        magiccut: "魔映",
         film: "影片",
         "portal-video": "视频门户",
         character: "角色",
@@ -132,5 +132,54 @@ export const assetCenter = {
     },
     preview: {
         unavailable: "预览地址不可用"
+    },
+    promptInput: {
+        label: "提示词",
+        placeholder: "输入文本...",
+        browseLibrary: "浏览提示词库",
+        browseHistory: "浏览提示词历史",
+        library: "提示词库",
+        history: "历史",
+        optimizeWithAi: "使用 AI 优化提示词",
+        enhancing: "优化中...",
+        enhance: "优化",
+        undoOptimization: "撤销优化",
+        redoOptimization: "重做优化",
+        mentionHint: "输入 @ 以关联素材",
+        charCount: "{count} 个字符",
+        copyPrompt: "复制提示词",
+        copied: "已复制",
+        copy: "复制"
+    },
+    promptLibrary: {
+        title: "提示词库",
+        subtitle: "从官方提示词库中选择可复用的提示词。",
+        failedToLoad: "加载提示词库失败。",
+        failedToUpdateFavorite: "更新收藏状态失败。",
+        filters: {
+            all: "全部",
+            popular: "热门",
+            favorites: "最高收藏"
+        },
+        refresh: "刷新",
+        searchPlaceholder: "搜索提示词...",
+        loading: "正在加载提示词...",
+        empty: "当前筛选条件下未找到提示词。",
+        public: "公开",
+        unfavoritePrompt: "取消收藏提示词",
+        favoritePrompt: "收藏提示词",
+        usePrompt: "使用提示词",
+        metaUses: "使用 {count} 次"
+    },
+    promptHistory: {
+        title: "提示词历史",
+        subtitle: "复用你最近生成记录中的提示词。",
+        failed: "失败",
+        failedToLoad: "加载提示词历史失败。",
+        searchPlaceholder: "搜索历史记录...",
+        loading: "正在加载提示词历史...",
+        empty: "未找到提示词历史记录。",
+        reuse: "复用",
+        basePrompt: "基础提示词：{content}"
     }
 };

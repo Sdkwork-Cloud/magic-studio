@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { ROUTES, RoutePath } from './routes';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // Import pages from packages
 import { ChatPage } from '@sdkwork/react-chat';
@@ -82,14 +83,18 @@ const AudioLeftGeneratorPanel = lazy(() => import('@sdkwork/react-audio').then(m
 const CharacterLeftGeneratorPanel = lazy(() => import('@sdkwork/react-character').then(m => ({ default: m.CharacterLeftGeneratorPanel })));
 
 // Loading fallback component
-const PageLoadingFallback = () => (
-    <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-            <span className="text-gray-400 text-sm">Loading...</span>
+const PageLoadingFallback = () => {
+    const { t } = useTranslation();
+
+    return (
+        <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+                <span className="text-gray-400 text-sm">{t('appShell.loading')}</span>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Panel loading fallback
 const PanelLoadingFallback = () => (

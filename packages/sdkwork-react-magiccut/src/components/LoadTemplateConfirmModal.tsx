@@ -4,6 +4,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, AlertTriangle, FolderOpen } from 'lucide-react';
 ;
+import { useMagicCutTranslation } from '../hooks/useMagicCutTranslation';
 
 interface LoadTemplateConfirmModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ interface LoadTemplateConfirmModalProps {
 export const LoadTemplateConfirmModal: React.FC<LoadTemplateConfirmModalProps> = ({ 
     isOpen, templateName, onClose, onConfirm 
 }) => {
+    const { t, tc } = useMagicCutTranslation();
     if (!isOpen) return null;
 
     return createPortal(
@@ -33,7 +35,7 @@ export const LoadTemplateConfirmModal: React.FC<LoadTemplateConfirmModalProps> =
                             <AlertTriangle size={20} />
                          </div>
                          <div>
-                             <h3 className="text-white font-bold text-lg">Load Template</h3>
+                             <h3 className="text-white font-bold text-lg">{t('loadTemplate.title')}</h3>
                          </div>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-[#333] rounded-lg">
@@ -44,22 +46,22 @@ export const LoadTemplateConfirmModal: React.FC<LoadTemplateConfirmModalProps> =
                 {/* Body */}
                 <div className="p-6">
                     <p className="text-sm text-gray-300 leading-relaxed">
-                        Are you sure you want to load <span className="font-bold text-white">"{templateName}"</span>?
+                        {t('loadTemplate.confirmMessage', { name: templateName })}
                     </p>
                     <p className="text-xs text-gray-500 mt-3 bg-[#252526] p-3 rounded-lg border border-[#333] flex gap-2 items-start">
                         <FolderOpen size={14} className="mt-0.5 shrink-0" />
-                        This will overwrite your current timeline and project settings. Any unsaved changes will be lost.
+                        {t('loadTemplate.warning')}
                     </p>
                 </div>
 
                 {/* Footer */}
                 <div className="flex-none px-6 py-4 border-t border-[#333] bg-[#252526] flex justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button variant="secondary" onClick={onClose}>{tc('cancel')}</Button>
                     <Button 
                         onClick={() => { onConfirm(); onClose(); }} 
                         className="bg-blue-600 hover:bg-blue-500 border-0 shadow-lg shadow-blue-900/20"
                     >
-                        Load & Replace
+                        {t('loadTemplate.confirm')}
                     </Button>
                 </div>
             </div>

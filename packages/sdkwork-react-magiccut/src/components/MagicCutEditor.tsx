@@ -15,6 +15,7 @@ import { ExportModal } from './Export/ExportModal';
 import { SaveTemplateModal } from './SaveTemplateModal';
 import { platform } from '@sdkwork/react-core';
 import { MagicCutErrorBoundary } from './ErrorBoundary/MagicCutErrorBoundary';
+import { useMagicCutTranslation } from '../hooks/useMagicCutTranslation';
 
 // Resizer Helper
 const Resizer: React.FC<{ orientation: 'vertical' | 'horizontal'; onMouseDown?: (e: React.MouseEvent) => void }> = ({ orientation, onMouseDown }) => (
@@ -30,6 +31,7 @@ const Resizer: React.FC<{ orientation: 'vertical' | 'horizontal'; onMouseDown?: 
 
 // --- Context-Aware Toolbar (Internal) ---
 const EditorToolbar: React.FC<{ onExportRequest: () => void, onSaveTemplateRequest: () => void }> = ({ onExportRequest, onSaveTemplateRequest }) => {
+    const { tc, t } = useMagicCutTranslation();
     const { project, commitHistory, isProcessing } = useMagicCutStore();
 
     const handleExportClick = () => {
@@ -43,7 +45,7 @@ const EditorToolbar: React.FC<{ onExportRequest: () => void, onSaveTemplateReque
             <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full ${isProcessing ? 'bg-blue-500 animate-pulse' : (project.name ? 'bg-green-500' : 'bg-yellow-500')}`} />
-                    <span className="text-[10px] text-gray-400 font-mono uppercase">{isProcessing ? 'Processing...' : 'Ready'}</span>
+                    <span className="text-[10px] text-gray-400 font-mono uppercase">{isProcessing ? tc('processing') : tc('ready')}</span>
                 </div>
             </div>
 
@@ -52,7 +54,7 @@ const EditorToolbar: React.FC<{ onExportRequest: () => void, onSaveTemplateReque
                 <button
                     onClick={onSaveTemplateRequest}
                     className="p-1.5 text-gray-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                    title="Save as Template"
+                    title={t('editorToolbar.saveTemplate')}
                 >
                     <LayoutTemplate size={14} />
                 </button>
@@ -64,7 +66,7 @@ const EditorToolbar: React.FC<{ onExportRequest: () => void, onSaveTemplateReque
                     className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
                     <Download size={12} />
-                    <span>Export</span>
+                    <span>{t('editorToolbar.export')}</span>
                 </button>
             </div>
         </div>
@@ -77,6 +79,7 @@ const MagicCutEditorLayout: React.FC<{
     onBack?: () => void;
     onExport?: (project: CutProject) => void;
 }> = ({ minimal, onBack, onExport }) => {
+    const { tc, t } = useMagicCutTranslation();
     const [activeTab, setActiveTab] = useState('video');
     const {
         project, saveAsTemplate, play, pause, seek,
@@ -308,7 +311,7 @@ const MagicCutEditorLayout: React.FC<{
     const handleSaveTemplateConfirm = async (metadata: TemplateMetadata) => {
         await saveAsTemplate(metadata);
         bus.emit(MagicCutEvents.TEMPLATE_SAVED);
-        await platform.notify('Success', 'Template saved successfully!');
+        await platform.notify(tc('success'), t('editorToolbar.templateSaved'));
     };
 
     return (

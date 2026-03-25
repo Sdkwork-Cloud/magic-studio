@@ -1,6 +1,7 @@
 
 import { useRouter } from '@sdkwork/react-core'
 import React from 'react';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { 
     Scissors, Layout, BookOpen, ChevronLeft, FolderOpen, HardDrive
 } from 'lucide-react';
@@ -13,13 +14,14 @@ interface CreationLayoutSidebarProps {
 
 export const CreationLayoutSidebar: React.FC<CreationLayoutSidebarProps> = ({ className = '' }) => {
     const { navigate, currentPath } = useRouter();
+    const { t } = useTranslation();
 
     const TOOLS = [
-        { id: 'magic-cut', label: 'Magic Cut', route: ROUTES.MAGIC_CUT, icon: Scissors, color: 'text-red-500' },
-        { id: 'canvas', label: 'Canvas', route: ROUTES.CANVAS, icon: Layout, color: 'text-blue-500' },
-        { id: 'notes', label: 'Notes', route: ROUTES.NOTES, icon: BookOpen, color: 'text-yellow-500' },
-        { id: 'assets', label: 'Assets', route: ROUTES.ASSETS, icon: FolderOpen, color: 'text-purple-500' },
-        { id: 'drive', label: 'Drive', route: ROUTES.DRIVE, icon: HardDrive, color: 'text-cyan-500' },
+        { id: 'magic-cut', label: t('sidebar.magic_cut'), route: ROUTES.MAGIC_CUT, icon: Scissors, color: 'text-red-500' },
+        { id: 'canvas', label: t('market.nav.canvas'), route: ROUTES.CANVAS, icon: Layout, color: 'text-blue-500' },
+        { id: 'notes', label: t('sidebar.notes'), route: ROUTES.NOTES, icon: BookOpen, color: 'text-yellow-500' },
+        { id: 'assets', label: t('sidebar.assets'), route: ROUTES.ASSETS, icon: FolderOpen, color: 'text-purple-500' },
+        { id: 'drive', label: t('sidebar.drive'), route: ROUTES.DRIVE, icon: HardDrive, color: 'text-cyan-500' },
     ];
 
     return (
@@ -28,7 +30,7 @@ export const CreationLayoutSidebar: React.FC<CreationLayoutSidebarProps> = ({ cl
             <button 
                 onClick={() => navigate(ROUTES.HOME)}
                 className="p-2 mb-4 text-gray-500 hover:text-white hover:bg-[#1a1a1c] rounded-xl transition-colors"
-                title="Back to Home"
+                title={t('common.actions.back_home')}
             >
                 <ChevronLeft size={20} />
             </button>

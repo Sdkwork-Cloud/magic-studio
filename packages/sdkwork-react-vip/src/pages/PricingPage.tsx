@@ -1,35 +1,50 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Crown, Gem, Sparkles, Star, TimerReset } from 'lucide-react';
+import { Button } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { PlanTier, type Subscription, type VipPlan } from '../entities';
 import { vipBusinessService } from '../services/vipBusinessService';
-import { Button } from '@sdkwork/react-commons';
 
 type BillingCycle = 'month' | 'year' | 'onetime';
 
-function formatCurrency(value: number, currency: string): string {
-  const prefix = currency === 'CNY' ? 'CNY ' : `${currency} `;
-  return `${prefix}${value.toFixed(2)}`;
+function formatCurrency(value: number, currency: string, locale: string): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    const prefix = currency === 'CNY' ? 'CNY ' : `${currency} `;
+    return `${prefix}${value.toFixed(2)}`;
+  }
 }
 
-function formatExpireTime(expiresAt: number): string {
+function formatExpireTime(
+  expiresAt: number,
+  locale: string,
+  t: (key: string, options?: Record<string, string>) => string,
+): string {
   if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
-    return 'Never';
+    return t('vip.page.subscription.never');
   }
+
   const parsed = new Date(expiresAt);
   if (Number.isNaN(parsed.getTime())) {
-    return 'Unknown';
+    return t('vip.page.subscription.unknown');
   }
-  return parsed.toLocaleDateString();
+
+  return parsed.toLocaleDateString(locale);
 }
 
-function getCycleLabel(cycle: BillingCycle): string {
-  if (cycle === 'year') {
-    return 'Yearly';
-  }
-  if (cycle === 'onetime') {
-    return 'One-time';
-  }
-  return 'Monthly';
+function getCycleLabel(
+  cycle: BillingCycle,
+  t: (key: string, options?: Record<string, string>) => string,
+): string {
+  if (cycle === 'year') return t('vip.page.cycles.year');
+  if (cycle === 'onetime') return t('vip.page.cycles.onetime');
+  return t('vip.page.cycles.month');
 }
 
 function getPlanTagTone(plan: VipPlan): string {
@@ -45,53 +60,72 @@ function getPlanTagTone(plan: VipPlan): string {
   return 'border-zinc-400/30 bg-zinc-500/10 text-zinc-200';
 }
 
-function getTierTitle(planId: PlanTier): string {
-  if (planId === PlanTier.PREMIUM) {
-    return 'Premium';
-  }
-  if (planId === PlanTier.STANDARD) {
-    return 'Standard';
-  }
-  if (planId === PlanTier.BASIC) {
-    return 'Basic';
-  }
-  return 'Free';
+function getTierTitle(
+  planId: PlanTier,
+  t: (key: string, options?: Record<string, string>) => string,
+): string {
+  if (planId === PlanTier.PREMIUM) return t('vip.page.tiers.premium');
+  if (planId === PlanTier.STANDARD) return t('vip.page.tiers.standard');
+  if (planId === PlanTier.BASIC) return t('vip.page.tiers.basic');
+  return t('vip.page.tiers.free');
 }
 
-const CYCLE_OPTIONS: Array<{ id: BillingCycle; label: string }> = [
-  { id: 'month', label: 'Monthly' },
-  { id: 'year', label: 'Yearly' },
-  { id: 'onetime', label: 'One-time' },
-];
+function getBillingLabel(
+  billingCycle: string,
+  t: (key: string, options?: Record<string, string>) => string,
+): string {
+  const normalized = billingCycle.trim().toLowerCase();
+  const count = String(Math.max(1, parseInt(normalized, 10) || 1));
+
+  if (normalized.includes('forever')) return t('vip.page.billing.forever');
+  if (normalized.includes('year')) return t('vip.page.billing.years', { count });
+  if (normalized.includes('month')) return t('vip.page.billing.months', { count });
+  if (normalized.includes('day')) return t('vip.page.billing.days', { count });
+
+  return billingCycle;
+}
 
 const PricingPage: React.FC = () => {
+  const { t, locale } = useTranslation();
   const [plans, setPlans] = useState<VipPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('month');
   const [subscribingPlanId, setSubscribingPlanId] = useState<PlanTier | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [message, setMessage] = useState<string>('');
+  const [message, setMessage] = useState('');
 
-  const loadPlans = useCallback(async (refresh = false) => {
-    if (refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
+  const cycleOptions = useMemo<Array<{ id: BillingCycle; label: string }>>(
+    () => [
+      { id: 'month', label: t('vip.page.cycles.month') },
+      { id: 'year', label: t('vip.page.cycles.year') },
+      { id: 'onetime', label: t('vip.page.cycles.onetime') },
+    ],
+    [t],
+  );
 
-    try {
-      const remotePlans = await vipBusinessService.getPlans();
-      setPlans(remotePlans);
-      setMessage('');
-    } catch (error) {
-      const text = error instanceof Error ? error.message : 'Failed to load VIP plans';
-      setMessage(text);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
+  const loadPlans = useCallback(
+    async (refresh = false) => {
+      if (refresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      try {
+        const remotePlans = await vipBusinessService.getPlans();
+        setPlans(remotePlans);
+        setMessage('');
+      } catch (error) {
+        const text = error instanceof Error ? error.message : t('vip.page.errors.loadPlans');
+        setMessage(text);
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     void loadPlans();
@@ -104,16 +138,19 @@ const PricingPage: React.FC = () => {
         const nextSubscription = await vipBusinessService.subscribe(planId, selectedCycle);
         setSubscription(nextSubscription);
         setMessage(
-          `Subscription updated: ${getTierTitle(nextSubscription.planId)} (${nextSubscription.status})`,
+          t('vip.page.messages.subscriptionUpdated', {
+            plan: getTierTitle(nextSubscription.planId, t),
+            status: t(`vip.page.subscription.status.${nextSubscription.status}`),
+          }),
         );
       } catch (error) {
-        const text = error instanceof Error ? error.message : 'Failed to purchase VIP plan';
+        const text = error instanceof Error ? error.message : t('vip.page.errors.purchaseFailed');
         setMessage(text);
       } finally {
         setSubscribingPlanId(null);
       }
     },
-    [selectedCycle],
+    [selectedCycle, t],
   );
 
   const sortedPlans = useMemo(() => {
@@ -124,6 +161,7 @@ const PricingPage: React.FC = () => {
         if (tier === PlanTier.STANDARD) return 2;
         return 3;
       };
+
       return rank(left.id) - rank(right.id);
     });
   }, [plans]);
@@ -143,23 +181,25 @@ const PricingPage: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-300/30 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
                 <Crown className="h-3.5 w-3.5" />
-                Magic Studio VIP
+                {t('vip.page.badges.brand')}
               </div>
-              <h1 className="mt-4 text-3xl font-bold md:text-4xl">Membership Center</h1>
-              <p className="mt-2 max-w-2xl text-sm text-gray-300 md:text-base">
-                Upgrade generation speed, quota, and advanced model access across your workspace.
-              </p>
+              <h1 className="mt-4 text-3xl font-bold md:text-4xl">{t('vip.page.title')}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-gray-300 md:text-base">{t('vip.page.subtitle')}</p>
             </div>
 
             <div className="rounded-2xl border border-white/15 bg-black/25 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-wide text-indigo-100/70">Current Subscription</div>
+              <div className="text-[11px] uppercase tracking-wide text-indigo-100/70">
+                {t('vip.page.subscription.title')}
+              </div>
               <div className="mt-1 text-lg font-semibold">
-                {subscription ? getTierTitle(subscription.planId) : 'Not Subscribed'}
+                {subscription ? getTierTitle(subscription.planId, t) : t('vip.page.subscription.none')}
               </div>
               <div className="mt-1 text-xs text-indigo-100/80">
                 {subscription
-                  ? `${subscription.status} | Expire ${formatExpireTime(subscription.expiresAt)}`
-                  : 'Choose a plan to activate premium features'}
+                  ? `${t(`vip.page.subscription.status.${subscription.status}`)} | ${t('vip.page.subscription.expires', {
+                      date: formatExpireTime(subscription.expiresAt, locale, t),
+                    })}`
+                  : t('vip.page.subscription.hint')}
               </div>
             </div>
           </div>
@@ -167,7 +207,7 @@ const PricingPage: React.FC = () => {
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
-            {CYCLE_OPTIONS.map((cycle) => (
+            {cycleOptions.map((cycle) => (
               <Button
                 key={cycle.id}
                 type="button"
@@ -193,7 +233,7 @@ const PricingPage: React.FC = () => {
             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-gray-200 hover:bg-white/10 disabled:opacity-60"
             disabled={isRefreshing}
           >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            {isRefreshing ? t('vip.page.actions.refreshing') : t('common.actions.refresh')}
           </Button>
         </div>
 
@@ -232,32 +272,34 @@ const PricingPage: React.FC = () => {
                     ) : (
                       <Gem className="h-4 w-4 text-cyan-300" />
                     )}
-                    {plan.name}
+                    {getTierTitle(plan.id, t)}
                   </div>
                   {plan.isPopular ? (
                     <span className="rounded-full border border-pink-300/40 px-2 py-0.5 text-[10px] font-semibold text-pink-200">
-                      POPULAR
+                      {t('vip.page.badges.popular')}
                     </span>
                   ) : null}
                 </div>
 
                 <div className="mt-3 flex items-end justify-between">
                   <div>
-                    <div className="text-3xl font-semibold">{formatCurrency(plan.price, plan.currency)}</div>
+                    <div className="text-3xl font-semibold">
+                      {formatCurrency(plan.price, plan.currency, locale)}
+                    </div>
                     <div className="mt-1 flex items-center gap-1 text-xs text-gray-300">
                       <TimerReset className="h-3.5 w-3.5" />
-                      {plan.billingCycle}
+                      {getBillingLabel(plan.billingCycle, t)}
                     </div>
                   </div>
                   {plan.originalPrice ? (
                     <div className="text-xs text-gray-500 line-through">
-                      {formatCurrency(plan.originalPrice, plan.currency)}
+                      {formatCurrency(plan.originalPrice, plan.currency, locale)}
                     </div>
                   ) : null}
                 </div>
 
                 <p className="mt-3 min-h-[42px] text-xs leading-relaxed text-gray-300">
-                  {plan.description || 'Priority queues, higher quota, and richer model options.'}
+                  {plan.description || t('vip.page.defaults.description')}
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
@@ -271,7 +313,7 @@ const PricingPage: React.FC = () => {
                   ))}
                   {plan.points > 0 ? (
                     <span className="rounded-full border border-amber-300/35 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-200">
-                      +{plan.points} points
+                      {t('vip.page.points', { count: String(plan.points) })}
                     </span>
                   ) : null}
                 </div>
@@ -293,10 +335,12 @@ const PricingPage: React.FC = () => {
                   disabled={subscribingPlanId !== null || plan.id === PlanTier.FREE}
                 >
                   {plan.id === PlanTier.FREE
-                    ? 'Current Plan'
+                    ? t('vip.page.actions.currentPlan')
                     : subscribingPlanId === plan.id
-                      ? 'Processing...'
-                      : `Subscribe (${getCycleLabel(selectedCycle)})`}
+                      ? t('common.status.processing')
+                      : t('vip.page.actions.subscribe', {
+                          cycle: getCycleLabel(selectedCycle, t),
+                        })}
                 </Button>
               </article>
             ))}

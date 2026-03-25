@@ -1,32 +1,36 @@
 import type { ExportFormat } from '../../services/export/types';
 import { isAudioOnlyExportFormat } from './audioOnlyExport';
 
+type Translate = (key: string, params?: Record<string, any>) => string;
+
 export function validateExportRequest({
   exportVideo,
   exportAudio,
   format,
+  translate,
 }: {
   exportVideo: boolean;
   exportAudio: boolean;
   format: ExportFormat;
+  translate: Translate;
 }) {
   if (!exportVideo && !exportAudio) {
-    return 'Enable video or audio before exporting.';
+    return translate('export.validation.enableVideoOrAudio');
   }
 
   if (!exportVideo && exportAudio) {
     if (!isAudioOnlyExportFormat(format)) {
-      return 'Audio-only export currently supports WAV only.';
+      return translate('export.validation.audioOnlyWav');
     }
     return null;
   }
 
   if (exportVideo && isAudioOnlyExportFormat(format)) {
-    return 'WAV export is only available for audio-only mixdowns.';
+    return translate('export.validation.wavAudioOnly');
   }
 
   if (format === 'mov') {
-    return 'MOV export is not available in the current renderer.';
+    return translate('export.validation.movUnavailable');
   }
 
   return null;

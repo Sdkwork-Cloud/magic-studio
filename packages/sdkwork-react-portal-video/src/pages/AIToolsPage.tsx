@@ -218,13 +218,10 @@ const AIToolsPage: React.FC = () => {
             <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div>
                 <h1 className="mb-1 text-2xl font-bold text-white">
-                  {t('portalVideo.page.ai_tools_title', 'AI Tools')}
+                  {t('portalVideo.page.ai_tools_title')}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  {t(
-                    'portalVideo.page.ai_tools_subtitle',
-                    'Explore creative tools for video and image workflows.',
-                  )}
+                  {t('portalVideo.page.ai_tools_subtitle')}
                 </p>
               </div>
 
@@ -263,10 +260,7 @@ const AIToolsPage: React.FC = () => {
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchQuery(event.target.value)
                   }
-                  placeholder={t(
-                    'portalVideo.page.search_placeholder',
-                    'Search AI tools...',
-                  )}
+                  placeholder={t('portalVideo.page.search_placeholder')}
                   className="w-full rounded-xl border border-[#27272a] bg-[#18181b] py-3 pl-11 pr-4 text-sm text-gray-200 transition-colors placeholder-gray-600 focus:border-purple-500 focus:outline-none"
                 />
               </div>
@@ -283,7 +277,7 @@ const AIToolsPage: React.FC = () => {
                   <ToolCard
                     key={tool.id}
                     tool={tool}
-                    ctaLabel={t('portalVideo.page.try_now', 'Try Now')}
+                    ctaLabel={t('portalVideo.page.try_now')}
                     onClick={() => navigate(tool.route)}
                   />
                 ))}
@@ -292,13 +286,10 @@ const AIToolsPage: React.FC = () => {
               <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#27272a] bg-[#111113] text-center">
                 <Sparkles size={36} className="mb-4 text-gray-600" />
                 <h2 className="mb-2 text-lg font-semibold text-white">
-                  {t('portalVideo.page.empty_title', 'No matching tools')}
+                  {t('portalVideo.page.empty_title')}
                 </h2>
                 <p className="max-w-md text-sm text-gray-500">
-                  {t(
-                    'portalVideo.page.empty_description',
-                    'Try another search or switch the current category.',
-                  )}
+                  {t('portalVideo.page.empty_description')}
                 </p>
               </div>
             )}

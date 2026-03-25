@@ -28,8 +28,7 @@ export interface ExportRuntimePresentation {
   formatOptions: ExportFormatPresentation[];
 }
 
-const SMART_HDR_REASON =
-  'Smart HDR metadata pass-through is not implemented in the current renderer.';
+type Translate = (key: string, params?: Record<string, any>) => string;
 
 function resolveRecommendedFormat(
   support: ExportRuntimeSupportSnapshot
@@ -47,7 +46,8 @@ function resolveRecommendedFormat(
 
 function resolveMp4Presentation(
   support: ExportRuntimeSupportSnapshot,
-  recommendedFormat: ExportRuntimeFormat | null
+  recommendedFormat: ExportRuntimeFormat | null,
+  translate: Translate
 ): ExportFormatPresentation {
   if (support.webCodecsMp4Available) {
     return {
@@ -56,8 +56,8 @@ function resolveMp4Presentation(
       available: true,
       recommended: recommendedFormat === 'mp4',
       route: 'webcodecs',
-      badge: 'Best quality',
-      description: 'H.264 MP4 export through WebCodecs and native MP4 muxing.',
+      badge: translate('export.formatBadges.bestQuality'),
+      description: translate('export.formatDescriptions.mp4WebCodecs'),
     };
   }
 
@@ -68,8 +68,8 @@ function resolveMp4Presentation(
       available: true,
       recommended: recommendedFormat === 'mp4',
       route: 'browser-media-recorder',
-      badge: 'Compatibility',
-      description: 'MP4 export through the runtime MediaRecorder compatibility path.',
+      badge: translate('export.formatBadges.compatibility'),
+      description: translate('export.formatDescriptions.mp4MediaRecorder'),
     };
   }
 
@@ -79,14 +79,15 @@ function resolveMp4Presentation(
     available: false,
     recommended: false,
     route: null,
-    badge: 'Unavailable',
-    description: 'This runtime does not expose a real MP4 export path.',
+    badge: translate('export.formatBadges.unavailable'),
+    description: translate('export.formatDescriptions.mp4Unavailable'),
   };
 }
 
 function resolveWebmPresentation(
   support: ExportRuntimeSupportSnapshot,
-  recommendedFormat: ExportRuntimeFormat | null
+  recommendedFormat: ExportRuntimeFormat | null,
+  translate: Translate
 ): ExportFormatPresentation {
   if (support.mediaRecorderWebmAvailable) {
     return {
@@ -95,8 +96,10 @@ function resolveWebmPresentation(
       available: true,
       recommended: recommendedFormat === 'webm',
       route: 'browser-media-recorder',
-      badge: recommendedFormat === 'webm' ? 'Recommended here' : 'Compatibility',
-      description: 'VP8/VP9 WebM export through MediaRecorder.',
+      badge: recommendedFormat === 'webm'
+        ? translate('export.formatBadges.recommendedHere')
+        : translate('export.formatBadges.compatibility'),
+      description: translate('export.formatDescriptions.webmMediaRecorder'),
     };
   }
 
@@ -106,33 +109,32 @@ function resolveWebmPresentation(
     available: false,
     recommended: false,
     route: null,
-    badge: 'Unavailable',
-    description: 'This runtime does not expose a real WebM export path.',
+    badge: translate('export.formatBadges.unavailable'),
+    description: translate('export.formatDescriptions.webmUnavailable'),
   };
 }
 
 export function resolveExportRuntimePresentation(
-  support: ExportRuntimeSupportSnapshot
+  support: ExportRuntimeSupportSnapshot,
+  translate: Translate
 ): ExportRuntimePresentation {
   const recommendedFormat = resolveRecommendedFormat(support);
   const formatOptions = [
-    resolveMp4Presentation(support, recommendedFormat),
-    resolveWebmPresentation(support, recommendedFormat),
+    resolveMp4Presentation(support, recommendedFormat, translate),
+    resolveWebmPresentation(support, recommendedFormat, translate),
   ] satisfies ExportFormatPresentation[];
 
-  let runtimeSummary = 'No real video container is available in the current runtime.';
+  let runtimeSummary = translate('export.runtime.noContainer');
   if (support.webCodecsMp4Available && support.mediaRecorderWebmAvailable) {
-    runtimeSummary =
-      'MP4 is available through WebCodecs, and WebM is available through MediaRecorder.';
+    runtimeSummary = translate('export.runtime.mp4WebCodecsAndWebmMediaRecorder');
   } else if (support.webCodecsMp4Available) {
-    runtimeSummary = 'MP4 is available through the high-quality WebCodecs export path.';
+    runtimeSummary = translate('export.runtime.mp4WebCodecsOnly');
   } else if (support.mediaRecorderMp4Available && support.mediaRecorderWebmAvailable) {
-    runtimeSummary =
-      'This runtime can export MP4 and WebM through MediaRecorder compatibility paths.';
+    runtimeSummary = translate('export.runtime.mp4AndWebmMediaRecorder');
   } else if (support.mediaRecorderMp4Available) {
-    runtimeSummary = 'This runtime can export MP4 through MediaRecorder compatibility mode.';
+    runtimeSummary = translate('export.runtime.mp4MediaRecorderOnly');
   } else if (support.mediaRecorderWebmAvailable) {
-    runtimeSummary = 'This runtime can export WebM through MediaRecorder.';
+    runtimeSummary = translate('export.runtime.webmMediaRecorderOnly');
   }
 
   return {
@@ -140,9 +142,9 @@ export function resolveExportRuntimePresentation(
     runtimeSummary,
     blockingReason: recommendedFormat
       ? null
-      : 'No supported export format is currently available. Change runtime or install the missing encoder path.',
+      : translate('export.runtime.noSupportedFormat'),
     smartHdrSupported: false,
-    smartHdrReason: SMART_HDR_REASON,
+    smartHdrReason: translate('export.runtime.smartHdrUnsupported'),
     formatOptions,
   };
 }

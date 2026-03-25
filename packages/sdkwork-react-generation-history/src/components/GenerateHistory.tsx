@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { History } from 'lucide-react';
 import { ImageTask, MediaType } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { GenerationItem } from './GenerationItem';
 import { GenerationPreview, EditorComponents } from './GenerationPreview';
 
@@ -23,6 +24,7 @@ export const GenerateHistory: React.FC<GenerateHistoryProps> = ({
     tasks, onDelete, onReuse, onSelect, onPreview, selectedItems = [], 
     order = 'asc', filter = 'all', onSaveToAssets, editors = {}
 }) => {
+    const { t } = useTranslation();
     const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
 
     const handleDownload = (url: string, taskId: string, index: number) => {
@@ -49,9 +51,9 @@ export const GenerateHistory: React.FC<GenerateHistoryProps> = ({
                 <div className="w-20 h-20 rounded-3xl bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-4 shadow-inner">
                     <History size={32} className="opacity-20" />
                 </div>
-                <h3 className="text-base font-bold text-gray-300">No History Yet</h3>
+                <h3 className="text-base font-bold text-gray-300">{t('generationHistory.emptyTitle')}</h3>
                 <p className="text-xs opacity-50 mt-2 max-w-[200px] text-center leading-relaxed">
-                    Start generating to see your creation timeline here.
+                    {t('generationHistory.emptyDescription')}
                 </p>
             </div>
         );
@@ -63,7 +65,7 @@ export const GenerateHistory: React.FC<GenerateHistoryProps> = ({
                 <div className="w-16 h-16 rounded-2xl bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-4 border-dashed">
                     <History size={24} className="opacity-20" />
                 </div>
-                <p className="text-xs opacity-50">No items found for this filter.</p>
+                <p className="text-xs opacity-50">{t('generationHistory.emptyFiltered')}</p>
             </div>
         );
     }

@@ -16,6 +16,7 @@ import { getSuggestionConfig } from '../CreationChatInput/suggestion';
 import { PromptHistoryDialog } from './PromptHistoryDialog';
 import { PromptPickerDialog } from './PromptPickerDialog';
 import { applyPromptSelection, resolvePromptHistoryContent, type PromptApplyMode } from './promptPickerUtils';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // Tiptap
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -129,8 +130,8 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
     value, 
     onChange, 
     readOnly, 
-    label = "Prompt", 
-    placeholder = "Enter text...", 
+    label, 
+    placeholder, 
     className = "", 
     disabled, 
     onEnhance, 
@@ -147,6 +148,7 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
     promptInstance,
     promptApplyMode = 'replace',
 }) => {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [localIsEnhancing, setLocalIsEnhancing] = useState(false);
@@ -181,13 +183,15 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
 
     const calculatedMinHeight = minHeight || (rows * 24 + 16); 
     const isProcessing = externalIsEnhancing || localIsEnhancing;
+    const resolvedLabel = label === undefined ? t('assetCenter.promptInput.label') : label;
+    const resolvedPlaceholder = placeholder ?? t('assetCenter.promptInput.placeholder');
 
     const editor = useEditor({
         editable: !readOnly && !disabled,
         extensions: [
             StarterKit,
             Placeholder.configure({
-                placeholder: placeholder,
+                placeholder: resolvedPlaceholder,
                 emptyEditorClass: 'is-editor-empty',
             }),
             Mention.configure({
@@ -334,9 +338,9 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
         <div className={`flex flex-col gap-2 ${className}`}>
             <style>{EDITOR_STYLES}</style>
             
-            {label && (
+            {resolvedLabel && (
                 <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{resolvedLabel}</label>
                 </div>
             )}
             
@@ -367,10 +371,10 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                         type="button"
                                         onClick={() => setIsPromptLibraryOpen(true)}
                                         className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-sky-400 transition-colors hover:border-sky-500/20 hover:bg-sky-500/10 hover:text-white"
-                                        title="Browse prompt library"
+                                        title={t('assetCenter.promptInput.browseLibrary')}
                                     >
                                         <BookOpen size={12} />
-                                        Library
+                                        {t('assetCenter.promptInput.library')}
                                     </button>
                                 )}
 
@@ -379,10 +383,10 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                         type="button"
                                         onClick={() => setIsPromptHistoryOpen(true)}
                                         className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-orange-300 transition-colors hover:border-orange-500/20 hover:bg-orange-500/10 hover:text-white"
-                                        title="Browse prompt history"
+                                        title={t('assetCenter.promptInput.browseHistory')}
                                     >
                                         <History size={12} />
-                                        History
+                                        {t('assetCenter.promptInput.history')}
                                     </button>
                                 )}
                             </div>
@@ -402,14 +406,14 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                         }
                                         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-transparent
                                     `}
-                                    title="Optimize prompt with AI"
+                                    title={t('assetCenter.promptInput.optimizeWithAi')}
                                 >
                                     {isProcessing ? (
                                         <Loader2 size={12} className="animate-spin" />
                                     ) : (
                                         <Sparkles size={12} className={isProcessing ? "animate-pulse" : ""} /> 
                                     )}
-                                    {isProcessing ? 'Enhancing...' : 'Enhance'}
+                                    {isProcessing ? t('assetCenter.promptInput.enhancing') : t('assetCenter.promptInput.enhance')}
                                 </button>
 
                                 {/* History Controls */}
@@ -419,7 +423,7 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                             onClick={handleUndoHistory}
                                             disabled={historyIndex <= 0}
                                             className="p-1 hover:text-white text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#333] rounded-l-md transition-colors"
-                                            title="Undo Optimization"
+                                            title={t('assetCenter.promptInput.undoOptimization')}
                                         >
                                             <ChevronLeft size={10} />
                                         </button>
@@ -430,7 +434,7 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                             onClick={handleRedoHistory}
                                             disabled={historyIndex >= history.length - 1}
                                             className="p-1 hover:text-white text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#333] rounded-r-md transition-colors"
-                                            title="Redo Optimization"
+                                            title={t('assetCenter.promptInput.redoOptimization')}
                                         >
                                             <ChevronRight size={10} />
                                         </button>
@@ -441,22 +445,22 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                         
                         {/* Mention Hint */}
                         {!readOnly && !disabled && assets.length > 0 && (
-                            <span className="text-[9px] text-gray-600 hidden sm:inline-block ml-2">Type <span className="text-gray-500 font-bold font-mono">@</span> to link assets</span>
+                            <span className="text-[9px] text-gray-600 hidden sm:inline-block ml-2">{t('assetCenter.promptInput.mentionHint')}</span>
                         )}
                     </div>
 
                     <div className="flex items-center gap-3">
                         <div className="text-[9px] text-gray-600 font-mono">
-                            {value.length} chars
+                            {t('assetCenter.promptInput.charCount', { count: String(value.length) })}
                         </div>
                         <div className="w-[1px] h-3 bg-[#333]" />
                         <button 
                             onClick={handleCopy}
                             className={`flex items-center gap-1.5 text-[10px] transition-colors font-medium hover:bg-white/5 px-2 py-0.5 rounded ${copied ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
-                            title="Copy Prompt"
+                            title={t('assetCenter.promptInput.copyPrompt')}
                         >
                             {copied ? <Check size={12} /> : <Copy size={12} />}
-                            {copied ? 'Copied' : 'Copy'}
+                            {copied ? t('assetCenter.promptInput.copied') : t('assetCenter.promptInput.copy')}
                         </button>
                     </div>
                 </div>

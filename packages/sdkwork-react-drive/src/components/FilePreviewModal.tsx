@@ -7,6 +7,7 @@ import { DriveItem } from '../entities';
 import { driveBusinessService } from '../services';
 import { FileIcon } from '@sdkwork/react-editor';
 import { assetService } from '@sdkwork/react-assets';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface FilePreviewModalProps {
     item: DriveItem;
@@ -30,6 +31,7 @@ const getResultDataOrThrow = <T,>(result: ServiceResult<T>, operation: string): 
 };
 
 export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClose }) => {
+    const { t } = useTranslation();
     const [url, setUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
 
                     const resolvedUrl = await assetService.resolveAssetUrl({ path: resolvedPath });
                     if (!resolvedUrl) {
-                        throw new Error('Could not resolve preview URL');
+                        throw new Error(t('drive.preview.errors.resolveUrl'));
                     }
                     setUrl(resolvedUrl);
                     return;
@@ -93,7 +95,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                     setUrl(createdObjectUrl);
                 } catch (localError) {
                     console.error('[FilePreview] Load failed', sdkError, localError);
-                    setError('Unable to load file content.');
+                    setError(t('drive.preview.errors.loadContent'));
                 }
             } finally {
                 setLoading(false);
@@ -153,7 +155,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                         <div className="h-4 w-[1px] bg-[#444]" />
 
                         {url && (
-                            <a href={url} download={item.name} title="Download File">
+                            <a href={url} download={item.name} title={t('drive.preview.actions.downloadFile')}>
                                 <button className="p-2 text-gray-400 hover:text-white hover:bg-[#333] rounded-lg transition-colors">
                                     <Download size={18} />
                                 </button>
@@ -162,7 +164,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                         <button
                             onClick={onClose}
                             className="p-2 text-gray-400 hover:text-white hover:bg-[#c42b1c] rounded-lg transition-colors"
-                            title="Close Preview"
+                            title={t('drive.preview.actions.closePreview')}
                         >
                             <X size={18} />
                         </button>
@@ -173,7 +175,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                     {loading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-3">
                             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs">Loading content...</span>
+                            <span className="text-xs">{t('drive.preview.loading')}</span>
                         </div>
                     ) : error ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
@@ -192,7 +194,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ item, onClos
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                                 <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
-                                <p>No preview available for this file type.</p>
+                                <p>{t('drive.preview.unavailable')}</p>
                             </div>
                         )
                     )}

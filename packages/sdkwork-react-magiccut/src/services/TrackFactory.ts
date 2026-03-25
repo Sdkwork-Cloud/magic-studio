@@ -2,6 +2,7 @@ import { CutTrackType } from '../entities/magicCut.entity';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { TIMELINE_CONSTANTS } from '../constants';
 import { TrackRulesFactory } from '../domain/dnd/TrackRulesFactory';
+import { i18nService } from '@sdkwork/react-i18n';
 
 export interface TrackCreationConfig {
     type: CutTrackType;
@@ -35,40 +36,40 @@ export class TrackFactory {
      */
     public static getTrackConfig(type: CutTrackType, isMain: boolean = false): TrackCreationConfig {
         let height = TIMELINE_CONSTANTS.TRACK_HEIGHT_DEFAULT;
-        let name = 'Track';
+        let name = i18nService.t('magicCut.timeline.track');
 
         if (isMain) {
             height = TIMELINE_CONSTANTS.TRACK_HEIGHT_MAIN;
-            name = 'Main';
+            name = i18nService.t('magicCut.timeline.mainTrack');
         } else {
             switch (type) {
                 case 'video':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
-                    name = 'Video Track';
+                    name = i18nService.t('magicCut.timeline.videoTrack');
                     break;
                 case 'audio':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_AUDIO;
-                    name = 'Audio Track';
+                    name = i18nService.t('magicCut.timeline.audioTrack');
                     break;
                 case 'effect':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_EFFECT;
-                    name = 'Effect Track';
+                    name = i18nService.t('magicCut.timeline.effectTrack');
                     break;
                 case 'text':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
-                    name = 'Text Track';
+                    name = i18nService.t('magicCut.timeline.textTrack');
                     break;
                 case 'subtitle':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_TEXT;
-                    name = 'Subtitle Track';
+                    name = i18nService.t('magicCut.timeline.subtitleTrack');
                     break;
                 case 'ai':
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_VIDEO;
-                    name = 'AI Track';
+                    name = i18nService.t('magicCut.timeline.aiTrack');
                     break;
                 default:
                     height = TIMELINE_CONSTANTS.TRACK_HEIGHT_DEFAULT;
-                    name = 'Track';
+                    name = i18nService.t('magicCut.timeline.track');
             }
         }
 

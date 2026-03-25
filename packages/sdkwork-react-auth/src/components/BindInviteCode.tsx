@@ -1,6 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Gift, Check, Loader2, Sparkles, X, Users, Coins, Crown } from 'lucide-react';
 import { Button } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { InviteCodeInput } from './InviteCodeInput';
 
 interface BindInviteCodeProps {
@@ -20,6 +21,7 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
     onClose,
     className = '',
 }) => {
+    const { t } = useTranslation();
     const [inviteCode, setInviteCode] = useState('');
     const [isValid, setIsValid] = useState(false);
     const [inviteData, setInviteData] = useState<unknown>(null);
@@ -44,7 +46,7 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
             setIsSuccess(true);
             onBind?.(inviteCode, inviteData);
         } catch (e) {
-            const message = e instanceof Error ? e.message : 'Bind invite code failed, please retry.';
+            const message = e instanceof Error ? e.message : t('auth.bindInvite.errors.bindFailed');
             setError(message);
         } finally {
             setIsBinding(false);
@@ -52,8 +54,16 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
     };
 
     const rewards: BindReward[] = [
-        { type: 'points', value: '+500 points', icon: <Coins size={18} className="text-yellow-500" /> },
-        { type: 'vip_days', value: '7-day VIP', icon: <Crown size={18} className="text-purple-500" /> },
+        {
+            type: 'points',
+            value: t('auth.bindInvite.rewards.points'),
+            icon: <Coins size={18} className="text-yellow-500" />,
+        },
+        {
+            type: 'vip_days',
+            value: t('auth.bindInvite.rewards.vipDays'),
+            icon: <Crown size={18} className="text-purple-500" />,
+        },
     ];
 
     if (isSuccess) {
@@ -62,10 +72,8 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
                     <Check size={40} className="text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Invite code bound</h3>
-                <p className="text-gray-400 text-sm mb-6">
-                    The invite reward has been sent to your account.
-                </p>
+                <h3 className="text-xl font-bold text-white mb-2">{t('auth.bindInvite.success.title')}</h3>
+                <p className="text-gray-400 text-sm mb-6">{t('auth.bindInvite.success.description')}</p>
 
                 <div className="flex justify-center gap-3 mb-6">
                     {rewards.map((reward, index) => (
@@ -83,7 +91,7 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                     onClick={onClose}
                     className="w-full h-11 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0"
                 >
-                    Done
+                    {t('auth.bindInvite.actions.done')}
                 </Button>
             </div>
         );
@@ -97,8 +105,8 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                         <Gift size={20} className="text-yellow-500" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white">Bind invite code</h3>
-                        <p className="text-gray-500 text-xs">Enter your friend&apos;s invite code and claim rewards.</p>
+                        <h3 className="text-lg font-bold text-white">{t('auth.bindInvite.title')}</h3>
+                        <p className="text-gray-500 text-xs">{t('auth.bindInvite.description')}</p>
                     </div>
                 </div>
                 {onClose && (
@@ -114,7 +122,7 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
             <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
                 <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
                     <Sparkles size={14} className="text-yellow-500" />
-                    Rewards after successful bind:
+                    {t('auth.bindInvite.rewards.title')}
                 </p>
                 <div className="flex gap-3">
                     {rewards.map((reward, index) => (
@@ -141,11 +149,11 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
             <div className="mb-6 space-y-2">
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Users size={14} className="text-blue-400" />
-                    <span>Both users get rewards after registration.</span>
+                    <span>{t('auth.bindInvite.tips.sharedReward')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Check size={14} className="text-green-400" />
-                    <span>Each account can bind one invite code only.</span>
+                    <span>{t('auth.bindInvite.tips.singleUse')}</span>
                 </div>
             </div>
 
@@ -157,10 +165,10 @@ export const BindInviteCode: React.FC<BindInviteCodeProps> = ({
                 {isBinding ? (
                     <span className="flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin" />
-                        Binding...
+                        {t('auth.bindInvite.actions.binding')}
                     </span>
                 ) : (
-                    'Bind now'
+                    t('auth.bindInvite.actions.bindNow')
                 )}
             </Button>
         </div>

@@ -103,13 +103,13 @@ export const AIWriterFloat: React.FC<AIWriterFloatProps> = ({
     ];
 
     const languageOptions = [
-        { value: 'Chinese (Simplified)', label: '��������' },
-        { value: 'English', label: 'English' },
-        { value: 'Japanese', label: '�ձ��Z' },
-        { value: 'Korean', label: '???' },
-        { value: 'Spanish', label: 'Espa?ol' },
-        { value: 'French', label: 'Fran?ais' },
-        { value: 'German', label: 'Deutsch' },
+        { value: 'Chinese (Simplified)', label: t('notes.ai_drafter.languages.chineseSimplified') },
+        { value: 'English', label: t('notes.ai_drafter.languages.english') },
+        { value: 'Japanese', label: t('notes.ai_drafter.languages.japanese') },
+        { value: 'Korean', label: t('notes.ai_drafter.languages.korean') },
+        { value: 'Spanish', label: t('notes.ai_drafter.languages.spanish') },
+        { value: 'French', label: t('notes.ai_drafter.languages.french') },
+        { value: 'German', label: t('notes.ai_drafter.languages.german') },
     ];
 
     // Calculate position style

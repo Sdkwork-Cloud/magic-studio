@@ -12,16 +12,16 @@ interface SidebarProps {
 }
 
 export const MagicCutLayoutSidebar: React.FC<SidebarProps> = ({ onSelectTab, activeTab }) => {
-    const { t: _t } = useTranslation();
+    const { t } = useTranslation();
 
     const TABS = [
-        { id: 'video', icon: Film, label: 'Video' },
-        { id: 'image', icon: ImageIcon, label: 'Image' },
-        { id: 'audio', icon: Music, label: 'Audio' },
-        { id: 'text', icon: Type, label: 'Text' },
-        { id: 'stickers', icon: Sticker, label: 'Stickers' },
-        { id: 'effects', icon: Sparkles, label: 'Effects' },
-        { id: 'transitions', icon: LayoutTemplate, label: 'Trans' },
+        { id: 'video', icon: Film, label: t('magicCut.resources.videos') },
+        { id: 'image', icon: ImageIcon, label: t('magicCut.resources.images') },
+        { id: 'audio', icon: Music, label: t('magicCut.resources.audio') },
+        { id: 'text', icon: Type, label: t('magicCut.resources.text') },
+        { id: 'stickers', icon: Sticker, label: t('magicCut.resources.stickers') },
+        { id: 'effects', icon: Sparkles, label: t('magicCut.resources.effects') },
+        { id: 'transitions', icon: LayoutTemplate, label: t('magicCut.resources.transitions') },
     ];
 
     return (
@@ -48,11 +48,11 @@ export const MagicCutLayoutSidebar: React.FC<SidebarProps> = ({ onSelectTab, act
             <div className="mt-auto flex flex-col gap-2 w-full px-2">
                  <button className="flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] transition-all">
                     <Import size={20} strokeWidth={1.5} />
-                    <span className="text-[9px] font-medium">Import</span>
+                    <span className="text-[9px] font-medium">{t('magicCut.resources.import')}</span>
                 </button>
                  <button className="flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] transition-all">
                     <Settings size={20} strokeWidth={1.5} />
-                    <span className="text-[9px] font-medium">Config</span>
+                    <span className="text-[9px] font-medium">{t('sidebar.settings')}</span>
                 </button>
             </div>
         </div>

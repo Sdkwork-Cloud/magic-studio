@@ -7,11 +7,15 @@ export const audioEnUS: I18nNamespaceResource = {
         generate: 'Generate Speech',
         creating: 'Generating...',
     },
+    actions: {
+        addToTimeline: 'Add to Timeline',
+    },
     page: {
         script: 'Script',
         duration: 'Duration',
         settings: 'Settings',
         speed: 'Speed',
+        placeholder: 'Enter text to synthesize...',
     },
     message: {
         noHistory: 'No History Yet',

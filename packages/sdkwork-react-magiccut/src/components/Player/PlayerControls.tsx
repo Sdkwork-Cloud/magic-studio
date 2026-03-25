@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { audioEngine } from '../../engine/AudioEngine';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 interface PlayerControlsProps {
     aspectRatio: string;
@@ -126,6 +127,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
     onJumpToOutPoint,
     onClearRange
 }) => {
+    const { tp } = useMagicCutTranslation();
     const { isLooping, toggleLoop, useTransientState } = useMagicCutStore();
     const isPlaying = useTransientState(s => s.isPlaying);
 
@@ -168,7 +170,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                             onClick={onJumpToInPoint}
                             disabled={disabled || inPoint === null}
                             className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${inPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
-                            title="Jump to In Point"
+                            title={tp('controls.jumpToInPoint')}
                         >
                             <ArrowLeftToLine size={10} />
                             <span>{inPoint === null ? '--:--.--' : formatTimecode(inPoint)}</span>
@@ -178,7 +180,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                             onClick={onJumpToOutPoint}
                             disabled={disabled || outPoint === null}
                             className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${outPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
-                            title="Jump to Out Point"
+                            title={tp('controls.jumpToOutPoint')}
                         >
                             <ArrowRightToLine size={10} />
                             <span>{outPoint === null ? '--:--.--' : formatTimecode(outPoint)}</span>
@@ -193,6 +195,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={() => onSeek(0)} 
                     disabled={disabled}
                     className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title={tp('controls.jumpToStart')}
                 >
                     <SkipBack size={16} fill="currentColor" />
                 </button>
@@ -200,7 +203,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={onStepBackward}
                     disabled={disabled}
                     className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    title="Step Back One Frame"
+                    title={tp('controls.stepBackFrame')}
                 >
                     <ChevronLeft size={16} />
                 </button>
@@ -208,6 +211,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={onTogglePlay} 
                     disabled={disabled}
                     className={`w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-white/10 active:scale-95 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={isPlaying ? tp('pause') : tp('play')}
                 >
                     {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
                 </button>
@@ -215,7 +219,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={onStepForward}
                     disabled={disabled}
                     className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    title="Step Forward One Frame"
+                    title={tp('controls.stepForwardFrame')}
                 >
                     <ChevronRight size={16} />
                 </button>
@@ -223,6 +227,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={() => onSeek(duration)} 
                     disabled={disabled}
                     className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title={tp('controls.jumpToEnd')}
                 >
                     <SkipForward size={16} fill="currentColor" />
                 </button>
@@ -233,7 +238,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     onClick={toggleLoop} 
                     disabled={disabled}
                     className={`p-1.5 rounded-md transition-colors ${isLooping ? 'text-blue-400 bg-blue-500/10' : 'text-gray-500 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    title="Toggle Loop Playback"
+                    title={tp('controls.toggleLoopPlayback')}
                 >
                     <Repeat size={14} />
                 </button>
@@ -249,7 +254,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                         onClick={onSetInPoint}
                         disabled={disabled}
                         className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${inPoint !== null ? 'bg-blue-500/15 text-blue-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-                        title="Set In Point (I)"
+                        title={tp('controls.setInPoint')}
                     >
                         I
                     </button>
@@ -257,7 +262,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                         onClick={onSetOutPoint}
                         disabled={disabled}
                         className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${outPoint !== null ? 'bg-orange-500/15 text-orange-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-                        title="Set Out Point (O)"
+                        title={tp('controls.setOutPoint')}
                     >
                         O
                     </button>
@@ -265,7 +270,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                         onClick={onClearRange}
                         disabled={disabled || !hasRange}
                         className={`p-1.5 rounded-md transition-colors ${hasRange ? 'text-gray-300 hover:text-white hover:bg-[#27272a]' : 'text-gray-600'} ${disabled || !hasRange ? 'opacity-30 cursor-not-allowed' : ''}`}
-                        title="Clear In/Out Points"
+                        title={tp('controls.clearInOutPoints')}
                     >
                         <X size={12} />
                     </button>
@@ -277,7 +282,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     </button>
                     {showRatioMenu && (
                         <div className="absolute bottom-full right-0 mb-2 w-44 bg-[#18181b] border border-[#333] rounded-lg shadow-xl py-1 z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                            <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase bg-[#222]">Settings</div>
+                            <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase bg-[#222]">{tp('controls.settings')}</div>
                             {['16:9', '9:16', '1:1', '21:9', '4:3'].map(r => (
                                 <button key={r} onClick={() => { onRatioChange(r); setShowRatioMenu(false); }} className="px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white">{r}</button>
                             ))}
@@ -290,14 +295,14 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                         <ZoomOut size={12} />
                     </button>
                     <button onClick={() => onViewScaleChange(1.0)} className={`px-2 text-[10px] font-mono min-w-[36px] text-center transition-colors cursor-pointer ${viewScale === 1.0 ? 'text-blue-400 font-bold' : 'text-gray-400 hover:text-white'}`}>
-                        {viewScale === 1.0 ? 'FIT' : `${Math.round(viewScale * 100)}%`}
+                        {viewScale === 1.0 ? tp('controls.fit') : `${Math.round(viewScale * 100)}%`}
                     </button>
                     <button onClick={() => onViewScaleChange(Math.min(5, viewScale + 0.1))} className="p-1 hover:bg-[#27272a] rounded text-gray-400 hover:text-white transition-colors">
                         <ZoomIn size={12} />
                     </button>
                 </div>
                  <div className="w-px h-4 bg-[#27272a]" />
-                 <button onClick={onFullscreen} className="p-1.5 hover:bg-[#27272a] rounded text-gray-500 hover:text-white transition-colors" title="Fullscreen">
+                 <button onClick={onFullscreen} className="p-1.5 hover:bg-[#27272a] rounded text-gray-500 hover:text-white transition-colors" title={tp('controls.fullscreen')}>
                     <Maximize size={16} />
                  </button>
             </div>

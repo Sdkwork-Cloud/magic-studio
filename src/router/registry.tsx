@@ -2,6 +2,7 @@
 import React, { lazy, Suspense } from 'react';
 import { ROUTES, RoutePath } from './routes';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 // Heavy modules: Lazy load to fix circular dependencies and improve startup
 const HomePage = lazy(() => import('../pages/HomePage'));
@@ -103,12 +104,16 @@ const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType<a
 );
 
 // Loading fallback for pages
-const PageLoadingFallback = () => (
-    <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
-        <Loader2 size={24} className="animate-spin text-blue-500" />
-        <span className="text-xs font-medium">Loading Module...</span>
-    </div>
-);
+const PageLoadingFallback = () => {
+    const { t } = useTranslation();
+
+    return (
+        <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
+            <Loader2 size={24} className="animate-spin text-blue-500" />
+            <span className="text-xs font-medium">{t('appShell.loading_module')}</span>
+        </div>
+    );
+};
 
 // Wrap lazy pages with Suspense
 const LazyPageWrapper = (LazyComponent: React.LazyExoticComponent<React.ComponentType<any>>) => (props: any) => (

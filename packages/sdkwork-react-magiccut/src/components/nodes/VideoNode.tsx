@@ -3,6 +3,7 @@ import { useAssetUrl } from '@sdkwork/react-commons'
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Upload, Loader2, RefreshCw } from 'lucide-react';
 ;
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 interface VideoNodeProps {
     src: string | null;
@@ -18,6 +19,7 @@ const formatTime = (seconds: number) => {
 };
 
 export const VideoNode: React.FC<VideoNodeProps> = ({ src, isSelected, isGenerating, onUpload }) => {
+    const { t } = useMagicCutTranslation();
     // Resolve asset URL (assets:// -> blob:/http:)
     const { url: resolvedSrc, loading: isResolving } = useAssetUrl(src);
 
@@ -178,7 +180,7 @@ export const VideoNode: React.FC<VideoNodeProps> = ({ src, isSelected, isGenerat
                 {isGenerating ? (
                     <div className="flex flex-col items-center gap-3 text-pink-500 z-10">
                         <Loader2 size={32} className="animate-spin" />
-                        <span className="text-[10px] font-bold tracking-widest uppercase animate-pulse">Generating</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase animate-pulse">{t('videoNode.generating')}</span>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center z-10">
@@ -189,10 +191,10 @@ export const VideoNode: React.FC<VideoNodeProps> = ({ src, isSelected, isGenerat
                             <Upload size={24} />
                         </button>
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-400 transition-colors">
-                            Upload Video
+                            {t('videoNode.uploadVideo')}
                         </span>
                         <span className="text-[9px] text-gray-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            Double click to browse
+                            {t('videoNode.doubleClickToBrowse')}
                         </span>
                     </div>
                 )}
@@ -229,10 +231,10 @@ export const VideoNode: React.FC<VideoNodeProps> = ({ src, isSelected, isGenerat
                     onClick={(e) => { e.stopPropagation(); onUpload(); }}
                     onMouseDown={(e) => e.stopPropagation()}
                     className="flex items-center gap-1.5 px-2 py-1 bg-black/60 hover:bg-blue-600 text-white/80 hover:text-white rounded-md backdrop-blur-md border border-white/10 transition-colors shadow-sm"
-                    title="Replace Video"
+                    title={t('videoNode.replaceVideo')}
                 >
                     <RefreshCw size={12} />
-                    <span className="text-[9px] font-bold pr-0.5">Replace</span>
+                    <span className="text-[9px] font-bold pr-0.5">{t('videoNode.replace')}</span>
                 </button>
             </div>
 

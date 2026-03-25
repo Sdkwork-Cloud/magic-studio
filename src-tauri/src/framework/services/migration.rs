@@ -357,7 +357,7 @@ mod tests {
     fn test_db_path(label: &str) -> String {
         let mut path = env::temp_dir();
         path.push(format!(
-            "open-studio-migration-{label}-{}.db",
+            "magic-studio-migration-{label}-{}.db",
             Uuid::new_v4()
         ));
         path.to_string_lossy().to_string()

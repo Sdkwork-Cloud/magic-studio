@@ -18,6 +18,7 @@ import { Plus, Video, Mic, Type, Captions } from 'lucide-react';
 import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../../events';
 import { MagicCutErrorBoundary } from '../ErrorBoundary/MagicCutErrorBoundary';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 export interface MagicCutTimelineProps {
     className?: string;
@@ -26,6 +27,7 @@ export interface MagicCutTimelineProps {
 
 export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, style }) => {
     const bus = useMagicCutBus();
+    const { tl } = useMagicCutTranslation();
     const {
         state,
         totalDuration,
@@ -232,7 +234,7 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                         ref={cornerRef}
                         className={`border-b border-r border-zinc-800 z-50 flex items-center justify-between px-3 bg-zinc-950 relative shadow-sm`}
                     >
-                        <span className="text-[10px] text-zinc-500 font-bold tracking-widest">TRACKS</span>
+                        <span className="text-[10px] text-zinc-500 font-bold tracking-widest">{tl('tracksHeader')}</span>
                         <div className="relative" ref={cornerMenuRef}>
                             <button
                                 onClick={() => setShowCornerMenu(!showCornerMenu)}
@@ -242,11 +244,11 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                             </button>
                             {showCornerMenu && (
                                 <div className="absolute top-full left-0 mt-1 w-32 bg-[#252526] border border-[#333] rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-75 flex flex-col p-1">
-                                    <div className="px-2 py-1 text-[9px] font-bold text-gray-500 uppercase">Add Track</div>
-                                    <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video" />
-                                    <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio" />
-                                    <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text" />
-                                    <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label="Subtitle" />
+                                    <div className="px-2 py-1 text-[9px] font-bold text-gray-500 uppercase">{tl('addTrack')}</div>
+                                    <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label={tl('videoTrack')} />
+                                    <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label={tl('audioTrack')} />
+                                    <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label={tl('textTrack')} />
+                                    <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label={tl('subtitleTrack')} />
                                 </div>
                             )}
                         </div>
@@ -310,14 +312,14 @@ export const MagicCutTimeline: React.FC<MagicCutTimelineProps> = ({ className, s
                                         onClick={() => setShowTrackMenu(!showTrackMenu)}
                                         className="w-full py-1.5 flex items-center justify-center gap-1.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-[10px] text-zinc-400 hover:text-white transition-colors"
                                     >
-                                        <Plus size={12} /> Add Track
+                                        <Plus size={12} /> {tl('addTrack')}
                                     </button>
                                     {showTrackMenu && (
                                         <div className="absolute top-full left-0 w-full mt-1 bg-[#252526] border border-[#333] rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-75 flex flex-col p-1">
-                                            <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label="Video Track" />
-                                            <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label="Audio Track" />
-                                            <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label="Text Track" />
-                                            <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label="Subtitle Track" />
+                                            <TrackMenuItem onClick={() => handleAddTrack('video')} icon={<Video size={12} />} label={tl('videoTrack')} />
+                                            <TrackMenuItem onClick={() => handleAddTrack('audio')} icon={<Mic size={12} />} label={tl('audioTrack')} />
+                                            <TrackMenuItem onClick={() => handleAddTrack('text')} icon={<Type size={12} />} label={tl('textTrack')} />
+                                            <TrackMenuItem onClick={() => handleAddTrack('subtitle')} icon={<Captions size={12} />} label={tl('subtitleTrack')} />
                                         </div>
                                     )}
                                 </div>

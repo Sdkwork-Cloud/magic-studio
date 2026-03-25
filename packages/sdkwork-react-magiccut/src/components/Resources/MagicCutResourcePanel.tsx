@@ -34,6 +34,7 @@ import { FilterTab, LoadingSpinner, EmptyState } from '../common/UIComponents';
 import { platform } from '@sdkwork/react-core';
 import { getProtectedAssetDeleteMessage } from '../../domain/assets/assetDeleteGuard';
 import { playerPreviewService } from '../../services';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 import {
     collectLocalAssetsForCategory,
     filterAssetCollectionByQuery,
@@ -168,6 +169,36 @@ const toAnyAsset = (asset: Asset): AnyAsset => ({
     isFavorite: asset.isFavorite
 });
 
+const resolveResourceCategoryLabel = (
+    category: string,
+    tr: (key: string, options?: Record<string, any>) => string
+): string => {
+    switch (category) {
+        case 'video':
+            return tr('categoryLabels.video');
+        case 'image':
+            return tr('categoryLabels.image');
+        case 'audio':
+            return tr('categoryLabels.audio');
+        case 'music':
+            return tr('categoryLabels.music');
+        case 'voice':
+            return tr('categoryLabels.voice');
+        case 'text':
+            return tr('categoryLabels.text');
+        case 'effects':
+            return tr('categoryLabels.effects');
+        case 'transitions':
+            return tr('categoryLabels.transitions');
+        case 'sfx':
+            return tr('categoryLabels.sfx');
+        case 'templates':
+            return tr('categoryLabels.templates');
+        default:
+            return category;
+    }
+};
+
 export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ activeTab }) => {
     const [assetViewModes, setAssetViewModes] = useState<Record<string, ResourcePanelViewMode>>({});
     
@@ -193,6 +224,7 @@ export const MagicCutResourcePanel: React.FC<MagicCutResourcePanelProps> = ({ ac
 // --- 1. Template View Component (Independent) ---
 
 const TemplateCategoryView: React.FC = () => {
+    const { tr } = useMagicCutTranslation();
     const { project, saveAsTemplate, loadTemplate } = useMagicCutStore();
     const bus = useMagicCutBus();
     
@@ -250,7 +282,7 @@ const TemplateCategoryView: React.FC = () => {
             <div className="p-3 border-b border-white/5 space-y-3 bg-[#050505] z-10 flex-none">
                 <div className="flex items-center justify-between text-xs text-gray-400 px-1">
                     <span className="font-bold uppercase tracking-wider flex items-center gap-2 text-gray-300">
-                        TEMPLATES
+                        {tr('categoryLabels.templates')}
                         <span className="bg-[#1a1a1a] px-1.5 rounded text-[9px] text-gray-500 border border-white/5">
                             {templates.length}
                         </span>
@@ -258,7 +290,7 @@ const TemplateCategoryView: React.FC = () => {
                     <button 
                         onClick={handleSaveTemplate}
                         className="p-1.5 hover:text-white rounded hover:bg-[#1a1a1a] text-gray-500 transition-colors"
-                        title="Save as template"
+                        title={tr('actions.saveAsTemplate')}
                     >
                         <Save size={14} />
                     </button>
@@ -270,7 +302,7 @@ const TemplateCategoryView: React.FC = () => {
                         type="text" 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search templates..."
+                        placeholder={tr('placeholders.searchTemplates')}
                         className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
                     />
                 </div>
@@ -281,9 +313,9 @@ const TemplateCategoryView: React.FC = () => {
                 {filteredTemplates.length === 0 && !loading ? (
                      <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3 border-2 border-dashed border-[#27272a] rounded-xl m-2 bg-[#121212]">
                         <Box size={24} className="opacity-20" />
-                        <p className="text-xs font-medium">No templates found</p>
+                        <p className="text-xs font-medium">{tr('emptyStates.noTemplates')}</p>
                         <button onClick={handleSaveTemplate} className="text-[10px] text-blue-400 hover:text-blue-300 mt-1 flex items-center gap-1">
-                            <Save size={10} /> Save current project as template
+                            <Save size={10} /> {tr('actions.saveCurrentProjectAsTemplate')}
                         </button>
                     </div>
                 ) : (
@@ -318,6 +350,7 @@ interface AssetCategoryViewProps {
 }
 
 const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMode, onViewModeChange }) => {
+    const { tr, t } = useMagicCutTranslation();
     const { 
         project,
         setDragOperation, 
@@ -588,28 +621,36 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
             console.error('Failed to save favorite', error);
             setFavoriteOverrides(prev => clearFavoriteOverride(prev, id));
             await platform.notify(
-                'Favorite update failed',
-                'MagicStudio could not save this favorite to the local asset catalog.'
+                t('resources.notifications.favoriteUpdateFailedTitle'),
+                t('resources.notifications.favoriteUpdateFailedDescription')
             );
         }
-    }, [assets, project.id, updateResource]);
+    }, [assets, project.id, t, updateResource]);
     
     const handleDeleteAsset = useCallback(async (asset: AnyAsset) => {
-        const protectedDeleteMessage = getProtectedAssetDeleteMessage(asset.origin);
+        const protectedDeleteMessage = getProtectedAssetDeleteMessage(asset.origin, (origin) =>
+            origin === 'system'
+                ? t('resources.notifications.systemAssetReadOnly')
+                : t('resources.notifications.stockAssetReadOnly')
+        );
         if (protectedDeleteMessage) {
-            await platform.notify('Delete unavailable', protectedDeleteMessage);
+            await platform.notify(t('resources.notifications.deleteUnavailableTitle'), protectedDeleteMessage);
             return;
         }
 
         if (isAssetInUse(asset.id)) {
             await platform.notify(
-                'Asset in use',
-                'This media is currently used on the timeline. Remove the related clips before deleting the source asset.'
+                t('resources.notifications.assetInUseTitle'),
+                t('resources.notifications.assetInUseDescription')
             );
             return;
         }
         
-        const confirmed = await platform.confirm(`Delete "${asset.name}"?`, "Delete Asset", 'warning');
+        const confirmed = await platform.confirm(
+            t('resources.notifications.deleteConfirmMessage', { name: asset.name }),
+            t('resources.notifications.deleteConfirmTitle'),
+            'warning'
+        );
         if (confirmed) {
             const previewCleanup = resolveDeletedAssetPreviewCleanup({
                 assetId: asset.id,
@@ -620,8 +661,8 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
             const deletionResult = await assetService.deleteById(asset.id);
             if (!deletionResult.success) {
                 await platform.notify(
-                    'Delete failed',
-                    deletionResult.message || 'MagicStudio could not remove this asset from local storage.'
+                    t('resources.notifications.deleteFailedTitle'),
+                    deletionResult.message || t('resources.notifications.deleteFailedDescription')
                 );
                 return;
             }
@@ -638,7 +679,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
             setRemoteAssets(prev => prev.filter(a => a.id !== asset.id));
             setHiddenAssetIds(prev => ({ ...prev, [asset.id]: true }));
         }
-    }, [isAssetInUse, removeAssetFromProjectState, setPreviewSource, setSkimmingResource, skimmingResource]);
+    }, [isAssetInUse, removeAssetFromProjectState, setPreviewSource, setSkimmingResource, skimmingResource, t]);
 
     const handleDragStart = useCallback((e: React.DragEvent, item: AnyAsset) => {
         let duration = (item as any).duration || ((item.metadata as any)?.duration) || 5; 
@@ -784,7 +825,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
             <div className="p-3 border-b border-white/5 space-y-3 bg-[#050505] z-10 flex-none">
                 <div className="flex items-center justify-between text-xs text-gray-400 px-1">
                     <span className="font-bold uppercase tracking-wider flex items-center gap-2 text-gray-300">
-                        {category.toUpperCase()}
+                        {resolveResourceCategoryLabel(category, tr)}
                         <span className="bg-[#1a1a1a] px-1.5 rounded text-[9px] text-gray-500 border border-white/5">
                             {assets.length}
                         </span>
@@ -794,7 +835,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                             onClick={() => onViewModeChange('grid')}
                             aria-pressed={viewMode === 'grid'}
                             className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
-                            title="Grid view"
+                            title={tr('viewModes.grid')}
                         >
                             <Grid size={12} />
                         </button>
@@ -802,7 +843,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                             onClick={() => onViewModeChange('list')}
                             aria-pressed={viewMode === 'list'}
                             className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
-                            title="List view"
+                            title={tr('viewModes.list')}
                         >
                             <List size={12} />
                         </button>
@@ -821,7 +862,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                                     query: e.target.value
                                 }))
                             }
-                            placeholder="Search assets..."
+                            placeholder={tr('placeholders.searchAssets')}
                             className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
                         />
                     </div>
@@ -830,7 +871,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                             onClick={handleImport}
                             disabled={loading}
                             className="flex items-center justify-center w-8 bg-[#1e1e20] hover:bg-[#252526] border border-[#27272a] text-gray-300 hover:text-white rounded-lg transition-colors disabled:opacity-50"
-                            title="Import Files"
+                            title={tr('actions.importFiles')}
                         >
                             <UploadCloud size={14} />
                         </button>
@@ -840,10 +881,10 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                 {/* Filter Tabs */}
                 {!isEffectTab && !isTextTab && (
                     <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
-                        <ResourceFilterTab id="all" label="All" icon={LayoutGrid} active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} />
-                        <ResourceFilterTab id="upload" label="Uploads" icon={FolderUp} active={filterCategory === 'upload'} onClick={() => setFilterCategory('upload')} />
-                        <ResourceFilterTab id="ai" label="AI" icon={Sparkles} active={filterCategory === 'ai'} onClick={() => setFilterCategory('ai')} />
-                        <ResourceFilterTab id="favorite" label="Favorites" icon={Heart} active={filterCategory === 'favorite'} onClick={() => setFilterCategory('favorite')} />
+                        <ResourceFilterTab id="all" label={tr('filters.all')} icon={LayoutGrid} active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} />
+                        <ResourceFilterTab id="upload" label={tr('filters.uploads')} icon={FolderUp} active={filterCategory === 'upload'} onClick={() => setFilterCategory('upload')} />
+                        <ResourceFilterTab id="ai" label={tr('filters.ai')} icon={Sparkles} active={filterCategory === 'ai'} onClick={() => setFilterCategory('ai')} />
+                        <ResourceFilterTab id="favorite" label={tr('filters.favorites')} icon={Heart} active={filterCategory === 'favorite'} onClick={() => setFilterCategory('favorite')} />
                     </div>
                 )}
             </div>
@@ -865,7 +906,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                             onClick={() => loadAssets(page + 1)}
                             className="text-xs text-gray-600 hover:text-white transition-colors"
                         >
-                            Load More
+                            {tr('actions.loadMore')}
                         </button>
                     </div>
                 )}
@@ -879,14 +920,15 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
 const ResourceFilterTab: React.FC<{ id: FilterCategory, label: string, icon: React.ComponentType<{ size?: number }>, active: boolean, onClick: () => void }> = FilterTab;
 
 const ResourceEmptyState: React.FC<{ filterCategory: string, isEffectTab: boolean, onImport: () => void }> = ({ filterCategory, isEffectTab, onImport }) => {
+    const { tr } = useMagicCutTranslation();
     const icon = filterCategory === 'favorite' 
         ? <Heart size={20} className="opacity-20 text-red-500" /> 
         : <UploadCloud size={20} className="opacity-20" />;
     
-    const title = filterCategory === 'favorite' ? 'No favorites yet' : 'No assets found';
+    const title = filterCategory === 'favorite' ? tr('emptyStates.noFavorites') : tr('emptyStates.noAssets');
     
     const action = filterCategory === 'all' && !isEffectTab 
-        ? { label: 'Add new', onClick: onImport } 
+        ? { label: tr('actions.addNew'), onClick: onImport } 
         : undefined;
 
     return <EmptyState icon={icon} title={title} action={action} />;

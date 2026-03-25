@@ -42,8 +42,12 @@ export const notes = {
         },
         languages: {
             chineseSimplified: "Chinese (Simplified)",
+            english: "English",
             japanese: "Japanese",
-            korean: "Korean"
+            korean: "Korean",
+            spanish: "Spanish",
+            french: "French",
+            german: "German"
         }
     },
     ai_actions: {

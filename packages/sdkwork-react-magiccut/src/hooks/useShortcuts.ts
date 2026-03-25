@@ -6,10 +6,12 @@ import { useMagicCutBus } from '../providers/MagicCutEventProvider';
 import { MagicCutEvents } from '../events';
 import { buildMagicCutShortcutDefinitions } from '../domain/shortcuts/magicCutShortcutDefinitions';
 import { createJklTransportHandlers } from '../domain/shortcuts/shortcutTransport';
+import { useMagicCutTranslation } from './useMagicCutTranslation';
 
 export function useShortcuts() {
     const store = useMagicCutStore();
     const bus = useMagicCutBus();
+    const { t } = useMagicCutTranslation();
     const isEditingTextRef = useRef(false);
     
     const {
@@ -65,6 +67,7 @@ export function useShortcuts() {
     useEffect(() => {
         const jklTransport = createJklTransportHandlers({ playerController });
         const shortcuts: ShortcutDefinition[] = buildMagicCutShortcutDefinitions({
+            translate: t,
             emit: (event) => bus.emit(event),
             playPause: () => bus.emit(MagicCutEvents.PLAYBACK_TOGGLE),
             playForward: jklTransport.playForward,
@@ -114,7 +117,7 @@ export function useShortcuts() {
         undo, redo, canUndo, canRedo, selectAllClips, clearSelection,
         deleteSelected, copySelectedClips, pasteClips, splitClip,
         nudgeSelectedClips, setInPoint, setOutPoint, clearInOutPoints,
-        toggleSnapping, toggleSkimming, seek
+        toggleSnapping, toggleSkimming, seek, t
     ]);
     
     return {

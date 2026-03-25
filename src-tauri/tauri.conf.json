@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Magic Studio",
   "version": "0.1.0",
-  "identifier": "ai.openstudio.desktop",
+  "identifier": "com.sdkwork.magicstudio.desktop",
   "build": {
     "beforeDevCommand": "node scripts/tauri-before-dev.mjs",
     "beforeBuildCommand": "pnpm build",
@@ -57,7 +57,7 @@
       "open": true
     },
     "updater": {
-      "endpoints": ["https://github.com/anomalyco/open-studio/releases/latest/download/latest.json"],
+      "endpoints": ["https://api.sdkwork.com/app/v3/api/app/update/latest?app=magic-studio"],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYwMDM5Nzg5OUMzOUExMDQKUldRRW9UbWNpWmNEOENYT01CV0lhOXR1UFhpaXJsK1Z3aU9lZnNtNzE0TDROWVMwVW9XQnFOelkK"
     }
   }

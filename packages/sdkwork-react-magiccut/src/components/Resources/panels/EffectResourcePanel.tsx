@@ -5,6 +5,7 @@ import { Sparkles, Eye, Heart } from 'lucide-react';
 import { useAssetUrl } from '@sdkwork/react-assets';
 import { resolveNextFavoriteState } from '../../../domain/assets/favoriteToggle';
 import { getResourceCardFrameClass, getResourcePanelLayoutClass, type ResourcePanelViewMode } from '../../../domain/assets/resourcePanelPresentation';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface EffectResourcePanelProps {
     assets: AnyAsset[];
@@ -48,6 +49,7 @@ const EffectCard: React.FC<{
     setPreviewEffect: (effect: AnyAsset | null) => void;
     viewMode: ResourcePanelViewMode;
 }> = ({ item, onDragStart, onToggleFavorite, previewEffect, setPreviewEffect, viewMode }) => {
+    const { tr } = useMagicCutTranslation();
     const isActive = previewEffect?.id === item.id;
     
     const { url: thumbnail } = useAssetUrl(item.metadata?.thumbnailUrl ? { id: 'thumb', path: item.metadata.thumbnailUrl } as any : null);
@@ -87,7 +89,7 @@ const EffectCard: React.FC<{
             <div className="absolute inset-0 flex flex-col justify-end p-1.5 bg-gradient-to-t from-black/90 via-black/10 to-transparent">
                 <div className="flex flex-col">
                     <span className="text-[7px] text-purple-400 font-bold uppercase tracking-wider block mb-0.5 opacity-80 truncate">
-                        {(item as any).category || 'Filter'}
+                        {(item as any).category || tr('defaults.effectCategory')}
                     </span>
                     <span className="text-[9px] font-bold text-gray-200 line-clamp-1 leading-tight group-hover:text-white transition-colors">
                         {item.name}
@@ -105,10 +107,10 @@ const EffectCard: React.FC<{
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite));
+                    onToggleFavorite(item.id, resolveNextFavoriteState(item.isFavorite));
                     }}
                     className={`p-1 rounded-full transition-all ${item.isFavorite ? 'text-red-500 bg-black/40' : 'text-white/80 bg-black/30 opacity-0 group-hover:opacity-100 hover:text-red-500'}`}
-                    title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    title={item.isFavorite ? tr('actions.removeFromFavorites') : tr('actions.addToFavorites')}
                 >
                     <Heart size={10} fill={item.isFavorite ? 'currentColor' : 'none'} />
                 </button>

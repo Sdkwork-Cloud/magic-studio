@@ -53,6 +53,7 @@
       "@sdkwork/react-prompt": ["packages/sdkwork-react-prompt/src/index.ts"],
       "@sdkwork/react-trade": ["packages/sdkwork-react-trade/src/index.ts"],
       "@sdkwork/app-sdk": ["../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"],
+      "@sdkwork/sdk-common": ["../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts"],
       "sdkwork-react-types": ["packages/sdkwork-react-types/src/index.ts"],
       "sdkwork-react-i18n": ["packages/sdkwork-react-i18n/src/index.ts"],
       "sdkwork-react-commons": ["packages/sdkwork-react-commons/src/index.ts"],

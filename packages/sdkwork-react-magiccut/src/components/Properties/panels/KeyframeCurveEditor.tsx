@@ -1,6 +1,7 @@
 import { KeyframePoint, EasingType, KeyframeMap } from '../../../entities/magicCut.entity'
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useMagicCutStore } from '../../../store/magicCutStore';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface KeyframeCurveEditorProps {
     clipId: string;
@@ -21,12 +22,12 @@ const EASING_CURVES: Record<EasingType, (t: number) => number> = {
     step: (t) => t < 1 ? 0 : 1,
 };
 
-const EASING_LABELS: Record<EasingType, string> = {
-    linear: 'Linear',
-    easeIn: 'Ease In',
-    easeOut: 'Ease Out',
-    easeInOut: 'Ease In/Out',
-    step: 'Step',
+const EASING_LABEL_KEYS: Record<EasingType, string> = {
+    linear: 'keyframeEditor.easing.linear',
+    easeIn: 'keyframeEditor.easing.easeIn',
+    easeOut: 'keyframeEditor.easing.easeOut',
+    easeInOut: 'keyframeEditor.easing.easeInOut',
+    step: 'keyframeEditor.easing.step',
 };
 
 export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
@@ -39,6 +40,7 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
     height = 120,
     color = '#3b82f6',
 }) => {
+    const { t, tc } = useMagicCutTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(300);
@@ -351,13 +353,13 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
                                 onClick={() => setShowEasingMenu(!showEasingMenu)}
                                 className="text-[10px] px-2 py-0.5 bg-[#27272a] rounded hover:bg-[#3f3f46] text-gray-300"
                             >
-                                {EASING_LABELS[selectedKf.easing]}
+                                {t(EASING_LABEL_KEYS[selectedKf.easing])}
                             </button>
                             <button
                                 onClick={deleteSelectedKeyframe}
                                 className="text-[10px] px-2 py-0.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
                             >
-                                Delete
+                                {tc('delete')}
                             </button>
                         </>
                     )}
@@ -366,7 +368,7 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
             
             {showEasingMenu && selectedKf && (
                 <div className="absolute z-50 bg-[#27272a] rounded-md shadow-lg border border-[#3f3f46] py-1">
-                    {(Object.keys(EASING_LABELS) as EasingType[]).map(easing => (
+                    {(Object.keys(EASING_LABEL_KEYS) as EasingType[]).map(easing => (
                         <button
                             key={easing}
                             onClick={() => updateEasing(easing)}
@@ -374,7 +376,7 @@ export const KeyframeCurveEditor: React.FC<KeyframeCurveEditorProps> = ({
                                 selectedKf.easing === easing ? 'text-blue-400' : 'text-gray-300'
                             }`}
                         >
-                            {EASING_LABELS[easing]}
+                            {t(EASING_LABEL_KEYS[easing])}
                         </button>
                     ))}
                 </div>

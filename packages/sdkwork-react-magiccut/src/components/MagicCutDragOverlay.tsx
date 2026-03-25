@@ -4,6 +4,7 @@ import { useMagicCutStore } from '../store/magicCutStore';
 import { MediaResourceType } from '@sdkwork/react-commons';
 import { Film, Image as ImageIcon, Music, Sparkles, AlertCircle, Type } from 'lucide-react';
 import { resolveAssetUrlByAssetIdFirst } from '../utils/assetUrlResolver';
+import { useMagicCutTranslation } from '../hooks/useMagicCutTranslation';
 ;
 
 const formatTime = (seconds: number) => {
@@ -14,19 +15,20 @@ const formatTime = (seconds: number) => {
 
 const getTypeConfig = (type: MediaResourceType) => {
     switch (type) {
-        case MediaResourceType.VIDEO: return { largeIcon: <Film size={24} />, label: 'Video' };
-        case MediaResourceType.IMAGE: return { largeIcon: <ImageIcon size={24} />, label: 'Image' };
+        case MediaResourceType.VIDEO: return { largeIcon: <Film size={24} /> };
+        case MediaResourceType.IMAGE: return { largeIcon: <ImageIcon size={24} /> };
         case MediaResourceType.AUDIO: 
         case MediaResourceType.MUSIC: 
         case MediaResourceType.VOICE:
-        case MediaResourceType.SPEECH: return { largeIcon: <Music size={24} />, label: 'Audio' };
-        case MediaResourceType.EFFECT: return { largeIcon: <Sparkles size={24} />, label: 'Effect' };
-        case MediaResourceType.TEXT: return { largeIcon: <Type size={24} />, label: 'Text' };
-        default: return { largeIcon: <AlertCircle size={24} />, label: 'File' };
+        case MediaResourceType.SPEECH: return { largeIcon: <Music size={24} /> };
+        case MediaResourceType.EFFECT: return { largeIcon: <Sparkles size={24} /> };
+        case MediaResourceType.TEXT: return { largeIcon: <Type size={24} /> };
+        default: return { largeIcon: <AlertCircle size={24} /> };
     }
 };
 
 export const MagicCutDragOverlay: React.FC = () => {
+    const { t } = useMagicCutTranslation();
     const { store, useTransientState } = useMagicCutStore();
     const dragOperation = useTransientState(s => s.dragOperation);
     
@@ -167,7 +169,7 @@ export const MagicCutDragOverlay: React.FC = () => {
         >
             {/* Visual Content */}
             {resolvedThumbnail ? (
-                <img src={resolvedThumbnail} className="w-full h-full object-cover" alt="Drag Preview" />
+                <img src={resolvedThumbnail} className="w-full h-full object-cover" alt={t('dragOverlay.previewAlt')} />
             ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-500 bg-[#252526]">
                     {typeConfig.largeIcon}

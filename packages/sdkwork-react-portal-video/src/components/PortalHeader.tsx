@@ -6,6 +6,7 @@ import {
     User,
     LogOut,
     Plus,
+    Download,
     CreditCard,
     Settings,
     LayoutGrid,
@@ -22,13 +23,11 @@ import { WindowControls } from '@sdkwork/react-commons';
 import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
 import { useNotificationStore, NotificationCenter } from '@sdkwork/react-notifications';
 import { PricingModal } from '@sdkwork/react-vip';
-import { useTranslation, createLocalizedText, resolveLocalizedText } from '@sdkwork/react-i18n';
-
-type LocalizedLabel = ReturnType<typeof createLocalizedText>;
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface NavItem {
     id: string;
-    label: LocalizedLabel;
+    label: string;
     icon: LucideIcon;
     route: string;
 }
@@ -48,27 +47,16 @@ interface PortalHeaderAuthSnapshot {
     logout: () => Promise<void>;
 }
 
-const NAV_ITEMS: NavItem[] = [
-    { id: 'home', label: createLocalizedText('Home', '\u9996\u9875'), icon: Home, route: ROUTES.PORTAL_VIDEO },
-    { id: 'community', label: createLocalizedText('Community', '\u793e\u533a'), icon: Users, route: ROUTES.PORTAL_COMMUNITY },
-    { id: 'theater', label: createLocalizedText('Theater', '\u5267\u573a'), icon: Tv, route: ROUTES.PORTAL_THEATER },
-    { id: 'skills', label: createLocalizedText('Skills', '\u6280\u80fd'), icon: Wrench, route: ROUTES.PORTAL_SKILLS },
-    { id: 'plugins', label: createLocalizedText('Plugins', '\u63d2\u4ef6'), icon: Puzzle, route: ROUTES.PORTAL_PLUGINS },
-    { id: 'task-market', label: createLocalizedText('Task Market', '\u4efb\u52a1\u5e02\u573a'), icon: Briefcase, route: ROUTES.TASK_MARKET },
-];
+const DOWNLOAD_APP_URL = 'https://clawstudio.sdkwork.com/download/app/mobile';
 
 export const PortalHeader: React.FC = () => {
-    const { locale } = useTranslation();
+    const { t } = useTranslation();
     const { user, logout } = useAuthStore() as PortalHeaderAuthSnapshot;
     const routerContext = useRouter();
     const navigate = routerContext?.navigate || (() => {});
     const currentPath = routerContext?.currentPath || '/';
     const { unreadCount } = useNotificationStore();
     const isDesktopRuntime = platform.getPlatform() === 'desktop';
-
-    React.useEffect(() => {
-        console.log('[PortalHeader] currentPath changed:', currentPath);
-    }, [currentPath]);
 
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -78,21 +66,33 @@ export const PortalHeader: React.FC = () => {
 
     const [showPricing, setShowPricing] = useState(false);
 
+    const navItems = React.useMemo<NavItem[]>(
+        () => [
+            { id: 'home', label: t('market.nav.home'), icon: Home, route: ROUTES.PORTAL_VIDEO },
+            { id: 'community', label: t('market.nav.community'), icon: Users, route: ROUTES.PORTAL_COMMUNITY },
+            { id: 'theater', label: t('market.nav.theater'), icon: Tv, route: ROUTES.PORTAL_THEATER },
+            { id: 'skills', label: t('market.nav.skills'), icon: Wrench, route: ROUTES.PORTAL_SKILLS },
+            { id: 'plugins', label: t('market.nav.plugins'), icon: Puzzle, route: ROUTES.PORTAL_PLUGINS },
+            { id: 'task-market', label: t('market.nav.task_market'), icon: Briefcase, route: ROUTES.TASK_MARKET },
+        ],
+        [t],
+    );
+
     const activeNav = React.useMemo(() => {
-        const item = NAV_ITEMS.find((candidate) => candidate.route === currentPath);
+        const item = navItems.find((candidate) => candidate.route === currentPath);
         return item ? item.id : 'home';
-    }, [currentPath]);
+    }, [currentPath, navItems]);
 
     const userProfile = React.useMemo(() => {
         if (!user) {
             return null;
         }
         return {
-            displayName: user.name || 'User',
+            displayName: user.name || t('header.breadcrumbs.user'),
             email: user.email || '',
             avatar: user.avatar,
         };
-    }, [user]);
+    }, [t, user]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -118,23 +118,18 @@ export const PortalHeader: React.FC = () => {
         setShowPricing(true);
     };
 
-    const myTasksLabel = resolveLocalizedText(createLocalizedText('My Tasks', '\u6211\u7684\u4efb\u52a1'), locale);
-
     return (
         <div className="sticky top-0 z-50 flex min-w-0 h-16 items-center bg-[#020202]/80 pl-6 pr-0 backdrop-blur-xl border-b border-white/5 transition-colors duration-300">
             <div className="relative z-10 min-w-0 flex-1 overflow-hidden pr-4">
                 <div className="flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                    {NAV_ITEMS.map((item) => {
+                    {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeNav === item.id;
 
                         return (
                             <button
                                 key={item.id}
-                                onClick={() => {
-                                    console.log('[PortalHeader] Clicked nav item:', item.id, 'route:', item.route);
-                                    navigate(item.route);
-                                }}
+                                onClick={() => navigate(item.route)}
                                 className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                                     isActive
                                         ? 'bg-[#1a1a1c] text-white border border-white/10'
@@ -142,7 +137,7 @@ export const PortalHeader: React.FC = () => {
                                 }`}
                             >
                                 <Icon size={16} className={isActive ? 'text-blue-400' : 'opacity-70'} />
-                                {resolveLocalizedText(item.label, locale)}
+                                {item.label}
                             </button>
                         );
                     })}
@@ -155,6 +150,20 @@ export const PortalHeader: React.FC = () => {
             />
 
             <div className="relative z-10 flex h-full shrink-0 items-center gap-5 pr-4">
+                <a
+                    href={DOWNLOAD_APP_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(event) => {
+                        event.preventDefault();
+                        void platform.openExternal(DOWNLOAD_APP_URL);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-300/40 hover:bg-cyan-400/15 hover:text-white"
+                >
+                    <Download size={14} />
+                    {t('sidebar.download_app_title')}
+                </a>
+
                 <WorkspaceProjectSelector
                     variant="portal"
                     showDelete={false}
@@ -167,7 +176,9 @@ export const PortalHeader: React.FC = () => {
                     onClick={() => setShowPricing(true)}
                 >
                     <div className="w-1.5 h-1.5 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                    <span className="text-[11px] font-bold text-gray-300 group-hover:text-white">880 Credits</span>
+                    <span className="text-[11px] font-bold text-gray-300 group-hover:text-white">
+                        {t('market.nav.credits', { count: '880' })}
+                    </span>
                     <Plus size={10} className="text-gray-500 group-hover:text-white transition-colors ml-1" />
                 </div>
 
@@ -208,11 +219,11 @@ export const PortalHeader: React.FC = () => {
                                     <div className="text-[10px] text-gray-500 truncate mt-0.5">{userProfile?.email}</div>
                                 </div>
                                 <div className="p-1.5 space-y-0.5">
-                                    <MenuLink icon={User} label="My Profile" onClick={() => navigate(ROUTES.PROFILE)} />
-                                    <MenuLink icon={ClipboardList} label={myTasksLabel} onClick={() => navigate(ROUTES.MY_TASKS)} />
-                                    <MenuLink icon={CreditCard} label="Billing & Plans" onClick={handleShowPricing} />
-                                    <MenuLink icon={LayoutGrid} label="Switch Workspace" onClick={() => {}} />
-                                    <MenuLink icon={Settings} label="Preferences" onClick={() => navigate(ROUTES.SETTINGS)} />
+                                    <MenuLink icon={User} label={t('market.nav.my_profile')} onClick={() => navigate(ROUTES.PROFILE)} />
+                                    <MenuLink icon={ClipboardList} label={t('market.nav.my_tasks')} onClick={() => navigate(ROUTES.MY_TASKS)} />
+                                    <MenuLink icon={CreditCard} label={t('market.nav.billing_plans')} onClick={handleShowPricing} />
+                                    <MenuLink icon={LayoutGrid} label={t('market.nav.switch_workspace')} onClick={() => {}} />
+                                    <MenuLink icon={Settings} label={t('market.nav.preferences')} onClick={() => navigate(ROUTES.SETTINGS)} />
                                 </div>
                                 <div className="h-px bg-white/5 mx-2 my-1" />
                                 <div className="p-1.5">
@@ -221,7 +232,7 @@ export const PortalHeader: React.FC = () => {
                                         className="w-full flex items-center gap-3 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors"
                                     >
                                         <LogOut size={14} />
-                                        Sign Out
+                                        {t('market.nav.sign_out')}
                                     </button>
                                 </div>
                             </div>
@@ -232,7 +243,7 @@ export const PortalHeader: React.FC = () => {
                         onClick={() => navigate(ROUTES.LOGIN)}
                         className="px-5 py-2 bg-white text-black hover:bg-gray-200 rounded-full text-xs font-bold transition-all shadow-lg hover:scale-105"
                     >
-                        Sign In
+                        {t('market.nav.sign_in')}
                     </button>
                 )}
             </div>

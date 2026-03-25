@@ -2,45 +2,45 @@
 import { useRouter, ROUTES } from '@sdkwork/react-core'
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-;
-;
+import { useTranslation } from '@sdkwork/react-i18n';
 
 export const FeaturedBanner: React.FC = () => {
     // Use useRouter safely - it returns default values if not wrapped in RouterProvider
     const routerContext = useRouter();
     const navigate = routerContext?.navigate || (() => {});
+    const { t } = useTranslation();
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {/* Card 1: MagicStudio (Video Generation) */}
             <BannerCard 
-                title="MAGIC STUDIO"
-                subtitle="AI Video Gen"
-                description="Create cinematic videos with text prompts"
+                title={t('portalVideo.featuredBanner.cards.video.title')}
+                subtitle={t('portalVideo.featuredBanner.cards.video.subtitle')}
+                description={t('portalVideo.featuredBanner.cards.video.description')}
                 image="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop"
-                badge="CORE"
+                badge={t('portalVideo.featuredBanner.cards.video.badge')}
                 badgeColor="bg-blue-600"
                 onClick={() => navigate(ROUTES.VIDEO)}
             />
             
             {/* Card 2: Magic Cut (Editor) */}
             <BannerCard 
-                title="MAGIC CUT"
-                subtitle="Smart Editor"
-                description="AI-native non-linear video editing"
+                title={t('portalVideo.featuredBanner.cards.magicCut.title')}
+                subtitle={t('portalVideo.featuredBanner.cards.magicCut.subtitle')}
+                description={t('portalVideo.featuredBanner.cards.magicCut.description')}
                 image="https://images.unsplash.com/photo-1574717436423-a75aa92f3523?q=80&w=1200&auto=format&fit=crop"
-                tag="Beta"
+                tag={t('portalVideo.featuredBanner.cards.magicCut.tag')}
                 tagColor="bg-gradient-to-r from-red-500 to-pink-500"
                 onClick={() => navigate(ROUTES.MAGIC_CUT)}
             />
             
             {/* Card 3: OpenChat (Agent) */}
             <BannerCard 
-                title="OPEN CHAT"
-                subtitle="AI Agent"
-                description="Your open source intelligent companion"
+                title={t('portalVideo.featuredBanner.cards.chat.title')}
+                subtitle={t('portalVideo.featuredBanner.cards.chat.subtitle')}
+                description={t('portalVideo.featuredBanner.cards.chat.description')}
                 image="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop"
-                badge="NEW"
+                badge={t('portalVideo.featuredBanner.cards.chat.badge')}
                 badgeColor="bg-emerald-500"
                 onClick={() => navigate(ROUTES.CHAT)}
             />

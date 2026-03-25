@@ -6,8 +6,10 @@ import { useMagicCutStore } from '../../store/magicCutStore';
 ;
 import { Plus, Film, Edit3 } from 'lucide-react';
 ;
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 export const TimelineTabBar: React.FC = React.memo(() => {
+    const { tl } = useMagicCutTranslation();
     const {
         state,
         activeTimelineId,
@@ -38,7 +40,7 @@ export const TimelineTabBar: React.FC = React.memo(() => {
     };
 
     const handleAdd = () => {
-        const name = `Sequence ${timelines.length + 1}`;
+        const name = tl('sequenceDefault', { index: timelines.length + 1 });
         addTimeline(name);
     };
 
@@ -56,10 +58,10 @@ export const TimelineTabBar: React.FC = React.memo(() => {
     };
 
     // Map timelines to generic TabItems
-    const tabItems: TabItem[] = timelines.map(tl => {
-        if (tl.id === editingId) {
+    const tabItems: TabItem[] = timelines.map((timeline) => {
+        if (timeline.id === editingId) {
             return {
-                id: tl.id,
+                id: timeline.id,
                 title: (
                     <input
                         autoFocus
@@ -80,10 +82,10 @@ export const TimelineTabBar: React.FC = React.memo(() => {
         }
 
         return {
-            id: tl.id,
-            title: tl.name,
-            icon: <Film size={12} className={activeTimelineId === tl.id ? "text-blue-400" : "text-gray-500"} />,
-            tooltip: `Duration: ${tl.duration}s`
+            id: timeline.id,
+            title: timeline.name,
+            icon: <Film size={12} className={activeTimelineId === timeline.id ? "text-blue-400" : "text-gray-500"} />,
+            tooltip: tl('durationSeconds', { duration: timeline.duration })
         };
     });
 
@@ -92,7 +94,7 @@ export const TimelineTabBar: React.FC = React.memo(() => {
             <button
                 onClick={handleAdd}
                 className="h-[28px] w-[28px] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#333] rounded-md transition-colors focus:outline-none"
-                title="New Sequence"
+                title={tl('newSequence')}
             >
                 <Plus size={16} />
             </button>

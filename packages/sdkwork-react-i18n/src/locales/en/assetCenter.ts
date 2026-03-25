@@ -132,5 +132,54 @@ export const assetCenter = {
     },
     preview: {
         unavailable: "Preview URL unavailable"
+    },
+    promptInput: {
+        label: "Prompt",
+        placeholder: "Enter text...",
+        browseLibrary: "Browse prompt library",
+        browseHistory: "Browse prompt history",
+        library: "Library",
+        history: "History",
+        optimizeWithAi: "Optimize prompt with AI",
+        enhancing: "Enhancing...",
+        enhance: "Enhance",
+        undoOptimization: "Undo Optimization",
+        redoOptimization: "Redo Optimization",
+        mentionHint: "Type @ to link assets",
+        charCount: "{count} chars",
+        copyPrompt: "Copy Prompt",
+        copied: "Copied",
+        copy: "Copy"
+    },
+    promptLibrary: {
+        title: "Prompt Library",
+        subtitle: "Choose reusable prompts from the official prompt library.",
+        failedToLoad: "Failed to load prompt library.",
+        failedToUpdateFavorite: "Failed to update favorite state.",
+        filters: {
+            all: "All",
+            popular: "Popular",
+            favorites: "Top Favorites"
+        },
+        refresh: "Refresh",
+        searchPlaceholder: "Search prompts...",
+        loading: "Loading prompts...",
+        empty: "No prompts found for the current filter.",
+        public: "Public",
+        unfavoritePrompt: "Unfavorite prompt",
+        favoritePrompt: "Favorite prompt",
+        usePrompt: "Use Prompt",
+        metaUses: "{count} uses"
+    },
+    promptHistory: {
+        title: "Prompt History",
+        subtitle: "Reuse prompts from your recent generation history.",
+        failed: "Failed",
+        failedToLoad: "Failed to load prompt history.",
+        searchPlaceholder: "Search history...",
+        loading: "Loading prompt history...",
+        empty: "No prompt history found.",
+        reuse: "Reuse",
+        basePrompt: "Base prompt: {content}"
     }
 };

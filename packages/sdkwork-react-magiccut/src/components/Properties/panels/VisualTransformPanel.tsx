@@ -1,8 +1,9 @@
 import { CutClipTransform, BlendMode } from '../../../entities/magicCut.entity'
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Scaling, RotateCw, Move, FlipHorizontal, FlipVertical, Maximize } from 'lucide-react';
 import { PropertySection, ScrubbableInput, Dropdown } from '../widgets/PropertyWidgets';
 import { normalizeClipTransform, toggleClipTransformFlip } from '../../../domain/transform/clipTransform';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 interface VideoSettingsPanelProps {
     transform?: CutClipTransform;
@@ -12,16 +13,6 @@ interface VideoSettingsPanelProps {
     onReset: () => void;
 }
 
-const BLEND_MODES: { label: string; value: BlendMode }[] = [
-    { label: 'Normal', value: 'normal' },
-    { label: 'Screen', value: 'screen' },
-    { label: 'Multiply', value: 'multiply' },
-    { label: 'Overlay', value: 'overlay' },
-    { label: 'Add (Linear Dodge)', value: 'add' },
-    { label: 'Darken', value: 'darken' },
-    { label: 'Lighten', value: 'lighten' },
-];
-
 export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
     transform = { x: 0, y: 0, width: 100, height: 100, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1 },
     blendMode = 'normal',
@@ -29,7 +20,17 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
     onChangeBlendMode,
     onReset
 }) => {
+    const { t, tpr } = useMagicCutTranslation();
     const normalizedTransform = normalizeClipTransform(transform);
+    const blendModes = useMemo<{ label: string; value: BlendMode }[]>(() => ([
+        { label: t('visualTransform.blendModes.normal'), value: 'normal' },
+        { label: t('visualTransform.blendModes.screen'), value: 'screen' },
+        { label: t('visualTransform.blendModes.multiply'), value: 'multiply' },
+        { label: t('visualTransform.blendModes.overlay'), value: 'overlay' },
+        { label: t('visualTransform.blendModes.add'), value: 'add' },
+        { label: t('visualTransform.blendModes.darken'), value: 'darken' },
+        { label: t('visualTransform.blendModes.lighten'), value: 'lighten' },
+    ]), [t]);
 
     const handleUpdateTransform = (key: keyof CutClipTransform, value: number) => {
         const newTransform = { ...normalizedTransform, [key]: value };
@@ -60,7 +61,7 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
     return (
         <>
             {/* TRANSFORM SECTION */}
-            <PropertySection title="Transform" defaultOpen onReset={onReset}>
+            <PropertySection title={tpr('transform')} defaultOpen onReset={onReset}>
                 {/* Position */}
                 <div className="grid grid-cols-2 gap-2">
                     <ScrubbableInput
@@ -79,7 +80,7 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                 {/* Scale & Rotation */}
                 <div className="grid grid-cols-2 gap-2">
                     <ScrubbableInput
-                        label="Scale"
+                        label={tpr('scale')}
                         value={Math.round((normalizedTransform.scale ?? 1) * 100)}
                         onChange={(v) => handleUpdateTransform('scale', v / 100)}
                         suffix="%"
@@ -87,7 +88,7 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                         step={1}
                     />
                     <ScrubbableInput
-                        label="Rotate"
+                        label={tpr('rotation')}
                         value={Math.round(normalizedTransform.rotation ?? 0)}
                         onChange={(v) => handleUpdateTransform('rotation', v)}
                         suffix="deg"
@@ -100,9 +101,9 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                     <button
                         onClick={handleFit}
                         className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-[#252526] hover:bg-[#333] border border-[#27272a] rounded text-[10px] text-gray-400 hover:text-white transition-colors"
-                        title="Reset Position/Scale"
+                        title={t('visualTransform.actions.resetPositionScale')}
                     >
-                        <Maximize size={12} /> Fit
+                        <Maximize size={12} /> {t('visualTransform.actions.fit')}
                     </button>
                     <button
                         onClick={() => handleFlip('h')}
@@ -111,7 +112,7 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                                 ? 'bg-blue-500/15 border-blue-500/40 text-blue-200'
                                 : 'bg-[#252526] hover:bg-[#333] border-[#27272a] text-gray-400 hover:text-white'
                         }`}
-                        title="Flip Horizontal"
+                        title={t('visualTransform.actions.flipHorizontal')}
                     >
                         <FlipHorizontal size={12} />
                     </button>
@@ -122,7 +123,7 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                                 ? 'bg-blue-500/15 border-blue-500/40 text-blue-200'
                                 : 'bg-[#252526] hover:bg-[#333] border-[#27272a] text-gray-400 hover:text-white'
                         }`}
-                        title="Flip Vertical"
+                        title={t('visualTransform.actions.flipVertical')}
                     >
                         <FlipVertical size={12} />
                     </button>
@@ -130,10 +131,10 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
             </PropertySection>
 
             {/* COMPOSITING SECTION */}
-            <PropertySection title="Compositing" defaultOpen>
+            <PropertySection title={t('visualTransform.sections.compositing')} defaultOpen>
                 <div className="space-y-3">
                     <ScrubbableInput
-                        label="Opacity"
+                        label={tpr('opacity')}
                         value={Math.round((normalizedTransform.opacity ?? 1) * 100)}
                         onChange={(v) => handleUpdateTransform('opacity', v / 100)}
                         min={0}
@@ -143,10 +144,10 @@ export const VisualTransformPanel: React.FC<VideoSettingsPanelProps> = ({
                     />
 
                     <Dropdown
-                        label="Blend Mode"
+                        label={t('visualTransform.fields.blendMode')}
                         value={blendMode}
                         onChange={(v) => onChangeBlendMode('blendMode', v as BlendMode)}
-                        options={BLEND_MODES}
+                        options={blendModes}
                     />
                 </div>
             </PropertySection>

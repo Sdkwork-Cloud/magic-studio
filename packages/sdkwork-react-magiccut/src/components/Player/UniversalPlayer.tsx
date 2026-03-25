@@ -6,6 +6,7 @@ import { playerPreviewService } from '../../services';
 import { Monitor } from 'lucide-react';
 import type { TimelineStore } from '../../store/transientStore';
 import { resolveCanvasBackingStoreSize, resolveRenderRuntimeProfile } from '../../engine/config/renderProfile';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 // Export RenderData for consumers (like MagicCutPlayer)
 export type { RenderData };
@@ -68,6 +69,7 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
     store,
     hiddenClipIds
 }, ref) => {
+    const { tp } = useMagicCutTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const stageRef = useRef<HTMLDivElement>(null);
@@ -410,7 +412,7 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
                     {(previewResource || previewResourceRef.current) && (
                         <div className="absolute top-2 left-2 z-30 pointer-events-none">
                             <div className="bg-red-500/90 text-white text-[10px] px-2 py-1 rounded font-bold uppercase shadow-lg border border-white/20">
-                                Preview: {(previewResource || previewResourceRef.current)?.name}
+                                {tp('previewLabel', { name: (previewResource || previewResourceRef.current)?.name })}
                             </div>
                         </div>
                     )}
@@ -419,7 +421,7 @@ export const UniversalPlayer = forwardRef<UniversalPlayerHandle, UniversalPlayer
                         <div className="absolute inset-0 flex items-center justify-center text-gray-600 pointer-events-none">
                             <div className="text-center">
                                 <Monitor size={48} className="mx-auto mb-2 opacity-20" />
-                                <p className="text-xs opacity-50 font-medium">Empty Sequence</p>
+                                <p className="text-xs opacity-50 font-medium">{tp('emptySequence')}</p>
                             </div>
                         </div>
                     )}

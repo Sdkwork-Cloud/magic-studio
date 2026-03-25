@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
     ChevronLeft, Scissors, Share2, Save, ChevronDown, FileJson
@@ -12,30 +11,18 @@ import { useRouter, platform } from '@sdkwork/react-core';
 
 export const MagicCutLayoutHeader: React.FC = () => {
     const { navigate, currentQuery } = useRouter();
-    const { t: _t } = useTranslation();
+    const { t } = useTranslation();
     const isDesktopRuntime = platform.getPlatform() === 'desktop';
-    
     const { project } = useMagicCutStore();
+    const searchParams = new URLSearchParams(currentQuery);
+    const fromSource = searchParams.get('from');
+    const backRoute = fromSource === 'canvas' ? ROUTES.CANVAS : ROUTES.PORTAL;
+    const backLabel = fromSource === 'canvas'
+        ? t('magicCut.header.back.canvas')
+        : t('magicCut.header.back.portal');
 
     const [showExportMenu, setShowExportMenu] = useState(false);
-    
     const exportRef = useRef<HTMLDivElement>(null);
-
-    const [backRoute, setBackRoute] = useState<any>(ROUTES.PORTAL);
-    const [backLabel, setBackLabel] = useState('Portal');
-
-    useEffect(() => {
-        const searchParams = new URLSearchParams(currentQuery);
-        const fromSource = searchParams.get('from');
-        
-        if (fromSource === 'canvas') {
-            setBackRoute(ROUTES.CANVAS);
-            setBackLabel('Canvas');
-        } else {
-            setBackRoute(ROUTES.PORTAL);
-            setBackLabel('Portal');
-        }
-    }, [currentQuery]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -69,7 +56,7 @@ export const MagicCutLayoutHeader: React.FC = () => {
                     <button 
                         onClick={() => navigate(backRoute)}
                         className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors group flex items-center gap-2"
-                        title={`Return to ${backLabel}`}
+                        title={t('magicCut.header.backTo', { target: backLabel })}
                     >
                         <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
                         <span className="text-xs font-bold hidden md:inline">{backLabel}</span>
@@ -83,10 +70,10 @@ export const MagicCutLayoutHeader: React.FC = () => {
                         </div>
                         <div className="hidden md:block">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-white tracking-tight">Magic Cut</span>
-                                <span className="text-[9px] text-red-300 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 font-medium">BETA</span>
+                                <span className="text-sm font-bold text-white tracking-tight">{t('magicCut.header.brand')}</span>
+                                <span className="text-[9px] text-red-300 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 font-medium">{t('magicCut.header.beta')}</span>
                             </div>
-                            <span className="text-[10px] text-gray-500 font-medium">AI-Native Video Editor</span>
+                            <span className="text-[10px] text-gray-500 font-medium">{t('magicCut.header.subtitle')}</span>
                         </div>
                     </div>
                 </div>
@@ -105,12 +92,12 @@ export const MagicCutLayoutHeader: React.FC = () => {
                 <div className="relative z-10 flex h-full items-center gap-3 pl-4">
                     <div className="hidden md:flex items-center text-xs text-gray-500 gap-2 mr-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        Saved
+                        {t('magicCut.header.saved')}
                     </div>
                     
                     <button className="h-8 px-3 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 border border-white/5 hover:border-white/10">
                         <Share2 size={14} />
-                        <span className="hidden sm:inline">Share</span>
+                        <span className="hidden sm:inline">{t('magicCut.header.share')}</span>
                     </button>
                     
                     <div className="relative" ref={exportRef}>
@@ -119,7 +106,7 @@ export const MagicCutLayoutHeader: React.FC = () => {
                             className="h-8 px-4 bg-white text-black hover:bg-gray-200 text-xs font-bold rounded-lg transition-colors shadow-lg shadow-white/5 flex items-center gap-2"
                         >
                             <Save size={14} />
-                            <span>Export</span>
+                            <span>{t('magicCut.header.export')}</span>
                             <ChevronDown size={10} />
                         </button>
                         
@@ -129,13 +116,13 @@ export const MagicCutLayoutHeader: React.FC = () => {
                                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"
                                     onClick={() => {}}
                                 >
-                                    <Save size={14} /> Export Video
+                                    <Save size={14} /> {t('magicCut.header.exportVideo')}
                                 </button>
                                 <button 
                                     onClick={handleExportJson}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"
                                 >
-                                    <FileJson size={14} /> Export JSON Project
+                                    <FileJson size={14} /> {t('magicCut.header.exportJsonProject')}
                                 </button>
                             </div>
                         )}

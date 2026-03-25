@@ -6,6 +6,7 @@ import {
   type ScopedSdkInstance,
 } from '@sdkwork/react-core';
 import { Dialog, DialogContent, Input } from '@sdkwork/react-commons/ui';
+import { useTranslation } from '@sdkwork/react-i18n';
 import { resolvePromptHistoryContent } from './promptPickerUtils';
 
 interface PromptHistoryDialogProps {
@@ -15,7 +16,7 @@ interface PromptHistoryDialogProps {
   promptInstance?: ScopedSdkInstance;
 }
 
-function formatHistoryMeta(record: PromptHistoryRecord): string {
+function formatHistoryMeta(record: PromptHistoryRecord, t: (key: string, options?: Record<string, any>) => string): string {
   const parts: string[] = [];
   if (record.model) {
     parts.push(record.model);
@@ -24,7 +25,7 @@ function formatHistoryMeta(record: PromptHistoryRecord): string {
     parts.push(record.createdAt);
   }
   if (record.success === false) {
-    parts.push('Failed');
+    parts.push(t('assetCenter.promptHistory.failed'));
   }
   return parts.join(' · ');
 }
@@ -35,6 +36,7 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
   onSelect,
   promptInstance,
 }) => {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState('');
   const [records, setRecords] = useState<PromptHistoryRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
         if (!active) {
           return;
         }
-        setError(loadError instanceof Error ? loadError.message : 'Failed to load prompt history.');
+        setError(loadError instanceof Error ? loadError.message : t('assetCenter.promptHistory.failedToLoad'));
       } finally {
         if (active) {
           setLoading(false);
@@ -77,7 +79,7 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
     return () => {
       active = false;
     };
-  }, [keyword, open, promptInstance]);
+  }, [keyword, open, promptInstance, t]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,8 +90,8 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
               <History size={18} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">Prompt History</h2>
-              <p className="text-xs text-gray-400">Reuse prompts from your recent generation history.</p>
+              <h2 className="text-base font-semibold text-white">{t('assetCenter.promptHistory.title')}</h2>
+              <p className="text-xs text-gray-400">{t('assetCenter.promptHistory.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -100,7 +102,7 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
             <Input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Search history..."
+              placeholder={t('assetCenter.promptHistory.searchPlaceholder')}
               className="pl-9"
             />
           </div>
@@ -114,13 +116,13 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
           <div className="max-h-[440px] space-y-3 overflow-y-auto pr-1">
             {loading ? (
               <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
-                Loading prompt history...
+                {t('assetCenter.promptHistory.loading')}
               </div>
             ) : null}
 
             {!loading && records.length === 0 ? (
               <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
-                No prompt history found.
+                {t('assetCenter.promptHistory.empty')}
               </div>
             ) : null}
 
@@ -133,14 +135,14 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-semibold text-white">{record.title}</h3>
-                      <span className="text-[11px] text-gray-500">{formatHistoryMeta(record)}</span>
+                      <span className="text-[11px] text-gray-500">{formatHistoryMeta(record, t)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => onSelect(record)}
                       className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black transition-transform hover:scale-[1.02]"
                     >
-                      Reuse
+                      {t('assetCenter.promptHistory.reuse')}
                     </button>
                   </div>
 
@@ -150,7 +152,7 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
 
                   {record.promptContent && record.usedContent && record.usedContent !== record.promptContent ? (
                     <p className="mt-2 text-xs text-gray-500">
-                      Base prompt: {record.promptContent}
+                      {t('assetCenter.promptHistory.basePrompt', { content: record.promptContent })}
                     </p>
                   ) : null}
                 </div>

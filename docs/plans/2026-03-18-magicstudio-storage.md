@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Replace legacy `OpenStudio` storage defaults with a professional `MagicStudio` filesystem model rooted at `~/.sdkwork/magicstudio`, make Magic Cut desktop uploads local-first by default, and expose root overrides in the settings center.
+**Goal:** Standardize storage defaults on the `MagicStudio` filesystem model rooted at `~/.sdkwork/magicstudio`, make Magic Cut desktop uploads local-first by default, and expose root overrides in the settings center.
 
 **Architecture:** Centralize path resolution and storage policy in shared settings/core utilities, route asset-center persistence through a project-aware managed filesystem layout, and update Magic Cut import behavior to use local managed assets first and optional background sync second. Keep internal directory names stable while allowing configurable root locations.
 
@@ -116,18 +116,18 @@ Expected:
 Implement:
 
 - centralized path builders for user, workspace, project, media, cache, exports
-- default root rename from `open-studio` to `magicstudio`
+- default root normalization to `magicstudio`
 - root override support
-- one-shot migration detection from legacy `open-studio` roots
+- one-shot cleanup of legacy branded roots
 
 **Step 4: Write the failing migration test**
 
 Create a migration test:
 
 ```ts
-it('rewrites legacy open-studio root to magicstudio exactly once', async () => {
+it('keeps the canonical magicstudio root stable across cleanup passes', async () => {
   const result = await planMagicStudioMigration({
-    currentRoot: '/Users/demo/.sdkwork/open-studio',
+    currentRoot: '/Users/demo/.sdkwork/magicstudio',
     targetRoot: '/Users/demo/.sdkwork/magicstudio',
     targetEmpty: true,
     markerExists: false,
@@ -458,7 +458,7 @@ Expected:
 Verify:
 
 - default local storage root resolves to `~/.sdkwork/magicstudio`
-- no new default writes go to `open-studio`
+- no new default writes drift away from `magicstudio`
 - desktop Magic Cut imports land in `workspaces/{workspaceId}/projects/{projectId}/media/originals/*`
 - project caches land in project `cache/*`
 - exports land in project `exports/*` unless overridden

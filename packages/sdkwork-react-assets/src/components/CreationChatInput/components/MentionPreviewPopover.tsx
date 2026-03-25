@@ -4,6 +4,7 @@ import { Popover } from '@sdkwork/react-commons';
 import type { InputAttachmentData } from '@sdkwork/react-commons';
 import { Music, FileText, Maximize2 } from 'lucide-react';
 import { getAssetLabel } from '@sdkwork/react-commons';
+import { useTranslation } from '@sdkwork/react-i18n';
 
 interface MentionPreviewPopoverProps {
     anchorEl: HTMLElement | null;
@@ -13,11 +14,13 @@ interface MentionPreviewPopoverProps {
 }
 
 export const MentionPreviewPopover: React.FC<MentionPreviewPopoverProps> = ({ anchorEl, attachment, index, onClose }) => {
+    const { t } = useTranslation();
     if (!anchorEl || !attachment) return null;
 
     // Create a ref object that points to the anchor element for the Popover component
     const triggerRef = { current: anchorEl };
     const label = getAssetLabel(index);
+    const typeLabel = t(`assetCenter.creationInput.preview.types.${attachment.type}`);
 
     return (
         <Popover
@@ -51,7 +54,7 @@ export const MentionPreviewPopover: React.FC<MentionPreviewPopoverProps> = ({ an
                         <FileText size={32} className="text-gray-600" />
                     )
                 ) : (
-                     <span className="text-xs text-gray-500">No preview available</span>
+                     <span className="text-xs text-gray-500">{t('assetCenter.creationInput.preview.empty')}</span>
                 )}
                 
                 {/* Fullscreen Hint */}
@@ -64,8 +67,8 @@ export const MentionPreviewPopover: React.FC<MentionPreviewPopoverProps> = ({ an
             
             {/* Footer Metadata */}
             <div className="px-3 py-2 text-[9px] text-gray-500 border-t border-[#27272a] bg-[#1a1a1c] flex justify-between">
-                <span>Type: {attachment.type.toUpperCase()}</span>
-                {attachment.size && <span>{(attachment.size / 1024).toFixed(1)} KB</span>}
+                <span>{t('assetCenter.creationInput.preview.type', { type: typeLabel })}</span>
+                {attachment.size && <span>{t('assetCenter.creationInput.preview.sizeKb', { size: (attachment.size / 1024).toFixed(1) })}</span>}
             </div>
         </Popover>
     );

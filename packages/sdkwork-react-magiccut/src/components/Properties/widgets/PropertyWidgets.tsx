@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronRight, RotateCcw, Eye, EyeOff, ChevronDown, Loader2 } from 'lucide-react';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
 
 // --- Types ---
 export interface PropertySectionProps {
@@ -68,6 +69,7 @@ export interface SliderRowProps {
 export const PropertySection: React.FC<PropertySectionProps> = ({ 
     title, children, defaultOpen = true, onReset, className = '', enabled, onToggle
 }) => {
+    const { tc } = useMagicCutTranslation();
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
@@ -91,7 +93,7 @@ export const PropertySection: React.FC<PropertySectionProps> = ({
                         <button 
                             onClick={() => onToggle(!enabled)}
                             className={`p-1 rounded transition-colors ${enabled ? 'text-blue-400 hover:text-blue-300' : 'text-gray-600 hover:text-gray-500'}`}
-                            title={enabled ? "Enabled" : "Disabled"}
+                            title={enabled ? tc('enabled') : tc('disabled')}
                         >
                             {enabled ? <Eye size={12} /> : <EyeOff size={12} />}
                         </button>
@@ -100,7 +102,7 @@ export const PropertySection: React.FC<PropertySectionProps> = ({
                         <button 
                             onClick={(e) => { e.stopPropagation(); onReset(); }} 
                             className="text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[#2a2a2d]"
-                            title="Reset to default"
+                            title={tc('resetDefault')}
                         >
                             <RotateCcw size={10} />
                         </button>
@@ -119,6 +121,7 @@ export const PropertySection: React.FC<PropertySectionProps> = ({
 export const ScrubbableInput: React.FC<ScrubbableInputProps> = ({ 
     label, value, onChange, step = 1, min = -Infinity, max = Infinity, suffix = '', icon, className = '', fullWidth
 }) => {
+    const { tc } = useMagicCutTranslation();
     const [isDragging, setIsDragging] = useState(false);
     const startX = useRef(0);
     const startVal = useRef(0);
@@ -170,7 +173,7 @@ export const ScrubbableInput: React.FC<ScrubbableInputProps> = ({
                 <div 
                     className={`flex items-center gap-1.5 cursor-ew-resize select-none shrink-0 transition-colors ${isDragging ? 'text-blue-400' : 'text-gray-500 group-hover:text-gray-300'}`}
                     onMouseDown={handleMouseDown}
-                    title="Drag to adjust"
+                    title={tc('dragToAdjust')}
                 >
                     {icon && <span className="opacity-80">{icon}</span>}
                     {label && <span className="text-[10px] font-medium uppercase tracking-wide min-w-[10px]">{label}</span>}
@@ -237,6 +240,7 @@ export const SliderRow: React.FC<SliderRowProps> = ({
 };
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange, opacity, onOpacityChange }) => {
+    const { tpr } = useMagicCutTranslation();
     const inputRef = useRef<HTMLInputElement>(null);
 
     return (
@@ -278,7 +282,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange
 
             {onOpacityChange && opacity !== undefined && (
                 <SliderRow 
-                    label="Opacity" 
+                    label={tpr('opacity')} 
                     value={opacity} 
                     onChange={onOpacityChange} 
                     min={0} max={1} step={0.01} 

@@ -14,6 +14,7 @@ import {
     importMagicCutTrackCoverFile,
     importMagicCutTrackCoverFromUrl,
 } from '../../utils/magicCutTrackCoverImport';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
 
 interface MagicCutTrackHeaderProps {
     track: CutTrack;
@@ -83,6 +84,7 @@ const ControlBtn = ({ active, activeIcon: ActiveIcon, inactiveIcon: InactiveIcon
 export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.memo(({
     track, height
 }) => {
+    const { t, tl } = useMagicCutTranslation();
     const { resizeTrack, updateTrack, removeTrack, selectedTrackId, selectTrack, state, getResource } = useMagicCutStore();
 
     const [isResizing, setIsResizing] = useState(false);
@@ -159,6 +161,19 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             case 'effect': return 'text-purple-400 bg-purple-500/5 border-l-purple-500';
             case 'ai': return 'text-pink-300 bg-pink-500/5 border-l-pink-400';
             default: return 'text-gray-400 bg-gray-500/5 border-l-gray-500';
+        }
+    };
+
+    const getTrackTypeTitle = () => {
+        if (track.isMain) return tl('mainTrack');
+        switch (track.trackType) {
+            case 'video': return tl('videoTrack');
+            case 'audio': return tl('audioTrack');
+            case 'text': return tl('textTrack');
+            case 'subtitle': return tl('subtitleTrack');
+            case 'effect': return tl('effectTrack');
+            case 'ai': return tl('aiTrack');
+            default: return tl('track');
         }
     };
 
@@ -311,11 +326,11 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
         e.stopPropagation();
 
         const confirmed = await confirm({
-            title: 'Delete Track?',
-            message: `Are you sure you want to delete "${track.name}"? This will also remove all clips inside this track. This action cannot be undone.`,
+            title: t('trackHeader.deleteDialogTitle'),
+            message: t('trackHeader.deleteDialogMessage', { name: track.name }),
             type: 'danger',
-            confirmText: 'Delete',
-            cancelText: 'Cancel',
+            confirmText: tl('deleteTrack'),
+            cancelText: t('common.cancel'),
             confirmVariant: 'danger'
         });
 
@@ -359,7 +374,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
             {/* 2. Icon Section */}
             <div
                 className={`w-8 h-8 rounded-lg flex-none flex items-center justify-center mr-2 shadow-sm border border-white/5 ${getTypeColorClass().split(' ').slice(0, 2).join(' ')}`}
-                title={`${track.trackType.toUpperCase()} Track`}
+                title={getTrackTypeTitle()}
             >
                 {getTrackIcon()}
             </div>
@@ -374,7 +389,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                         onClick={() => updateTrack(track.id, { locked: !track.locked })}
                         activeClass="text-red-500 bg-red-500/10"
                         inactiveClass="text-gray-500 hover:text-gray-300"
-                        title={track.locked ? "Unlock Track" : "Lock Track"}
+                        title={track.locked ? tl('unlockTrack') : tl('lockTrack')}
                     />
                     {isVisual && (
                         <ControlBtn
@@ -383,7 +398,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                             onClick={() => updateTrack(track.id, { visible: !track.visible })}
                             activeClass="text-gray-400 bg-gray-500/20"
                             inactiveClass="text-gray-500 hover:text-white"
-                            title={!track.visible ? "Show Track" : "Hide Track"}
+                            title={!track.visible ? tl('showTrack') : tl('hideTrack')}
                         />
                     )}
                     {(canHaveVolume) && (
@@ -393,7 +408,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                             onClick={() => updateTrack(track.id, { muted: !track.muted })}
                             activeClass="text-orange-500 bg-orange-500/10"
                             inactiveClass="text-gray-500 hover:text-white"
-                            title={track.muted ? "Unmute Track" : "Mute Track"}
+                            title={track.muted ? tl('unmuteTrack') : tl('muteTrack')}
                         />
                     )}
                 </div>
@@ -409,17 +424,17 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                             w-10 h-10 rounded-md cursor-pointer overflow-hidden relative group/cover flex items-center justify-center transition-all
                             ${track.coverImage ? 'bg-black border-0' : 'bg-[#18181b] border border-dashed border-[#444] hover:border-gray-400'}
                         `}
-                        title="Change Cover"
+                        title={t('trackHeader.changeCover')}
                     >
                         {track.coverImage ? (
                             <>
-                                <img src={track.coverImage} className="w-full h-full object-cover" alt="Cover" />
+                                <img src={track.coverImage} className="w-full h-full object-cover" alt={t('trackHeader.coverAlt')} />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/cover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <span className="text-[8px] text-white font-medium">Edit</span>
+                                    <span className="text-[8px] text-white font-medium">{t('trackHeader.editCover')}</span>
                                 </div>
                             </>
                         ) : (
-                            <span className="text-[9px] font-medium text-gray-500 group-hover/cover:text-gray-300 transform scale-90">Cover</span>
+                            <span className="text-[9px] font-medium text-gray-500 group-hover/cover:text-gray-300 transform scale-90">{t('trackHeader.coverLabel')}</span>
                         )}
                     </div>
                 )}
@@ -428,7 +443,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                     <button
                         onClick={handleDeleteTrack}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded-md"
-                        title="Delete Track"
+                        title={t('trackHeader.deleteTrack')}
                         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                     >
                         <Trash2 size={13} />
@@ -444,7 +459,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                         onMouseDown={e => e.stopPropagation()}
                     >
                         <div className="px-3 py-2 border-b border-[#333] flex justify-between items-center bg-[#1e1e1e]">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Set Cover</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('trackHeader.setCover')}</span>
                             <button onClick={() => setCoverMenuPos(null)} className="text-gray-500 hover:text-white"><X size={12} /></button>
                         </div>
 
@@ -454,20 +469,20 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                                 disabled={isSavingCover}
                                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-[#252526] hover:bg-[#2a2a2d] text-xs text-gray-300 transition-colors border border-transparent hover:border-[#444] font-medium"
                             >
-                                {isSavingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} {isSavingCover ? 'Saving Cover...' : 'Upload Custom'}
+                                {isSavingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} {isSavingCover ? t('trackHeader.savingCover') : t('trackHeader.uploadCustom')}
                             </button>
 
-                            <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pt-1 border-t border-[#333] mt-1">From Track Clips</div>
+                            <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pt-1 border-t border-[#333] mt-1">{t('trackHeader.fromTrackClips')}</div>
 
                             {isLoadingFrames ? (
                                 <div className="flex justify-center py-6 text-gray-500 flex-col items-center gap-2">
                                     <Loader2 size={16} className="animate-spin text-blue-500" />
-                                    <span className="text-[10px]">Scanning content...</span>
+                                    <span className="text-[10px]">{t('trackHeader.scanningContent')}</span>
                                 </div>
                             ) : isSavingCover ? (
                                 <div className="flex justify-center py-6 text-gray-500 flex-col items-center gap-2">
                                     <Loader2 size={16} className="animate-spin text-blue-500" />
-                                    <span className="text-[10px]">Saving cover...</span>
+                                    <span className="text-[10px]">{t('trackHeader.savingCover')}</span>
                                 </div>
                             ) : candidateFrames.length > 0 ? (
                                 <div className="grid grid-cols-3 gap-2">
@@ -484,7 +499,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                                 </div>
                             ) : (
                                 <div className="text-center py-6 text-[10px] text-gray-500 bg-[#1e1e1e] rounded-lg border border-[#333] border-dashed">
-                                    No suitable frames found.
+                                    {t('trackHeader.noSuitableFrames')}
                                 </div>
                             )}
                         </div>

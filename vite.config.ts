@@ -128,6 +128,7 @@ export default defineConfig(({ mode }) => {
           
           // SDK
           { find: '@sdkwork/app-sdk', replacement: path.resolve(__dirname, '../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts') },
+          { find: '@sdkwork/sdk-common', replacement: path.resolve(__dirname, '../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts') },
         ]
       }
     };
