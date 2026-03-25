@@ -1,5 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
+  "build": {
+    "beforeBuildCommand": "pnpm run build:npm-sdk"
+  },
   "bundle": {
     "createUpdaterArtifacts": false,
     "icon": [

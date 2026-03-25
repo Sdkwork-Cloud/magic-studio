@@ -92,6 +92,6 @@ jobs:
           releaseDraft: false
           prerelease: false
           generateReleaseNotes: true
-          uploadUpdaterJson: false
-          releaseAssetNamePattern: magic-studio_[version]_[platform]_[arch][_setup][ext]
+          includeUpdaterJson: false
+          assetNamePattern: magic-studio_[version]_[platform]_[arch][_setup][ext]
           args: ${{ matrix.args }}
