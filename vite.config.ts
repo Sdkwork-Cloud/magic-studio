@@ -1,4 +1,5 @@
 import path from 'path';
+import { existsSync } from 'fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
@@ -6,8 +7,43 @@ import { configDefaults } from 'vitest/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const EXTERNAL_APP_SDK_ENTRY = path.resolve(
+  __dirname,
+  '../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts',
+);
+const EXTERNAL_SDK_COMMON_ENTRY = path.resolve(
+  __dirname,
+  '../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts',
+);
 
 const normalizeModuleId = (id: string): string => id.replace(/\\/g, '/');
+
+const resolveSdkAliases = () => {
+  const sdkMode = (process.env.MAGIC_STUDIO_SDK_MODE ?? 'external').trim().toLowerCase();
+
+  if (sdkMode === 'npm') {
+    return [];
+  }
+
+  if (sdkMode !== 'external') {
+    throw new Error(`Unsupported MAGIC_STUDIO_SDK_MODE: ${sdkMode}`);
+  }
+
+  const missingEntries = [EXTERNAL_APP_SDK_ENTRY, EXTERNAL_SDK_COMMON_ENTRY].filter(
+    (entry) => !existsSync(entry),
+  );
+
+  if (missingEntries.length > 0) {
+    throw new Error(
+      `MAGIC_STUDIO_SDK_MODE=external requires external SDK source checkouts:\n${missingEntries.join('\n')}`,
+    );
+  }
+
+  return [
+    { find: '@sdkwork/app-sdk', replacement: EXTERNAL_APP_SDK_ENTRY },
+    { find: '@sdkwork/sdk-common', replacement: EXTERNAL_SDK_COMMON_ENTRY },
+  ];
+};
 
 const resolveManualChunk = (id: string): string | undefined => {
     const normalized = normalizeModuleId(id);
@@ -127,8 +163,7 @@ export default defineConfig(({ mode }) => {
           { find: '@sdkwork/react-ide-config', replacement: path.resolve(__dirname, 'packages/sdkwork-react-ide-config/src/index.ts') },
           
           // SDK
-          { find: '@sdkwork/app-sdk', replacement: path.resolve(__dirname, '../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts') },
-          { find: '@sdkwork/sdk-common', replacement: path.resolve(__dirname, '../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts') },
+          ...resolveSdkAliases(),
         ]
       }
     };

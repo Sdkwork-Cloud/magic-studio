@@ -97,7 +97,7 @@
                              },
     "dependencies":  {
                          "@google/genai":  "catalog:",
-                         "@sdkwork/app-sdk":  "workspace:*",
+                         "@sdkwork/app-sdk":  "npm:@sdkwork/app-sdk@1.0.34",
                          "@sdkwork/react-types":  "workspace:*",
                          "@sdkwork/react-fs":  "workspace:*",
                          "@sdkwork/react-commons":  "workspace:*"

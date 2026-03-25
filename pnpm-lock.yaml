@@ -222,8 +222,8 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:packages/sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-commons':
         specifier: workspace:*
         version: link:packages/sdkwork-react-commons
@@ -251,6 +251,9 @@ importers:
       '@sdkwork/react-trade':
         specifier: workspace:*
         version: link:packages/sdkwork-react-trade
+      '@sdkwork/sdk-common':
+        specifier: npm:@sdkwork/sdk-common@1.0.2
+        version: 1.0.2
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.10.1
@@ -481,17 +484,11 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@25.3.5)
 
-  packages/sdkwork-app-sdk:
-    dependencies:
-      '@sdkwork/sdk-common':
-        specifier: workspace:*
-        version: link:../sdkwork-sdk-common
-
   packages/sdkwork-react-assets:
     dependencies:
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-commons':
         specifier: workspace:*
         version: link:../sdkwork-react-commons
@@ -591,8 +588,8 @@ importers:
   packages/sdkwork-react-auth:
     dependencies:
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-commons':
         specifier: workspace:*
         version: link:../sdkwork-react-commons
@@ -944,8 +941,8 @@ importers:
         specifier: 'catalog:'
         version: 1.44.0
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-commons':
         specifier: workspace:*
         version: link:../sdkwork-react-commons
@@ -1026,8 +1023,8 @@ importers:
         specifier: 'catalog:'
         version: 3.1004.0
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-assets':
         specifier: workspace:*
         version: link:../sdkwork-react-assets
@@ -1993,8 +1990,8 @@ importers:
   packages/sdkwork-react-vip:
     dependencies:
       '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../sdkwork-app-sdk
+        specifier: npm:@sdkwork/app-sdk@1.0.34
+        version: 1.0.34
       '@sdkwork/react-auth':
         specifier: workspace:*
         version: link:../sdkwork-react-auth
@@ -2118,8 +2115,6 @@ importers:
       vite-plugin-dts:
         specifier: 'catalog:'
         version: 4.5.4(@types/node@25.3.5)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.3.5))
-
-  packages/sdkwork-sdk-common: {}
 
 packages:
 
@@ -3022,6 +3017,13 @@ packages:
 
   '@rushstack/ts-command-line@5.3.3':
     resolution: {integrity: sha512-c+ltdcvC7ym+10lhwR/vWiOhsrm/bP3By2VsFcs5qTKv+6tTmxgbVrtJ5NdNjANiV5TcmOZgUN+5KYQ4llsvEw==}
+
+  '@sdkwork/app-sdk@1.0.34':
+    resolution: {integrity: sha512-eBp1xD+TaS5JGLWGQr1l1WAmOfDLIZmPlCy3uwVl6x7Dc4z5DzJlRjRtvUe51mxEth5mvShAWY/BAyN7hPupsg==}
+
+  '@sdkwork/sdk-common@1.0.2':
+    resolution: {integrity: sha512-mjKQCRQBty8x2B1eM/sMiQwj46xvGucwSal2tymyAoF/vupsU3kzYcTSVLH3eVyAXON9U8gJwa7vRNAk13LWRQ==}
+    engines: {node: '>=18.0.0'}
 
   '@smithy/abort-controller@4.2.11':
     resolution: {integrity: sha512-Hj4WoYWMJnSpM6/kchsm4bUNTL9XiSyhvoMb2KIq4VJzyDt7JpGHUZHkVNPZVC7YE1tf8tPeVauxpFBKGW4/KQ==}
@@ -6324,6 +6326,12 @@ snapshots:
       string-argv: 0.3.2
     transitivePeerDependencies:
       - '@types/node'
+
+  '@sdkwork/app-sdk@1.0.34':
+    dependencies:
+      '@sdkwork/sdk-common': 1.0.2
+
+  '@sdkwork/sdk-common@1.0.2': {}
 
   '@smithy/abort-controller@4.2.11':
     dependencies:

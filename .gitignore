@@ -142,6 +142,9 @@ scripts/*
 !scripts/audit-service-encapsulation.mjs
 !scripts/validate-service-encapsulation-policy.mjs
 !scripts/check-service-policy-review-gate.mjs
+!scripts/sdk-mode.mjs
+!scripts/run-app-build.mjs
+!scripts/run-vite-dev.mjs
 
 # Debug
 npm-debug.log*

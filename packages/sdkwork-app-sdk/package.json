@@ -11,7 +11,7 @@
   "files": [
     "dist"
   ],
-  "private": true,
+  "private": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -23,7 +23,10 @@
     "build": "node -e \"console.log('Using vendored @sdkwork/app-sdk dist bundle')\""
   },
   "dependencies": {
-    "@sdkwork/sdk-common": "workspace:*"
+    "@sdkwork/sdk-common": "1.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "sdk",

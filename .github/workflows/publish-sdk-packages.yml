@@ -1,0 +1,56 @@
+name: Publish SDK Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        default: app-sdk
+        type: choice
+        options:
+          - app-sdk
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-app-sdk:
+    if: github.event.inputs.package == 'app-sdk'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Resolve package version
+        id: package_version
+        run: |
+          echo "version=$(node -p 'require(\"./packages/sdkwork-app-sdk/package.json\").version')" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when version already exists
+        id: version_exists
+        run: |
+          if npm view "@sdkwork/app-sdk@${{ steps.package_version.outputs.version }}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish @sdkwork/app-sdk
+        if: steps.version_exists.outputs.exists != 'true'
+        run: npm publish --access public
+        working-directory: packages/sdkwork-app-sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Report existing version
+        if: steps.version_exists.outputs.exists == 'true'
+        run: echo "@sdkwork/app-sdk@${{ steps.package_version.outputs.version }} is already published."

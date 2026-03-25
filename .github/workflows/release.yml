@@ -13,6 +13,8 @@ jobs:
   publish-tauri:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.platform }}
+    env:
+      MAGIC_STUDIO_SDK_MODE: npm
     strategy:
       fail-fast: false
       matrix:
