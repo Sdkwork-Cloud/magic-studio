@@ -146,6 +146,7 @@ scripts/*
 !scripts/prepare-git-sdk-sources.mjs
 !scripts/run-app-build.mjs
 !scripts/run-vite-dev.mjs
+!scripts/check-desktop-bundle-self-contained.mjs
 
 # Debug
 npm-debug.log*

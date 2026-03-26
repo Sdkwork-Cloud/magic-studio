@@ -5,14 +5,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Magic Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css" />
     <style>
       :root {
         --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -185,73 +177,6 @@
         color: #fff;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0?deps=react@^19.2.3",
-    "@xterm/xterm": "https://esm.sh/@xterm/xterm@^6.0.0",
-    "@xterm/addon-fit": "https://esm.sh/@xterm/addon-fit@^0.11.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-search": "https://esm.sh/@xterm/addon-search@^0.16.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-webgl": "https://esm.sh/@xterm/addon-webgl@^0.19.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-ligatures": "https://esm.sh/@xterm/addon-ligatures@^0.10.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-web-links": "https://esm.sh/@xterm/addon-web-links@^0.12.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-image": "https://esm.sh/@xterm/addon-image@^0.9.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-serialize": "https://esm.sh/@xterm/addon-serialize@^0.14.0?deps=@xterm/xterm@^6.0.0",
-    "@xterm/addon-unicode11": "https://esm.sh/@xterm/addon-unicode11@^0.9.0?deps=@xterm/xterm@^6.0.0",
-    "jszip": "https://esm.sh/jszip@^3.10.1",
-    "@monaco-editor/react": "https://esm.sh/@monaco-editor/react@^4.7.0?deps=react@^19.2.3,react-dom@^19.2.3",
-    "@tauri-apps/plugin-dialog": "https://esm.sh/@tauri-apps/plugin-dialog@^2.6.0",
-    "@tauri-apps/plugin-process": "https://esm.sh/@tauri-apps/plugin-process@^2.3.1",
-    "@tauri-apps/plugin-notification": "https://esm.sh/@tauri-apps/plugin-notification@^2.3.3",
-    "@tauri-apps/plugin-updater": "https://esm.sh/@tauri-apps/plugin-updater@^2.9.0",
-    "@tauri-apps/plugin-http": "https://esm.sh/@tauri-apps/plugin-http@^2.5.6",
-    "@tauri-apps/plugin-store": "https://esm.sh/@tauri-apps/plugin-store@^2.4.2",
-    "@tauri-apps/plugin-os": "https://esm.sh/@tauri-apps/plugin-os@^2.3.2",
-    "@tauri-apps/api/": "https://esm.sh/@tauri-apps/api@^2.9.1/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@tauri-apps/plugin-clipboard-manager": "https://esm.sh/@tauri-apps/plugin-clipboard-manager@^2.3.2",
-    "@tauri-apps/plugin-fs": "https://esm.sh/@tauri-apps/plugin-fs@^2.4.5",
-    "@tauri-apps/plugin-opener": "https://esm.sh/@tauri-apps/plugin-opener@^2.5.3",
-    "@tiptap/core": "https://esm.sh/@tiptap/core@^3.16.0",
-    "@tiptap/react": "https://esm.sh/@tiptap/react@^3.16.0?deps=react@^19.2.3,react-dom@^19.2.3,@tiptap/core@^3.16.0,@tiptap/extension-bubble-menu@^3.16.0,@tiptap/extension-floating-menu@^3.16.0",
-    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-floating-menu": "https://esm.sh/@tiptap/extension-floating-menu@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-image": "https://esm.sh/@tiptap/extension-image@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "@tiptap/extension-typography": "https://esm.sh/@tiptap/extension-typography@^3.16.0?deps=@tiptap/core@^3.16.0",
-    "classnames": "https://esm.sh/classnames@^2.5.1",
-    "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@^3.16.0",
-    "@tiptap/extension-gapcursor": "https://esm.sh/@tiptap/extension-gapcursor@^3.16.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "@tiptap/extension-character-count": "https://esm.sh/@tiptap/extension-character-count@^3.16.0",
-    "@tauri-apps/plugin-shell": "https://esm.sh/@tauri-apps/plugin-shell@^2.3.4",
-    "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4",
-    "date-fns": "https://esm.sh/date-fns@^4.1.0",
-    "markdown-it": "https://esm.sh/markdown-it@^14.1.0",
-    "@aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@^3.975.0",
-    "@aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@^3.975.0",
-    "zustand/": "https://esm.sh/zustand@^5.0.11/",
-    "zustand": "https://esm.sh/zustand@^5.0.11",
-    "immer": "https://esm.sh/immer@^11.1.3",
-    "lottie-web": "https://esm.sh/lottie-web@^5.13.0",
-    "tippy.js": "https://esm.sh/tippy.js@^6.3.7",
-    "@tiptap/extension-mention": "https://esm.sh/@tiptap/extension-mention@^3.19.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
