@@ -143,6 +143,7 @@ scripts/*
 !scripts/validate-service-encapsulation-policy.mjs
 !scripts/check-service-policy-review-gate.mjs
 !scripts/sdk-mode.mjs
+!scripts/prepare-git-sdk-sources.mjs
 !scripts/run-app-build.mjs
 !scripts/run-vite-dev.mjs
 
@@ -189,5 +190,6 @@ docs/reports/*.json
 
 # Local SDK checkout
 sdkwork-sdk-app/
+.sdk-git-sources/
 .pnpm-store/
 .pnpm-store/*

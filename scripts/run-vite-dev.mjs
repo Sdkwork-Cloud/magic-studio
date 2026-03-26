@@ -1,7 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { resolveSdkMode } from './sdk-mode.mjs';
+import { ensureSdkModeReady, resolveSdkMode } from './sdk-mode.mjs';
 
 const sdkMode = resolveSdkMode();
+ensureSdkModeReady(sdkMode);
+
 const env = {
   ...process.env,
   MAGIC_STUDIO_SDK_MODE: sdkMode,

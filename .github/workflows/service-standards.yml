@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      MAGIC_STUDIO_SDK_MODE: npm
+      MAGIC_STUDIO_SDK_MODE: git
 
     steps:
       - name: Checkout
@@ -63,7 +63,7 @@ jobs:
         run: pnpm run audit:services
 
       - name: Run build gate
-        run: pnpm run build:npm-sdk
+        run: pnpm run build:git-sdk
 
       - name: Upload service audit reports
         if: always()

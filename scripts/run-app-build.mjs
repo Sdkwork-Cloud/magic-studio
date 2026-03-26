@@ -1,14 +1,21 @@
 import { spawnSync } from 'node:child_process';
-import { resolveSdkMode } from './sdk-mode.mjs';
+import { ensureSdkModeReady, resolveSdkMode } from './sdk-mode.mjs';
 
 const sdkMode = resolveSdkMode();
+ensureSdkModeReady(sdkMode);
+
 const env = {
   ...process.env,
   MAGIC_STUDIO_SDK_MODE: sdkMode,
 };
-const tsconfig = sdkMode === 'npm' ? 'tsconfig.npm-sdk.json' : 'tsconfig.json';
+const tsconfig =
+  sdkMode === 'git'
+    ? 'tsconfig.git-sdk.json'
+    : sdkMode === 'npm'
+      ? 'tsconfig.npm-sdk.json'
+      : 'tsconfig.json';
 
-const run = (command) => {
+const run = command => {
   const result = spawnSync(command, {
     stdio: 'inherit',
     env,

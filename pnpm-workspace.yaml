@@ -1,7 +1,5 @@
 packages:
   - 'packages/*'
-  - '!packages/sdkwork-app-sdk'
-  - '!packages/sdkwork-sdk-common'
 
 catalog:
   react: ^19.2.4

@@ -50,7 +50,7 @@ jobs:
     needs: prepare-release
     runs-on: ${{ matrix.platform }}
     env:
-      MAGIC_STUDIO_SDK_MODE: npm
+      MAGIC_STUDIO_SDK_MODE: git
       RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}
     strategy:
       fail-fast: false
