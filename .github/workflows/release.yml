@@ -67,11 +67,16 @@ jobs:
             args: --config src-tauri/tauri.prod.conf.json --bundles nsis
             asset_patterns: |
               src-tauri/target/release/bundle/nsis/*.exe
-          - name: macOS
+          - name: macOS Apple Silicon
             platform: macos-latest
-            args: --config src-tauri/tauri.prod.conf.json --bundles dmg
+            args: --config src-tauri/tauri.prod.conf.json --target aarch64-apple-darwin --bundles dmg
             asset_patterns: |
-              src-tauri/target/release/bundle/dmg/*.dmg
+              src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          - name: macOS Intel
+            platform: macos-15-intel
+            args: --config src-tauri/tauri.prod.conf.json --target x86_64-apple-darwin --bundles dmg
+            asset_patterns: |
+              src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
 
     steps:
       - name: Checkout
