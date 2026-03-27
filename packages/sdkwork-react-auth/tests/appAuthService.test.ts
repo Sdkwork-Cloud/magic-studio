@@ -29,6 +29,7 @@ describe('appAuthService', () => {
       code: '200',
       data: {
         authToken: 'auth-token',
+        accessToken: 'payload-access-token',
         refreshToken: 'refresh-token',
         userInfo: {
           id: 7,
@@ -63,6 +64,38 @@ describe('appAuthService', () => {
     expect(mockApplyTokens).toHaveBeenCalledWith({
       authToken: 'auth-token',
       accessToken: 'access-from-env',
+    });
+  });
+
+  it('ignores login payload accessToken and keeps the configured app access token', async () => {
+    const login = vi.fn(async () => ({
+      code: '200',
+      data: {
+        authToken: 'auth-token',
+        accessToken: 'payload-access-token',
+        refreshToken: 'refresh-token',
+        userInfo: {
+          id: 9,
+          username: 'keep-config',
+          nickname: 'Keep Config',
+        },
+      },
+    }));
+
+    mockGetClient.mockReturnValue({
+      auth: { login },
+      user: { getUserProfile: vi.fn() },
+    });
+
+    const { appAuthService } = await import('../src/services/appAuthService');
+    const session = await appAuthService.login({ username: 'keep-config', password: 'secret' });
+
+    expect(session.accessToken).toBe('access-from-env');
+    expect(session.accessToken).not.toBe('payload-access-token');
+    expect(mockPersistTokens).toHaveBeenLastCalledWith({
+      authToken: 'auth-token',
+      accessToken: 'access-from-env',
+      refreshToken: 'refresh-token',
     });
   });
 
