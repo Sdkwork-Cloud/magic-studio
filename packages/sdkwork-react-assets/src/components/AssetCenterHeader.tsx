@@ -13,7 +13,6 @@ export interface AssetCenterHeaderProps {
   resultLabel: string;
   coverageLabel: string;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
-  canImport?: boolean;
 }
 
 export const AssetCenterHeader: React.FC<AssetCenterHeaderProps> = ({
@@ -26,8 +25,7 @@ export const AssetCenterHeader: React.FC<AssetCenterHeaderProps> = ({
   onClearAll,
   resultLabel,
   coverageLabel,
-  searchInputRef,
-  canImport = true,
+  searchInputRef
 }) => {
   const { t } = useTranslation();
 
@@ -57,12 +55,7 @@ export const AssetCenterHeader: React.FC<AssetCenterHeaderProps> = ({
           )}
           <button
             onClick={onImport}
-            disabled={!canImport}
-            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-colors ${
-              canImport
-                ? 'bg-blue-600 hover:bg-blue-500'
-                : 'cursor-not-allowed bg-[#2a2a2d] text-gray-500'
-            }`}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-blue-500"
           >
             <Upload size={13} />
             {t('studio.common.import', 'Import')}

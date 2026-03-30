@@ -50,12 +50,12 @@ const MainGlobalHeader: React.FC = () => {
 
   return (
     <>
-      <div className="app-header-glass desktop-shell-header flex-none h-12 flex items-center justify-between select-none z-[1000] transition-colors duration-200">
+      <div className="desktop-shell-header flex-none h-[40px] bg-white/92 dark:bg-[#050505]/92 border-b border-[#e4e4e7] dark:border-[#1a1a1a] flex items-center justify-between select-none z-[1000] transition-colors duration-200 backdrop-blur-xl">
         
         {/* LEFT: Workspace / Project Context Switcher */}
-        <div className="flex items-center h-full px-3 sm:px-4" data-tauri-drag-region>
+        <div className="flex items-center h-full px-4">
           <WorkspaceProjectSelector 
-            variant="portal"
+            variant="dark"
             showDelete={true}
             defaultProjectType="APP"
           />
@@ -65,13 +65,13 @@ const MainGlobalHeader: React.FC = () => {
         <div className="flex-1 h-full" data-tauri-drag-region />
 
         {/* RIGHT: Breadcrumbs & Controls */}
-        <div className="flex items-center h-full" data-tauri-drag-region="false">
+        <div className="flex items-center h-full">
            
            {/* Contextual Breadcrumbs */}
-           <div className="flex items-center px-4 h-full gap-2 border-r border-[var(--border-color)] mr-0">
-              <span className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.16em] hidden md:block">{parent}</span>
-              <ChevronRight size={10} className="text-[var(--text-muted)] hidden md:block" />
-              <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+           <div className="flex items-center px-4 h-full gap-2 border-r border-gray-200 dark:border-[#1a1a1a] mr-0">
+              <span className="text-[10px] text-gray-400 dark:text-gray-600 font-medium uppercase tracking-wider hidden md:block">{parent}</span>
+              <ChevronRight size={10} className="text-gray-400 dark:text-gray-700 hidden md:block" />
+              <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                   <Icon size={14} />
                   <span className="text-xs font-medium">{label}</span>
               </div>
@@ -85,30 +85,30 @@ const MainGlobalHeader: React.FC = () => {
 
            {/* Debug Menu Toggle */}
            {settings.general.developerMode && (
-               <div className="h-full flex items-center border-r border-[var(--border-color)] px-0" ref={devRef}>
+               <div className="h-full flex items-center border-r border-gray-200 dark:border-[#1a1a1a] px-0" ref={devRef}>
                    <div className="relative h-full">
                       <button 
                           onClick={() => setShowDevMenu(!showDevMenu)}
-                          className={`app-header-action h-full w-[46px] flex items-center justify-center transition-colors focus:outline-none ${showDevMenu ? 'bg-[color-mix(in_srgb,var(--text-primary)_10%,transparent)] text-primary-500' : ''}`}
+                          className={`h-full w-[46px] flex items-center justify-center text-gray-400 hover:bg-[#2d2d2d] hover:text-green-400 transition-colors focus:outline-none ${showDevMenu ? 'bg-[#2d2d2d] text-green-400' : ''}`}
                           title={t('header.developer_tools')}
                       >
                           <Bug size={14} />
                       </button>
                       
                       {showDevMenu && (
-                          <div className="app-floating-panel absolute right-0 top-full mt-2 w-48 rounded-2xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75">
-                              <div className="px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.16em]">{t('header.developer_menu')}</div>
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-[#1a1a1a] rounded-lg shadow-2xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75">
+                              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('header.developer_menu')}</div>
                               <button 
                                   onClick={() => { platform.restartApp(); setShowDevMenu(false); }}
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-xl hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
-                                  <RefreshCw size={14} className="text-primary-500" /> {t('header.reload_app')}
+                                  <RefreshCw size={14} className="text-blue-500" /> {t('header.reload_app')}
                               </button>
                               <button 
                                   onClick={() => { platform.toggleDevTools(); setShowDevMenu(false); }}
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-xl hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
-                                  <Terminal size={14} className="text-primary-500" /> {t('header.toggle_devtools')}
+                                  <Terminal size={14} className="text-green-500" /> {t('header.toggle_devtools')}
                               </button>
                           </div>
                       )}
@@ -117,7 +117,7 @@ const MainGlobalHeader: React.FC = () => {
            )}
 
            {/* Window Controls */}
-           <div className="h-full border-l border-[var(--border-color)]">
+           <div className="h-full">
              <WindowControls />
            </div>
         </div>

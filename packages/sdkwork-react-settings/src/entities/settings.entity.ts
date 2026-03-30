@@ -5,16 +5,6 @@ export enum ThemeMode {
     SYSTEM = 'system',
 }
 
-export type ThemeColor =
-    | 'lobster'
-    | 'tech-blue'
-    | 'green-tech'
-    | 'zinc'
-    | 'violet'
-    | 'rose';
-
-export type AppearanceDensityMode = 'compact' | 'standard' | 'comfortable' | 'auto' | 'custom';
-
 export interface SidebarItemConfig {
     id: string;
     labelKey: string;
@@ -206,11 +196,9 @@ export interface AppSettings {
   };
   appearance: {
     theme: ThemeMode;
-    themeColor: ThemeColor;
     fontFamily: string;
     fontSize: number;
     lineHeight: number;
-    densityMode: AppearanceDensityMode;
     sidebarPosition: 'left' | 'right';
     sidebarConfig?: SidebarItemConfig[];
   };

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Grid, List, UploadCloud, Heart, Sparkles, FolderUp, LayoutGrid, Save, Box } from 'lucide-react';
+import { Search, Grid, List, UploadCloud, Heart, Sparkles, FolderUp, LayoutGrid, Save, Box } from 'lucide-react';
 import { useMagicCutStore } from '../../store/magicCutStore';
 import { DEFAULT_PAGE_SIZE, AssetType, MediaResourceType, type AnyMediaResource } from '@sdkwork/react-commons';
 import {
@@ -30,7 +30,7 @@ import { MusicResourcePanel } from './panels/MusicResourcePanel';
 import { AudioResourcePanel } from './panels/AudioResourcePanel';
 import { VideoResourcePanel } from './panels/VideoResourcePanel';
 import { ImageResourcePanel } from './panels/ImageResourcePanel';
-import { Badge, EmptyState, FilterTab, LoadingSpinner, SearchInput } from '../common/UIComponents';
+import { FilterTab, LoadingSpinner, EmptyState } from '../common/UIComponents';
 import { platform } from '@sdkwork/react-core';
 import { getProtectedAssetDeleteMessage } from '../../domain/assets/assetDeleteGuard';
 import { playerPreviewService } from '../../services';
@@ -277,42 +277,47 @@ const TemplateCategoryView: React.FC = () => {
     }, [loadTemplate, templateToLoad]);
 
     return (
-        <div className="app-surface-subtle h-full min-w-[320px] flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-panel-subtle)]">
+        <div className="h-full flex flex-col bg-[#050505] border-r border-white/5 min-w-[320px]">
             {/* Header */}
-            <div className="app-header-glass z-10 flex-none space-y-3 p-3">
-                <div className="flex items-center justify-between px-1 text-xs text-[var(--text-secondary)]">
-                    <span className="flex items-center gap-2 font-bold uppercase tracking-wider text-[var(--text-primary)]">
+            <div className="p-3 border-b border-white/5 space-y-3 bg-[#050505] z-10 flex-none">
+                <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+                    <span className="font-bold uppercase tracking-wider flex items-center gap-2 text-gray-300">
                         {tr('categoryLabels.templates')}
-                        <Badge count={templates.length} />
+                        <span className="bg-[#1a1a1a] px-1.5 rounded text-[9px] text-gray-500 border border-white/5">
+                            {templates.length}
+                        </span>
                     </span>
                     <button 
                         onClick={handleSaveTemplate}
-                        className="app-header-action rounded-xl p-1.5"
+                        className="p-1.5 hover:text-white rounded hover:bg-[#1a1a1a] text-gray-500 transition-colors"
                         title={tr('actions.saveAsTemplate')}
                     >
                         <Save size={14} />
                     </button>
                 </div>
                 
-                <SearchInput
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder={tr('placeholders.searchTemplates')}
-                    className="w-full"
-                />
+                <div className="relative group">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-blue-500 transition-colors" />
+                    <input 
+                        type="text" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={tr('placeholders.searchTemplates')}
+                        className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
+                    />
+                </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-[var(--bg-panel-subtle)] p-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-2 custom-scrollbar bg-[#050505]">
                 {filteredTemplates.length === 0 && !loading ? (
-                    <EmptyState
-                        icon={<Box size={24} className="opacity-20" />}
-                        title={tr('emptyStates.noTemplates')}
-                        action={{
-                            label: tr('actions.saveCurrentProjectAsTemplate'),
-                            onClick: handleSaveTemplate
-                        }}
-                    />
+                     <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3 border-2 border-dashed border-[#27272a] rounded-xl m-2 bg-[#121212]">
+                        <Box size={24} className="opacity-20" />
+                        <p className="text-xs font-medium">{tr('emptyStates.noTemplates')}</p>
+                        <button onClick={handleSaveTemplate} className="text-[10px] text-blue-400 hover:text-blue-300 mt-1 flex items-center gap-1">
+                            <Save size={10} /> {tr('actions.saveCurrentProjectAsTemplate')}
+                        </button>
+                    </div>
                 ) : (
                     <TemplateResourceGrid templates={filteredTemplates} onLoadTemplate={setTemplateToLoad} />
                 )}
@@ -371,6 +376,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [_showFilters, _setShowFilters] = useState(false);
     const [_filters, _setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
     const [debouncedQuery, setDebouncedQuery] = useState(DEFAULT_FILTERS.query);
     const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
@@ -555,12 +561,11 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                 case 'date':
                     comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                     break;
-                case 'duration': {
+                case 'duration':
                     const durA = (a as any).duration || (a.metadata as any)?.duration || 0;
                     const durB = (b as any).duration || (b.metadata as any)?.duration || 0;
                     comparison = durA - durB;
                     break;
-                }
             }
             
             return _filters.sortOrder === 'asc' ? comparison : -comparison;
@@ -815,19 +820,21 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
     };
 
     return (
-        <div className="app-surface-subtle h-full min-w-[320px] flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-panel-subtle)]">
+        <div className="h-full flex flex-col bg-[#050505] border-r border-white/5 min-w-[320px]">
             {/* Header */}
-            <div className="app-header-glass z-10 flex-none space-y-3 p-3">
-                <div className="flex items-center justify-between px-1 text-xs text-[var(--text-secondary)]">
-                    <span className="flex items-center gap-2 font-bold uppercase tracking-wider text-[var(--text-primary)]">
+            <div className="p-3 border-b border-white/5 space-y-3 bg-[#050505] z-10 flex-none">
+                <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+                    <span className="font-bold uppercase tracking-wider flex items-center gap-2 text-gray-300">
                         {resolveResourceCategoryLabel(category, tr)}
-                        <Badge count={assets.length} />
+                        <span className="bg-[#1a1a1a] px-1.5 rounded text-[9px] text-gray-500 border border-white/5">
+                            {assets.length}
+                        </span>
                     </span>
-                    <div className="app-floating-panel flex items-center gap-1 rounded-2xl p-1">
+                    <div className="flex gap-1">
                         <button
                             onClick={() => onViewModeChange('grid')}
                             aria-pressed={viewMode === 'grid'}
-                            className={`app-header-action rounded-xl p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-[color-mix(in_srgb,var(--theme-primary-500)_14%,transparent)] text-primary-500' : ''}`}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
                             title={tr('viewModes.grid')}
                         >
                             <Grid size={12} />
@@ -835,7 +842,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                         <button
                             onClick={() => onViewModeChange('list')}
                             aria-pressed={viewMode === 'list'}
-                            className={`app-header-action rounded-xl p-1.5 transition-colors ${viewMode === 'list' ? 'bg-[color-mix(in_srgb,var(--theme-primary-500)_14%,transparent)] text-primary-500' : ''}`}
+                            className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-[#1a1a1a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`}
                             title={tr('viewModes.list')}
                         >
                             <List size={12} />
@@ -844,22 +851,26 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                 </div>
                 
                 <div className="flex gap-2">
-                    <SearchInput
-                        value={_filters.query}
-                        onChange={(query) =>
-                            _setFilters((prev) => ({
-                                ...prev,
-                                query
-                            }))
-                        }
-                        placeholder={tr('placeholders.searchAssets')}
-                        className="flex-1"
-                    />
+                     <div className="relative flex-1 group">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-blue-500 transition-colors" />
+                        <input 
+                            type="text" 
+                            value={_filters.query}
+                            onChange={(e) =>
+                                _setFilters((prev) => ({
+                                    ...prev,
+                                    query: e.target.value
+                                }))
+                            }
+                            placeholder={tr('placeholders.searchAssets')}
+                            className="w-full bg-[#121212] border border-[#27272a] hover:border-[#3f3f46] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
+                        />
+                    </div>
                     {!isEffectTab && !isTextTab && (
                         <button 
                             onClick={handleImport}
                             disabled={loading}
-                            className="app-header-action flex h-8 w-8 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
+                            className="flex items-center justify-center w-8 bg-[#1e1e20] hover:bg-[#252526] border border-[#27272a] text-gray-300 hover:text-white rounded-lg transition-colors disabled:opacity-50"
                             title={tr('actions.importFiles')}
                         >
                             <UploadCloud size={14} />
@@ -869,7 +880,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
 
                 {/* Filter Tabs */}
                 {!isEffectTab && !isTextTab && (
-                    <div className="app-segmented-control flex items-center gap-1 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
                         <ResourceFilterTab id="all" label={tr('filters.all')} icon={LayoutGrid} active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} />
                         <ResourceFilterTab id="upload" label={tr('filters.uploads')} icon={FolderUp} active={filterCategory === 'upload'} onClick={() => setFilterCategory('upload')} />
                         <ResourceFilterTab id="ai" label={tr('filters.ai')} icon={Sparkles} active={filterCategory === 'ai'} onClick={() => setFilterCategory('ai')} />
@@ -881,7 +892,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
             {/* Grid Content */}
             <div 
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto bg-[var(--bg-panel-subtle)] p-1 custom-scrollbar"
+                className="flex-1 overflow-y-auto p-1 custom-scrollbar bg-[#050505]"
             >
                 {filteredAssets.length === 0 && !loading ? (
                     <ResourceEmptyState filterCategory={filterCategory} isEffectTab={isEffectTab || isTextTab} onImport={handleImport} />
@@ -893,7 +904,7 @@ const AssetCategoryView: React.FC<AssetCategoryViewProps> = ({ category, viewMod
                     <div className="flex justify-center py-4">
                         <button 
                             onClick={() => loadAssets(page + 1)}
-                            className="app-header-action rounded-full px-3 py-1.5 text-xs"
+                            className="text-xs text-gray-600 hover:text-white transition-colors"
                         >
                             {tr('actions.loadMore')}
                         </button>

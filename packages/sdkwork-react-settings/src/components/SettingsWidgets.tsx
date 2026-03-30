@@ -14,7 +14,7 @@ interface BaseProps {
     error?: string | null;
     className?: string;
     /** Controls layout direction. Default is 'horizontal' */
-    layout?: 'horizontal' | 'vertical';
+    layout?: 'horizontal' | 'vertical'; 
     /** If true, the control fills the available width */
     fullWidth?: boolean;
     /** Custom class for the label */
@@ -24,7 +24,7 @@ interface BaseProps {
 // --- Section Wrapper ---
 export const SettingsSection: React.FC<{ title: React.ReactNode; children: React.ReactNode; className?: string }> = ({ title, children, className }) => (
     <div className={`mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300 ${className || ''}`}>
-        <h3 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3 select-none flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+        <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 select-none flex items-center justify-between border-b border-gray-100 dark:border-[#2d2d2d] pb-2">
             {title}
         </h3>
         <div className="space-y-3">
@@ -34,8 +34,8 @@ export const SettingsSection: React.FC<{ title: React.ReactNode; children: React
 );
 
 // --- Row Wrapper ---
-const SettingRow: React.FC<BaseProps & { children: React.ReactNode }> = ({
-    label, description, children, disabled, isModified, onReset, error, layout = 'horizontal', fullWidth, labelClassName
+const SettingRow: React.FC<BaseProps & { children: React.ReactNode }> = ({ 
+    label, description, children, disabled, isModified, onReset, error, layout = 'horizontal', fullWidth, labelClassName 
 }) => {
     const isVertical = layout === 'vertical' || fullWidth;
 
@@ -48,27 +48,27 @@ const SettingRow: React.FC<BaseProps & { children: React.ReactNode }> = ({
             {/* Modified Indicator */}
             <div className={`
                 absolute -left-2 top-2 bottom-2 w-[3px] rounded-r transition-opacity duration-300
-                ${isModified ? 'bg-primary-500 opacity-100' : 'bg-transparent opacity-0'}
+                ${isModified ? 'bg-blue-500 opacity-100' : 'bg-transparent opacity-0'}
             `} title="Modified from default" />
 
             {/* Label Section */}
             {label && (
                 <div className={`flex-1 min-w-0 ${isVertical ? 'w-full' : 'max-w-[40%] pt-2'}`}>
-                    <label className={labelClassName || `block text-sm font-medium leading-none ${error ? 'text-[var(--status-danger-fg)]' : 'text-[var(--text-primary)]'}`}>
+                    <label className={labelClassName || `block text-sm font-medium leading-none ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>
                         {label}
                     </label>
-                    {description && <div className="mt-1.5 text-xs text-[var(--text-muted)] leading-relaxed text-balance">{description}</div>}
-
+                    {description && <div className="mt-1.5 text-xs text-gray-500 leading-relaxed text-balance">{description}</div>}
+                    
                     {/* Error Message */}
                     {error && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--status-danger-fg)] font-medium animate-in slide-in-from-left-1">
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 font-medium animate-in slide-in-from-left-1">
                             <AlertCircle size={12} />
                             {error}
                         </div>
                     )}
                 </div>
             )}
-
+            
             {/* Control Section */}
             <div className={`
                 flex items-center gap-2
@@ -77,17 +77,17 @@ const SettingRow: React.FC<BaseProps & { children: React.ReactNode }> = ({
                 <div className={`relative ${fullWidth || isVertical ? 'w-full' : 'w-auto min-w-[200px]'}`}>
                     {children}
                 </div>
-
+                
                 {/* Reset Button (Only show if not full width/vertical layout to avoid layout shifts, or handle differently) */}
                 {!fullWidth && (
                     <div className="w-6 h-6 flex items-center justify-center flex-none">
-                        <button
+                        <button 
                             onClick={onReset}
                             disabled={!isModified}
                             className={`
-                                transition-all p-1 rounded hover:bg-[color-mix(in_srgb,var(--text-primary)_8%,transparent)]
-                                ${isModified
-                                    ? 'text-[var(--text-muted)] hover:text-primary-500 opacity-100'
+                                transition-all p-1 rounded hover:bg-gray-200 dark:hover:bg-[#333]
+                                ${isModified 
+                                    ? 'text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 opacity-100' 
                                     : 'opacity-0 pointer-events-none'
                                 }
                             `}
@@ -116,8 +116,8 @@ export const SettingToggle: React.FC<ToggleProps> = (props) => (
                 role="switch"
                 aria-checked={props.checked}
                 className={`
-                    relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]
-                    ${props.checked ? 'bg-primary-600' : 'bg-[var(--border-strong)] hover:bg-[color-mix(in_srgb,var(--text-muted)_55%,var(--bg-panel-strong))]'}
+                    relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e1e1e]
+                    ${props.checked ? 'bg-blue-600' : 'bg-gray-300 dark:bg-[#3f3f46] hover:bg-gray-400 dark:hover:bg-[#4a4a52]'}
                 `}
             >
                 <span className="sr-only">Use setting</span>
@@ -145,15 +145,15 @@ export const SettingSelect: React.FC<SelectProps> = (props) => (
                 value={props.value}
                 onChange={(e) => props.onChange(e.target.value)}
                 className={`
-                    w-full appearance-none cursor-pointer bg-[var(--bg-panel-strong)] border hover:border-[var(--border-strong)] text-sm text-[var(--text-primary)] rounded-lg px-3 py-2 pr-9 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all shadow-sm h-9
-                    ${props.error ? 'border-[var(--status-danger-fg)] focus:border-[var(--status-danger-fg)] focus:ring-[var(--status-danger-fg)]/20' : 'border-[var(--border-color)]'}
+                    w-full appearance-none cursor-pointer bg-gray-50 dark:bg-[#252526] border hover:border-gray-400 dark:hover:border-[#52525b] text-sm text-gray-900 dark:text-gray-200 rounded-lg px-3 py-2 pr-9 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all shadow-sm h-9
+                    ${props.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-[#333]'}
                 `}
             >
                 {props.options.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
             </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-hover/select:text-[var(--text-secondary)] transition-colors pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover/select:text-gray-600 dark:group-hover/select:text-gray-300 transition-colors pointer-events-none" />
         </div>
     </SettingRow>
 );
@@ -171,7 +171,7 @@ export const SettingInput: React.FC<InputProps> = (props) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = props.type === 'password';
-
+    
     // Auto-detect layout: if placeholder is long or it's a key, prefer full width
     const effectiveLayout = props.layout || (props.fontMono || isPassword ? 'vertical' : 'horizontal');
     const effectiveFullWidth = props.fullWidth ?? (effectiveLayout === 'vertical');
@@ -187,17 +187,17 @@ export const SettingInput: React.FC<InputProps> = (props) => {
                     onChange={(e) => props.onChange(e.target.value)}
                     placeholder={props.placeholder}
                     className={`
-                        w-full bg-[var(--bg-panel-strong)] border hover:border-[var(--border-strong)] text-sm text-[var(--text-primary)] rounded-lg px-3 py-2 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all placeholder:text-[var(--text-muted)] shadow-sm h-9
+                        w-full bg-gray-50 dark:bg-[#252526] border hover:border-gray-400 dark:hover:border-[#52525b] text-sm text-gray-900 dark:text-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-gray-400 dark:placeholder-gray-600 shadow-sm h-9
                         ${props.fontMono ? 'font-mono text-[13px]' : ''}
-                        ${props.error ? 'border-[var(--status-danger-fg)] focus:border-[var(--status-danger-fg)] focus:ring-[var(--status-danger-fg)]/20' : 'border-[var(--border-color)]'}
+                        ${props.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-[#333]'}
                         ${isPassword ? 'pr-9' : ''}
                     `}
                 />
-
+                
                 {isPassword && (
-                     <button
+                     <button 
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                         tabIndex={-1}
                     >
                         {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -205,9 +205,9 @@ export const SettingInput: React.FC<InputProps> = (props) => {
                 )}
 
                 {!isPassword && props.value && (
-                    <button
+                    <button 
                         onClick={() => { props.onChange(''); inputRef.current?.focus(); }}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-0 group-hover/input:opacity-100 transition-opacity"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 opacity-0 group-hover/input:opacity-100 transition-opacity"
                         tabIndex={-1}
                     >
                         <X size={12} />
@@ -229,15 +229,15 @@ interface TextAreaProps extends BaseProps {
 export const SettingTextArea: React.FC<TextAreaProps> = (props) => {
     return (
         <SettingRow {...props} layout="vertical" fullWidth>
-             <textarea
+             <textarea 
                 value={props.value}
                 onChange={(e) => props.onChange(e.target.value)}
                 rows={props.rows || 3}
                 placeholder={props.placeholder}
                 className={`
-                    w-full bg-[var(--bg-panel-strong)] border border-[var(--border-color)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all placeholder:text-[var(--text-muted)] shadow-sm resize-y text-[var(--text-primary)]
+                    w-full bg-gray-50 dark:bg-[#252526] border border-gray-200 dark:border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-gray-400 dark:placeholder-gray-600 shadow-sm resize-y text-gray-900 dark:text-gray-200
                     ${props.fontMono ? 'font-mono text-xs leading-relaxed' : ''}
-                    ${props.error ? 'border-[var(--status-danger-fg)]' : 'hover:border-[var(--border-strong)]'}
+                    ${props.error ? 'border-red-500' : 'hover:border-gray-400 dark:hover:border-[#52525b]'}
                 `}
             />
         </SettingRow>
@@ -290,23 +290,23 @@ export const SettingPathInput: React.FC<PathInputProps> = (props) => {
                         readOnly={isDesktop}
                         placeholder={props.placeholder}
                         className={`
-                            w-full bg-[var(--bg-panel-strong)] border text-sm text-[var(--text-primary)] rounded-l-lg px-3 py-2 h-9
-                            focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors
-                            placeholder:text-[var(--text-muted)] truncate font-mono shadow-sm
-                            ${props.error ? 'border-[var(--status-danger-fg)]' : 'border-[var(--border-color)] hover:border-[var(--border-strong)]'}
+                            w-full bg-gray-50 dark:bg-[#252526] border text-sm text-gray-900 dark:text-gray-200 rounded-l-lg px-3 py-2 h-9
+                            focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors 
+                            placeholder-gray-400 dark:placeholder-gray-600 truncate font-mono shadow-sm
+                            ${props.error ? 'border-red-500' : 'border-gray-200 dark:border-[#333] hover:border-gray-400 dark:hover:border-[#52525b]'}
                             ${isDesktop ? 'cursor-default' : ''}
                         `}
                         title={props.value}
                     />
-
+                    
                     {/* Inner Actions */}
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/input:opacity-100 transition-opacity bg-[var(--bg-panel-strong)] pl-1">
-                        <button
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/input:opacity-100 transition-opacity bg-gray-50 dark:bg-[#252526] pl-1">
+                        <button 
                             onClick={handleCopy}
-                        className="p-1 text-[var(--text-muted)] hover:text-primary-500 transition-colors rounded"
+                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors rounded"
                             title={isCopied ? t('common.actions.copied') : t('common.actions.copy')}
                         >
-                            {isCopied ? <Check size={12} className="text-[var(--status-success-fg)]" /> : <Copy size={12} />}
+                            {isCopied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                         </button>
                     </div>
                 </div>
@@ -314,7 +314,7 @@ export const SettingPathInput: React.FC<PathInputProps> = (props) => {
                 {isDesktop && (
                     <button
                         onClick={handleBrowse}
-                        className="flex-none flex items-center justify-center px-4 h-9 bg-[var(--bg-panel-subtle)] border-y border-r border-[var(--border-color)] rounded-r-lg hover:bg-[color-mix(in_srgb,var(--text-primary)_8%,transparent)] text-[var(--text-secondary)] transition-colors shadow-sm z-10"
+                        className="flex-none flex items-center justify-center px-4 h-9 bg-gray-100 dark:bg-[#2d2d2d] border-y border-r border-gray-200 dark:border-[#333] rounded-r-lg hover:bg-gray-200 dark:hover:bg-[#3f3f46] text-gray-600 dark:text-gray-300 transition-colors shadow-sm z-10"
                         title={t('common.actions.browse')}
                     >
                         {props.type === 'folder' ? <FolderOpen size={14} /> : <File size={14} />}
@@ -336,7 +336,7 @@ interface SliderProps extends BaseProps {
 }
 export const SettingSlider: React.FC<SliderProps> = (props) => {
     const [isDragging, setIsDragging] = useState(false);
-
+    
     return (
         <SettingRow {...props}>
             <div className="flex items-center gap-4 w-full">
@@ -352,24 +352,23 @@ export const SettingSlider: React.FC<SliderProps> = (props) => {
                         onTouchEnd={() => setIsDragging(false)}
                         onChange={(e) => props.onChange(Number(e.target.value))}
                         className={`
-                            w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
-                            bg-[color-mix(in_srgb,var(--text-primary)_10%,transparent)]
+                            w-full h-1.5 bg-gray-200 dark:bg-[#3f3f46] rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
                             ${props.error ? 'accent-red-500' : ''}
                         `}
                     />
                     {/* Tooltip on Drag */}
                     {isDragging && (
-                        <div className="absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-xl border border-[var(--border-color)] bg-[var(--text-primary)] px-2 py-1 text-[10px] text-[var(--bg-panel-strong)] shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded shadow-xl animate-in fade-in zoom-in-95 duration-100 whitespace-nowrap z-10">
                             {props.value}{props.unit}
-                            <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-r border-b border-[var(--border-color)] bg-[var(--text-primary)]" />
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
                         </div>
                     )}
                 </div>
                 <div className={`
                     text-xs font-mono px-2.5 py-1.5 rounded border min-w-[60px] text-center transition-colors
-                    ${props.error
-                        ? 'bg-[color-mix(in_srgb,var(--status-danger-fg)_10%,transparent)] text-[var(--status-danger-fg)] border-[color-mix(in_srgb,var(--status-danger-fg)_24%,transparent)]'
-                        : 'bg-[var(--bg-panel-strong)] text-[var(--text-primary)] border-[var(--border-color)]'
+                    ${props.error 
+                        ? 'bg-red-500/10 text-red-500 border-red-500/30' 
+                        : 'bg-white dark:bg-[#252526] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#333]'
                     }
                 `}>
                     {props.value}{props.unit}

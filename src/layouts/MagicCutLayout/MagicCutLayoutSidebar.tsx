@@ -25,15 +25,18 @@ export const MagicCutLayoutSidebar: React.FC<SidebarProps> = ({ onSelectTab, act
     ];
 
     return (
-        <div className="app-sidebar-rail w-16 h-full flex flex-col items-center py-4 select-none z-20">
+        <div className="w-16 h-full bg-[#050505] border-r border-[#1a1a1a] flex flex-col items-center py-4 select-none z-20">
             <div className="flex flex-col w-full gap-2 px-2">
                 {TABS.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => onSelectTab(tab.id)}
-                        data-active={activeTab === tab.id}
                         className={`
-                            app-sidebar-item flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl transition-all
+                            flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl transition-all
+                            ${activeTab === tab.id 
+                                ? 'bg-[#1e1e20] text-red-500 shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c]'
+                            }
                         `}
                     >
                         <tab.icon size={20} strokeWidth={1.5} />
@@ -43,11 +46,11 @@ export const MagicCutLayoutSidebar: React.FC<SidebarProps> = ({ onSelectTab, act
             </div>
 
             <div className="mt-auto flex flex-col gap-2 w-full px-2">
-                 <button className="app-sidebar-item flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl transition-all">
+                 <button className="flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] transition-all">
                     <Import size={20} strokeWidth={1.5} />
                     <span className="text-[9px] font-medium">{t('magicCut.resources.import')}</span>
                 </button>
-                 <button className="app-sidebar-item flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl transition-all">
+                 <button className="flex flex-col items-center justify-center gap-1 w-full aspect-square rounded-xl text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c] transition-all">
                     <Settings size={20} strokeWidth={1.5} />
                     <span className="text-[9px] font-medium">{t('sidebar.settings')}</span>
                 </button>

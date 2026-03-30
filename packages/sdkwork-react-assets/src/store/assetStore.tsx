@@ -8,11 +8,7 @@ import React, {
   useState,
   type ReactNode
 } from 'react';
-import {
-  hasAppSdkAuthSession,
-  isAppSdkAuthorizationError,
-  uploadHelper,
-} from '@sdkwork/react-core';
+import { uploadHelper } from '@sdkwork/react-core';
 import type { Page } from '@sdkwork/react-commons';
 import type { AssetBusinessDomain } from '@sdkwork/react-types';
 import type { Asset, AssetType, AssetOrigin } from '../entities';
@@ -34,7 +30,6 @@ interface AssetStoreContextType {
   loadedAssets: Asset[];
   pageData: Page<Asset> | null;
   isLoading: boolean;
-  requiresAuthentication: boolean;
   originCounts: Record<AssetOrigin | 'all', number>;
   typeCounts: Partial<Record<AssetType | 'all', number>>;
   
@@ -102,7 +97,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
   const [assets, setAssets] = useState<Asset[]>([]);
   const [pageData, setPageData] = useState<Page<Asset> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [requiresAuthentication, setRequiresAuthentication] = useState(false);
 
   // Filter State
   const [filterType, setFilterType] = useState<AssetType | 'all'>('all');
@@ -163,15 +157,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         return;
       }
 
-      if (!hasAppSdkAuthSession()) {
-        const emptyPage = createEmptyPage(normalized.page, normalized.size, normalized.sort);
-        setRequiresAuthentication(true);
-        setPageData(emptyPage);
-        setAssets([]);
-        return;
-      }
-      setRequiresAuthentication(false);
-
       if (initialAllowedTypes && initialAllowedTypes.length > 0 && (!allowedTypes || allowedTypes.length === 0)) {
         const emptyPage = createEmptyPage(normalized.page, normalized.size, normalized.sort);
         setPageData(emptyPage);
@@ -197,19 +182,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
         setAssets((prev) => [...prev, ...content]);
       }
     } catch (e) {
-      if (isAppSdkAuthorizationError(e)) {
-        const normalized = normalizeSpringPageRequest({
-          page,
-          size: ASSET_PAGE_SIZE,
-          keyword: searchQuery,
-          sort: ['updatedAt,desc']
-        });
-        const emptyPage = createEmptyPage(normalized.page, normalized.size, normalized.sort);
-        setRequiresAuthentication(true);
-        setPageData(emptyPage);
-        setAssets([]);
-        return;
-      }
       console.error('Failed to load assets from unified asset-center', e);
     } finally {
       if (requestId === requestSequenceRef.current) {
@@ -250,11 +222,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
 
   const importAssets = async () => {
     try {
-      if (!hasAppSdkAuthSession()) {
-        setRequiresAuthentication(true);
-        return;
-      }
-
       const effectiveTypes = allowedTypes && allowedTypes.length > 0
         ? allowedTypes
         : resolveDomainAssetTypes(domain);
@@ -285,10 +252,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
       }
       await load(0);
     } catch (e) {
-      if (isAppSdkAuthorizationError(e)) {
-        setRequiresAuthentication(true);
-        return;
-      }
       console.error(e);
       alert('Import failed');
     } finally {
@@ -305,10 +268,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
       }
       await load(0);
     } catch (e) {
-      if (isAppSdkAuthorizationError(e)) {
-        setRequiresAuthentication(true);
-        return;
-      }
       console.error(e);
     }
   };
@@ -318,10 +277,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
       await assetBusinessService.renameAssetBySdk(asset.id, newName);
       await refresh();
     } catch (e) {
-      if (isAppSdkAuthorizationError(e)) {
-        setRequiresAuthentication(true);
-        return;
-      }
       console.error(e);
     }
   };
@@ -397,7 +352,6 @@ export const AssetStoreProvider: React.FC<AssetStoreProviderProps> = ({
       loadedAssets: assets,
       pageData,
       isLoading,
-      requiresAuthentication,
       originCounts,
       typeCounts,
       filterType,

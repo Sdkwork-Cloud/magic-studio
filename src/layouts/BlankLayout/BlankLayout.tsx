@@ -8,13 +8,13 @@ export interface BlankLayoutProps {
 
 export const BlankLayout: React.FC<BlankLayoutProps> = ({ children, leftPane: LeftPane }) => {
   return (
-    <div className="w-full h-full min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] relative flex">
+    <div className="w-full h-full min-h-screen bg-[#111] text-white relative flex">
       {LeftPane && (
-          <div className="w-80 border-r border-[var(--border-color)] overflow-hidden bg-[var(--bg-panel-subtle)]">
+          <div className="w-80 border-r border-white/10 overflow-hidden">
               <LeftPane />
           </div>
       )}
-      <div className="app-shell-main flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         {children}
       </div>
     </div>

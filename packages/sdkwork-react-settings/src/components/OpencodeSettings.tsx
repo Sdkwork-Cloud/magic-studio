@@ -33,13 +33,13 @@ const OpencodeSettings: React.FC = () => {
         <div className="flex flex-col h-full w-full max-w-4xl mx-auto animate-in fade-in slide-in-from-right-2 duration-300 p-6">
             
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+            <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200 dark:border-[#333]">
                 <div>
-                     <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--text-primary)]">
-                        <Terminal size={28} className="text-primary-500" />
+                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        <Terminal size={28} className="text-blue-500" />
                         {t('settings.opencode.title')}
                     </h2>
-                    <p className="mt-1 max-w-xl text-sm text-[var(--text-muted)]">
+                    <p className="text-sm text-gray-500 mt-1 max-w-xl">
                         {t('settings.opencode.subtitle')}
                     </p>
                 </div>
@@ -117,7 +117,7 @@ const OpencodeSettings: React.FC = () => {
                         />
                     </div>
                     
-                    <div className="mt-4 rounded-2xl border border-primary-500/20 bg-[color-mix(in_srgb,var(--theme-primary-500)_8%,var(--bg-panel-strong))] p-4">
+                    <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 rounded-xl">
                         <SettingToggle 
                             label={t('settings.opencode.confirm_unsafe.label')}
                             description={t('settings.opencode.confirm_unsafe.desc')}

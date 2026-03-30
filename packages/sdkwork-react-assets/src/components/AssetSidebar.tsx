@@ -175,8 +175,8 @@ export const AssetSidebar: React.FC<AssetSidebarProps> = ({
   }, [allowedTypes, loadedAssets, quickPresets]);
 
   return (
-    <aside className="h-full min-h-0 w-full select-none overflow-hidden p-3" style={FRAMEWORK_STYLE}>
-      <div className="app-ghost-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden pr-1">
+    <aside className="h-full w-[272px] select-none p-3" style={FRAMEWORK_STYLE}>
+      <div className="flex h-full min-h-0 flex-col gap-3">
         <section className="rounded-[var(--sdk-radius-md)] border border-[var(--sdk-border)] bg-[var(--sdk-surface)] p-3">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -323,6 +323,7 @@ export const AssetSidebar: React.FC<AssetSidebarProps> = ({
           <section
             className={[
               'rounded-[var(--sdk-radius-md)] border border-[var(--sdk-border)] bg-[var(--sdk-surface)] p-2',
+              sections.type ? 'min-h-0 flex-1' : ''
             ].join(' ')}
           >
             <SectionHeader
@@ -332,64 +333,66 @@ export const AssetSidebar: React.FC<AssetSidebarProps> = ({
             />
             {sections.type && (
               <>
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setFilterType('all')}
-                    className={[
-                      'flex w-full items-center justify-between rounded-[var(--sdk-radius-sm)] border px-2.5 py-2 transition-colors',
-                      filterType === 'all'
-                        ? 'border-[var(--sdk-primary)] bg-[color-mix(in_srgb,var(--sdk-primary)_14%,var(--sdk-surface))]'
-                        : 'border-[var(--sdk-border)] bg-[var(--sdk-surface-muted)] hover:border-[var(--sdk-border-strong)] hover:bg-[var(--sdk-surface-elevated)]'
-                    ].join(' ')}
-                  >
-                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--sdk-text-secondary)]">
-                      <LayoutGrid size={16} />
-                      {allTypesLabel}
-                    </span>
-                    <div className="inline-flex items-center gap-1.5">
-                      {filterType === 'all' && <Check size={13} className="text-[var(--sdk-primary)]" />}
-                      <span className="rounded-full border border-[var(--sdk-border)] bg-[var(--sdk-surface)] px-1.5 py-0.5 text-[10px] text-[var(--sdk-text-muted)]">
-                        {typeCounts.all || 0}
+                <div className="h-full min-h-0 overflow-y-auto pr-1">
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setFilterType('all')}
+                      className={[
+                        'flex w-full items-center justify-between rounded-[var(--sdk-radius-sm)] border px-2.5 py-2 transition-colors',
+                        filterType === 'all'
+                          ? 'border-[var(--sdk-primary)] bg-[color-mix(in_srgb,var(--sdk-primary)_14%,var(--sdk-surface))]'
+                          : 'border-[var(--sdk-border)] bg-[var(--sdk-surface-muted)] hover:border-[var(--sdk-border-strong)] hover:bg-[var(--sdk-surface-elevated)]'
+                      ].join(' ')}
+                    >
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--sdk-text-secondary)]">
+                        <LayoutGrid size={16} />
+                        {allTypesLabel}
                       </span>
-                    </div>
-                  </button>
-
-                  {typeItems.map((item) => {
-                    const active = filterType === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setFilterType(item.id)}
-                        className={[
-                          'flex w-full items-center justify-between rounded-[var(--sdk-radius-sm)] border px-2.5 py-2 transition-colors',
-                          active
-                            ? 'border-[var(--sdk-primary)] bg-[color-mix(in_srgb,var(--sdk-primary)_14%,var(--sdk-surface))]'
-                            : 'border-[var(--sdk-border)] bg-[var(--sdk-surface-muted)] hover:border-[var(--sdk-border-strong)] hover:bg-[var(--sdk-surface-elevated)]'
-                        ].join(' ')}
-                      >
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--sdk-text-secondary)]">
-                          <span
-                            className={
-                              active
-                                ? 'text-[var(--sdk-primary)]'
-                                : 'text-[var(--sdk-text-muted)]'
-                            }
-                          >
-                            <item.Icon size={16} />
-                          </span>
-                          {item.label}
+                      <div className="inline-flex items-center gap-1.5">
+                        {filterType === 'all' && <Check size={13} className="text-[var(--sdk-primary)]" />}
+                        <span className="rounded-full border border-[var(--sdk-border)] bg-[var(--sdk-surface)] px-1.5 py-0.5 text-[10px] text-[var(--sdk-text-muted)]">
+                          {typeCounts.all || 0}
                         </span>
-                        <div className="inline-flex items-center gap-1.5">
-                          {active && <Check size={13} className="text-[var(--sdk-primary)]" />}
-                          <span className="rounded-full border border-[var(--sdk-border)] bg-[var(--sdk-surface)] px-1.5 py-0.5 text-[10px] text-[var(--sdk-text-muted)]">
-                            {typeCounts[item.id] || 0}
+                      </div>
+                    </button>
+
+                    {typeItems.map((item) => {
+                      const active = filterType === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setFilterType(item.id)}
+                          className={[
+                            'flex w-full items-center justify-between rounded-[var(--sdk-radius-sm)] border px-2.5 py-2 transition-colors',
+                            active
+                              ? 'border-[var(--sdk-primary)] bg-[color-mix(in_srgb,var(--sdk-primary)_14%,var(--sdk-surface))]'
+                              : 'border-[var(--sdk-border)] bg-[var(--sdk-surface-muted)] hover:border-[var(--sdk-border-strong)] hover:bg-[var(--sdk-surface-elevated)]'
+                          ].join(' ')}
+                        >
+                          <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--sdk-text-secondary)]">
+                            <span
+                              className={
+                                active
+                                  ? 'text-[var(--sdk-primary)]'
+                                  : 'text-[var(--sdk-text-muted)]'
+                              }
+                            >
+                              <item.Icon size={16} />
+                            </span>
+                            {item.label}
                           </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <div className="inline-flex items-center gap-1.5">
+                            {active && <Check size={13} className="text-[var(--sdk-primary)]" />}
+                            <span className="rounded-full border border-[var(--sdk-border)] bg-[var(--sdk-surface)] px-1.5 py-0.5 text-[10px] text-[var(--sdk-text-muted)]">
+                              {typeCounts[item.id] || 0}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 {typeItems.length === 0 && (
                   <p className="px-1 pt-2 text-[11px] text-[var(--sdk-text-muted)]">

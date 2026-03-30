@@ -100,7 +100,7 @@ const VUMeter: React.FC = () => {
     }, [isPlaying]);
 
     return (
-        <div className="app-toolbar-group ml-2 h-2 w-20 overflow-hidden rounded-full">
+        <div className="w-20 h-2 bg-[#121212] rounded overflow-hidden border border-[#333] ml-2">
             <canvas ref={canvasRef} width={80} height={8} className="block" />
         </div>
     );
@@ -153,33 +153,33 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
     const hasRange = inPoint !== null || outPoint !== null;
 
     return (
-        <div className="app-toolbar-strip flex h-12 flex-none items-center justify-between border-t px-4 relative select-none z-30">
+        <div className="h-12 bg-[#050505] border-t border-white/5 flex items-center justify-between px-4 z-30 flex-none relative select-none">
             {/* Left: Timecode */}
-            <div className="flex w-1/3 items-center gap-4">
-                <div className="app-toolbar-group flex items-center gap-2 rounded-xl px-2.5 py-1 font-mono text-primary-500 shadow-inner">
+            <div className="flex items-center gap-4 w-1/3">
+                <div className="flex items-center gap-2 px-2 py-1 bg-[#121212] border border-[#27272a] rounded-md font-mono shadow-inner text-blue-400">
                     <span ref={handleTimeRef} className="text-xs font-bold tracking-widest">
                         00:00.00
                     </span>
                 </div>
-                <div className="font-mono text-[10px] text-[var(--text-muted)]">
+                <div className="text-[10px] text-gray-600 font-mono">
                     / {formatTimecode(duration)}
                 </div>
                 {hasRange && (
-                    <div className="app-toolbar-group hidden xl:flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] font-mono text-primary-500">
+                    <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-md border border-blue-500/20 bg-blue-500/5 text-[10px] font-mono text-blue-200">
                         <button
                             onClick={onJumpToInPoint}
                             disabled={disabled || inPoint === null}
-                            className={`app-toolbar-button flex items-center gap-1 rounded-lg px-1.5 py-0.5 ${inPoint === null ? '' : ''}`}
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${inPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
                             title={tp('controls.jumpToInPoint')}
                         >
                             <ArrowLeftToLine size={10} />
                             <span>{inPoint === null ? '--:--.--' : formatTimecode(inPoint)}</span>
                         </button>
-                        <div className="app-toolbar-divider h-3 w-px" />
+                        <div className="w-px h-3 bg-white/10" />
                         <button
                             onClick={onJumpToOutPoint}
                             disabled={disabled || outPoint === null}
-                            className="app-toolbar-button flex items-center gap-1 rounded-lg px-1.5 py-0.5"
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${outPoint === null ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
                             title={tp('controls.jumpToOutPoint')}
                         >
                             <ArrowRightToLine size={10} />
@@ -190,11 +190,11 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             </div>
 
             {/* Center: Transport & Meter */}
-            <div className="flex w-1/3 items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3 w-1/3">
                 <button 
                     onClick={() => onSeek(0)} 
                     disabled={disabled}
-                    className="app-toolbar-button rounded-xl p-1.5"
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title={tp('controls.jumpToStart')}
                 >
                     <SkipBack size={16} fill="currentColor" />
@@ -202,7 +202,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <button
                     onClick={onStepBackward}
                     disabled={disabled}
-                    className="app-toolbar-button rounded-xl p-1.5"
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title={tp('controls.stepBackFrame')}
                 >
                     <ChevronLeft size={16} />
@@ -210,7 +210,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <button 
                     onClick={onTogglePlay} 
                     disabled={disabled}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-[var(--bg-panel-strong)] shadow-lg transition-transform active:scale-95 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:scale-105 hover:bg-primary-600 hover:text-white'}`}
+                    className={`w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-white/10 active:scale-95 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     title={isPlaying ? tp('pause') : tp('play')}
                 >
                     {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
@@ -218,7 +218,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <button
                     onClick={onStepForward}
                     disabled={disabled}
-                    className="app-toolbar-button rounded-xl p-1.5"
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title={tp('controls.stepForwardFrame')}
                 >
                     <ChevronRight size={16} />
@@ -226,18 +226,18 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <button 
                     onClick={() => onSeek(duration)} 
                     disabled={disabled}
-                    className="app-toolbar-button rounded-xl p-1.5"
+                    className={`text-gray-500 hover:text-white transition-colors p-1.5 hover:bg-[#27272a] rounded-md ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title={tp('controls.jumpToEnd')}
                 >
                     <SkipForward size={16} fill="currentColor" />
                 </button>
                 
-                <div className="app-toolbar-divider mx-1 h-4 w-px" />
+                <div className="w-px h-4 bg-[#27272a] mx-1" />
                 
                 <button 
                     onClick={toggleLoop} 
                     disabled={disabled}
-                    className={`app-toolbar-button rounded-xl p-1.5 ${isLooping ? 'bg-[color-mix(in_srgb,var(--theme-primary-500)_10%,transparent)] text-primary-500' : ''}`}
+                    className={`p-1.5 rounded-md transition-colors ${isLooping ? 'text-blue-400 bg-blue-500/10' : 'text-gray-500 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title={tp('controls.toggleLoopPlayback')}
                 >
                     <Repeat size={14} />
@@ -248,12 +248,12 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             </div>
             
             {/* Right: View Controls */}
-            <div className="flex w-1/3 items-center justify-end gap-3">
-                <div className="app-toolbar-group hidden items-center gap-1 rounded-xl p-0.5 lg:flex">
+            <div className="flex items-center justify-end gap-3 w-1/3">
+                <div className="hidden lg:flex items-center gap-1 rounded-lg border border-[#27272a] bg-[#121212] p-0.5">
                     <button
                         onClick={onSetInPoint}
                         disabled={disabled}
-                        className={`app-toolbar-button rounded-lg px-2 py-1 text-[10px] font-bold ${inPoint !== null ? 'bg-[color-mix(in_srgb,var(--theme-primary-500)_10%,transparent)] text-primary-500' : ''}`}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${inPoint !== null ? 'bg-blue-500/15 text-blue-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                         title={tp('controls.setInPoint')}
                     >
                         I
@@ -261,7 +261,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     <button
                         onClick={onSetOutPoint}
                         disabled={disabled}
-                        className={`app-toolbar-button rounded-lg px-2 py-1 text-[10px] font-bold ${outPoint !== null ? 'bg-[color-mix(in_srgb,var(--status-warning-fg)_10%,transparent)] text-[var(--status-warning-fg)]' : ''}`}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${outPoint !== null ? 'bg-orange-500/15 text-orange-300' : 'text-gray-400 hover:text-white hover:bg-[#27272a]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                         title={tp('controls.setOutPoint')}
                     >
                         O
@@ -269,40 +269,40 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     <button
                         onClick={onClearRange}
                         disabled={disabled || !hasRange}
-                        className={`app-toolbar-button rounded-lg p-1.5 ${hasRange ? '' : ''}`}
+                        className={`p-1.5 rounded-md transition-colors ${hasRange ? 'text-gray-300 hover:text-white hover:bg-[#27272a]' : 'text-gray-600'} ${disabled || !hasRange ? 'opacity-30 cursor-not-allowed' : ''}`}
                         title={tp('controls.clearInOutPoints')}
                     >
                         <X size={12} />
                     </button>
                 </div>
                 <div className="relative" ref={ratioMenuRef}>
-                    <button onClick={() => setShowRatioMenu(!showRatioMenu)} className="app-toolbar-button flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-[10px] font-bold uppercase">
+                    <button onClick={() => setShowRatioMenu(!showRatioMenu)} className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5 rounded hover:bg-[#27272a] uppercase border border-transparent hover:border-[#333]">
                         <Ratio size={14} />
                         <span>{aspectRatio}</span>
                     </button>
                     {showRatioMenu && (
-                        <div className="app-floating-panel absolute bottom-full right-0 z-50 mb-2 flex w-44 flex-col overflow-hidden rounded-2xl py-1 animate-in fade-in zoom-in-95 duration-100">
-                            <div className="app-surface-subtle px-3 py-1.5 text-[9px] font-bold uppercase text-[var(--text-muted)]">{tp('controls.settings')}</div>
+                        <div className="absolute bottom-full right-0 mb-2 w-44 bg-[#18181b] border border-[#333] rounded-lg shadow-xl py-1 z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                            <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase bg-[#222]">{tp('controls.settings')}</div>
                             {['16:9', '9:16', '1:1', '21:9', '4:3'].map(r => (
-                                <button key={r} onClick={() => { onRatioChange(r); setShowRatioMenu(false); }} className="app-toolbar-button mx-1 rounded-xl px-3 py-2 text-left text-xs">{r}</button>
+                                <button key={r} onClick={() => { onRatioChange(r); setShowRatioMenu(false); }} className="px-3 py-2 text-xs text-left hover:bg-[#27272a] text-gray-300 hover:text-white">{r}</button>
                             ))}
                         </div>
                     )}
                 </div>
-                <div className="app-toolbar-divider h-4 w-px" />
-                <div className="app-toolbar-group flex items-center rounded-xl p-0.5">
-                    <button onClick={() => onViewScaleChange(Math.max(0.1, viewScale - 0.1))} className="app-toolbar-button rounded-lg p-1">
+                <div className="w-px h-4 bg-[#27272a]" />
+                <div className="flex items-center bg-[#121212] rounded-lg p-0.5 border border-[#27272a]">
+                    <button onClick={() => onViewScaleChange(Math.max(0.1, viewScale - 0.1))} className="p-1 hover:bg-[#27272a] rounded text-gray-400 hover:text-white transition-colors">
                         <ZoomOut size={12} />
                     </button>
-                    <button onClick={() => onViewScaleChange(1.0)} className={`app-toolbar-button min-w-[36px] px-2 text-center font-mono text-[10px] ${viewScale === 1.0 ? 'font-bold text-primary-500' : ''}`}>
+                    <button onClick={() => onViewScaleChange(1.0)} className={`px-2 text-[10px] font-mono min-w-[36px] text-center transition-colors cursor-pointer ${viewScale === 1.0 ? 'text-blue-400 font-bold' : 'text-gray-400 hover:text-white'}`}>
                         {viewScale === 1.0 ? tp('controls.fit') : `${Math.round(viewScale * 100)}%`}
                     </button>
-                    <button onClick={() => onViewScaleChange(Math.min(5, viewScale + 0.1))} className="app-toolbar-button rounded-lg p-1">
+                    <button onClick={() => onViewScaleChange(Math.min(5, viewScale + 0.1))} className="p-1 hover:bg-[#27272a] rounded text-gray-400 hover:text-white transition-colors">
                         <ZoomIn size={12} />
                     </button>
                 </div>
-                 <div className="app-toolbar-divider h-4 w-px" />
-                 <button onClick={onFullscreen} className="app-toolbar-button rounded-xl p-1.5" title={tp('controls.fullscreen')}>
+                 <div className="w-px h-4 bg-[#27272a]" />
+                 <button onClick={onFullscreen} className="p-1.5 hover:bg-[#27272a] rounded text-gray-500 hover:text-white transition-colors" title={tp('controls.fullscreen')}>
                     <Maximize size={16} />
                  </button>
             </div>

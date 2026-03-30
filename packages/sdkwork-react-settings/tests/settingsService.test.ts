@@ -52,20 +52,4 @@ describe('settingsService', () => {
     expect(result.data?.materialStorage.sync.autoUploadOnImport).toBe(false);
     expect(result.data?.materialStorage.naming.keepOriginalFilenameInMetadata).toBe(true);
   });
-
-  it('does not eagerly probe shell executables when a concrete shell is already saved', async () => {
-    mockLoadSettings.mockResolvedValue({
-      terminal: {
-        defaultShell: 'pwsh',
-      },
-    });
-
-    const { settingsService } = await import('../src/services/settingsService');
-    const result = await settingsService.getSettings({ force: true });
-
-    expect(result.success).toBe(true);
-    expect(result.data?.terminal.defaultShell).toBe('pwsh');
-    expect(mockPlatform.getOsType).not.toHaveBeenCalled();
-    expect(mockPlatform.checkCommandExists).not.toHaveBeenCalled();
-  });
 });

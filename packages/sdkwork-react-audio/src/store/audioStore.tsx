@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import { AudioTask, AudioGenerationParams } from '../entities';
 import { audioBusinessService } from '../services';
 import { importAssetBySdk, importAssetFromUrlBySdk, resolveAssetPrimaryUrlBySdk } from '@sdkwork/react-assets';
-import { OFFLINE_DEMO_AUDIO_URL, inlineDataService } from '@sdkwork/react-core';
+import { inlineDataService } from '@sdkwork/react-core';
 
 interface AudioStoreContextType {
     history: AudioTask[];
@@ -54,7 +54,7 @@ export const AudioStoreProvider: React.FC<{ children: ReactNode }> = ({ children
             const candidateUrl =
                 generated.results?.[0]?.url ||
                 generated.url ||
-                OFFLINE_DEMO_AUDIO_URL;
+                'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
             const inlineData = await inlineDataService.tryExtractInlineData(candidateUrl);
             const uploaded = inlineData
                 ? await importAssetBySdk(

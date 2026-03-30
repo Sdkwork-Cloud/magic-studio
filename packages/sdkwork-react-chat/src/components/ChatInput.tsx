@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Mic, Bot, Workflow, ChevronDown, Check } from 'lucide-react';
 import { findByIdOrFirst } from '@sdkwork/react-commons';
 import { useTranslation } from '@sdkwork/react-i18n';
+
 import { ChatMode } from '../entities';
 
 interface ChatInputProps {
@@ -15,23 +17,25 @@ interface ChatInputProps {
 }
 
 const AVAILABLE_MODELS = [
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
-  { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
-  { id: 'gpt-4o', name: 'GPT-4o' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+    { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
+    { id: 'gpt-4o', name: 'GPT-4o' },
 ];
 
-const ChatInput: React.FC<ChatInputProps> = ({
-  onSend,
-  disabled,
-  placeholder,
-  mode: externalMode,
-  setMode: externalSetMode,
-  model: externalModel,
-  setModel: externalSetModel,
+const ChatInput: React.FC<ChatInputProps> = ({ 
+    onSend, 
+    disabled, 
+    placeholder,
+    mode: externalMode,
+    setMode: externalSetMode,
+    model: externalModel,
+    setModel: externalSetModel
 }) => {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
+  
+  // Internal state fallback if not controlled
   const [internalMode, setInternalMode] = useState<ChatMode>('AGENT');
   const [internalModel, setInternalModel] = useState('gemini-3-flash-preview');
 
@@ -43,34 +47,25 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showModeMenu, setShowModeMenu] = useState(false);
-
+  
   const modelMenuRef = useRef<HTMLDivElement>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
 
+  // Dynamic Mode Definitions
   const chatModes = [
-    {
-      id: 'AGENT',
-      label: t('copilot.modes.agent.label'),
-      icon: Bot,
-      tone: 'primary' as const,
-      desc: t('copilot.modes.agent.desc'),
-    },
-    {
-      id: 'PLAN',
-      label: t('copilot.modes.plan.label'),
-      icon: Workflow,
-      tone: 'success' as const,
-      desc: t('copilot.modes.plan.desc'),
-    },
+      { id: 'AGENT', label: t('copilot.modes.agent.label'), icon: Bot, color: 'text-indigo-400', desc: t('copilot.modes.agent.desc') },
+      { id: 'PLAN', label: t('copilot.modes.plan.label'), icon: Workflow, color: 'text-emerald-400', desc: t('copilot.modes.plan.desc') },
   ];
 
+  // Auto-resize logic
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   }, [input]);
 
+  // Click outside menus
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modelMenuRef.current && !modelMenuRef.current.contains(event.target as Node)) {
@@ -80,7 +75,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setShowModeMenu(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -92,152 +86,131 @@ const ChatInput: React.FC<ChatInputProps> = ({
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
-    }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+      }
   };
 
-  const currentModelName = AVAILABLE_MODELS.find(item => item.id === model)?.name || model;
+  const currentModelName = AVAILABLE_MODELS.find(m => m.id === model)?.name || model;
   const currentMode = findByIdOrFirst(chatModes, mode);
   const ModeIcon = currentMode?.icon || Bot;
 
   return (
-    <div className="px-4 pb-4">
-      <div className="app-floating-panel relative flex flex-col rounded-[1.35rem] transition-colors focus-within:border-[var(--border-strong)]">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={event => setInput(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            placeholder ||
-            (mode === 'PLAN'
-              ? t('copilot.input.placeholder_plan')
-              : t('copilot.input.placeholder_agent'))
-          }
-          className="min-h-[56px] w-full resize-none border-none bg-transparent px-4 pt-4 pb-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-0 focus:outline-none scrollbar-hide overflow-y-auto"
-          rows={1}
-          style={{ maxHeight: '200px' }}
-        />
-
-        <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-1">
-          <div className="flex items-center gap-2">
-            <div className="relative" ref={modeMenuRef}>
-              <button
-                onClick={() => setShowModeMenu(!showModeMenu)}
-                className="app-surface-subtle group flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
-                title="Switch Chat Mode"
-              >
-                <span
-                  className="app-status-icon flex h-5 w-5 items-center justify-center rounded-lg"
-                  data-tone={currentMode?.tone || 'primary'}
-                >
-                  <ModeIcon size={12} />
-                </span>
-                <span>{currentMode?.label || mode}</span>
-                <ChevronDown
-                  size={10}
-                  className="opacity-50 transition-opacity group-hover:opacity-100"
-                />
-              </button>
-
-              {showModeMenu && (
-                <div className="app-floating-panel absolute bottom-full left-0 z-50 mb-2 flex w-56 flex-col rounded-2xl p-1.5 animate-in fade-in zoom-in-95 duration-75">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                    Mode
-                  </div>
-                  {chatModes.map(item => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setMode(item.id as ChatMode);
-                        setShowModeMenu(false);
-                      }}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors ${
-                        mode === item.id
-                          ? 'app-surface-strong text-[var(--text-primary)]'
-                          : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] hover:text-[var(--text-primary)]'
-                      }`}
-                    >
-                      <span
-                        className="app-status-icon flex h-7 w-7 items-center justify-center rounded-xl"
-                        data-tone={item.tone}
+    <div className="p-[5px] bg-[#111113]">
+      <div className="relative bg-[#18181b] border border-[#333] rounded-xl shadow-sm transition-all focus-within:border-gray-600 flex flex-col">
+          
+          {/* Text Area */}
+          <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder || (mode === 'PLAN' ? t('copilot.input.placeholder_plan') : t('copilot.input.placeholder_agent'))}
+              className="w-full bg-transparent border-none text-white placeholder-gray-500 text-sm px-4 pt-3 pb-2 resize-none focus:ring-0 focus:outline-none scrollbar-hide overflow-y-auto min-h-[48px]"
+              rows={1}
+              style={{ maxHeight: '200px' }}
+          />
+          
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-2 pb-2 pt-1 gap-2">
+              
+              {/* LEFT: Context Controls */}
+              <div className="flex items-center gap-2">
+                  
+                  {/* Mode Selector */}
+                  <div className="relative" ref={modeMenuRef}>
+                      <button
+                        onClick={() => setShowModeMenu(!showModeMenu)}
+                        className="flex items-center gap-1.5 text-[11px] font-medium bg-[#27272a] hover:bg-[#333] text-gray-300 px-2 py-1 rounded transition-colors border border-[#333] group shadow-sm"
+                        title="Switch Chat Mode"
                       >
-                        <item.icon size={14} />
-                      </span>
-                      <div className="flex flex-1 flex-col">
-                        <span className={mode === item.id ? 'font-medium text-[var(--text-primary)]' : ''}>
-                          {item.label}
-                        </span>
-                        <span className="text-[10px] text-[var(--text-muted)]">{item.desc}</span>
-                      </div>
-                      {mode === item.id && <Check size={12} className="text-primary-500" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                          <ModeIcon size={12} className={currentMode?.color || 'text-indigo-400'} />
+                          <span>{currentMode?.label || mode}</span>
+                          <ChevronDown size={10} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </button>
 
-            <div className="relative" ref={modelMenuRef}>
-              <button
-                onClick={() => setShowModelMenu(!showModelMenu)}
-                className="app-header-action flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px]"
-              >
-                <span className="max-w-[100px] truncate">{currentModelName}</span>
-                <ChevronDown size={10} />
-              </button>
-
-              {showModelMenu && (
-                <div className="app-floating-panel absolute bottom-full left-0 z-50 mb-2 flex w-56 flex-col rounded-2xl p-1.5 animate-in fade-in zoom-in-95 duration-75">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                    Model
+                      {showModeMenu && (
+                          <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#252526] border border-[#333] rounded-lg shadow-xl py-1 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-75">
+                              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mode</div>
+                              {chatModes.map(m => (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => { setMode(m.id as ChatMode); setShowModeMenu(false); }}
+                                    className={`flex items-center gap-3 px-3 py-2 text-xs text-left hover:bg-[#333] transition-colors ${mode === m.id ? 'bg-[#333]' : ''}`}
+                                  >
+                                      <m.icon size={14} className={m.color} />
+                                      <div className="flex flex-col flex-1">
+                                          <span className={mode === m.id ? 'text-white font-medium' : 'text-gray-300'}>{m.label}</span>
+                                          <span className="text-[10px] text-gray-500">{m.desc}</span>
+                                      </div>
+                                      {mode === m.id && <Check size={12} className="text-blue-400" />}
+                                  </button>
+                              ))}
+                          </div>
+                      )}
                   </div>
-                  {AVAILABLE_MODELS.map(item => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setModel(item.id);
-                        setShowModelMenu(false);
-                      }}
-                      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs transition-colors ${
-                        model === item.id
-                          ? 'app-surface-strong text-primary-500'
-                          : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] hover:text-[var(--text-primary)]'
-                      }`}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+
+                  {/* Model Selector */}
+                  <div className="relative" ref={modelMenuRef}>
+                      <button 
+                        onClick={() => setShowModelMenu(!showModelMenu)}
+                        className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-[#27272a] transition-colors"
+                      >
+                          <span className="truncate max-w-[100px]">{currentModelName}</span>
+                          <ChevronDown size={10} />
+                      </button>
+
+                      {showModelMenu && (
+                          <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#252526] border border-[#333] rounded-lg shadow-xl py-1 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-75">
+                              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Model</div>
+                              {AVAILABLE_MODELS.map(m => (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => { setModel(m.id); setShowModelMenu(false); }}
+                                    className={`flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-[#333] transition-colors ${model === m.id ? 'text-blue-400 bg-blue-500/10' : 'text-gray-300'}`}
+                                  >
+                                      {m.name}
+                                  </button>
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              </div>
+              
+              {/* RIGHT: Input Actions */}
+              <div className="flex items-center gap-1">
+                  <button 
+                    className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-[#27272a] rounded-md transition-colors"
+                    title={t('copilot.input.attach')}
+                  >
+                      <Paperclip size={16} />
+                  </button>
+                  <button 
+                    className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-[#27272a] rounded-md transition-colors"
+                    title={t('copilot.input.voice')}
+                  >
+                      <Mic size={16} />
+                  </button>
+                  
+                  <div className="w-[1px] h-4 bg-[#333] mx-1" />
+
+                  <button 
+                      onClick={handleSend}
+                      disabled={!input.trim() || disabled}
+                      className={`
+                          p-1.5 rounded-md transition-all duration-200 flex items-center justify-center
+                          ${input.trim() && !disabled
+                              ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-900/20' 
+                              : 'bg-[#27272a] text-gray-600 cursor-not-allowed'
+                          }
+                      `}
+                  >
+                      <Send size={14} />
+                  </button>
+              </div>
           </div>
-
-          <div className="flex items-center gap-1">
-            <button className="app-header-action rounded-xl p-2" title={t('copilot.input.attach')}>
-              <Paperclip size={16} />
-            </button>
-            <button className="app-header-action rounded-xl p-2" title={t('copilot.input.voice')}>
-              <Mic size={16} />
-            </button>
-
-            <div className="mx-1 h-4 w-px bg-[var(--border-color)]" />
-
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || disabled}
-              className={`flex items-center justify-center rounded-xl p-2 transition-all duration-200 ${
-                input.trim() && !disabled
-                  ? 'bg-[var(--text-primary)] text-[var(--bg-panel-strong)] shadow-lg hover:bg-primary-600 hover:text-white'
-                  : 'app-surface-subtle cursor-not-allowed text-[var(--text-muted)]'
-              }`}
-            >
-              <Send size={14} />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

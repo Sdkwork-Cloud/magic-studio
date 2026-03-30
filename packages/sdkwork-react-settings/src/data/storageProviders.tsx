@@ -84,14 +84,14 @@ export const STORAGE_PROVIDERS: StorageProviderDefinition[] = [
     {
         id: 'minio',
         name: 'MinIO',
-        icon: <Server size={24} className="text-primary-500" />,
+        icon: <Server size={24} className="text-red-500" />,
         needsRegion: false,
         needsEndpoint: true
     },
     {
         id: 'custom',
         name: 'Custom S3',
-        icon: <Box size={24} className="text-[var(--text-muted)]" />,
+        icon: <Box size={24} className="text-gray-500" />,
         needsRegion: false,
         needsEndpoint: true
     }

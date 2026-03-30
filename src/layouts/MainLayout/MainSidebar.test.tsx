@@ -67,7 +67,6 @@ describe('MainSidebar', () => {
 
   it('shows the download app entry on web', () => {
     const html = renderToStaticMarkup(<MainSidebar />);
-    expect(html).toContain('app-sidebar-rail');
     expect(html).toContain('sidebar.download');
   });
 

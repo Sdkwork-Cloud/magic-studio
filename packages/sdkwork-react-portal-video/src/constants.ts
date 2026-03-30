@@ -1,11 +1,6 @@
 import type { StyleOption } from '@sdkwork/react-commons';
 import { createLocalizedText } from '@sdkwork/react-i18n';
 import {
-  OFFLINE_DEMO_VIDEO_URL,
-  createOfflineArtwork,
-  createOfflineAvatar,
-} from '@sdkwork/react-core';
-import {
   ArrowRightLeft,
   Bot,
   Clapperboard,
@@ -119,33 +114,6 @@ export const GEN_MODES = [
   },
 ];
 
-const CINEMATIC_SCENE_ART = createOfflineArtwork({
-  title: 'Cinematic Scene',
-  subtitle: 'Layered depth, dramatic light, and bundled offline preview',
-  eyebrow: 'Magic Studio Film',
-  badge: 'Scene',
-  accent: '#d97706',
-  width: 800,
-  height: 520,
-});
-
-const CINEMATIC_PORTRAIT_ART = createOfflineAvatar({
-  name: 'Film Portrait',
-  seed: 'cinematic-portrait',
-  accent: '#f97316',
-  size: 400,
-});
-
-const CINEMATIC_SHEET_ART = createOfflineArtwork({
-  title: 'Shot Sheet',
-  subtitle: 'Color continuity, framing, and atmosphere references',
-  eyebrow: 'Magic Studio Film',
-  badge: 'Sheet',
-  accent: '#fb923c',
-  width: 800,
-  height: 800,
-});
-
 export const FILM_STYLES: StyleOption[] = [
   {
     id: 'cinematic',
@@ -156,16 +124,16 @@ export const FILM_STYLES: StyleOption[] = [
     ),
     assets: {
       scene: {
-        url: CINEMATIC_SCENE_ART,
+        url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?q=80&w=800&auto=format&fit=crop',
       },
       portrait: {
-        url: CINEMATIC_PORTRAIT_ART,
+        url: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=400&auto=format&fit=crop',
       },
       video: {
-        url: OFFLINE_DEMO_VIDEO_URL,
+        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
       },
       sheet: {
-        url: CINEMATIC_SHEET_ART,
+        url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800&auto=format&fit=crop',
       },
     },
     usage: [

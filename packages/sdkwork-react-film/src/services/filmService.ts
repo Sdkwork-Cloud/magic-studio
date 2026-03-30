@@ -13,7 +13,6 @@ import type {
 import { MediaScene } from '@sdkwork/react-commons';
 import { filmProjectService } from './filmProjectService';
 import { generateUUID } from '@sdkwork/react-commons';
-import { OFFLINE_DEMO_VIDEO_URL, createOfflineArtwork } from '@sdkwork/react-core';
 
 export interface FilmAnalysisResult {
   characters: Partial<FilmCharacter>[];
@@ -97,36 +96,6 @@ type SupportedImageAspectRatio = (typeof SUPPORTED_IMAGE_ASPECT_RATIOS)[number];
 const normalizeImageAspectRatio = (aspectRatio: string): SupportedImageAspectRatio => {
   const normalized = SUPPORTED_IMAGE_ASPECT_RATIOS.find((item) => item === aspectRatio);
   return normalized || '16:9';
-};
-
-const aspectRatioToDimensions = (
-  aspectRatio: SupportedImageAspectRatio,
-): { width: number; height: number } => {
-  switch (aspectRatio) {
-    case '1:1':
-      return { width: 1024, height: 1024 };
-    case '3:4':
-      return { width: 960, height: 1280 };
-    case '4:3':
-      return { width: 1280, height: 960 };
-    case '9:16':
-      return { width: 720, height: 1280 };
-    case '16:9':
-    default:
-      return { width: 1280, height: 720 };
-  }
-};
-
-const createOfflineFilmArtwork = (prompt: string, aspectRatio: SupportedImageAspectRatio): string => {
-  const { width, height } = aspectRatioToDimensions(aspectRatio);
-  return createOfflineArtwork({
-    title: prompt.slice(0, 36) || 'Film Preview',
-    subtitle: 'Offline fallback artwork generated from the current prompt',
-    eyebrow: 'Magic Studio Film',
-    accent: '#f97316',
-    width,
-    height,
-  });
 };
 
 const API_KEY = process.env.API_KEY || '';
@@ -504,14 +473,13 @@ export const filmService = {
   },
 
   generateImage: async (prompt: string, aspectRatio: string = '16:9'): Promise<string> => {
-    const normalizedAspectRatio = normalizeImageAspectRatio(aspectRatio);
-    if (!ai) return createOfflineFilmArtwork(prompt, normalizedAspectRatio);
+    if (!ai) return `https://placehold.co/1280x720/1a1a1a/FFF?text=${encodeURIComponent(prompt.slice(0, 30))}`;
     
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: prompt }] },
-            config: { imageConfig: { aspectRatio: normalizedAspectRatio } }
+            config: { imageConfig: { aspectRatio: normalizeImageAspectRatio(aspectRatio) } }
         });
         
         for (const part of response.candidates?.[0]?.content?.parts || []) {
@@ -522,12 +490,12 @@ export const filmService = {
         throw new Error("No image data");
     } catch (e) {
         console.error("Generate Image Failed", e);
-        return createOfflineFilmArtwork(prompt || 'Generation Error', normalizedAspectRatio);
+        return `https://placehold.co/1280x720/331a1a/FFF?text=Error`;
     }
   },
   
   generateVideo: async (_prompt: string, _imageUrl?: string): Promise<string> => {
     await new Promise(resolve => setTimeout(resolve, 5000));
-    return OFFLINE_DEMO_VIDEO_URL;
+    return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
   },
 };

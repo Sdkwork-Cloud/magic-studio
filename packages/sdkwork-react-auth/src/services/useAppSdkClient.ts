@@ -15,10 +15,6 @@ import {
     persistAppSdkSessionTokens,
     clearAppSdkSessionTokens,
     getAppSdkClientWithSession,
-    hasAppSdkAuthSession,
-    isAppSdkAuthorizationError,
-    registerAppSdkSessionRecoveryHandler,
-    runWithAppSdkAuthRecovery,
     type AppRuntimeEnv,
     type AppSdkClientConfig,
     type AppSdkSessionTokens,
@@ -40,10 +36,6 @@ export {
     persistAppSdkSessionTokens,
     clearAppSdkSessionTokens,
     getAppSdkClientWithSession,
-    hasAppSdkAuthSession,
-    isAppSdkAuthorizationError,
-    registerAppSdkSessionRecoveryHandler,
-    runWithAppSdkAuthRecovery,
 };
 
 export function useAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): SdkworkAppClient {

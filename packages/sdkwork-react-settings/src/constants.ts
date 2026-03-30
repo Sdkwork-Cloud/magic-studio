@@ -138,11 +138,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   appearance: {
     theme: ThemeMode.DARK,
-    themeColor: 'lobster',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif",
     fontSize: 13,
     lineHeight: 1.5,
-    densityMode: 'standard',
     sidebarPosition: 'left',
     sidebarConfig: SIDEBAR_TEMPLATES[0].config
   },

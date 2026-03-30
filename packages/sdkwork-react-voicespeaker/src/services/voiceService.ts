@@ -1,7 +1,7 @@
 import { VoiceConfig, GeneratedVoiceResult, VoiceProfile, VoiceTask } from '../entities';
 import { PRESET_VOICES } from '../constants';
 import { generateUUID } from '@sdkwork/react-commons';
-import { OFFLINE_DEMO_AUDIO_URL, hasSdkworkClient, sdk } from '@sdkwork/react-core';
+import { hasSdkworkClient, sdk } from '@sdkwork/react-core';
 
 interface ApiEnvelope<T> {
     data?: T;
@@ -238,7 +238,7 @@ export const voiceService = {
         }
 
         await new Promise(resolve => setTimeout(resolve, 1500));
-        const audioUrl = OFFLINE_DEMO_AUDIO_URL;
+        const audioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
 
         return [
             {

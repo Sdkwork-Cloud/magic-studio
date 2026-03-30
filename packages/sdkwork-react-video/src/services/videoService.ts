@@ -1,8 +1,4 @@
 import { GeneratedVideoResult, LipSyncStage, UnifiedVideoGenerationRequest } from '../entities';
-import {
-    OFFLINE_DEMO_VIDEO_URL,
-    createOfflineArtwork,
-} from '@sdkwork/react-core';
 
 type LipSyncTaskStatus = 'queued' | 'processing' | 'succeeded' | 'failed' | 'canceled';
 
@@ -50,21 +46,11 @@ const toServiceError = (code: string, message: string): Error & { code: string }
     return error;
 };
 
-const createPoster = (title: string, accent: string): string =>
-    createOfflineArtwork({
-        title,
-        subtitle: 'Offline bundled video preview',
-        eyebrow: 'Magic Studio Video',
-        accent,
-        width: 1280,
-        height: 720,
-    });
-
 const buildMockLipSyncResult = (taskId: string, modelId: string): GeneratedVideoResult => ({
     id: `lipsync_video_${taskId}`,
-    url: OFFLINE_DEMO_VIDEO_URL,
-    mp4Url: OFFLINE_DEMO_VIDEO_URL,
-    posterUrl: createPoster('Lip Sync Preview', '#5b8cff'),
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    mp4Url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    posterUrl: 'https://sample-videos.com/img/Sample-jpg-image-500kb.jpg',
     modelId
 });
 
@@ -151,29 +137,29 @@ export const videoService = {
         
         switch (request.generationType) {
             case 'avatar':
-                videoUrl = OFFLINE_DEMO_VIDEO_URL;
-                posterUrl = createPoster('Avatar Motion', '#10b981');
+                videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
+                posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-100kb.jpg';
                 break;
             case 'lip-sync':
-                videoUrl = OFFLINE_DEMO_VIDEO_URL;
-                posterUrl = createPoster('Lip Sync', '#5b8cff');
+                videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
+                posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-50kb.jpg';
                 break;
             case 'multi-image':
             case 'smart_multi':
-                videoUrl = OFFLINE_DEMO_VIDEO_URL;
-                posterUrl = createPoster('Multi Image Motion', '#f97316');
+                videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+                posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-1mb.jpg';
                 break;
             case 'image':
             case 'start_end':
             case 'smart_reference':
             case 'subject_ref':
-                videoUrl = OFFLINE_DEMO_VIDEO_URL;
-                posterUrl = createPoster('Reference Video', '#a855f7');
+                videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
+                posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-200kb.jpg';
                 break;
             case 'text':
             default:
-                videoUrl = OFFLINE_DEMO_VIDEO_URL;
-                posterUrl = createPoster('Text To Video', '#06b6d4');
+                videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4';
+                posterUrl = 'https://sample-videos.com/img/Sample-jpg-image-300kb.jpg';
                 break;
         }
 

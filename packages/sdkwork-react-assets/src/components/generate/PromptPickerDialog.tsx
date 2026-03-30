@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, RefreshCcw, Search, Star } from 'lucide-react';
 import {
   promptLibraryService,
@@ -45,24 +45,6 @@ function formatMeta(record: PromptLibraryRecord, t: (key: string, options?: Reco
   return parts.join(' · ');
 }
 
-function buildPromptLibraryRequestKey(options: {
-  source: PromptLibrarySource;
-  keyword: string;
-  promptBizType?: PromptRecordBizType;
-  promptType?: PromptRecordType;
-  promptInstance?: ScopedSdkInstance;
-  reloadToken: number;
-}): string {
-  return JSON.stringify({
-    source: options.source,
-    keyword: options.keyword.trim(),
-    promptBizType: options.promptBizType ?? null,
-    promptType: options.promptType ?? null,
-    promptInstance: options.promptInstance ?? null,
-    reloadToken: options.reloadToken,
-  });
-}
-
 export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
   open,
   onOpenChange,
@@ -78,25 +60,9 @@ export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
   const [records, setRecords] = useState<PromptLibraryRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [resolvedRequestKey, setResolvedRequestKey] = useState<string | null>(null);
-
-  const requestKey = useMemo(
-    () =>
-      buildPromptLibraryRequestKey({
-        source,
-        keyword,
-        promptBizType,
-        promptType,
-        promptInstance,
-        reloadToken,
-      }),
-    [keyword, promptBizType, promptInstance, promptType, reloadToken, source],
-  );
 
   useEffect(() => {
     if (!open) {
-      setLoading(false);
-      setResolvedRequestKey(null);
       return;
     }
 
@@ -118,13 +84,11 @@ export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
           return;
         }
         setRecords(result.items);
-        setResolvedRequestKey(requestKey);
       } catch (loadError) {
         if (!active) {
           return;
         }
         setError(loadError instanceof Error ? loadError.message : t('assetCenter.promptLibrary.failedToLoad'));
-        setResolvedRequestKey(requestKey);
       } finally {
         if (active) {
           setLoading(false);
@@ -137,12 +101,7 @@ export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
     return () => {
       active = false;
     };
-  }, [keyword, open, promptBizType, promptInstance, promptType, requestKey, source, t]);
-
-  const isRequestPending = open && resolvedRequestKey !== requestKey;
-  const isShowingLoading = open && (loading || isRequestPending);
-  const isShowingError = !isShowingLoading && Boolean(error);
-  const isShowingEmpty = !isShowingLoading && !error && records.length === 0;
+  }, [keyword, open, promptBizType, promptInstance, promptType, reloadToken, source, t]);
 
   const handleFavoriteToggle = async (record: PromptLibraryRecord) => {
     try {
@@ -159,8 +118,8 @@ export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
                 isFavorite: !item.isFavorite,
                 favoriteCount: Math.max(0, item.favoriteCount + (item.isFavorite ? -1 : 1)),
               }
-            : item,
-        ),
+            : item
+        )
       );
     } catch (favoriteError) {
       setError(favoriteError instanceof Error ? favoriteError.message : t('assetCenter.promptLibrary.failedToUpdateFavorite'));
@@ -222,45 +181,26 @@ export const PromptPickerDialog: React.FC<PromptPickerDialogProps> = ({
             />
           </div>
 
-          {isShowingError ? (
+          {error ? (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {error}
             </div>
           ) : null}
 
           <div className="max-h-[440px] space-y-3 overflow-y-auto pr-1">
-            {isShowingLoading ? (
-              <div className="space-y-3" aria-live="polite">
-                <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-3 text-sm text-gray-300">
-                  <div className="inline-flex items-center gap-2">
-                    <RefreshCcw size={14} className="animate-spin text-blue-300" />
-                    <span>{t('assetCenter.promptLibrary.loading')}</span>
-                  </div>
-                </div>
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="animate-pulse rounded-2xl border border-[#2a2a30] bg-[#18181b] px-4 py-3"
-                  >
-                    <div className="h-4 w-1/3 rounded bg-[#242428]" />
-                    <div className="mt-3 h-3 w-full rounded bg-[#202024]" />
-                    <div className="mt-2 h-3 w-5/6 rounded bg-[#202024]" />
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="h-3 w-1/4 rounded bg-[#1f1f23]" />
-                      <div className="h-8 w-20 rounded-full bg-[#2a2a30]" />
-                    </div>
-                  </div>
-                ))}
+            {loading ? (
+              <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
+                {t('assetCenter.promptLibrary.loading')}
               </div>
             ) : null}
 
-            {isShowingEmpty ? (
+            {!loading && records.length === 0 ? (
               <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
                 {t('assetCenter.promptLibrary.empty')}
               </div>
             ) : null}
 
-            {!isShowingLoading &&
+            {!loading &&
               records.map((record) => (
                 <div
                   key={record.id}

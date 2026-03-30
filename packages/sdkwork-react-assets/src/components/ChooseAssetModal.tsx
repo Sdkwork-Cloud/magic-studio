@@ -1,17 +1,18 @@
 import type { Asset, AssetType } from '../entities/asset.entity'
 import {
+    AppShell,
     Button,
     CommandPalette,
+    SplitView,
     buildFrameworkStyle,
     type CommandPaletteCommand
 } from '@sdkwork/react-commons'
 import type { AssetBusinessDomain } from '@sdkwork/react-types';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Search, UploadCloud, CheckCircle2, LayoutGrid, FileText, Command, SlidersHorizontal } from 'lucide-react';
+import { X, Search, UploadCloud, CheckCircle2, LayoutGrid, FileText, Command } from 'lucide-react';
 import { AssetStoreProvider, useAssetStore } from '../store/assetStore';
 import { AssetSidebar } from './AssetSidebar';
 import { AssetGrid } from './AssetGrid';
-import { AssetFilterDrawer } from './AssetFilterDrawer';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { platform, uploadHelper as _uploadHelper } from '@sdkwork/react-core'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -39,8 +40,7 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
         filterOrigin, setFilterOrigin,
         deleteAsset,
         pageData,
-        isLoading,
-        requiresAuthentication
+        isLoading
     } = useAssetStore();
 
     // Initialize tab based on props, defaulting to library unless document requested and images exist
@@ -48,7 +48,6 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
         (initialTab === 'document' && extractedImages.length > 0) ? 'document' : 'library'
     );
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-    const [isLibraryFiltersOpen, setIsLibraryFiltersOpen] = useState(false);
     const [docSelection, setDocSelection] = useState<string | null>(null);
     const [selectedAssets, setSelectedAssets] = useState<Asset[]>([]);
     const selectedAssetIds = useMemo(() => selectedAssets.map((item) => item.id), [selectedAssets]);
@@ -257,28 +256,6 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
     ]);
 
     useEffect(() => {
-        if (tab !== 'library') {
-            setIsLibraryFiltersOpen(false);
-        }
-    }, [tab]);
-
-    useEffect(() => {
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-            return;
-        }
-
-        const mediaQuery = window.matchMedia('(min-width: 1024px)');
-        const closeDrawerWhenDesktop = (event: MediaQueryListEvent) => {
-            if (event.matches) {
-                setIsLibraryFiltersOpen(false);
-            }
-        };
-
-        mediaQuery.addEventListener('change', closeDrawerWhenDesktop);
-        return () => mediaQuery.removeEventListener('change', closeDrawerWhenDesktop);
-    }, []);
-
-    useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
@@ -311,186 +288,155 @@ const ChooseAssetModalContent: React.FC<ChooseAssetModalContentProps> = ({
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [canConfirm, extractedImages.length, handleConfirm, importAssets, tab]);
 
-    const clearLibrarySelection = useCallback(() => {
-        if (_multiple) {
-            setSelectedAssets([]);
-            return;
-        }
-        setSelectedAsset(null);
-    }, [_multiple, setSelectedAsset, setSelectedAssets]);
-
-    const selectionSummary = useMemo(() => {
-        if (_multiple && selectedAssets.length > 0) {
-            return String(selectedAssets.length);
-        }
-        if (!_multiple && selectedAsset) {
-            return selectedAsset.name;
-        }
-        return null;
-    }, [_multiple, selectedAsset, selectedAssets.length]);
-
     return (
         <div
-            className="relative flex h-[85vh] max-h-[960px] w-[96vw] max-w-[1500px] min-w-0 flex-col overflow-hidden rounded-2xl border border-[#333] bg-[#1e1e1e] shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            className="relative w-[90vw] h-[85vh] max-w-[1600px] bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
             style={FRAMEWORK_STYLE}
         >
-            <div className="shrink-0 border-b border-[#333] bg-[#252526]">
-                <div className="flex min-w-0 flex-col gap-4 px-5 py-4 sm:px-6">
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <h3 className="truncate text-lg font-bold text-white">
-                                    {title || t('sidebar.assets')}
-                                </h3>
-                                {tab === 'library' && (
-                                    <span className="hidden items-center rounded-full border border-[#333] bg-[#1b1b1d] px-2 py-1 text-[11px] font-mono text-gray-400 xl:inline-flex">
+            <AppShell
+                id="choose-asset-modal-shell"
+                className="h-full w-full"
+                header={(
+                    <div className="h-16 bg-[#252526] flex items-center justify-between px-6">
+                        <div className="flex items-center gap-4">
+                            <h3 className="text-white font-bold text-lg">{title || t('sidebar.assets')}</h3>
+
+                            {/* View Switcher if extracted images exist */}
+                            {extractedImages.length > 0 && (
+                                <div className="flex bg-[#111] p-1 rounded-lg border border-[#333]">
+                                    <button
+                                        onClick={() => setTab('library')}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${tab === 'library' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        <LayoutGrid size={14} /> Asset Library
+                                    </button>
+                                    <button
+                                        onClick={() => setTab('document')}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${tab === 'document' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        <FileText size={14} /> From Content ({extractedImages.length})
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {tab === 'library' && (
+                                <>
+                                    <div className="hidden lg:flex items-center px-2 py-1 rounded-md border border-[#333] bg-[#1b1b1d] text-[11px] text-gray-400 font-mono">
                                         {isLoading && !pageSummary
                                             ? 'Loading...'
                                             : `Page ${pageSummary || '1/1 | 0'} | Origin ${originLabel}`}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-2">
+                                    </div>
+                                    <div className="relative w-64">
+                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            placeholder={t('common.actions.search')}
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full bg-[#18181b] border border-[#333] rounded-lg pl-9 pr-4 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <Button size="sm" onClick={importAssets} className="gap-2">
+                                        <UploadCloud size={14} /> Upload
+                                    </Button>
+                                </>
+                            )}
                             <button
                                 onClick={() => setIsCommandPaletteOpen(true)}
-                                className="hidden xl:flex items-center gap-1.5 rounded-md border border-[#333] bg-[#1b1b1d] px-2.5 py-1.5 text-[11px] text-gray-300 transition-colors hover:text-white"
+                                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[#333] bg-[#1b1b1d] text-[11px] text-gray-300 hover:text-white transition-colors"
                             >
                                 <Command size={12} /> Quick Actions
                                 <span className="text-gray-500">Ctrl+K</span>
                             </button>
-                            <button onClick={onClose} className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[#333] hover:text-white">
+                            <div className="h-6 w-[1px] bg-[#333] mx-2" />
+                            <button onClick={onClose} className="text-gray-400 hover:text-white p-2 hover:bg-[#333] rounded-lg transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
                     </div>
-
-                    {extractedImages.length > 0 && (
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                            <div className="flex min-w-0 flex-wrap rounded-lg border border-[#333] bg-[#111] p-1">
-                                <button
-                                    onClick={() => setTab('library')}
-                                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${tab === 'library' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
-                                >
-                                    <LayoutGrid size={14} /> Asset Library
-                                </button>
-                                <button
-                                    onClick={() => setTab('document')}
-                                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${tab === 'document' ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
-                                >
-                                    <FileText size={14} /> From Content ({extractedImages.length})
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {tab === 'library' && (
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                            {requiresAuthentication && (
-                                <div className="w-full rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-                                    Sign in to browse and import assets in the shared library.
-                                </div>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => setIsLibraryFiltersOpen(true)}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#333] bg-[#18181b] px-3 py-2 text-xs font-semibold text-gray-200 lg:hidden"
-                            >
-                                <SlidersHorizontal size={14} />
-                                Filters
-                            </button>
-                            <div className="relative min-w-[220px] flex-1 max-w-[640px]">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                <input
-                                    type="text"
-                                    placeholder={t('common.actions.search')}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full rounded-lg border border-[#333] bg-[#18181b] py-2 pl-9 pr-4 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-                                />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button size="sm" onClick={importAssets} className="gap-2" disabled={requiresAuthentication}>
-                                    <UploadCloud size={14} /> Upload
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-                {tab === 'library' ? (
-                    <>
-                        <AssetFilterDrawer open={isLibraryFiltersOpen} onClose={() => setIsLibraryFiltersOpen(false)}>
-                            <AssetSidebar />
-                        </AssetFilterDrawer>
-
-                        <div className="hidden h-full w-[296px] shrink-0 overflow-hidden border-r border-[#333] bg-[#101012] lg:block">
-                            <AssetSidebar />
-                        </div>
-
-                        <div className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#111]">
-                            <AssetGrid
-                                onPreview={handleGridSelect}
-                                selectedAssetIds={_multiple ? selectedAssetIds : (selectedAsset ? [selectedAsset.id] : [])}
-                                onDelete={handleDelete}
-                            />
-
-                            {selectionSummary && (
-                                <div className="pointer-events-none absolute bottom-6 left-0 right-0 z-20 flex justify-center px-4">
-                                    <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-full border border-[#333] bg-[#1e1e1e] px-4 py-2 shadow-xl animate-in slide-in-from-bottom-4">
-                                        <span className="min-w-0 truncate text-xs text-gray-300">
-                                            Selected: <span className="font-medium text-white">{selectionSummary}</span>
-                                        </span>
-                                        <button onClick={clearLibrarySelection} className="shrink-0 text-gray-400 transition-colors hover:text-white">
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </>
-                ) : (
-                    <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#111] p-5 sm:p-8">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 sm:gap-6">
-                            {extractedImages.map((src, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => setDocSelection(src)}
-                                    className={`
-                                        group relative aspect-video cursor-pointer overflow-hidden rounded-xl border-2 bg-[#1e1e1e] transition-all
-                                        ${docSelection === src ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-[#333] hover:border-gray-500'}
-                                    `}
-                                >
-                                    <img src={src} className="h-full w-full object-cover" alt={`Document asset ${idx + 1}`} />
-                                    {docSelection === src && (
-                                        <div className="absolute right-2 top-2 rounded-full bg-blue-500 p-0.5 text-white shadow-sm">
-                                            <CheckCircle2 size={16} />
+                )}
+                content={(
+                    <div className="h-full flex overflow-hidden">
+                        {tab === 'library' ? (
+                            <div className="flex-1 overflow-hidden">
+                                <SplitView
+                                    id="choose-asset-library-split-view"
+                                    className="h-full w-full"
+                                    primary={<AssetSidebar />}
+                                    secondary={(
+                                        <div className="h-full bg-[#111] overflow-y-auto p-0 relative">
+                                            <div className="absolute inset-0">
+                                                <AssetGrid
+                                                    onPreview={handleGridSelect}
+                                                    selectedAssetIds={_multiple ? selectedAssetIds : (selectedAsset ? [selectedAsset.id] : [])}
+                                                    onDelete={handleDelete}
+                                                />
+                                            </div>
+                                            {/* Overlay Selection Indicator since AssetGrid doesn't show "selected" state persistently for pickers usually */}
+                                            {_multiple && selectedAssets.length > 0 && (
+                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-[#1e1e1e] border border-[#333] rounded-full px-4 py-2 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
+                                                    <span className="text-xs text-gray-300">Selected: <span className="text-white font-medium">{selectedAssets.length}</span></span>
+                                                    <button onClick={() => setSelectedAssets([])} className="hover:text-white"><X size={14} /></button>
+                                                </div>
+                                            )}
+                                            {!_multiple && selectedAsset && (
+                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-[#1e1e1e] border border-[#333] rounded-full px-4 py-2 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
+                                                    <span className="text-xs text-gray-300">Selected: <span className="text-white font-medium">{selectedAsset.name}</span></span>
+                                                    <button onClick={() => setSelectedAsset(null)} className="hover:text-white"><X size={14} /></button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
+                                    defaultPrimarySize={280}
+                                    minPrimarySize={272}
+                                    maxPrimarySize={380}
+                                    minSecondarySize={520}
+                                    dividerSize={6}
+                                />
+                            </div>
+                        ) : (
+                            /* Document Images Tab */
+                            <div className="flex-1 bg-[#111] p-8 overflow-y-auto">
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                                    {extractedImages.map((src, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => setDocSelection(src)}
+                                            className={`
+                                                group relative aspect-video bg-[#1e1e1e] border-2 rounded-xl cursor-pointer overflow-hidden transition-all
+                                                ${docSelection === src ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-[#333] hover:border-gray-500'}
+                                            `}
+                                        >
+                                            <img src={src} className="w-full h-full object-cover" />
+                                            {docSelection === src && (
+                                                <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-0.5 shadow-sm">
+                                                    <CheckCircle2 size={16} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 )}
-            </div>
-
-            <div className="shrink-0 border-t border-[#333] bg-[#252526]">
-                <div className="flex flex-wrap items-center justify-end gap-3 px-5 py-4 sm:px-8">
-                    <Button variant="secondary" onClick={onClose} size="lg">Cancel</Button>
-                    <Button
-                        onClick={handleConfirm}
-                        disabled={!canConfirm}
-                        size="lg"
-                        className="bg-blue-600 px-8 shadow-lg shadow-blue-900/20 hover:bg-blue-500"
-                    >
-                        {`Confirm Selection${_multiple && selectedAssets.length > 0 ? ` (${selectedAssets.length})` : ''}`}
-                    </Button>
-                </div>
-            </div>
+                footer={(
+                    <div className="h-20 bg-[#252526] flex items-center justify-end px-8 gap-4 z-20">
+                        <Button variant="secondary" onClick={onClose} size="lg">Cancel</Button>
+                        <Button
+                            onClick={handleConfirm}
+                            disabled={!canConfirm}
+                            size="lg"
+                            className="px-8 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20"
+                        >
+                            {`Confirm Selection${_multiple && selectedAssets.length > 0 ? ` (${selectedAssets.length})` : ''}`}
+                        </Button>
+                    </div>
+                )}
+            />
 
             {isCommandPaletteOpen && (
                 <div

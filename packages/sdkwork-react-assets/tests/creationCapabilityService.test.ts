@@ -115,32 +115,6 @@ describe('creationCapabilityService', () => {
     expect(mockGetCreationCapabilities).toHaveBeenCalledTimes(1);
   });
 
-  it('returns an anonymous-safe fallback snapshot when capability loading is unauthorized', async () => {
-    mockGetCreationCapabilities.mockRejectedValueOnce(
-      Object.assign(new Error('未授权'), {
-        name: 'BusinessError',
-        code: 'BUSINESS_ERROR',
-        businessCode: '401',
-      }),
-    );
-
-    const {
-      clearCreationCapabilityCache,
-      fetchCreationCapabilities,
-      resolveCreationStyleOptions,
-    } = await import('../src/services/creationCapabilityService');
-
-    clearCreationCapabilityCache();
-    const snapshot = await fetchCreationCapabilities('short_drama');
-
-    expect(snapshot).toEqual({
-      target: 'short_drama',
-      channels: [],
-      styleOptions: [],
-    });
-    expect(resolveCreationStyleOptions(snapshot).some((option) => option.id === 'cinematic')).toBe(true);
-  });
-
   it('resolves shared portal defaults when a model has no explicit capability options', async () => {
     const {
       resolveCreationEntryCapabilityOptions,

@@ -141,7 +141,7 @@ export const ProjectOverview: React.FC = () => {
                                          ))}
                                      </div>
                                  ) : (
-                                     <div className="absolute inset-0 bg-[url('/visual-textures/cubes.svg')] opacity-20" />
+                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
                                  )}
                                  
                                  <div className="absolute bottom-0 left-0 p-6 z-10 w-full">

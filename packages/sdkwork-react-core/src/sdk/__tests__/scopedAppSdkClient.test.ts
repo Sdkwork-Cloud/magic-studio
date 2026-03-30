@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const createClientMock = vi.fn((config: { baseUrl: string; tenantId?: string; tokenManager?: unknown }) => ({
+const createClientMock = vi.fn((config: { baseUrl: string; tenantId?: string }) => ({
   prompt: {},
   generation: {},
   setAuthToken: vi.fn(),
@@ -41,23 +41,5 @@ describe('createScopedAppSdkClient', () => {
         tenantId: 'tenant-b',
       })
     );
-  });
-
-  it('reuses the same token manager for singleton and scoped clients', async () => {
-    const sdkClientModule = await import('../useAppSdkClient');
-
-    sdkClientModule.initAppSdkClient({
-      baseUrl: 'https://default.example.com',
-      tenantId: 'tenant-a',
-    });
-
-    sdkClientModule.createScopedAppSdkClient({
-      baseUrl: 'https://tenant-b.example.com',
-      tenantId: 'tenant-b',
-    });
-
-    expect(createClientMock).toHaveBeenCalledTimes(2);
-    expect(createClientMock.mock.calls[0]?.[0]?.tokenManager).toBeTruthy();
-    expect(createClientMock.mock.calls[1]?.[0]?.tokenManager).toBe(createClientMock.mock.calls[0]?.[0]?.tokenManager);
   });
 });

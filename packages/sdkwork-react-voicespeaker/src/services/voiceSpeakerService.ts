@@ -6,12 +6,12 @@ import {
     resolveAssetUrlByAssetIdFirst,
     type Asset
 } from '@sdkwork/react-assets';
-import { hasSdkworkClient, OFFLINE_DEMO_AUDIO_URL, sdk } from '@sdkwork/react-core';
+import { hasSdkworkClient, sdk } from '@sdkwork/react-core';
 import type { GeneratedVoiceResult, VoiceProfile } from '../entities';
 import type { IVoice } from '../components/voicespeaker/types';
 import { voiceService } from './voiceService';
 
-const DEFAULT_PREVIEW = OFFLINE_DEMO_AUDIO_URL;
+const DEFAULT_PREVIEW = 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav';
 const DEFAULT_CUSTOM_VOICE_STORAGE_KEY = 'sdkwork_voice_lab_custom_v1';
 
 export interface UploadedVoiceReferenceInput {

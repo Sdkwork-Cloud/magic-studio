@@ -1,15 +1,4 @@
 import { MusicConfig, GeneratedMusicResult } from '../entities';
-import { OFFLINE_DEMO_AUDIO_URL, createOfflineArtwork } from '@sdkwork/react-core';
-
-const createMusicCover = (title: string, accent: string): string =>
-    createOfflineArtwork({
-        title,
-        subtitle: 'Offline bundled cover art',
-        eyebrow: 'Magic Studio Music',
-        accent,
-        width: 512,
-        height: 512,
-    });
 
 // Mock music generation service for demonstration
 export const musicService = {
@@ -30,28 +19,28 @@ export const musicService = {
         
         switch (config.style.toLowerCase()) {
             case 'pop':
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Pop Pulse', '#ec4899');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400&auto=format&fit=crop';
                 break;
             case 'rock':
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Rock Drive', '#f97316');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop';
                 break;
             case 'electronic':
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Electronic Bloom', '#5b8cff');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=400&auto=format&fit=crop';
                 break;
             case 'classical':
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Classical Flow', '#c084fc');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=400&auto=format&fit=crop';
                 break;
             case 'hip-hop':
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Hip Hop Grid', '#14b8a6');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&auto=format&fit=crop';
                 break;
             default:
-                musicUrl = OFFLINE_DEMO_AUDIO_URL;
-                coverUrl = createMusicCover('Generated Music', '#64748b');
+                musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+                coverUrl = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=400&auto=format&fit=crop';
                 break;
         }
 

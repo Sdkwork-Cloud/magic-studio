@@ -23,7 +23,6 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
         isLoading,
         pageData,
         loadPage,
-        requiresAuthentication,
         filterType,
         filterOrigin,
         searchQuery,
@@ -94,22 +93,6 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
     }
 
     if (assets.length === 0) {
-        if (requiresAuthentication) {
-            return (
-                <div className="flex flex-col items-center justify-center h-full px-6 text-center text-gray-400">
-                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10">
-                        <Shield size={30} className="text-amber-300" />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-100">
-                        {t('assetCenter.auth.title', 'Sign in to access Asset Center')}
-                    </p>
-                    <p className="mt-2 max-w-md text-xs leading-6 text-gray-500">
-                        {t('assetCenter.auth.desc', 'Asset browsing, uploads, and management are available after authentication.')}
-                    </p>
-                </div>
-            );
-        }
-
         return (
             <div className="flex flex-col items-center justify-center h-full text-gray-600 opacity-80 select-none px-6">
                 <div className="w-20 h-20 bg-[#252526] rounded-2xl flex items-center justify-center mb-4 border border-[#333]">
@@ -138,15 +121,13 @@ export const AssetGrid: React.FC<AssetGridProps> = ({
                             {t('assetCenter.filters.clearAll', 'Clear All')}
                         </button>
                     )}
-                    {!requiresAuthentication && (
-                        <button
-                            type="button"
-                            onClick={importAssets}
-                            className="rounded-md border border-blue-500/40 bg-blue-600/20 px-3 py-1.5 text-xs text-blue-100 hover:bg-blue-600/30"
-                        >
-                            {t('studio.common.import', 'Import')}
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        onClick={importAssets}
+                        className="rounded-md border border-blue-500/40 bg-blue-600/20 px-3 py-1.5 text-xs text-blue-100 hover:bg-blue-600/30"
+                    >
+                        {t('studio.common.import', 'Import')}
+                    </button>
                 </div>
             </div>
         );

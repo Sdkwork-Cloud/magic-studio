@@ -18,11 +18,11 @@ export const VibeLayoutSidebar: React.FC = () => {
     ];
 
     return (
-        <div className="app-sidebar-rail w-16 flex-none flex flex-col items-center py-4 z-20">
+        <div className="w-16 flex-none bg-[#050505] border-r border-[#1a1a1a] flex flex-col items-center py-4 z-20">
             {/* Back / Home Action */}
             <button 
                 onClick={() => navigate(ROUTES.HOME)}
-                className="app-sidebar-item p-3 mb-6 rounded-2xl transition-colors"
+                className="p-3 mb-6 text-gray-400 hover:text-white hover:bg-[#1a1a1c] rounded-xl transition-colors"
                 title={t('common.actions.back_home')}
             >
                 <ChevronLeft size={20} />
@@ -40,9 +40,12 @@ export const VibeLayoutSidebar: React.FC = () => {
                         <button
                             key={tool.id}
                             onClick={() => navigate(tool.route)}
-                            data-active={isActive}
                             className={`
-                                app-sidebar-item relative group w-full aspect-square rounded-xl flex items-center justify-center transition-all duration-200
+                                relative group w-full aspect-square rounded-xl flex items-center justify-center transition-all duration-200
+                                ${isActive 
+                                    ? 'bg-[#1e1e20] text-white shadow-lg ring-1 ring-white/10' 
+                                    : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1c]'
+                                }
                             `}
                             title={tool.label}
                         >
@@ -50,7 +53,7 @@ export const VibeLayoutSidebar: React.FC = () => {
                             
                             {/* Active Dot */}
                             {isActive && (
-                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-l-full" />
+                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-l-full" />
                             )}
                         </button>
                     );

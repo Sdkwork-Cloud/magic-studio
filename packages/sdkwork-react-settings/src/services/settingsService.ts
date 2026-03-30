@@ -3,28 +3,14 @@ import { settingsRepository } from '../repository/settingsRepository';
 ;
 import { DEFAULT_SETTINGS } from '../constants';
 import { platform } from '@sdkwork/react-core';
-import { AppSettings, SidebarItemConfig, ThemeColor } from '../entities';
+import { AppSettings, SidebarItemConfig } from '../entities';
 import { ServiceResult, Result } from '@sdkwork/react-commons';
-import { inferAppearanceDensityMode } from './appearanceDensityService';
 
 let settingsCache: AppSettings | null = null;
 let settingsLoadPromise: Promise<ServiceResult<AppSettings>> | null = null;
 
-const guessRuntimeOs = (): 'windows' | 'macos' | 'linux' | null => {
-  if (typeof navigator === 'undefined') {
-    return null;
-  }
-
-  const userAgent = `${navigator.userAgent || ''} ${navigator.platform || ''}`.toLowerCase();
-  if (userAgent.includes('win')) return 'windows';
-  if (userAgent.includes('mac')) return 'macos';
-  if (userAgent.includes('linux')) return 'linux';
-  return null;
-};
-
 const getPlatformDefaultShell = async (): Promise<string> => {
-  const guessedOs = guessRuntimeOs();
-  const os = guessedOs || await platform.getOsType();
+  const os = await platform.getOsType();
   if (os === 'windows') return 'powershell';
   if (os === 'macos') return 'zsh';
   
@@ -57,23 +43,6 @@ const normalizeSidebarConfigOrder = (sidebarConfig?: SidebarItemConfig[]): Sideb
   return normalized;
 };
 
-const VALID_THEME_COLORS: ThemeColor[] = [
-  'lobster',
-  'tech-blue',
-  'green-tech',
-  'zinc',
-  'violet',
-  'rose',
-];
-
-const normalizeThemeColor = (themeColor: unknown): ThemeColor =>
-  VALID_THEME_COLORS.includes(themeColor as ThemeColor)
-    ? (themeColor as ThemeColor)
-    : DEFAULT_SETTINGS.appearance.themeColor;
-
-const toErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
-
 const mergeMaterialStorage = (saved: AppSettings | null) => ({
   ...DEFAULT_SETTINGS.materialStorage,
   ...saved?.materialStorage,
@@ -94,31 +63,29 @@ const mergeMaterialStorage = (saved: AppSettings | null) => ({
 const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
   try {
     const saved = await settingsRepository.loadSettings();
+    const platformDefaultShell = await getPlatformDefaultShell();
+
+    // Resolve Shell: 'default' means auto-detect, otherwise use saved or fallback
     let shell = saved?.terminal?.defaultShell;
     
     if (!shell || shell === 'default') {
-        shell = await getPlatformDefaultShell();
+        shell = platformDefaultShell;
+    } else {
+        // Verify saved shell still exists (e.g. if user uninstalled fish)
+        const exists = await platform.checkCommandExists(shell);
+        if (!exists) shell = platformDefaultShell;
     }
 
     // Deep merge with platform-validated defaults
     const mergedAppearance = { ...DEFAULT_SETTINGS.appearance, ...saved?.appearance };
-    const normalizedAppearance = {
-      ...mergedAppearance,
-      densityMode: inferAppearanceDensityMode({
-        ...mergedAppearance,
-        densityMode: saved?.appearance?.densityMode,
-      }),
-    };
-
     const settings: AppSettings = {
       ...DEFAULT_SETTINGS,
       ...saved,
       general: { ...DEFAULT_SETTINGS.general, ...saved?.general },
       appearance: {
-        ...normalizedAppearance,
-        themeColor: normalizeThemeColor(normalizedAppearance.themeColor),
+        ...mergedAppearance,
         sidebarConfig: normalizeSidebarConfigOrder(
-          normalizedAppearance.sidebarConfig || DEFAULT_SETTINGS.appearance.sidebarConfig
+          mergedAppearance.sidebarConfig || DEFAULT_SETTINGS.appearance.sidebarConfig
         )
       },
       editor: { ...DEFAULT_SETTINGS.editor, ...saved?.editor },
@@ -132,8 +99,8 @@ const loadSettingsInternal = async (): Promise<ServiceResult<AppSettings>> => {
     };
     
     return Result.success(settings);
-  } catch (error: unknown) {
-    console.error('Failed to load settings', error);
+  } catch (e: any) {
+    console.error('Failed to load settings', e);
     // Fallback safe defaults on error, but return error metadata if needed
     return Result.success(DEFAULT_SETTINGS); 
   }
@@ -169,19 +136,17 @@ export const settingsService = {
         const normalizedSettings: AppSettings = {
           ...settings,
           appearance: {
-          ...settings.appearance,
-          densityMode: inferAppearanceDensityMode(settings.appearance),
-          themeColor: normalizeThemeColor(settings.appearance.themeColor),
-          sidebarConfig: normalizeSidebarConfigOrder(settings.appearance.sidebarConfig)
+            ...settings.appearance,
+            sidebarConfig: normalizeSidebarConfigOrder(settings.appearance.sidebarConfig)
           },
           materialStorage: mergeMaterialStorage(settings)
         };
         await settingsRepository.saveSettings(normalizedSettings);
         settingsCache = normalizedSettings;
         return Result.success(undefined);
-    } catch (error: unknown) {
-        console.error('Failed to save settings', error);
-        return Result.error(toErrorMessage(error));
+    } catch (e: any) {
+        console.error('Failed to save settings', e);
+        return Result.error(e.message);
     }
   }
 };
