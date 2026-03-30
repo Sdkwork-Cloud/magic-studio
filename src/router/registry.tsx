@@ -3,14 +3,18 @@ import React, { lazy, Suspense } from 'react';
 import { ROUTES, RoutePath } from './routes';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
+import HomePage from '../pages/HomePage';
 
 // Heavy modules: Lazy load to fix circular dependencies and improve startup
-const HomePage = lazy(() => import('../pages/HomePage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const PricingPage = lazy(() => import('@sdkwork/react-vip').then(m => ({ default: m.PricingPage })));
 const ChatPage = lazy(() => import('@sdkwork/react-chat').then(m => ({ default: m.ChatPage })));
+const ChatStoreProvider = lazy(() => import('@sdkwork/react-chat').then(m => ({ default: m.ChatStoreProvider })));
+const NotificationStoreProvider = lazy(() =>
+  import('@sdkwork/react-notifications').then(m => ({ default: m.NotificationStoreProvider })),
+);
 const DrivePage = lazy(() => import('@sdkwork/react-drive').then(m => ({ default: m.DrivePage })));
 const BrowserPage = lazy(() => import('@sdkwork/react-browser').then(m => ({ default: m.BrowserPage })));
 const NotesPage = lazy(() => import('@sdkwork/react-notes').then(m => ({ default: m.NotesPage })));
@@ -35,15 +39,12 @@ const FilmHomePage = lazy(() => import('@sdkwork/react-film').then(m => ({ defau
 const FilmEditorPage = lazy(() => import('@sdkwork/react-film').then(m => ({ default: m.FilmEditorPage })));
 const PromptOptimizerPage = lazy(() => import('@sdkwork/react-prompt').then(m => ({ default: m.PromptOptimizerPage })));
 
-// Fix for PortalPage ReferenceError:
-// Importing from '@sdkwork/react-portal-video' (index.ts) can cause cycles if index.ts exports everything.
-// Direct import combined with lazy is safer.
-const PortalPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.PortalPage })));
-const AIToolsPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.AIToolsPage })));
-const DiscoverPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DiscoverPage })));
-const CommunityPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.CommunityPage })));
-const TheaterPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.TheaterPage })));
-const DownloadAppPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DownloadAppPage })));
+const PortalPage = lazy(() => import('@sdkwork/react-portal-video/pages/PortalPage'));
+const AIToolsPage = lazy(() => import('@sdkwork/react-portal-video/pages/AIToolsPage'));
+const DiscoverPage = lazy(() => import('@sdkwork/react-portal-video/pages/DiscoverPage'));
+const CommunityPage = lazy(() => import('@sdkwork/react-portal-video/pages/CommunityPage'));
+const TheaterPage = lazy(() => import('@sdkwork/react-portal-video/pages/TheaterPage'));
+const DownloadAppPage = lazy(() => import('@sdkwork/react-portal-video/pages/DownloadAppPage'));
 const SkillsPage = lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillsPage })));
 const SkillDetailPage = lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillDetailPage })));
 const PluginsPage = lazy(() => import('@sdkwork/react-plugins').then(m => ({ default: m.PluginsPage })));
@@ -91,8 +92,8 @@ const CharacterLeftGeneratorPanel = lazy(() => import('@sdkwork/react-character'
 
 // Loading fallback for panels
 const PanelLoadingFallback = () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
-        <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+    <div className="app-loading-screen w-full h-full flex items-center justify-center">
+        <div className="app-loading-spinner w-4 h-4 rounded-full animate-spin" />
     </div>
 );
 
@@ -108,8 +109,8 @@ const PageLoadingFallback = () => {
     const { t } = useTranslation();
 
     return (
-        <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
-            <Loader2 size={24} className="animate-spin text-blue-500" />
+        <div className="app-loading-screen w-full h-screen flex items-center justify-center gap-3">
+            <Loader2 size={24} className="animate-spin text-primary-500" />
             <span className="text-xs font-medium">{t('appShell.loading_module')}</span>
         </div>
     );
@@ -130,13 +131,14 @@ export interface RouteDefinition {
     layout?: LayoutType;
     leftPane?: React.ComponentType<any>;
     provider?: React.ComponentType<any>;
+    requiresAuth?: boolean;
 }
 
 export const APP_ROUTES: RouteDefinition[] = [
     // --- Main Layout Routes ---
-    { path: ROUTES.HOME, component: HomePage, layout: 'none' }, 
+    { path: ROUTES.HOME, component: HomePage, layout: 'none', provider: NotificationStoreProvider },
     { path: ROUTES.EDITOR, component: EditorPage, layout: 'main', provider: EditorStoreProvider },
-    { path: ROUTES.CHAT, component: ChatPage, layout: 'none' },
+    { path: ROUTES.CHAT, component: ChatPage, layout: 'none', provider: ChatStoreProvider },
     { path: ROUTES.BROWSER, component: BrowserPage, layout: 'main' },
     { path: ROUTES.DRIVE, component: DrivePage, layout: 'creation' },
     { 
@@ -146,7 +148,7 @@ export const APP_ROUTES: RouteDefinition[] = [
         provider: AssetStoreProvider
     },
     { path: ROUTES.SETTINGS, component: SettingsPage, layout: 'none' },
-    { path: ROUTES.PROFILE, component: ProfilePage, layout: 'blank' },
+    { path: ROUTES.PROFILE, component: ProfilePage, layout: 'blank', requiresAuth: true },
     { path: ROUTES.VIP, component: PricingPage, layout: 'main' },
     
     // --- Specific Tool Layouts ---
@@ -261,61 +263,74 @@ export const APP_ROUTES: RouteDefinition[] = [
     {
         path: ROUTES.PORTAL,
         component: LazyPageWrapper(PortalPage),
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_VIDEO,
         component: LazyPageWrapper(PortalPage),
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_TOOLS,
         component: AIToolsPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_DISCOVER,
         component: DiscoverPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_COMMUNITY,
         component: CommunityPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_THEATER,
         component: TheaterPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_SKILLS,
         component: SkillsPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: `${ROUTES.PORTAL_SKILLS}/:skillId`,
         component: SkillDetailPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.PORTAL_PLUGINS,
         component: PluginsPage,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.TASK_MARKET,
         component: TaskMarketWithLayout,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     },
     {
         path: ROUTES.MY_TASKS,
         component: MyTasksWithLayout,
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider,
+        requiresAuth: true
     },
     {
         path: ROUTES.DOWNLOAD,
         component: LazyPageWrapper(DownloadAppPage),
-        layout: 'none'
+        layout: 'none',
+        provider: NotificationStoreProvider
     }
 ];

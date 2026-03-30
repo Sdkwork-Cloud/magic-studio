@@ -1,8 +1,38 @@
 
-import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { useRouter, ROUTES, createOfflineArtwork } from '@sdkwork/react-core'
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useTranslation } from '@sdkwork/react-i18n';
+
+const VIDEO_BANNER_IMAGE = createOfflineArtwork({
+    title: 'AI Video',
+    subtitle: 'Cinematic motion generation with local-ready previews',
+    eyebrow: 'Magic Studio',
+    badge: 'Create',
+    accent: '#5b8cff',
+    width: 1200,
+    height: 750,
+});
+
+const MAGIC_CUT_BANNER_IMAGE = createOfflineArtwork({
+    title: 'Magic Cut',
+    subtitle: 'Timeline editing and finishing in one desktop workspace',
+    eyebrow: 'Magic Studio',
+    badge: 'Edit',
+    accent: '#ef4444',
+    width: 1200,
+    height: 750,
+});
+
+const CHAT_BANNER_IMAGE = createOfflineArtwork({
+    title: 'Open Chat',
+    subtitle: 'Agent collaboration with the same polished bundled chrome',
+    eyebrow: 'Magic Studio',
+    badge: 'Assist',
+    accent: '#10b981',
+    width: 1200,
+    height: 750,
+});
 
 export const FeaturedBanner: React.FC = () => {
     // Use useRouter safely - it returns default values if not wrapped in RouterProvider
@@ -17,7 +47,7 @@ export const FeaturedBanner: React.FC = () => {
                 title={t('portalVideo.featuredBanner.cards.video.title')}
                 subtitle={t('portalVideo.featuredBanner.cards.video.subtitle')}
                 description={t('portalVideo.featuredBanner.cards.video.description')}
-                image="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop"
+                image={VIDEO_BANNER_IMAGE}
                 badge={t('portalVideo.featuredBanner.cards.video.badge')}
                 badgeColor="bg-blue-600"
                 onClick={() => navigate(ROUTES.VIDEO)}
@@ -28,7 +58,7 @@ export const FeaturedBanner: React.FC = () => {
                 title={t('portalVideo.featuredBanner.cards.magicCut.title')}
                 subtitle={t('portalVideo.featuredBanner.cards.magicCut.subtitle')}
                 description={t('portalVideo.featuredBanner.cards.magicCut.description')}
-                image="https://images.unsplash.com/photo-1574717436423-a75aa92f3523?q=80&w=1200&auto=format&fit=crop"
+                image={MAGIC_CUT_BANNER_IMAGE}
                 tag={t('portalVideo.featuredBanner.cards.magicCut.tag')}
                 tagColor="bg-gradient-to-r from-red-500 to-pink-500"
                 onClick={() => navigate(ROUTES.MAGIC_CUT)}
@@ -39,7 +69,7 @@ export const FeaturedBanner: React.FC = () => {
                 title={t('portalVideo.featuredBanner.cards.chat.title')}
                 subtitle={t('portalVideo.featuredBanner.cards.chat.subtitle')}
                 description={t('portalVideo.featuredBanner.cards.chat.description')}
-                image="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop"
+                image={CHAT_BANNER_IMAGE}
                 badge={t('portalVideo.featuredBanner.cards.chat.badge')}
                 badgeColor="bg-emerald-500"
                 onClick={() => navigate(ROUTES.CHAT)}

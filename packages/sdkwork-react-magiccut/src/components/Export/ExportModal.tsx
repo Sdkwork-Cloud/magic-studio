@@ -417,7 +417,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
                         {te('modal.preview')}
                     </div>
 
-                    <div className="flex-1 flex items-center justify-center p-8 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+                    <div className="flex-1 flex items-center justify-center p-8 bg-[url('/visual-textures/dark-matter.svg')]">
                         <div
                             className="relative shadow-2xl rounded-lg overflow-hidden ring-1 ring-white/10 bg-black transition-all duration-300"
                             style={{

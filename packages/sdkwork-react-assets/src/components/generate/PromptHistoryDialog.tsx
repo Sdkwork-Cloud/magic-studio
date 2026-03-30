@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { History, Search } from 'lucide-react';
 import {
   promptLibraryService,
@@ -30,6 +30,16 @@ function formatHistoryMeta(record: PromptHistoryRecord, t: (key: string, options
   return parts.join(' · ');
 }
 
+function buildPromptHistoryRequestKey(options: {
+  keyword: string;
+  promptInstance?: ScopedSdkInstance;
+}): string {
+  return JSON.stringify({
+    keyword: options.keyword.trim(),
+    promptInstance: options.promptInstance ?? null,
+  });
+}
+
 export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
   open,
   onOpenChange,
@@ -41,9 +51,21 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
   const [records, setRecords] = useState<PromptHistoryRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resolvedRequestKey, setResolvedRequestKey] = useState<string | null>(null);
+
+  const requestKey = useMemo(
+    () =>
+      buildPromptHistoryRequestKey({
+        keyword,
+        promptInstance,
+      }),
+    [keyword, promptInstance],
+  );
 
   useEffect(() => {
     if (!open) {
+      setLoading(false);
+      setResolvedRequestKey(null);
       return;
     }
 
@@ -62,11 +84,13 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
           return;
         }
         setRecords(result.items);
+        setResolvedRequestKey(requestKey);
       } catch (loadError) {
         if (!active) {
           return;
         }
         setError(loadError instanceof Error ? loadError.message : t('assetCenter.promptHistory.failedToLoad'));
+        setResolvedRequestKey(requestKey);
       } finally {
         if (active) {
           setLoading(false);
@@ -79,7 +103,12 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
     return () => {
       active = false;
     };
-  }, [keyword, open, promptInstance, t]);
+  }, [keyword, open, promptInstance, requestKey, t]);
+
+  const isRequestPending = open && resolvedRequestKey !== requestKey;
+  const isShowingLoading = open && (loading || isRequestPending);
+  const isShowingError = !isShowingLoading && Boolean(error);
+  const isShowingEmpty = !isShowingLoading && !error && records.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,26 +136,42 @@ export const PromptHistoryDialog: React.FC<PromptHistoryDialogProps> = ({
             />
           </div>
 
-          {error ? (
+          {isShowingError ? (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {error}
             </div>
           ) : null}
 
           <div className="max-h-[440px] space-y-3 overflow-y-auto pr-1">
-            {loading ? (
-              <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
-                {t('assetCenter.promptHistory.loading')}
+            {isShowingLoading ? (
+              <div className="space-y-3" aria-live="polite">
+                <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-3 text-sm text-gray-300">
+                  <div className="inline-flex items-center gap-2">
+                    <History size={14} className="text-orange-300" />
+                    <span>{t('assetCenter.promptHistory.loading')}</span>
+                  </div>
+                </div>
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="animate-pulse rounded-2xl border border-[#2a2a30] bg-[#18181b] px-4 py-3"
+                  >
+                    <div className="h-4 w-1/3 rounded bg-[#242428]" />
+                    <div className="mt-3 h-3 w-1/4 rounded bg-[#1f1f23]" />
+                    <div className="mt-4 h-3 w-full rounded bg-[#202024]" />
+                    <div className="mt-2 h-3 w-5/6 rounded bg-[#202024]" />
+                  </div>
+                ))}
               </div>
             ) : null}
 
-            {!loading && records.length === 0 ? (
+            {isShowingEmpty ? (
               <div className="rounded-xl border border-[#2a2a30] bg-[#18181b] px-4 py-8 text-center text-sm text-gray-400">
                 {t('assetCenter.promptHistory.empty')}
               </div>
             ) : null}
 
-            {!loading &&
+            {!isShowingLoading &&
               records.map((record) => (
                 <div
                   key={record.id}

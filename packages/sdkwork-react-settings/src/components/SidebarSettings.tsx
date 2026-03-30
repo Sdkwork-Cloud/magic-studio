@@ -29,7 +29,7 @@ const SidebarSettings: React.FC = () => {
 
     const toggleItemVisibility = (itemId: string, visible: boolean, parentId?: string) => {
         const newConfig = [...currentConfig];
-        
+
         if (parentId) {
             const parent = newConfig.find(i => i.id === parentId);
             if (parent && parent.children) {
@@ -55,11 +55,11 @@ const SidebarSettings: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                        <LayoutTemplate size={28} className="text-blue-500" />
+                     <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--text-primary)]">
+                        <LayoutTemplate size={28} className="text-primary-500" />
                         {t('settings.sidebar_layout.title')}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1 max-w-xl">
+                    <p className="mt-1 max-w-xl text-sm text-[var(--text-muted)]">
                         {t('settings.sidebar_layout.subtitle')}
                     </p>
                 </div>
@@ -75,20 +75,20 @@ const SidebarSettings: React.FC = () => {
                                 key={template.id}
                                 onClick={() => applyTemplate(template.id)}
                                 className={`
-                                    relative p-4 rounded-xl border text-left transition-all duration-200
-                                    ${isActive 
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500' 
-                                        : 'bg-white dark:bg-[#1e1e1e] border-gray-200 dark:border-[#333] hover:border-blue-400'
+                                    relative rounded-2xl p-4 text-left transition-all duration-200
+                                    ${isActive
+                                        ? 'app-surface-strong border-primary-500 ring-1 ring-primary-500 bg-[color-mix(in_srgb,var(--theme-primary-500)_10%,var(--bg-panel-strong))]'
+                                        : 'app-surface-strong hover:border-[var(--border-strong)] hover:bg-[color-mix(in_srgb,var(--text-primary)_3%,transparent)]'
                                     }
                                 `}
                             >
                                 <div className="flex justify-between items-start">
-                                    <h4 className={`font-bold text-sm ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-200'}`}>
+                                    <h4 className={`text-sm font-bold ${isActive ? 'text-primary-500' : 'text-[var(--text-primary)]'}`}>
                                         {t(template.labelKey)}
                                     </h4>
-                                    {isActive && <Check size={16} className="text-blue-500" />}
+                                    {isActive && <Check size={16} className="text-primary-500" />}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                                <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
                                     {t(template.descriptionKey)}
                                 </p>
                             </button>
@@ -99,34 +99,34 @@ const SidebarSettings: React.FC = () => {
 
             {/* Item Toggles */}
             <SettingsSection title={t('settings.sidebar_layout.sections.items')}>
-                <div className="bg-white dark:bg-[#1e1e1e] rounded-xl border border-gray-200 dark:border-[#333] p-4 space-y-2">
+                <div className="app-surface-strong rounded-2xl p-4 space-y-2">
                     {currentConfig.map((item: SidebarItemConfig) => {
                         if (item.id.startsWith('separator')) return null;
 
                         return (
                             <div key={item.id} className="space-y-1">
-                                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#252526]">
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                <div className="flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-[color-mix(in_srgb,var(--text-primary)_4%,transparent)]">
+                                    <span className="text-sm font-medium text-[var(--text-secondary)]">
                                         {t(item.labelKey)}
                                     </span>
-                                    <SettingToggle 
-                                        checked={item.visible} 
-                                        onChange={(v) => toggleItemVisibility(item.id, v)} 
+                                    <SettingToggle
+                                        checked={item.visible}
+                                        onChange={(v) => toggleItemVisibility(item.id, v)}
                                         label=""
                                     />
                                 </div>
-                                
+
                                 {/* Children */}
                                 {item.children && item.children.length > 0 && (
-                                    <div className="ml-6 border-l border-gray-200 dark:border-[#333] pl-2 space-y-1">
+                                    <div className="ml-6 space-y-1 border-l border-[var(--border-color)] pl-2">
                                         {item.children.map(child => (
-                                            <div key={child.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#252526]">
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            <div key={child.id} className="flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-[color-mix(in_srgb,var(--text-primary)_4%,transparent)]">
+                                                <span className="text-xs text-[var(--text-muted)]">
                                                     {t(child.labelKey)}
                                                 </span>
-                                                <SettingToggle 
-                                                    checked={child.visible} 
-                                                    onChange={(v) => toggleItemVisibility(child.id, v, item.id)} 
+                                                <SettingToggle
+                                                    checked={child.visible}
+                                                    onChange={(v) => toggleItemVisibility(child.id, v, item.id)}
                                                     label=""
                                                 />
                                             </div>
@@ -137,11 +137,11 @@ const SidebarSettings: React.FC = () => {
                         );
                     })}
                 </div>
-                
+
                 <div className="flex justify-end mt-4">
-                     <button 
+                     <button
                         onClick={() => applyTemplate('default')}
-                        className="text-xs text-gray-500 hover:text-blue-500 flex items-center gap-1 transition-colors"
+                        className="flex items-center gap-1 text-xs text-[var(--text-muted)] transition-colors hover:text-primary-500"
                      >
                          <RotateCcw size={12} /> {t('settings.sidebar_layout.actions.reset')}
                      </button>

@@ -27,6 +27,8 @@ const GIT_SDK_COMMON_ENTRY = path.resolve(
 );
 
 const normalizeModuleId = (id: string): string => id.replace(/\\/g, '/');
+const matchesChunkFamily = (id: string, fragments: string[]): boolean =>
+  fragments.some(fragment => id.includes(fragment));
 
 const resolveSdkAliases = () => {
   const sdkMode = (process.env.MAGIC_STUDIO_SDK_MODE ?? 'external').trim().toLowerCase();
@@ -69,8 +71,63 @@ const resolveSdkAliases = () => {
 const resolveManualChunk = (id: string): string | undefined => {
   const normalized = normalizeModuleId(id);
 
-  if (normalized.includes('/node_modules/')) {
-    return 'vendor';
+  if (
+    matchesChunkFamily(normalized, [
+      '/node_modules/react/',
+      '/node_modules/react-dom/',
+      '/node_modules/scheduler/',
+    ])
+  ) {
+    return 'vendor-react';
+  }
+
+  if (
+    matchesChunkFamily(normalized, [
+      '/node_modules/@monaco-editor/',
+      '/node_modules/monaco-editor/',
+    ])
+  ) {
+    return 'vendor-monaco';
+  }
+
+  if (
+    matchesChunkFamily(normalized, [
+      '/node_modules/@xterm/',
+      '/node_modules/xterm/',
+    ])
+  ) {
+    return 'vendor-terminal';
+  }
+
+  if (
+    matchesChunkFamily(normalized, [
+      '/node_modules/@aws-sdk/',
+      '/node_modules/@smithy/',
+    ])
+  ) {
+    return 'vendor-cloud';
+  }
+
+  if (matchesChunkFamily(normalized, ['/node_modules/@google/genai/'])) {
+    return 'vendor-ai';
+  }
+
+  if (
+    matchesChunkFamily(normalized, [
+      '/node_modules/@tiptap/',
+      '/node_modules/prosemirror-',
+      '/node_modules/tippy.js/',
+    ])
+  ) {
+    return 'vendor-richtext';
+  }
+
+  if (matchesChunkFamily(normalized, ['/node_modules/@tauri-apps/'])) {
+    return 'vendor-tauri';
+  }
+
+  if (matchesChunkFamily(normalized, ['/node_modules/jszip/'])) {
+    return 'vendor-archive';
   }
 
   if (normalized.includes('/packages/sdkwork-react-magiccut/')) return 'feature-magiccut';
@@ -78,7 +135,6 @@ const resolveManualChunk = (id: string): string | undefined => {
   if (normalized.includes('/packages/sdkwork-react-notes/')) return 'feature-notes';
   if (normalized.includes('/packages/sdkwork-react-editor/')) return 'feature-editor';
   if (normalized.includes('/packages/sdkwork-react-drive/')) return 'feature-drive';
-  if (normalized.includes('/packages/sdkwork-react-portal-video/')) return 'feature-portal-video';
   if (normalized.includes('/packages/sdkwork-react-assets/')) return 'feature-assets';
   return undefined;
 };
@@ -365,6 +421,48 @@ export default defineConfig(({ mode }) => {
         {
           find: '@sdkwork/react-notes',
           replacement: path.resolve(__dirname, 'packages/sdkwork-react-notes/src/index.ts'),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/PortalPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/PortalPage.tsx'
+          ),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/AIToolsPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/AIToolsPage.tsx'
+          ),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/DiscoverPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/DiscoverPage.tsx'
+          ),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/CommunityPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/CommunityPage.tsx'
+          ),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/TheaterPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/TheaterPage.tsx'
+          ),
+        },
+        {
+          find: '@sdkwork/react-portal-video/pages/DownloadAppPage',
+          replacement: path.resolve(
+            __dirname,
+            'packages/sdkwork-react-portal-video/src/pages/DownloadAppPage.tsx'
+          ),
         },
         {
           find: '@sdkwork/react-portal-video',

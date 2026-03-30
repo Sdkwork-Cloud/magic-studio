@@ -4,6 +4,7 @@ import { WindowControls } from '@sdkwork/react-commons';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { Sparkles, Smartphone, ScanLine, ShieldCheck } from 'lucide-react';
 import { LoginForm, RegisterForm, ForgotPasswordForm, QrCodeLogin } from '../index';
+import { AUTH_GRAIN_TEXTURE_URL } from '../constants/authVisuals';
 
 type AuthView = 'login' | 'register' | 'forgot';
 
@@ -30,7 +31,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-900/20 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[120px] rounded-full mix-blend-screen" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150" />
+                <div
+                    className="absolute inset-0 opacity-20 brightness-100 contrast-150"
+                    style={{ backgroundImage: `url(${AUTH_GRAIN_TEXTURE_URL})` }}
+                />
             </div>
 
             {isDesktopRuntime && (

@@ -10,6 +10,44 @@
         --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
         --font-serif: 'Merriweather', serif;
+        --boot-accent-400: #f87171;
+        --boot-accent-500: #ef4444;
+        --boot-accent-600: #dc2626;
+        --boot-background:
+          radial-gradient(
+            circle at top,
+            color-mix(in srgb, var(--boot-accent-500) 18%, transparent),
+            transparent 48%
+          ),
+          linear-gradient(180deg, #13151a 0%, #09090b 100%);
+        --boot-panel-background: rgba(24, 24, 27, 0.74);
+        --boot-panel-border: rgba(255, 255, 255, 0.08);
+        --boot-panel-shadow: 0 24px 80px rgba(15, 23, 42, 0.32);
+        --boot-text-color: #f4f4f5;
+        --boot-text-muted: rgba(212, 212, 216, 0.8);
+        --boot-mark-background: linear-gradient(135deg, var(--boot-accent-400), var(--boot-accent-600));
+        --boot-mark-shadow: 0 16px 36px color-mix(in srgb, var(--boot-accent-600) 34%, transparent);
+        --boot-spinner-track: color-mix(in srgb, var(--boot-accent-400) 18%, transparent);
+        --boot-spinner-head: var(--boot-accent-400);
+      }
+
+      html:not(.dark) {
+        --boot-background:
+          radial-gradient(
+            circle at top,
+            color-mix(in srgb, var(--boot-accent-500) 12%, transparent),
+            transparent 42%
+          ),
+          linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%);
+        --boot-panel-background: rgba(255, 255, 255, 0.9);
+        --boot-panel-border: rgba(15, 23, 42, 0.08);
+        --boot-panel-shadow: 0 24px 70px rgba(148, 163, 184, 0.2);
+        --boot-text-color: #111827;
+        --boot-text-muted: rgba(71, 85, 105, 0.82);
+        --boot-mark-background: linear-gradient(135deg, var(--boot-accent-500), var(--boot-accent-600));
+        --boot-mark-shadow: 0 16px 36px color-mix(in srgb, var(--boot-accent-500) 24%, transparent);
+        --boot-spinner-track: color-mix(in srgb, var(--boot-accent-500) 16%, transparent);
+        --boot-spinner-head: var(--boot-accent-600);
       }
 
       /* Custom scrollbar for Webkit */
@@ -173,12 +211,261 @@
         height: 100%;
         margin: 0;
         overflow: hidden;
-        background-color: #000;
-        color: #fff;
+        background: var(--boot-background);
+        color: var(--boot-text-color);
+      }
+
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        box-sizing: border-box;
+        font-family: var(--font-sans);
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 180ms ease, visibility 180ms ease;
+      }
+
+      #boot-splash[data-state="ready"] {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .boot-splash__panel {
+        display: flex;
+        min-width: min(420px, 100%);
+        max-width: 520px;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid var(--boot-panel-border);
+        border-radius: 28px;
+        background: var(--boot-panel-background);
+        box-shadow: var(--boot-panel-shadow);
+        backdrop-filter: blur(20px);
+        padding: 32px 28px;
+        text-align: center;
+        transition: transform 180ms ease, opacity 180ms ease;
+      }
+
+      #boot-splash[data-state="ready"] .boot-splash__panel {
+        opacity: 0;
+        transform: translateY(6px) scale(0.985);
+      }
+
+      .boot-splash__mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        background: var(--boot-mark-background);
+        box-shadow: var(--boot-mark-shadow);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .boot-splash__title {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .boot-splash__subtitle {
+        font-size: 12px;
+        color: var(--boot-text-muted);
+      }
+
+      .boot-splash__spinner {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        border: 2px solid var(--boot-spinner-track);
+        border-top-color: var(--boot-spinner-head);
+        animation: boot-splash-spin 0.9s linear infinite;
+      }
+
+      @keyframes boot-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
+    <script>
+      (() => {
+        const SNAPSHOT_KEY = 'magic_studio_appearance_snapshot_v1';
+        const SETTINGS_KEYS = ['magic_studio_settings_v2', 'open_studio_settings_v1'];
+        const TAURI_SNAPSHOT = window.__MAGIC_STUDIO_TAURI_APPEARANCE_SNAPSHOT__;
+        const BOOT_PRESENTATION_WINDOW_KEY = '__MAGIC_STUDIO_BOOT_PRESENTATION__';
+        const defaultAppearance = {
+          theme: 'dark',
+          themeColor: 'lobster',
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+          fontSize: 13,
+          lineHeight: 1.5,
+          densityMode: 'standard',
+          sidebarPosition: 'left',
+        };
+
+        const readStorage = (key) => {
+          try {
+            return window.localStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        };
+
+        const normalizeLanguage = (value) => {
+          if (typeof value === 'string') {
+            const normalized = value.toLowerCase();
+            if (normalized === 'system') {
+              return normalizeLanguage(window.navigator?.language || 'en');
+            }
+            if (normalized.startsWith('zh')) {
+              return 'zh-CN';
+            }
+          }
+
+          return 'en';
+        };
+
+        const resolveBootPresentation = (language) => {
+          if (language === 'zh-CN') {
+            return {
+              language,
+              title: 'Magic Studio',
+              subtitle: '正在初始化工作台、主题与首页体验...',
+            };
+          }
+
+          return {
+            language: 'en',
+            title: 'Magic Studio',
+            subtitle: 'Initializing workspace, theme and home experience...',
+          };
+        };
+
+        const parseJson = (value) => {
+          if (!value) {
+            return null;
+          }
+
+          try {
+            return JSON.parse(value);
+          } catch {
+            return null;
+          }
+        };
+
+        const snapshotFromSettings = (settings) => {
+          if (!settings || typeof settings !== 'object' || !settings.appearance) {
+            return null;
+          }
+
+          return {
+            appearance: settings.appearance,
+            editor: settings.editor,
+            terminal: settings.terminal,
+            language: settings.general?.language,
+          };
+        };
+
+        const themePalettes = {
+          lobster: { 400: '#f87171', 500: '#ef4444', 600: '#dc2626' },
+          'tech-blue': { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb' },
+          'green-tech': { 400: '#34d399', 500: '#10b981', 600: '#059669' },
+          zinc: { 400: '#a1a1aa', 500: '#71717a', 600: '#52525b' },
+          violet: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' },
+          rose: { 400: '#fb7185', 500: '#f43f5e', 600: '#e11d48' },
+        };
+
+        const snapshot =
+          (TAURI_SNAPSHOT && TAURI_SNAPSHOT.appearance ? TAURI_SNAPSHOT : null) ||
+          parseJson(readStorage(SNAPSHOT_KEY)) ||
+          SETTINGS_KEYS.map((key) => snapshotFromSettings(parseJson(readStorage(key)))).find(Boolean) ||
+          { appearance: defaultAppearance };
+
+        const appearance = { ...defaultAppearance, ...(snapshot.appearance || {}) };
+        const root = document.documentElement;
+        const palette = themePalettes[appearance.themeColor] || themePalettes[defaultAppearance.themeColor];
+        const language = normalizeLanguage(snapshot.language || window.navigator?.language || 'en');
+        const bootPresentation = resolveBootPresentation(language);
+        const prefersDark =
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = appearance.theme === 'dark' || (appearance.theme === 'system' && prefersDark);
+
+        window[BOOT_PRESENTATION_WINDOW_KEY] = bootPresentation;
+        root.setAttribute('lang', bootPresentation.language);
+        root.style.setProperty('--boot-accent-400', palette[400]);
+        root.style.setProperty('--boot-accent-500', palette[500]);
+        root.style.setProperty('--boot-accent-600', palette[600]);
+
+        if (isDark) {
+          root.classList.add('dark');
+          root.style.colorScheme = 'dark';
+        } else {
+          root.classList.remove('dark');
+          root.style.colorScheme = 'light';
+        }
+
+        root.setAttribute('data-theme', appearance.themeColor);
+        root.setAttribute('data-density', appearance.densityMode);
+        root.setAttribute('data-sidebar-position', appearance.sidebarPosition);
+        root.style.setProperty('--app-font-family', appearance.fontFamily);
+        root.style.setProperty('--app-font-size', `${appearance.fontSize}px`);
+        root.style.setProperty('--app-line-height', String(appearance.lineHeight));
+
+        if (snapshot.editor?.fontFamily) {
+          root.style.setProperty('--app-code-font-family', snapshot.editor.fontFamily);
+        }
+        if (typeof snapshot.editor?.fontSize === 'number') {
+          root.style.setProperty('--app-code-font-size', `${snapshot.editor.fontSize}px`);
+        }
+        if (snapshot.terminal?.fontFamily) {
+          root.style.setProperty('--app-terminal-font-family', snapshot.terminal.fontFamily);
+        }
+        if (typeof snapshot.terminal?.fontSize === 'number') {
+          root.style.setProperty('--app-terminal-font-size', `${snapshot.terminal.fontSize}px`);
+        }
+        if (typeof snapshot.terminal?.lineHeight === 'number') {
+          root.style.setProperty('--app-terminal-line-height', String(snapshot.terminal.lineHeight));
+        }
+      })();
+    </script>
 </head>
   <body>
+    <div id="boot-splash" aria-hidden="true">
+      <div class="boot-splash__panel">
+        <div class="boot-splash__mark">MS</div>
+        <div class="boot-splash__title" data-boot-field="title">Magic Studio</div>
+        <div class="boot-splash__subtitle" data-boot-field="subtitle">Initializing workspace, theme and home experience...</div>
+        <div class="boot-splash__spinner"></div>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const presentation = window.__MAGIC_STUDIO_BOOT_PRESENTATION__;
+        if (!presentation || typeof document === 'undefined') {
+          return;
+        }
+
+        document.querySelectorAll('[data-boot-field]').forEach((node) => {
+          const field = node.getAttribute('data-boot-field');
+          const value = field ? presentation[field] : null;
+
+          if (typeof value === 'string') {
+            node.textContent = value;
+          }
+        });
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>

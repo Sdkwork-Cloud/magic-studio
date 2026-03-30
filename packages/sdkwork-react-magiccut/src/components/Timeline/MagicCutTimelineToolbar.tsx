@@ -215,10 +215,10 @@ const ZoomSlider: React.FC<{
             title={title}
         >
             {/* Track Background */}
-            <div className="absolute left-0 right-0 h-1 bg-[#27272a] rounded-full overflow-hidden pointer-events-none group-hover:bg-[#333] transition-colors">
+            <div className="app-toolbar-slider-track absolute left-0 right-0 h-1 rounded-full overflow-hidden pointer-events-none group-hover:bg-[color-mix(in_srgb,var(--text-primary)_14%,transparent)]">
                 {/* Active Fill */}
                 <div
-                    className={`h-full bg-blue-600 transition-all duration-75 ease-linear ${isDragging ? 'bg-blue-500' : ''}`}
+                    className={`app-toolbar-slider-fill h-full transition-all duration-75 ease-linear ${isDragging ? 'brightness-110' : ''}`}
                     style={{ width: `${localValue}%` }}
                 />
             </div>
@@ -226,11 +226,10 @@ const ZoomSlider: React.FC<{
             {/* Thumb / Handle */}
             <div
                 className={`
-                    absolute top-1/2 -translate-y-1/2 h-3 w-3 
-                    bg-[#e4e4e7] rounded-full shadow-md z-10 
-                    border border-[#52525b] 
+                    absolute top-1/2 -translate-y-1/2 h-3 w-3
+                    app-toolbar-slider-thumb rounded-full z-10
                     transform transition-transform duration-75 ease-out
-                    ${isDragging ? 'scale-125 bg-white border-blue-400 cursor-grabbing' : 'scale-100 group-hover:scale-110 cursor-ew-resize'}
+                    ${isDragging ? 'scale-125 cursor-grabbing border-primary-500' : 'scale-100 group-hover:scale-110 cursor-ew-resize'}
                 `}
                 style={{
                     left: `${localValue}%`,
@@ -258,11 +257,11 @@ const ToolbarButton: React.FC<{
         onClick={onClick}
         disabled={disabled}
         title={title}
+        data-active={isActive ? 'true' : undefined}
         className={`
-            p-1.5 rounded-md transition-all duration-200 flex items-center justify-center
-            ${disabled ? 'text-gray-600 cursor-not-allowed opacity-50' : ''}
-            ${!disabled && !isActive ? `text-gray-400 hover:bg-[#27272a] hover:shadow-sm ${hoverColor || 'hover:text-white'}` : ''}
-            ${isActive ? (activeColor || 'bg-[#27272a] text-white shadow-inner') : ''}
+            app-toolbar-button flex items-center justify-center rounded-lg p-1.5
+            ${!disabled && !isActive ? hoverColor || '' : ''}
+            ${isActive && activeColor ? activeColor : ''}
             active:scale-95
         `}
     >
@@ -354,7 +353,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
 
     // --- AI Generation Callbacks (Decoupled) ---
 
-    const emitAddClip = (resource: any, duration: number) => {
+    const emitAddClip = (resource: AnyMediaResource, duration: number) => {
         if (!selectedTrackId) return;
         const currentT = store.getState().currentTime; // Use live time from store
         bus.emit<TimelineAddClipPayload>(MagicCutEvents.TIMELINE_ADD_CLIP, {
@@ -481,19 +480,19 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
 
     return (
         <>
-            <div className="h-10 border-b border-[#27272a] bg-[#09090b] flex items-center justify-between px-3 flex-none z-30 select-none shadow-sm relative">
+            <div className="app-toolbar-strip relative flex h-10 flex-none items-center justify-between border-b px-3 select-none shadow-sm z-30">
 
                 {/* Left Tools Group */}
                 <div className="flex items-center gap-2">
 
-                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                    <div className="app-toolbar-group flex items-center rounded-xl p-0.5">
                         <ToolbarButton onClick={handleUndo} disabled={!canUndo} icon={Undo} title={withShortcut(tc('undo'), 'Ctrl+Z')} />
                         <ToolbarButton onClick={handleRedo} disabled={!canRedo} icon={Redo} title={withShortcut(tc('redo'), 'Ctrl+Shift+Z')} />
                     </div>
 
-                    <div className="w-[1px] h-4 bg-[#27272a]" />
+                    <div className="app-toolbar-divider h-4 w-px" />
 
-                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                    <div className="app-toolbar-group flex items-center rounded-xl p-0.5">
                         <ToolbarButton
                             onClick={handleSplit}
                             icon={Scissors}
@@ -513,7 +512,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                             title={withShortcut(tl('trimEndToPlayhead'), 'W')}
                             disabled={!hasSelection}
                         />
-                        <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
+                        <div className="app-toolbar-divider mx-1 h-3 w-px" />
                         <ToolbarButton
                             onClick={handleDelete}
                             icon={Trash2}
@@ -523,9 +522,9 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         />
                     </div>
 
-                    <div className="w-[1px] h-4 bg-[#27272a]" />
+                    <div className="app-toolbar-divider h-4 w-px" />
 
-                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                    <div className="app-toolbar-group flex items-center rounded-xl p-0.5">
                         <ToolbarButton
                             onClick={() => setEditTool('select')}
                             icon={MousePointer2}
@@ -570,16 +569,16 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         />
                     </div>
 
-                    <div className="w-[1px] h-4 bg-[#27272a]" />
+                    <div className="app-toolbar-divider h-4 w-px" />
 
-                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                    <div className="app-toolbar-group flex items-center rounded-xl p-0.5">
                         <ToolbarButton
                             onClick={handleAddMarker}
                             icon={MapPin}
                             title={withShortcut(tl('addMarker'), 'M')}
                             hoverColor="hover:text-yellow-400"
                         />
-                        <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
+                        <div className="app-toolbar-divider mx-1 h-3 w-px" />
                         <ToolbarButton
                             onClick={handleToggleSnap}
                             icon={Magnet}
@@ -610,12 +609,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         onClick={() => setShowImageGen(true)}
                         disabled={!isVisualTrack}
                         className={`
-                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            app-status-pill gap-1.5 px-3 py-1 normal-case tracking-normal transition-all
                             ${isVisualTrack
-                                ? 'bg-[#18181b] text-white hover:border-purple-500 hover:text-purple-400 border-[#27272a] hover:bg-[#202023]'
-                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                                ? 'text-[var(--text-primary)] hover:border-purple-500/40 hover:text-purple-400'
+                                : 'cursor-not-allowed opacity-45'
                             }
                         `}
+                        data-tone="neutral"
                         title={getVisualTooltip(aiLabels.image)}
                     >
                         <Sparkles size={12} className={isVisualTrack ? "text-purple-500" : ""} />
@@ -626,12 +626,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         onClick={() => setShowVideoGen(true)}
                         disabled={!isVisualTrack}
                         className={`
-                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            app-status-pill gap-1.5 px-3 py-1 normal-case tracking-normal transition-all
                             ${isVisualTrack
-                                ? 'bg-[#18181b] text-white hover:border-pink-500 hover:text-pink-400 border-[#27272a] hover:bg-[#202023]'
-                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                                ? 'text-[var(--text-primary)] hover:border-pink-500/40 hover:text-pink-400'
+                                : 'cursor-not-allowed opacity-45'
                             }
                         `}
+                        data-tone="neutral"
                         title={getVisualTooltip(aiLabels.video)}
                     >
                         <Film size={12} className={isVisualTrack ? "text-pink-500" : ""} />
@@ -642,12 +643,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         onClick={() => setShowAudioGen(true)}
                         disabled={!isAudioTrack}
                         className={`
-                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            app-status-pill gap-1.5 px-3 py-1 normal-case tracking-normal transition-all
                             ${isAudioTrack
-                                ? 'bg-[#18181b] text-white hover:border-emerald-500 hover:text-emerald-400 border-[#27272a] hover:bg-[#202023]'
-                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                                ? 'text-[var(--text-primary)] hover:border-emerald-500/40 hover:text-emerald-400'
+                                : 'cursor-not-allowed opacity-45'
                             }
                         `}
+                        data-tone="neutral"
                         title={getAudioTooltip(aiLabels.speech)}
                     >
                         <Mic size={12} className={isAudioTrack ? "text-emerald-500" : ""} />
@@ -658,12 +660,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         onClick={() => setShowSfxGen(true)}
                         disabled={!isAudioTrack}
                         className={`
-                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            app-status-pill gap-1.5 px-3 py-1 normal-case tracking-normal transition-all
                             ${isAudioTrack
-                                ? 'bg-[#18181b] text-white hover:border-orange-500 hover:text-orange-400 border-[#27272a] hover:bg-[#202023]'
-                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                                ? 'text-[var(--text-primary)] hover:border-orange-500/40 hover:text-orange-400'
+                                : 'cursor-not-allowed opacity-45'
                             }
                         `}
+                        data-tone="neutral"
                         title={getAudioTooltip(aiLabels.sfx)}
                     >
                         <AudioWaveform size={12} className={isAudioTrack ? "text-orange-500" : ""} />
@@ -674,12 +677,13 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                         onClick={() => setShowMusicGen(true)}
                         disabled={!isAudioTrack}
                         className={`
-                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            app-status-pill gap-1.5 px-3 py-1 normal-case tracking-normal transition-all
                             ${isAudioTrack
-                                ? 'bg-[#18181b] text-white hover:border-indigo-500 hover:text-indigo-400 border-[#27272a] hover:bg-[#202023]'
-                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                                ? 'text-[var(--text-primary)] hover:border-indigo-500/40 hover:text-indigo-400'
+                                : 'cursor-not-allowed opacity-45'
                             }
                         `}
+                        data-tone="neutral"
                         title={getAudioTooltip(aiLabels.music)}
                     >
                         <Music size={12} className={isAudioTrack ? "text-indigo-500" : ""} />
@@ -691,16 +695,16 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
                 <div className="flex items-center gap-3 pr-1">
                     <button
                         onClick={handleFit}
-                        className="flex items-center justify-center p-1.5 hover:bg-[#18181b] rounded-md text-gray-400 hover:text-white transition-colors border border-transparent hover:border-[#27272a]"
+                        className="app-toolbar-button flex items-center justify-center rounded-xl border border-transparent p-1.5 hover:border-[var(--border-color)]"
                         title={withShortcut(tl('fitToView'), 'Shift+Z')}
                     >
                         <Minimize2 size={14} />
                     </button>
 
-                    <div className="flex items-center bg-[#18181b] rounded-md border border-[#27272a] px-2 py-1 gap-2 h-7">
+                    <div className="app-toolbar-group flex h-7 items-center gap-2 rounded-xl px-2 py-1">
                         <button
                             onClick={() => stepZoom(-1)}
-                            className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
+                            className="app-toolbar-button rounded-lg p-0.5 active:scale-95"
                             title={tl('zoomOut')}
                         >
                             <ZoomOut size={13} />
@@ -714,7 +718,7 @@ export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
 
                         <button
                             onClick={() => stepZoom(1)}
-                            className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
+                            className="app-toolbar-button rounded-lg p-0.5 active:scale-95"
                             title={tl('zoomIn')}
                         >
                             <ZoomIn size={13} />

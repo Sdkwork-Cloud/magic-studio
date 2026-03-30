@@ -4,6 +4,7 @@ export * from './entities/settings.entity';
 export * from './constants';
 export * from './store/settingsStore';
 export * from './components/SettingsWidgets';
+export { default as AppearanceSettings } from './components/AppearanceSettings';
 export * from './components/AgentsSettings';
 export * from './components/MediaSettings';
 export * from './components/StorageSettings';

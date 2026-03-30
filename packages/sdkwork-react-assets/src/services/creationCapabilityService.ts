@@ -1,10 +1,3 @@
-import type {
-  CreationCapabilitiesVO,
-  CreationChannelVO,
-  CreationModelVO,
-  CreationOptionVO,
-  CreationStyleOptionVO,
-} from '@sdkwork/app-sdk';
 import type { ModelProvider } from '@sdkwork/react-commons';
 import type { StyleOption } from '../components/CreationChatInput/StyleSelector';
 import type { PortalTab } from '../components/CreationChatInput/types';
@@ -12,9 +5,78 @@ import { getSdkworkClient } from '@sdkwork/react-core';
 
 export type CreationCapabilityTarget = PortalTab;
 
+interface CreationOptionLike {
+  value?: string | null;
+  label?: string | null;
+  description?: string | null;
+}
+
+interface CreationModelCapabilitiesLike {
+  supportsReasoning?: boolean;
+  supportsMultimodal?: boolean;
+  supportsFunctionCall?: boolean;
+  durationOptions?: CreationOptionLike[] | null;
+  resolutionOptions?: CreationOptionLike[] | null;
+  aspectRatioOptions?: CreationOptionLike[] | null;
+}
+
+interface CreationModelLike {
+  model?: string | null;
+  name?: string | null;
+  description?: string | null;
+  capabilities?: CreationModelCapabilitiesLike | null;
+}
+
+interface CreationChannelLike {
+  channel?: string | null;
+  name?: string | null;
+  models?: CreationModelLike[] | null;
+}
+
+interface CreationStyleAssetLike {
+  url?: string | null;
+  type?: string | null;
+}
+
+interface CreationStyleAssetGroupLike {
+  scene?: CreationStyleAssetLike | null;
+  portrait?: CreationStyleAssetLike | null;
+  sheet?: CreationStyleAssetLike | null;
+  video?: CreationStyleAssetLike | null;
+}
+
+interface CreationStyleOptionLike {
+  id?: string | null;
+  label?: string | null;
+  description?: string | null;
+  usage?: string[] | null;
+  prompt?: string | null;
+  promptZh?: string | null;
+  custom?: boolean | null;
+  previewColor?: string | null;
+  assets?: CreationStyleAssetGroupLike | null;
+}
+
+interface CreationCapabilitiesLike {
+  channels?: CreationChannelLike[] | null;
+  styleOptions?: CreationStyleOptionLike[] | null;
+}
+
+interface CreationCapabilitiesResponseLike {
+  code?: string | number | null;
+  msg?: string | null;
+  data?: CreationCapabilitiesLike | null;
+}
+
+interface CreationCapabilityModelApiLike {
+  getCreationCapabilities?: (
+    params: { target: CreationCapabilityTarget },
+  ) => Promise<CreationCapabilitiesResponseLike | null | undefined>;
+}
+
 export interface CreationCapabilitySnapshot {
   target: CreationCapabilityTarget;
-  channels: CreationChannelVO[];
+  channels: CreationChannelLike[];
   styleOptions: StyleOption[];
 }
 
@@ -25,6 +87,8 @@ export interface CreationEntryCapabilityOptions {
 }
 
 const SUCCESS_CODE = '2000';
+const APP_SDK_AUTH_TOKEN_STORAGE_KEY = 'sdkwork_token';
+const AUTHORIZATION_ERROR_PATTERN = /(unauthorized|forbidden|unauthenticated|not login|not logged in|未登录|无权限|权限不足|未授权|禁止访问)/i;
 const DEFAULT_VISUAL_ASPECT_RATIO_OPTIONS = [
   { label: '21:9', value: '21:9' },
   { label: '16:9', value: '16:9' },
@@ -88,13 +152,93 @@ const DEFAULT_SHORT_DRAMA_STYLE_OPTIONS: ReadonlyArray<StyleOption> = [
     previewColor: '#6b7280',
   },
 ] as const;
-const capabilityRequestCache = new Map<CreationCapabilityTarget, Promise<CreationCapabilitySnapshot>>();
+const capabilityRequestCache = new Map<string, Promise<CreationCapabilitySnapshot>>();
 
 function normalizeText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function normalizeOption(option?: CreationOptionVO | null): CreationOptionVO | null {
+function normalizeErrorCode(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  if (typeof value === 'string') {
+    return value.trim().toUpperCase();
+  }
+  return '';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function isAuthorizationError(error: unknown, depth: number = 0): boolean {
+  if (depth > 2 || error == null) {
+    return false;
+  }
+
+  if (typeof error === 'string') {
+    return AUTHORIZATION_ERROR_PATTERN.test(error);
+  }
+
+  if (error instanceof Error && AUTHORIZATION_ERROR_PATTERN.test(error.message)) {
+    return true;
+  }
+
+  if (!isRecord(error)) {
+    return false;
+  }
+
+  const httpStatus = normalizeErrorCode(error.httpStatus);
+  if (httpStatus === '401' || httpStatus === '403') {
+    return true;
+  }
+
+  const errorCodes = [
+    normalizeErrorCode(error.code),
+    normalizeErrorCode(error.businessCode),
+    normalizeErrorCode(error.errorCode),
+  ];
+  if (errorCodes.some((code) => ['401', '4010', '403', '4030', 'UNAUTHORIZED', 'FORBIDDEN', 'TOKEN_EXPIRED', 'TOKEN_INVALID', 'NO_RIGHT'].includes(code))) {
+    return true;
+  }
+
+  const errorMessage = normalizeText(error.message) || normalizeText(error.msg) || normalizeText(error.error);
+  if (AUTHORIZATION_ERROR_PATTERN.test(errorMessage)) {
+    return true;
+  }
+
+  return isAuthorizationError(error.cause, depth + 1);
+}
+
+function readCapabilityCacheScope(): 'anonymous' | 'authenticated' {
+  if (typeof window === 'undefined') {
+    return 'anonymous';
+  }
+
+  try {
+    const authToken = window.localStorage.getItem(APP_SDK_AUTH_TOKEN_STORAGE_KEY);
+    return normalizeText(authToken) ? 'authenticated' : 'anonymous';
+  } catch {
+    return 'anonymous';
+  }
+}
+
+function getCapabilityCacheKey(target: CreationCapabilityTarget): string {
+  return `${target}:${readCapabilityCacheScope()}`;
+}
+
+function createEmptyCreationCapabilitySnapshot(
+  target: CreationCapabilityTarget,
+): CreationCapabilitySnapshot {
+  return {
+    target,
+    channels: [],
+    styleOptions: [],
+  };
+}
+
+function normalizeOption(option?: CreationOptionLike | null): CreationOptionLike | null {
   if (!option) {
     return null;
   }
@@ -111,13 +255,13 @@ function normalizeOption(option?: CreationOptionVO | null): CreationOptionVO | n
   };
 }
 
-function normalizeChannel(channel?: CreationChannelVO | null): CreationChannelVO | null {
+function normalizeChannel(channel?: CreationChannelLike | null): CreationChannelLike | null {
   if (!channel) {
     return null;
   }
   const channelCode = normalizeText(channel.channel);
   const models = Array.isArray(channel.models)
-    ? channel.models.filter((model): model is CreationModelVO => Boolean(normalizeText(model?.model)))
+    ? channel.models.filter((model): model is CreationModelLike => Boolean(normalizeText(model?.model)))
     : [];
   if (!channelCode || models.length === 0) {
     return null;
@@ -130,7 +274,7 @@ function normalizeChannel(channel?: CreationChannelVO | null): CreationChannelVO
   };
 }
 
-function normalizeStyleOption(style?: CreationStyleOptionVO | null): StyleOption | null {
+function normalizeStyleOption(style?: CreationStyleOptionLike | null): StyleOption | null {
   if (!style) {
     return null;
   }
@@ -159,25 +303,25 @@ function normalizeStyleOption(style?: CreationStyleOptionVO | null): StyleOption
 }
 
 function unwrapCapabilitiesResponse(
-  response: { code?: string; msg?: string; data?: CreationCapabilitiesVO | null } | null | undefined,
+  response: CreationCapabilitiesResponseLike | null | undefined,
   target: CreationCapabilityTarget,
 ): CreationCapabilitySnapshot {
   if (!response) {
     throw new Error(`Failed to load creation capabilities for ${target}.`);
   }
-  const code = normalizeText(response.code);
+  const code = typeof response.code === 'number' ? String(response.code) : normalizeText(response.code);
   if (code && code !== SUCCESS_CODE) {
     throw new Error(normalizeText(response.msg) || `Failed to load creation capabilities for ${target}.`);
   }
   const data = response.data;
   const channels = Array.isArray(data?.channels)
     ? data.channels
-        .map((channel) => normalizeChannel(channel))
-        .filter((channel): channel is CreationChannelVO => Boolean(channel))
+        .map((channel: CreationChannelLike) => normalizeChannel(channel))
+        .filter((channel): channel is CreationChannelLike => Boolean(channel))
     : [];
   const styleOptions = Array.isArray(data?.styleOptions)
     ? data.styleOptions
-        .map((style) => normalizeStyleOption(style))
+        .map((style: CreationStyleOptionLike) => normalizeStyleOption(style))
         .filter((style): style is StyleOption => Boolean(style))
     : [];
 
@@ -191,27 +335,39 @@ function unwrapCapabilitiesResponse(
 export async function fetchCreationCapabilities(
   target: CreationCapabilityTarget,
 ): Promise<CreationCapabilitySnapshot> {
-  const cached = capabilityRequestCache.get(target);
+  const cacheKey = getCapabilityCacheKey(target);
+  const cached = capabilityRequestCache.get(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const request = getSdkworkClient()
-    .model
-    .getCreationCapabilities({ target })
-    .then((response) => unwrapCapabilitiesResponse(response, target))
-    .catch((error) => {
-      capabilityRequestCache.delete(target);
-      throw error;
-    });
+  const request = Promise.resolve().then(async () => {
+    const modelApi = getSdkworkClient().model as unknown as CreationCapabilityModelApiLike;
+    if (typeof modelApi.getCreationCapabilities !== 'function') {
+      return createEmptyCreationCapabilitySnapshot(target);
+    }
 
-  capabilityRequestCache.set(target, request);
+    const response = await modelApi.getCreationCapabilities({ target });
+    return unwrapCapabilitiesResponse(response, target);
+  }).catch((error) => {
+    if (isAuthorizationError(error)) {
+      // Anonymous users can still enter the creation surfaces with shared defaults.
+      return createEmptyCreationCapabilitySnapshot(target);
+    }
+    capabilityRequestCache.delete(cacheKey);
+    throw error;
+  });
+
+  capabilityRequestCache.set(cacheKey, request);
   return request;
 }
 
 export function clearCreationCapabilityCache(target?: CreationCapabilityTarget): void {
   if (target) {
-    capabilityRequestCache.delete(target);
+    const prefix = `${target}:`;
+    Array.from(capabilityRequestCache.keys())
+      .filter((key) => key.startsWith(prefix))
+      .forEach((key) => capabilityRequestCache.delete(key));
     return;
   }
   capabilityRequestCache.clear();
@@ -219,14 +375,14 @@ export function clearCreationCapabilityCache(target?: CreationCapabilityTarget):
 
 export function flattenCreationModels(
   snapshot: CreationCapabilitySnapshot,
-): CreationModelVO[] {
+): CreationModelLike[] {
   return snapshot.channels.flatMap((channel) => channel.models || []);
 }
 
 export function findCreationModel(
   snapshot: CreationCapabilitySnapshot,
   model: string,
-): CreationModelVO | undefined {
+): CreationModelLike | undefined {
   const normalized = normalizeText(model);
   if (!normalized) {
     return undefined;
@@ -235,14 +391,14 @@ export function findCreationModel(
 }
 
 export function normalizeCreationOptions(
-  options?: CreationOptionVO[] | null,
+  options?: CreationOptionLike[] | null,
 ): Array<{ label: string; value: string }> {
   if (!Array.isArray(options)) {
     return [];
   }
   return options
-    .map((option) => normalizeOption(option))
-    .filter((option): option is CreationOptionVO => Boolean(option))
+    .map((option: CreationOptionLike) => normalizeOption(option))
+    .filter((option): option is CreationOptionLike => Boolean(option))
     .map((option) => ({
       label: option.label || option.value || '',
       value: option.value || '',
@@ -294,7 +450,7 @@ export function resolveCreationStyleOptions(
   return getDefaultCreationStyleOptions(snapshot.target);
 }
 
-function toBadge(model: CreationModelVO): { badge?: string; badgeColor?: string } {
+function toBadge(model: CreationModelLike): { badge?: string; badgeColor?: string } {
   const capability = model.capabilities;
   if (capability?.supportsReasoning) {
     return { badge: 'Reasoning', badgeColor: 'bg-amber-500' };
@@ -318,7 +474,7 @@ export function toCreationModelProviders(
       name: normalizeText(channel.name) || normalizeText(channel.channel) || 'Channel',
       icon: null,
       models: (channel.models || [])
-        .filter((model): model is CreationModelVO => Boolean(normalizeText(model?.model)))
+        .filter((model): model is CreationModelLike => Boolean(normalizeText(model?.model)))
         .map((model) => {
           const badge = toBadge(model);
           return {

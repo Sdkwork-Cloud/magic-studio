@@ -10,27 +10,22 @@ export interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, leftPane: LeftPane }) => {
   return (
-    // 'layout-container' class is targeted by index.css to flip direction if data-sidebar-position="right"
-    <div className="layout-container flex w-full h-screen bg-white dark:bg-[#020202] overflow-hidden select-none transition-colors duration-200">
-
-      {/* Sidebar - Fixed Class for CSS targeting */}
-      <div className="sidebar-panel flex-none z-50">
+    <div className="app-shell layout-container select-none">
+      <div className="app-shell-content">
+        <div className="sidebar-panel flex-none z-20">
           <MainSidebar />
-      </div>
+        </div>
 
-      {/* Left Pane */}
-      {LeftPane && (
-          <div className="flex-none border-r border-[#1a1a1a] bg-[#050505] flex flex-col h-full overflow-hidden z-10 relative">
-              <LeftPane />
+        {LeftPane && (
+          <div className="flex-none min-h-0 overflow-hidden border-r border-[var(--border-color)] bg-[var(--bg-panel-subtle)] relative z-10">
+            <LeftPane />
           </div>
-      )}
+        )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-0">
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
           <MainGlobalHeader />
-          <div className="flex-1 overflow-hidden">
-              {children}
-          </div>
+          <div className="app-shell-main">{children}</div>
+        </div>
       </div>
     </div>
   );

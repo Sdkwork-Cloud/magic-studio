@@ -6,6 +6,18 @@ import { MagicCutLayoutHeader } from './MagicCutLayoutHeader';
 const mockUseRouter = vi.fn();
 const mockUseTranslation = vi.fn();
 const mockUseMagicCutStore = vi.fn();
+const LOCALIZED_COPY: Record<string, string> = {
+  'magicCut.header.back.portal': 'portal-label',
+  'magicCut.header.back.canvas': 'canvas-label',
+  'magicCut.header.brand': 'magic-cut-brand',
+  'magicCut.header.beta': 'beta-badge',
+  'magicCut.header.subtitle': 'localized-shell-subtitle',
+  'magicCut.header.saved': 'saved-indicator',
+  'magicCut.header.share': 'share-action',
+  'magicCut.header.export': 'export-action',
+  'magicCut.header.exportVideo': 'export-video-action',
+  'magicCut.header.exportJsonProject': 'export-json-project-action',
+};
 
 let mockPlatformMode: 'web' | 'desktop' = 'desktop';
 
@@ -47,18 +59,7 @@ describe('MagicCutLayoutHeader', () => {
       currentQuery: '',
     });
     mockUseTranslation.mockReturnValue({
-      t: (key: string) => ({
-        'magicCut.header.back.portal': '门户',
-        'magicCut.header.back.canvas': '画布',
-        'magicCut.header.brand': '魔映',
-        'magicCut.header.beta': '测试版',
-        'magicCut.header.subtitle': 'AI 原生视频编辑器',
-        'magicCut.header.saved': '已保存',
-        'magicCut.header.share': '分享',
-        'magicCut.header.export': '导出',
-        'magicCut.header.exportVideo': '导出视频',
-        'magicCut.header.exportJsonProject': '导出 JSON 项目',
-      }[key] ?? key),
+      t: (key: string) => LOCALIZED_COPY[key] ?? key,
     });
     mockUseMagicCutStore.mockReturnValue({
       project: {
@@ -73,16 +74,17 @@ describe('MagicCutLayoutHeader', () => {
 
     expect(matches).toHaveLength(1);
     expect(html).toContain('data-testid="window-controls"');
+    expect(html).toContain('app-header-glass');
   });
 
-  it('renders the localized Magic Cut shell copy instead of hardcoded English strings', () => {
+  it('renders the localized Magic Cut shell copy from the i18n layer', () => {
     const html = renderToStaticMarkup(<MagicCutLayoutHeader />);
 
-    expect(html).toContain('魔映');
-    expect(html).toContain('测试版');
-    expect(html).toContain('AI 原生视频编辑器');
-    expect(html).toContain('已保存');
-    expect(html).toContain('分享');
-    expect(html).toContain('导出');
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.brand']);
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.beta']);
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.subtitle']);
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.saved']);
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.share']);
+    expect(html).toContain(LOCALIZED_COPY['magicCut.header.export']);
   });
 });

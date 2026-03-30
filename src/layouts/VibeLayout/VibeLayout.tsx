@@ -9,7 +9,7 @@ export interface VibeLayoutProps {
 
 // Resizer Component
 const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void }> = ({ onMouseDown }) => (
-    <div className="group relative flex-none w-[1px] h-full bg-[#1a1a1a] z-50 cursor-col-resize hover:bg-blue-500 transition-colors delay-75">
+    <div className="app-resizer group relative h-full z-50 cursor-col-resize delay-75">
         <div className="absolute inset-y-0 -left-1 -right-1 bg-transparent z-50" onMouseDown={onMouseDown} />
     </div>
 );
@@ -50,14 +50,14 @@ export const VibeLayout: React.FC<VibeLayoutProps> = ({ leftPane: LeftPane, chil
     }, [isResizing]);
 
     return (
-        <div className="flex w-full h-full bg-[#020202] overflow-hidden">
+        <div className="app-shell h-full">
             {/* 1. Vibe Sidebar */}
             <VibeLayoutSidebar />
 
             {/* 2. Left Pane (Config/Explorer) */}
             {LeftPane && (
                 <>
-                    <div style={{ width: leftWidth }} className="flex-none h-full overflow-hidden bg-[#050505] flex flex-col">
+                    <div style={{ width: leftWidth }} className="flex-none h-full overflow-hidden bg-[var(--bg-panel-subtle)] border-r border-[var(--border-color)] flex flex-col">
                         <LeftPane />
                     </div>
                     <Resizer onMouseDown={() => setIsResizing(true)} />
@@ -65,7 +65,7 @@ export const VibeLayout: React.FC<VibeLayoutProps> = ({ leftPane: LeftPane, chil
             )}
 
             {/* 3. Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-[#020202] relative z-0">
+            <div className="app-shell-main flex flex-col min-w-0 relative z-0">
                 {children}
             </div>
         </div>

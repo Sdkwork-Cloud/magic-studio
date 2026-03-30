@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 
 import { useTranslation } from '@sdkwork/react-i18n';
-import { 
+import {
     Database, Plus, Trash2, Edit2, AlertCircle, Terminal, Server, Wifi
 } from 'lucide-react';
 import { SettingsSection, SettingInput, SettingSelect, SettingTextArea } from './SettingsWidgets';
@@ -57,17 +57,17 @@ const McpSettings: React.FC = () => {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                        <Database size={28} className="text-green-500" />
+                     <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--text-primary)]">
+                        <Database size={28} className="text-primary-500" />
                         {t('settings.mcp.title')}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1 max-w-xl">
+                    <p className="mt-1 max-w-xl text-sm text-[var(--text-muted)]">
                         {t('settings.mcp.subtitle')}
                     </p>
                 </div>
-                <button 
+                <button
                     onClick={handleCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all shadow-md hover:shadow-lg shadow-blue-900/20"
+                    className="flex items-center gap-2 rounded-xl bg-[var(--text-primary)] px-4 py-2 text-sm font-medium text-[var(--bg-panel-strong)] shadow-md transition-all hover:bg-primary-600 hover:text-white hover:shadow-lg"
                 >
                     <Plus size={16} /> {t('common.actions.add')}
                 </button>
@@ -75,59 +75,60 @@ const McpSettings: React.FC = () => {
 
             {/* Split Content */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
+
                 {/* List Column */}
                 <div className="lg:col-span-4 space-y-3">
                     {mcpList.length === 0 ? (
-                         <div className="flex flex-col items-center justify-center py-16 text-gray-500 border-2 border-dashed border-gray-200 dark:border-[#333] rounded-2xl bg-gray-50 dark:bg-[#1e1e1e]/50">
+                         <div className="app-surface-subtle flex flex-col items-center justify-center rounded-3xl border-dashed py-16 text-[var(--text-muted)]">
                             <AlertCircle size={32} className="opacity-20 mb-3" />
                             <p>{t('settings.mcp.no_tools')}</p>
                         </div>
                     ) : (
                         mcpList.map(mcp => {
                             const isStdio = mcp.transport === 'stdio';
-                            
+
                             return (
-                                <div 
+                                <div
                                     key={mcp.id}
                                     onClick={() => setEditingId(mcp.id)}
                                     className={`
-                                        group relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all duration-200
-                                        ${editingId === mcp.id 
-                                            ? 'bg-green-50/50 dark:bg-green-900/10 border-green-500/50 shadow-sm' 
-                                            : 'bg-white dark:bg-[#1e1e1e] border-gray-200 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#52525b] hover:shadow-md'
+                                        group relative flex cursor-pointer flex-col rounded-[1.5rem] p-4 transition-all duration-200
+                                        ${editingId === mcp.id
+                                            ? 'app-surface-strong border-primary-500/40 bg-[color-mix(in_srgb,var(--theme-primary-500)_8%,var(--bg-panel-strong))] shadow-sm'
+                                            : 'app-surface-strong hover:border-[var(--border-strong)] hover:shadow-md'
                                         }
                                     `}
                                 >
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${mcp.enabled ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-[#333] text-gray-400'}`}>
+                                            <div className="app-status-icon rounded-xl p-2" data-tone={mcp.enabled ? 'success' : 'neutral'}>
                                                 {isStdio ? <Terminal size={16} /> : <Wifi size={16} />}
                                             </div>
-                                            <h3 className={`font-semibold text-sm ${editingId === mcp.id ? 'text-green-700 dark:text-green-400' : 'text-gray-900 dark:text-gray-200'}`}>
+                                            <h3 className={`text-sm font-semibold ${editingId === mcp.id ? 'text-primary-500' : 'text-[var(--text-primary)]'}`}>
                                                 {mcp.name}
                                             </h3>
                                         </div>
-                                        <div 
+                                        <div
                                             onClick={(e) => { e.stopPropagation(); updateMcp(mcp.id, { enabled: !mcp.enabled }); }}
-                                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border transition-all ${mcp.enabled ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800' : 'bg-gray-100 dark:bg-[#2d2d2d] text-gray-400 border-gray-200 dark:border-[#444]'}`}
+                                            className="app-status-pill"
+                                            data-tone={mcp.enabled ? 'success' : 'neutral'}
                                         >
                                             {mcp.enabled ? t('common.status.enabled') : t('common.status.disabled')}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="pl-[44px]">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${isStdio ? 'bg-gray-100 dark:bg-[#2d2d2d] border-gray-200 dark:border-[#444] text-gray-500' : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400'}`}>
+                                            <span className="app-status-pill normal-case tracking-normal" data-tone={isStdio ? 'neutral' : 'primary'}>
                                                 {mcp.transport.toUpperCase()}
                                             </span>
                                             {isStdio && mcp.command && (
-                                                <span className="text-[10px] text-gray-400 font-mono truncate bg-gray-50 dark:bg-[#252526] px-1.5 py-0.5 rounded">
+                                                <span className="app-surface-subtle rounded px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-muted)] truncate">
                                                     {mcp.command}
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="text-[10px] text-gray-400 font-mono truncate opacity-60">
+                                        <div className="truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">
                                             {isStdio ? (mcp.args?.join(' ') || 'No args') : mcp.url}
                                         </div>
                                     </div>
@@ -140,31 +141,31 @@ const McpSettings: React.FC = () => {
                 {/* Editor Column */}
                 <div className="lg:col-span-8 relative">
                     {editingId ? (
-                        <div className="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-2xl p-6 sticky top-6 animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-xl shadow-black/5">
-                             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-[#2d2d2d]">
+                        <div className="app-floating-panel sticky top-6 animate-in fade-in slide-in-from-bottom-4 rounded-[1.75rem] p-6 duration-300">
+                             <div className="mb-6 flex items-center justify-between border-b border-[var(--border-color)] pb-4">
                                 <div>
-                                    <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Edit2 size={16} className="text-green-500" />
+                                    <h3 className="flex items-center gap-2 text-base font-bold text-[var(--text-primary)]">
+                                        <Edit2 size={16} className="text-primary-500" />
                                         {t('settings.mcp.configuration')}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">ID: <span className="font-mono text-[10px]">{editingId}</span></p>
+                                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">ID: <span className="font-mono text-[10px]">{editingId}</span></p>
                                 </div>
-                                <button 
-                                    onClick={() => handleDelete(editingId)} 
-                                    className="text-red-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2 text-xs font-medium"
+                                <button
+                                    onClick={() => handleDelete(editingId)}
+                                    className="app-button-danger flex items-center gap-2 rounded-xl p-2 text-xs font-medium"
                                 >
                                     <Trash2 size={14} /> {t('common.actions.delete')}
                                 </button>
                              </div>
 
                              <SettingsSection title={t('common.form.required')}>
-                                 <SettingInput 
-                                    label={t('common.form.name')} 
+                                 <SettingInput
+                                    label={t('common.form.name')}
                                     value={settings.mcp[editingId].name}
                                     onChange={(v) => updateMcp(editingId, { name: v })}
                                     fullWidth
                                  />
-                                 <SettingSelect 
+                                 <SettingSelect
                                     label={t('settings.mcp.transport')}
                                     value={settings.mcp[editingId].transport}
                                     onChange={(v) => updateMcp(editingId, { transport: v as any })}
@@ -179,7 +180,7 @@ const McpSettings: React.FC = () => {
                              {settings.mcp[editingId].transport === 'stdio' && (
                                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                                     <SettingsSection title={t('settings.mcp.execution')}>
-                                        <SettingInput 
+                                        <SettingInput
                                             label={t('common.form.command')}
                                             placeholder="e.g. npx, python3, uv"
                                             value={settings.mcp[editingId].command || ''}
@@ -204,7 +205,7 @@ const McpSettings: React.FC = () => {
                             {settings.mcp[editingId].transport === 'sse' && (
                                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                                     <SettingsSection title={t('settings.mcp.connection')}>
-                                        <SettingInput 
+                                        <SettingInput
                                             label={t('settings.mcp.url')}
                                             placeholder="http://localhost:8000/sse"
                                             value={settings.mcp[editingId].url || ''}
@@ -219,14 +220,14 @@ const McpSettings: React.FC = () => {
 
                              {/* Environment Variables (Visual placeholder for now) */}
                              <SettingsSection title={t('settings.mcp.env_vars')}>
-                                 <div className="bg-gray-50 dark:bg-[#252526] border border-gray-200 dark:border-[#333] rounded-lg p-4 text-center">
-                                     <p className="text-xs text-gray-500">{t('settings.mcp.env_vars_desc')}</p>
+                                 <div className="app-surface-subtle rounded-2xl p-4 text-center">
+                                     <p className="text-xs text-[var(--text-muted)]">{t('settings.mcp.env_vars_desc')}</p>
                                  </div>
                              </SettingsSection>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px] text-gray-400 bg-gray-50 dark:bg-[#1e1e1e] border-2 border-dashed border-gray-200 dark:border-[#333] rounded-2xl">
-                             <div className="w-16 h-16 bg-gray-100 dark:bg-[#252526] rounded-full flex items-center justify-center mb-4">
+                        <div className="app-surface-subtle flex h-[400px] flex-col items-center justify-center rounded-3xl border-dashed text-[var(--text-muted)]">
+                             <div className="app-surface-strong mb-4 flex h-16 w-16 items-center justify-center rounded-full">
                                 <Server size={24} className="opacity-40" />
                             </div>
                             <span className="text-sm font-medium">{t('settings.mcp.select_tool')}</span>

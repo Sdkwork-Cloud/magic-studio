@@ -22,17 +22,17 @@ const EditorProjectActions: React.FC<EditorProjectActionsProps> = ({ projectName
 
   return (
     <>
-      <div className="flex items-center gap-1 px-2 h-full border-r border-gray-200 dark:border-[#1a1a1a]">
+      <div className="flex items-center gap-1 px-2 h-full border-r border-[var(--border-color)]">
         <button
           onClick={() => setShowGitModal(true)}
-          className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-200 dark:hover:bg-[#2d2d2d] rounded transition-colors"
+          className="app-header-action p-1.5 rounded-lg transition-colors"
           title={t('editor.explorer.git.title')}
         >
           <Github size={14} />
         </button>
         <button
           onClick={() => setShowPublishModal(true)}
-          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-[#2d2d2d] rounded transition-colors"
+          className="app-header-action p-1.5 rounded-lg transition-colors hover:text-primary-500"
           title={t('editor.explorer.publish.title')}
         >
           <Rocket size={14} />

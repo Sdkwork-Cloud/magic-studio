@@ -17,7 +17,14 @@ import {
 import { ModelSelector, AspectRatioSelector, GalleryCard, GalleryItem } from '@sdkwork/react-commons';
 import type { Resolution } from '@sdkwork/react-commons';
 import { GenerationPreview } from '@sdkwork/react-image';
-import { inlineDataService, useRouter, ROUTES, uploadHelper } from '@sdkwork/react-core';
+import {
+    createOfflineArtwork,
+    createOfflineAvatar,
+    inlineDataService,
+    useRouter,
+    ROUTES,
+    uploadHelper
+} from '@sdkwork/react-core';
 import { importFilmAssetFromFile } from '../utils/filmModalAssetImport';
 
 type FilmHomeAttachment = InputAttachment & {
@@ -58,56 +65,56 @@ const classifyFilmHomeFile = (
 
 // Mapped to GalleryItem structure
 const MOCK_SHORTS: GalleryItem[] = [
-    { 
-        id: '1', title: 'Global AI Creation', type: 'short', url: 'https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u1', name: 'CCTV_AI', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cctv' }, 
-        stats: { likes: 1200, views: 10000 }, 
+    {
+        id: '1', title: 'Global AI Creation', type: 'short', url: createOfflineArtwork({ title: 'Global AI Creation', subtitle: 'Worldwide story craft with desktop-grade direction', eyebrow: 'Creation Plaza', badge: 'Featured', accent: '#ef4444', width: 800, height: 500 }),
+        aspectRatio: '16:10',
+        author: { id: 'u1', name: 'CCTV_AI', avatar: createOfflineAvatar({ name: 'CCTV AI', seed: 'film-cctv', accent: '#ef4444' }) },
+        stats: { likes: 1200, views: 10000 },
         prompt: '', model: '', createdAt: '2024-01-15 10:30:00',
         badges: [{ text: 'Featured', color: 'bg-red-600' }]
     },
-    { 
-        id: '2', title: 'Journey to the West Reimagined', type: 'short', url: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u2', name: 'Director_Li', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=li' }, 
-        stats: { likes: 856, views: 5000 }, 
+    {
+        id: '2', title: 'Journey to the West Reimagined', type: 'short', url: createOfflineArtwork({ title: 'Journey To The West', subtitle: 'Classic myth restaged through AI production design', eyebrow: 'Creation Plaza', badge: 'Trending', accent: '#f97316', width: 800, height: 500 }),
+        aspectRatio: '16:10',
+        author: { id: 'u2', name: 'Director_Li', avatar: createOfflineAvatar({ name: 'Director Li', seed: 'film-li', accent: '#f97316' }) },
+        stats: { likes: 856, views: 5000 },
         prompt: '', model: '', createdAt: '2024-01-14 15:20:00',
         badges: [{ text: 'Trending', color: 'bg-orange-500' }]
     },
-    { 
-        id: '3', title: 'Zootopia: Origins', type: 'short', url: 'https://images.unsplash.com/photo-1626544827763-d516dce335ca?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u3', name: 'DisneyFan', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=disney' }, 
-        stats: { likes: 4500, views: 50000 }, 
+    {
+        id: '3', title: 'Zootopia: Origins', type: 'short', url: createOfflineArtwork({ title: 'Zootopia Origins', subtitle: 'Animated universe moodboards with rapid scene ideation', eyebrow: 'Creation Plaza', badge: 'Fan Film', accent: '#3b82f6', width: 800, height: 500 }),
+        aspectRatio: '16:10',
+        author: { id: 'u3', name: 'DisneyFan', avatar: createOfflineAvatar({ name: 'Disney Fan', seed: 'film-disney', accent: '#3b82f6' }) },
+        stats: { likes: 4500, views: 50000 },
         prompt: '', model: '', createdAt: '2024-01-13 09:00:00',
         badges: [{ text: 'Fan Film', color: 'bg-blue-600' }]
     },
-    { 
-        id: '4', title: 'Cyberpunk 2078', type: 'short', url: 'https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=800&auto=format&fit=crop', 
-        aspectRatio: '16:10', 
-        author: { id: 'u4', name: 'NeoTokyo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neo' }, 
-        stats: { likes: 3200, views: 22000 }, 
+    {
+        id: '4', title: 'Cyberpunk 2078', type: 'short', url: createOfflineArtwork({ title: 'Cyberpunk 2078', subtitle: 'Dense neon worldbuilding with stylized frame language', eyebrow: 'Creation Plaza', badge: 'Sci-Fi', accent: '#8b5cf6', width: 800, height: 500 }),
+        aspectRatio: '16:10',
+        author: { id: 'u4', name: 'NeoTokyo', avatar: createOfflineAvatar({ name: 'NeoTokyo', seed: 'film-neo', accent: '#8b5cf6' }) },
+        stats: { likes: 3200, views: 22000 },
         prompt: '', model: '', createdAt: '2024-01-12 14:45:00',
         badges: [{ text: 'Sci-Fi', color: 'bg-purple-600' }]
     },
 ];
 
 const ACTIVE_USERS = [
-    { name: 'FengMo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=feng' },
-    { name: 'CatHero', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cat_eng' },
-    { name: 'SanTiCreator', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=san' },
-    { name: 'CatWineMaster', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jiu' },
+    { name: 'FengMo', avatar: createOfflineAvatar({ name: 'FengMo', seed: 'film-feng', accent: '#5b8cff' }) },
+    { name: 'CatHero', avatar: createOfflineAvatar({ name: 'CatHero', seed: 'film-cat', accent: '#14b8a6' }) },
+    { name: 'SanTiCreator', avatar: createOfflineAvatar({ name: 'SanTiCreator', seed: 'film-san', accent: '#f97316' }) },
+    { name: 'CatWineMaster', avatar: createOfflineAvatar({ name: 'CatWineMaster', seed: 'film-jiu', accent: '#ec4899' }) },
 ];
 
 const FilmHomePageContent: React.FC = () => {
     const { navigate } = useRouter();
     const { createProject, createProjectFromInput } = useFilmStore();
-    
+
     // Hero Input State
     const [activeTab] = useState<PortalTab>('short_drama');
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    
+
     // Config State
     const [aspectRatio, setAspectRatio] = useState<FilmAspectRatio>('16:9');
     const [resolution, setResolution] = useState<Resolution>('2k');
@@ -116,7 +123,7 @@ const FilmHomePageContent: React.FC = () => {
     const [activeModel, setActiveModel] = useState<string>('');
     const [attachments, setAttachments] = useState<FilmHomeAttachment[]>([]);
     const [capabilitySnapshot, setCapabilitySnapshot] = useState<CapabilitySnapshot | null>(null);
-    
+
     // Menus
     const [showDurationMenu, setShowDurationMenu] = useState(false);
     const durationMenuRef = useRef<HTMLDivElement>(null);
@@ -230,9 +237,9 @@ const FilmHomePageContent: React.FC = () => {
 
     const handleGenerate = async () => {
         if (!prompt.trim() && attachments.length === 0) return;
-        
+
         setIsGenerating(true);
-        
+
         try {
             if (activeTab === 'short_drama') {
                  const scriptAttachment = attachments.find(a => a.type === 'script');
@@ -243,7 +250,7 @@ const FilmHomePageContent: React.FC = () => {
                       const name = prompt.slice(0, 30) || scriptAttachment.name.replace(/\.[^/.]+$/, "") || "New Short Drama";
                       await createProjectFromInput(name, text);
                  } else {
-                      await createProject(prompt.slice(0, 30) || "New Short Drama"); 
+                      await createProject(prompt.slice(0, 30) || "New Short Drama");
                  }
                  navigate(ROUTES.FILM_EDITOR);
             } else {
@@ -263,7 +270,7 @@ const FilmHomePageContent: React.FC = () => {
 
     const handleUpload = async () => {
         try {
-            const accept = activeTab === 'short_drama' 
+            const accept = activeTab === 'short_drama'
                 ? 'image/*, video/*, .txt, .md, .doc, .docx, .pdf'
                 : 'image/*, video/*';
 
@@ -312,9 +319,9 @@ const FilmHomePageContent: React.FC = () => {
     const renderFooterControls = () => {
         return (
             <div className="flex items-center gap-2 whitespace-nowrap">
-                
+
                 {/* 1. Model Selector (Generic) */}
-                <ModelSelector 
+                <ModelSelector
                     value={activeModel}
                     onChange={setActiveModel}
                     providers={currentProviders}
@@ -323,7 +330,7 @@ const FilmHomePageContent: React.FC = () => {
 
                 {/* 2. Style Selector */}
                 {activeTab === 'short_drama' && (
-                    <StyleSelector 
+                    <StyleSelector
                         value={activeStyle}
                         onChange={setActiveStyle}
                         options={activeStyleOptions}
@@ -332,7 +339,7 @@ const FilmHomePageContent: React.FC = () => {
                 )}
 
                 {/* 3. Aspect Ratio */}
-                <AspectRatioSelector 
+                <AspectRatioSelector
                     value={aspectRatio}
                     onChange={(ratio) => setAspectRatio(ratio)}
                     resolution={resolution as Resolution}
@@ -345,7 +352,7 @@ const FilmHomePageContent: React.FC = () => {
                 {/* 4. Duration */}
                 {(activeTab === 'video' || activeTab === 'short_drama') && (
                     <div className="relative" ref={durationMenuRef}>
-                        <button 
+                        <button
                             onClick={() => setShowDurationMenu(!showDurationMenu)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1c] hover:bg-[#202022] rounded-full text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors border border-transparent hover:border-[#333]"
                         >
@@ -355,8 +362,8 @@ const FilmHomePageContent: React.FC = () => {
                         {showDurationMenu && (
                              <div className="absolute bottom-full left-0 mb-2 w-32 bg-[#18181b] border border-[#27272a] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-75">
                                 {activeDurationOptions.map(d => (
-                                    <button 
-                                        key={d.value} 
+                                    <button
+                                        key={d.value}
                                         onClick={() => { setDuration(d.value); setShowDurationMenu(false); }}
                                         className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-[#27272a] ${duration === d.value ? 'text-blue-400' : 'text-gray-400'}`}
                                     >
@@ -386,21 +393,21 @@ const FilmHomePageContent: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0 relative h-full">
                 <FilmHeader />
-                
+
                 <div className="absolute inset-0 pointer-events-none z-0">
                      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#1a1033]/30 via-[#0a0a0a]/80 to-[#050505]" />
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 p-8">
                     <div className="max-w-[1400px] mx-auto flex flex-col items-center">
-                        
+
                         <div className="w-full mt-10 mb-8 text-center space-y-6">
                             <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-xl opacity-90">
                                 What story will you create today?
                             </h1>
-                            
+
                             <div className="max-w-[1200px] mx-auto w-full">
-                                <CreationChatInput 
+                                <CreationChatInput
                                     value={prompt}
                                     onChange={setPrompt}
                                     isGenerating={isGenerating}
@@ -438,9 +445,9 @@ const FilmHomePageContent: React.FC = () => {
 
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {MOCK_SHORTS.map(item => (
-                                    <GalleryCard 
-                                        key={item.id} 
-                                        item={item} 
+                                    <GalleryCard
+                                        key={item.id}
+                                        item={item}
                                         onClick={(it) => setSelectedItem(it)}
                                     />
                                 ))}
@@ -451,11 +458,11 @@ const FilmHomePageContent: React.FC = () => {
                 </div>
 
                 {selectedItem && (
-                    <GenerationPreview 
+                    <GenerationPreview
                         mode="view"
                         galleryItem={selectedItem}
                         relatedItems={MOCK_SHORTS}
-                        onClose={() => setSelectedItem(null)} 
+                        onClose={() => setSelectedItem(null)}
                     />
                 )}
             </div>

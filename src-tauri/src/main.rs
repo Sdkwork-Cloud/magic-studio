@@ -22,11 +22,20 @@ use commands::pty_commands::{
 };
 use commands::system_commands::{system_command_exists, system_runtime_info};
 use commands::toolkit_commands::{toolkit_capabilities, toolkit_execute};
-use framework::AppContext;
+use framework::{build_appearance_snapshot_init_script, AppContext};
 use tauri::Manager;
 
 fn main() {
-    tauri::Builder::default()
+    let context = tauri::generate_context!();
+    let appearance_snapshot_init_script =
+        build_appearance_snapshot_init_script(context.config().identifier.as_str());
+
+    let mut builder = tauri::Builder::default();
+    if let Some(initialization_script) = appearance_snapshot_init_script {
+        builder = builder.append_invoke_initialization_script(initialization_script);
+    }
+
+    builder
         .plugin(tauri_plugin_log::Builder::default().build())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             let _ = app
@@ -96,7 +105,7 @@ fn main() {
             policy_validate_command,
             policy_snapshot
         ])
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building tauri application")
         .run(|app_handle, event| match event {
             tauri::RunEvent::ExitRequested { .. } => {

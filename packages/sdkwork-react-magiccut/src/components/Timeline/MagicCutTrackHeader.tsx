@@ -50,7 +50,7 @@ const analyzeFrameBrightness = (url: string): Promise<number> => {
                 const pixelCount = data.length / 16;
                 const avg = brightnessSum / pixelCount;
                 resolve(avg);
-            } catch (e) {
+            } catch {
                 // Canvas tainted (CORS error), assume valid brightness to avoid skipping good frames
                 console.warn("[MagicCut] Canvas tainted during analysis, skipping brightness check.");
                 resolve(100);
@@ -74,7 +74,8 @@ const ControlBtn = ({ active, activeIcon: ActiveIcon, inactiveIcon: InactiveIcon
     <button
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
-        className={`p-1.5 rounded-md transition-all flex items-center justify-center hover:bg-white/5 ${active ? activeClass : inactiveClass}`}
+        className={`app-toolbar-button flex items-center justify-center rounded-lg p-1.5 transition-all ${active ? activeClass : inactiveClass}`}
+        data-active={active ? 'true' : 'false'}
         title={title}
     >
         {active ? <ActiveIcon size={14} /> : <InactiveIcon size={14} />}
@@ -151,16 +152,16 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
         }
     };
 
-    const getTypeColorClass = () => {
-        if (track.isMain) return 'text-blue-400 bg-blue-500/5 border-l-blue-500';
+    const getTrackAccentColor = () => {
+        if (track.isMain) return '#60a5fa';
         switch (track.trackType) {
-            case 'video': return 'text-cyan-400 bg-cyan-500/5 border-l-cyan-500';
-            case 'audio': return 'text-emerald-400 bg-emerald-500/5 border-l-emerald-500';
-            case 'text': return 'text-yellow-400 bg-yellow-500/5 border-l-yellow-500';
-            case 'subtitle': return 'text-orange-300 bg-orange-500/5 border-l-orange-400';
-            case 'effect': return 'text-purple-400 bg-purple-500/5 border-l-purple-500';
-            case 'ai': return 'text-pink-300 bg-pink-500/5 border-l-pink-400';
-            default: return 'text-gray-400 bg-gray-500/5 border-l-gray-500';
+            case 'video': return '#22d3ee';
+            case 'audio': return '#34d399';
+            case 'text': return '#facc15';
+            case 'subtitle': return '#fb923c';
+            case 'effect': return '#c084fc';
+            case 'ai': return '#f9a8d4';
+            default: return '#a1a1aa';
         }
     };
 
@@ -256,7 +257,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                     } else {
                         continue;
                     }
-                } catch (e) { continue; }
+                } catch { continue; }
             }
 
             // Brightness check to avoid black frames
@@ -348,32 +349,48 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
     const isMain = track.isMain;
     const canHaveVolume = track.trackType === 'video' || track.trackType === 'audio';
     const isSelected = selectedTrackId === track.id;
+    const trackAccentColor = getTrackAccentColor();
 
     const baseClasses = `
-        border-b border-[#27272a] bg-[#09090b] 
+        app-surface-subtle border-b border-[var(--border-color)]
         transition-all duration-200 select-none group relative box-border flex items-center
-        border-l-[4px] ${track.locked ? 'bg-[repeating-linear-gradient(45deg,#0e0e0e,#0e0e0e_10px,#141414_10px,#141414_20px)]' : 'hover:bg-[#111]'}
-        ${getTypeColorClass().split(' ').pop()} 
-        ${isSelected ? 'bg-[#18181b] border-l-4' : ''}
+        border-l-[4px] ${track.locked ? '' : 'hover:bg-[color-mix(in_srgb,var(--text-primary)_3%,var(--bg-panel-subtle))]'}
+        ${isSelected ? 'shadow-sm' : ''}
     `;
+
+    const trackSurfaceStyle: React.CSSProperties = {
+        height,
+        borderLeftColor: trackAccentColor,
+        backgroundColor: isSelected
+            ? 'color-mix(in srgb, var(--theme-primary-500) 8%, var(--bg-panel-subtle))'
+            : undefined,
+        backgroundImage: track.locked
+            ? 'repeating-linear-gradient(45deg, color-mix(in srgb, var(--text-primary) 3%, var(--bg-panel-subtle)), color-mix(in srgb, var(--text-primary) 3%, var(--bg-panel-subtle)) 10px, color-mix(in srgb, var(--text-primary) 6%, var(--bg-panel-subtle)) 10px, color-mix(in srgb, var(--text-primary) 6%, var(--bg-panel-subtle)) 20px)'
+            : undefined,
+    };
 
     return (
         <div
             className={baseClasses}
-            style={{ height }}
+            style={trackSurfaceStyle}
             data-track-header-id={track.id}
             draggable
             onDragStart={handleDragStart}
             onClick={() => selectTrack(track.id)}
         >
             {/* 1. Drag Handle (Visual Grip) */}
-            <div className="w-4 h-full flex-none flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-700 hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex h-full w-4 flex-none items-center justify-center text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--text-secondary)] cursor-grab active:cursor-grabbing">
                 <GripVertical size={12} />
             </div>
 
             {/* 2. Icon Section */}
             <div
-                className={`w-8 h-8 rounded-lg flex-none flex items-center justify-center mr-2 shadow-sm border border-white/5 ${getTypeColorClass().split(' ').slice(0, 2).join(' ')}`}
+                className="app-surface-strong mr-2 flex h-8 w-8 flex-none items-center justify-center rounded-lg shadow-sm"
+                style={{
+                    color: trackAccentColor,
+                    background: `color-mix(in srgb, ${trackAccentColor} 10%, var(--bg-panel-strong))`,
+                    borderColor: `color-mix(in srgb, ${trackAccentColor} 22%, var(--border-color))`
+                }}
                 title={getTrackTypeTitle()}
             >
                 {getTrackIcon()}
@@ -381,14 +398,14 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
 
             {/* 3. Controls & Name Section - Centered */}
             <div className="flex-1 flex flex-col justify-center min-w-0 h-full py-1">
-                <div className="text-[11px] font-bold text-gray-300 truncate mb-1 leading-none">{track.name}</div>
+                <div className="mb-1 truncate text-[11px] font-bold leading-none text-[var(--text-primary)]">{track.name}</div>
                 <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                     <ControlBtn
                         active={track.locked || false}
                         activeIcon={Lock} inactiveIcon={Unlock}
                         onClick={() => updateTrack(track.id, { locked: !track.locked })}
-                        activeClass="text-red-500 bg-red-500/10"
-                        inactiveClass="text-gray-500 hover:text-gray-300"
+                        activeClass="bg-[color-mix(in_srgb,var(--status-danger-fg)_12%,transparent)] text-[var(--status-danger-fg)]"
+                        inactiveClass="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                         title={track.locked ? tl('unlockTrack') : tl('lockTrack')}
                     />
                     {isVisual && (
@@ -396,8 +413,8 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                             active={!track.visible}
                             activeIcon={EyeOff} inactiveIcon={Eye}
                             onClick={() => updateTrack(track.id, { visible: !track.visible })}
-                            activeClass="text-gray-400 bg-gray-500/20"
-                            inactiveClass="text-gray-500 hover:text-white"
+                            activeClass="bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] text-[var(--text-secondary)]"
+                            inactiveClass="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                             title={!track.visible ? tl('showTrack') : tl('hideTrack')}
                         />
                     )}
@@ -406,8 +423,8 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                             active={track.muted || false}
                             activeIcon={VolumeX} inactiveIcon={Volume2}
                             onClick={() => updateTrack(track.id, { muted: !track.muted })}
-                            activeClass="text-orange-500 bg-orange-500/10"
-                            inactiveClass="text-gray-500 hover:text-white"
+                            activeClass="bg-[color-mix(in_srgb,var(--status-warning-fg)_12%,transparent)] text-[var(--status-warning-fg)]"
+                            inactiveClass="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                             title={track.muted ? tl('unmuteTrack') : tl('muteTrack')}
                         />
                     )}
@@ -421,8 +438,8 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                         onClick={handleOpenCoverSelector}
                         onMouseDown={(e) => e.stopPropagation()}
                         className={`
-                            w-10 h-10 rounded-md cursor-pointer overflow-hidden relative group/cover flex items-center justify-center transition-all
-                            ${track.coverImage ? 'bg-black border-0' : 'bg-[#18181b] border border-dashed border-[#444] hover:border-gray-400'}
+                            app-surface-strong relative flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all group/cover
+                            ${track.coverImage ? 'border-transparent bg-black' : 'border border-dashed border-[var(--border-strong)] hover:border-primary-500/40'}
                         `}
                         title={t('trackHeader.changeCover')}
                     >
@@ -434,7 +451,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                                 </div>
                             </>
                         ) : (
-                            <span className="text-[9px] font-medium text-gray-500 group-hover/cover:text-gray-300 transform scale-90">{t('trackHeader.coverLabel')}</span>
+                            <span className="scale-90 text-[9px] font-medium text-[var(--text-muted)] transition-colors group-hover/cover:text-[var(--text-secondary)]">{t('trackHeader.coverLabel')}</span>
                         )}
                     </div>
                 )}
@@ -442,7 +459,7 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                 {!isMain && (
                     <button
                         onClick={handleDeleteTrack}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded-md"
+                        className="app-toolbar-button app-button-danger rounded-lg p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
                         title={t('trackHeader.deleteTrack')}
                         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                     >
@@ -454,34 +471,34 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                 {coverMenuPos && createPortal(
                     <div
                         ref={selectorRef}
-                        className="fixed w-64 bg-[#18181b] border border-[#333] rounded-xl shadow-2xl z-[9999] animate-in fade-in zoom-in-95 duration-100 overflow-hidden flex flex-col"
+                        className="app-floating-panel fixed z-[9999] flex w-64 flex-col overflow-hidden rounded-2xl animate-in fade-in zoom-in-95 duration-100"
                         style={{ top: Math.min(coverMenuPos.y, window.innerHeight - 300), left: coverMenuPos.x }}
                         onMouseDown={e => e.stopPropagation()}
                     >
-                        <div className="px-3 py-2 border-b border-[#333] flex justify-between items-center bg-[#1e1e1e]">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('trackHeader.setCover')}</span>
-                            <button onClick={() => setCoverMenuPos(null)} className="text-gray-500 hover:text-white"><X size={12} /></button>
+                        <div className="app-header-glass flex items-center justify-between px-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{t('trackHeader.setCover')}</span>
+                            <button onClick={() => setCoverMenuPos(null)} className="app-header-action rounded-lg p-1"><X size={12} /></button>
                         </div>
 
                         <div className="p-2 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             <button
                                 onClick={handleUploadCover}
                                 disabled={isSavingCover}
-                                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-[#252526] hover:bg-[#2a2a2d] text-xs text-gray-300 transition-colors border border-transparent hover:border-[#444] font-medium"
+                                className="app-surface-subtle flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                             >
                                 {isSavingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} {isSavingCover ? t('trackHeader.savingCover') : t('trackHeader.uploadCustom')}
                             </button>
 
-                            <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pt-1 border-t border-[#333] mt-1">{t('trackHeader.fromTrackClips')}</div>
+                            <div className="mt-1 border-t border-[var(--border-color)] px-1 pt-1 text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{t('trackHeader.fromTrackClips')}</div>
 
                             {isLoadingFrames ? (
-                                <div className="flex justify-center py-6 text-gray-500 flex-col items-center gap-2">
-                                    <Loader2 size={16} className="animate-spin text-blue-500" />
+                                <div className="flex flex-col items-center justify-center gap-2 py-6 text-[var(--text-muted)]">
+                                    <Loader2 size={16} className="animate-spin text-primary-500" />
                                     <span className="text-[10px]">{t('trackHeader.scanningContent')}</span>
                                 </div>
                             ) : isSavingCover ? (
-                                <div className="flex justify-center py-6 text-gray-500 flex-col items-center gap-2">
-                                    <Loader2 size={16} className="animate-spin text-blue-500" />
+                                <div className="flex flex-col items-center justify-center gap-2 py-6 text-[var(--text-muted)]">
+                                    <Loader2 size={16} className="animate-spin text-primary-500" />
                                     <span className="text-[10px]">{t('trackHeader.savingCover')}</span>
                                 </div>
                             ) : candidateFrames.length > 0 ? (
@@ -491,14 +508,14 @@ export const MagicCutTrackHeader: React.FC<MagicCutTrackHeaderProps> = React.mem
                                             key={i}
                                             onClick={() => handleSelectCover(frame)}
                                             disabled={isSavingCover}
-                                            className="aspect-video rounded overflow-hidden border border-[#333] hover:border-blue-500 transition-all hover:scale-105 bg-black relative group/frame"
+                                            className="app-surface-strong group/frame relative aspect-video overflow-hidden rounded-xl border transition-all hover:scale-105 hover:border-primary-500/40"
                                         >
                                             <img src={frame} className="w-full h-full object-cover" loading="lazy" />
                                         </button>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-6 text-[10px] text-gray-500 bg-[#1e1e1e] rounded-lg border border-[#333] border-dashed">
+                                <div className="app-surface-subtle rounded-xl border border-dashed py-6 text-center text-[10px] text-[var(--text-muted)]">
                                     {t('trackHeader.noSuitableFrames')}
                                 </div>
                             )}

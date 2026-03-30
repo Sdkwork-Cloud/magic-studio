@@ -1,6 +1,5 @@
 import { ThemeMode } from '@sdkwork/react-commons'
-
-;
+import type { AppearanceDensityMode } from '../entities';
 
 export type SettingType = 'select' | 'toggle' | 'input' | 'slider';
 
@@ -32,8 +31,16 @@ export interface SettingDefinition<T = any> {
   inputType?: 'text' | 'password' | 'number';
   
   // Logic
-  validator?: Validator<T>;
+  validator?: (value: T) => string | null;
 }
+
+const DENSITY_MODE_OPTIONS: Array<{ label: string; value: AppearanceDensityMode }> = [
+  { label: 'Compact', value: 'compact' },
+  { label: 'Standard', value: 'standard' },
+  { label: 'Comfortable', value: 'comfortable' },
+  { label: 'Auto', value: 'auto' },
+  { label: 'Custom', value: 'custom' },
+];
 
 // --- Validators ---
 const isRange = (min: number, max: number): Validator<number> => (val) => (val >= min && val <= max) ? null : `Value must be between ${min} and ${max}`;
@@ -118,6 +125,23 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     ]
   },
   {
+    key: 'appearance.themeColor',
+    labelKey: 'Theme Color',
+    descriptionKey: 'Choose the shared shell accent used across the application.',
+    type: 'select',
+    category: 'appearance',
+    sectionKey: 'settings.sections.window',
+    tags: ['accent', 'primary', 'shell'],
+    options: [
+      { label: 'Lobster Red', value: 'lobster' },
+      { label: 'Tech Blue', value: 'tech-blue' },
+      { label: 'Green Tech', value: 'green-tech' },
+      { label: 'Zinc', value: 'zinc' },
+      { label: 'Violet', value: 'violet' },
+      { label: 'Rose', value: 'rose' },
+    ]
+  },
+  {
     key: 'appearance.sidebarPosition',
     labelKey: 'settings.appearance.sidebarPosition.label',
     descriptionKey: 'settings.appearance.sidebarPosition.desc',
@@ -128,6 +152,16 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
       { labelKey: 'settings.appearance.sidebarPosition.options.left', value: 'left' },
       { labelKey: 'settings.appearance.sidebarPosition.options.right', value: 'right' },
     ]
+  },
+  {
+    key: 'appearance.densityMode',
+    labelKey: 'Interface Density',
+    descriptionKey: 'Stable shell density presets with one-shot Auto recommendation.',
+    type: 'select',
+    category: 'appearance',
+    sectionKey: 'settings.sections.typography',
+    tags: ['density', 'compact', 'comfortable', 'auto'],
+    options: DENSITY_MODE_OPTIONS,
   },
   {
     key: 'appearance.fontFamily',

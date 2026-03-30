@@ -24,6 +24,7 @@ const AssetsPage: React.FC = () => {
     pageData,
     assets,
     loadedAssets,
+    requiresAuthentication,
     domain,
     typeCounts,
     allowedTypes
@@ -95,7 +96,7 @@ const AssetsPage: React.FC = () => {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#121214]">
-      <div className="hidden border-r border-[#27272a] bg-[#0f0f11] lg:block">
+      <div className="hidden w-[296px] shrink-0 overflow-hidden border-r border-[#27272a] bg-[#0f0f11] lg:block">
         <AssetSidebar showTypeSection={false} />
       </div>
 
@@ -103,7 +104,7 @@ const AssetsPage: React.FC = () => {
         <AssetSidebar showTypeSection={false} />
       </AssetFilterDrawer>
 
-      <div className="flex min-w-0 flex-1 flex-col bg-[#111]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#111]">
         <AssetCenterHeader
           domainLabel={domainLabel}
           searchQuery={searchQuery}
@@ -115,6 +116,7 @@ const AssetsPage: React.FC = () => {
           resultLabel={resultLabel}
           coverageLabel={coverageLabel}
           searchInputRef={searchInputRef}
+          canImport={!requiresAuthentication}
         />
         <AssetTypeTabs
           filterType={filterType}
@@ -123,7 +125,7 @@ const AssetsPage: React.FC = () => {
           onChangeType={setFilterType}
         />
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <AssetGrid onPreview={handlePreview} onDelete={handleDelete} />
         </div>
       </div>

@@ -29,12 +29,12 @@ const CharacterChatPage = lazy(() => import('@sdkwork/react-character').then(m =
 const MagicCutPage = lazy(() => import('@sdkwork/react-magiccut').then(m => ({ default: m.MagicCutPage })));
 const FilmHomePage = lazy(() => import('@sdkwork/react-film').then(m => ({ default: m.FilmHomePage })));
 const FilmEditorPage = lazy(() => import('@sdkwork/react-film').then(m => ({ default: m.FilmEditorPage })));
-const PortalPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.PortalPage })));
-const AIToolsPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.AIToolsPage })));
-const DiscoverPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DiscoverPage })));
-const CommunityPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.CommunityPage })));
-const TheaterPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.TheaterPage })));
-const DownloadAppPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DownloadAppPage })));
+const PortalPage = lazy(() => import('@sdkwork/react-portal-video/pages/PortalPage'));
+const AIToolsPage = lazy(() => import('@sdkwork/react-portal-video/pages/AIToolsPage'));
+const DiscoverPage = lazy(() => import('@sdkwork/react-portal-video/pages/DiscoverPage'));
+const CommunityPage = lazy(() => import('@sdkwork/react-portal-video/pages/CommunityPage'));
+const TheaterPage = lazy(() => import('@sdkwork/react-portal-video/pages/TheaterPage'));
+const DownloadAppPage = lazy(() => import('@sdkwork/react-portal-video/pages/DownloadAppPage'));
 const SkillsPage = lazy(() => import('@sdkwork/react-skills').then(m => ({ default: m.SkillsPage })));
 const PluginsPage = lazy(() => import('@sdkwork/react-plugins'));
 const ChatPPTPage = lazy(() => import('@sdkwork/react-chatppt').then(m => ({ default: m.ChatPPTPage })));
@@ -87,10 +87,10 @@ const PageLoadingFallback = () => {
     const { t } = useTranslation();
 
     return (
-        <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="app-loading-screen w-full h-screen flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-                <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-                <span className="text-gray-400 text-sm">{t('appShell.loading')}</span>
+                <div className="app-loading-spinner w-8 h-8 rounded-full animate-spin" />
+                <span className="text-sm">{t('appShell.loading')}</span>
             </div>
         </div>
     );
@@ -98,8 +98,8 @@ const PageLoadingFallback = () => {
 
 // Panel loading fallback
 const PanelLoadingFallback = () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
-        <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+    <div className="app-loading-screen w-full h-full flex items-center justify-center">
+        <div className="app-loading-spinner w-4 h-4 rounded-full animate-spin" />
     </div>
 );
 
@@ -125,6 +125,7 @@ export interface RouteDefinition {
     layout?: LayoutType;
     leftPane?: React.ComponentType<any>;
     provider?: React.ComponentType<any>;
+    requiresAuth?: boolean;
 }
 
 export const PACKAGE_ROUTES: RouteDefinition[] = [
@@ -141,7 +142,7 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
         provider: AssetStoreProvider
     },
     { path: ROUTES.SETTINGS, component: LazyPageWrapper(SettingsPage), layout: 'none' },
-    { path: ROUTES.PROFILE, component: LazyPageWrapper(ProfilePageLazy), layout: 'blank' },
+    { path: ROUTES.PROFILE, component: LazyPageWrapper(ProfilePageLazy), layout: 'blank', requiresAuth: true },
     { path: ROUTES.VIP, component: PricingPage, layout: 'main' },
     
     // --- Specific Tool Layouts ---
@@ -296,7 +297,8 @@ export const PACKAGE_ROUTES: RouteDefinition[] = [
     {
         path: ROUTES.MY_TASKS,
         component: MyTasksWithLayout,
-        layout: 'none'
+        layout: 'none',
+        requiresAuth: true
     },
     {
         path: ROUTES.DOWNLOAD,

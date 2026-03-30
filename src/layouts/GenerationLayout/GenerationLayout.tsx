@@ -9,7 +9,7 @@ export interface GenerationLayoutProps {
 
 // Resizer Handle Component
 const Resizer: React.FC<{ onMouseDown: (e: React.MouseEvent) => void }> = ({ onMouseDown }) => (
-    <div className="group relative flex-none w-[1px] h-full bg-[#1a1a1a] z-50 cursor-col-resize hover:bg-blue-600 transition-colors delay-75">
+    <div className="app-resizer group relative h-full z-50 cursor-col-resize delay-75">
         {/* Invisible hit area for easier grabbing */}
         <div className="absolute inset-y-0 -left-2 -right-2 bg-transparent z-50" onMouseDown={onMouseDown} />
     </div>
@@ -57,7 +57,7 @@ export const GenerationLayout: React.FC<GenerationLayoutProps> = ({ leftPane: Le
     }, [isResizing]);
 
     return (
-        <div className="flex w-full h-full bg-[#020202] overflow-hidden">
+        <div className="app-shell h-full">
             {/* 1. Thin Icon Sidebar (Navigation) */}
             <GenerationLayoutSidebar />
 
@@ -66,7 +66,7 @@ export const GenerationLayout: React.FC<GenerationLayoutProps> = ({ leftPane: Le
                 <>
                     <div
                         style={{ width: sidebarWidth }}
-                        className="flex-none border-r border-[#1a1a1a] bg-[#050505] flex flex-col h-full overflow-hidden z-10 relative transition-none"
+                        className="flex-none border-r border-[var(--border-color)] bg-[var(--bg-panel-subtle)] flex flex-col h-full overflow-hidden z-10 relative transition-none"
                     >
                         <LeftPane />
                     </div>
@@ -75,7 +75,7 @@ export const GenerationLayout: React.FC<GenerationLayoutProps> = ({ leftPane: Le
             )}
 
             {/* 3. Main Content Area (Children) */}
-            <div className="flex-1 flex flex-col min-w-0 bg-[#020202] relative z-0">
+            <div className="app-shell-main flex flex-col min-w-0 relative z-0">
                 {children}
             </div>
         </div>

@@ -10,24 +10,25 @@ export interface RouteDefinition {
     layout?: LayoutType;
     leftPane?: React.ComponentType<any>;
     provider?: React.ComponentType<any>;
+    requiresAuth?: boolean;
 }
 
 const PageLoadingFallback = () => {
     const { t } = useTranslation();
 
     return (
-        <div className="w-full h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="app-loading-screen w-full h-screen flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-                <div className="w-8 h-8 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-                <span className="text-gray-400 text-sm">{t('appShell.loading')}</span>
+                <div className="app-loading-spinner w-8 h-8 rounded-full animate-spin" />
+                <span className="text-sm">{t('appShell.loading')}</span>
             </div>
         </div>
     );
 };
 
 const PanelLoadingFallback = () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
-        <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+    <div className="app-loading-screen w-full h-full flex items-center justify-center">
+        <div className="app-loading-spinner w-4 h-4 rounded-full animate-spin" />
     </div>
 );
 
@@ -160,37 +161,37 @@ export const PACKAGE_BASED_ROUTES: RouteDefinition[] = [
     
     {
         path: ROUTES.PORTAL,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.PortalPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/PortalPage'))),
         layout: 'none'
     },
 
     {
         path: ROUTES.PORTAL_VIDEO,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.PortalPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/PortalPage'))),
         layout: 'none'
     },
 
     {
         path: ROUTES.PORTAL_TOOLS,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.AIToolsPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/AIToolsPage'))),
         layout: 'none'
     },
     
     {
         path: ROUTES.PORTAL_DISCOVER,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.DiscoverPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/DiscoverPage'))),
         layout: 'none'
     },
 
     {
         path: ROUTES.PORTAL_COMMUNITY,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.CommunityPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/CommunityPage'))),
         layout: 'none'
     },
 
     {
         path: ROUTES.PORTAL_THEATER,
-        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.TheaterPage })))),
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-portal-video/pages/TheaterPage'))),
         layout: 'none'
     },
 
@@ -218,6 +219,12 @@ export const PACKAGE_BASED_ROUTES: RouteDefinition[] = [
         path: ROUTES.CANVAS,
         component: LazyPageWrapper(lazy(() => import('@sdkwork/react-canvas').then(m => ({ default: m.CanvasPage })))),
         layout: 'none'
+    },
+    {
+        path: ROUTES.MY_TASKS,
+        component: LazyPageWrapper(lazy(() => import('@sdkwork/react-trade').then(m => ({ default: m.MyTasksPage })))),
+        layout: 'none',
+        requiresAuth: true
     }
 ];
 
@@ -240,7 +247,8 @@ export const FALLBACK_ROUTES: RouteDefinition[] = [
     {
         path: ROUTES.PROFILE,
         component: LazyPageWrapper(lazy(() => import('../pages/ProfilePage'))),
-        layout: 'blank'
+        layout: 'blank',
+        requiresAuth: true
     },
     {
         path: ROUTES.IMAGE_CHAT,

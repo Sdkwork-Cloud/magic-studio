@@ -261,6 +261,10 @@ export {
     readAppSdkSessionTokens,
     persistAppSdkSessionTokens,
     clearAppSdkSessionTokens,
+    hasAppSdkAuthSession,
+    isAppSdkAuthorizationError,
+    registerAppSdkSessionRecoveryHandler,
+    runWithAppSdkAuthRecovery,
     getAppSdkClientWithSession,
 } from './useAppSdkClient';
 export type {

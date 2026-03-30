@@ -6,6 +6,7 @@ import { Mail, Lock, Smartphone, Key, User, QrCode, RefreshCw, Check } from 'luc
 import { AuthInput } from './AuthInput';
 import { useTranslation } from '@sdkwork/react-i18n';
 import { useAuthStore } from '../store/authStore';
+import { AUTH_LOGIN_QR_CODE } from '../constants/authVisuals';
 
 interface LoginFormProps {
     onForgotPassword: () => void;
@@ -127,7 +128,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSucces
                 <div className="flex flex-col items-center justify-center py-8 space-y-4 h-[300px]">
                     <div className="relative group cursor-pointer">
                         <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-2xl">
-                             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MagicStudioLogin`} className="w-full h-full object-contain" alt={t('auth.page.qr_alt')} />
+                             <img src={AUTH_LOGIN_QR_CODE} className="w-full h-full object-contain" alt={t('auth.page.qr_alt')} />
                         </div>
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
                              <RefreshCw size={24} />

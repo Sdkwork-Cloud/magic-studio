@@ -21,11 +21,6 @@ const MainSidebar: React.FC = () => {
   const { t } = useTranslation();
   const isDesktopRuntime = platform.getPlatform() === 'desktop';
 
-  // Debug: Log path changes
-  React.useEffect(() => {
-      console.log('[MainSidebar] currentPath changed:', currentPath);
-  }, [currentPath]);
-
   // Load Config (Fallback to Default Template if missing)
   const menuConfig = settings.appearance.sidebarConfig || SIDEBAR_TEMPLATES[0].config;
   const runtimeMenuConfig = menuConfig
@@ -37,16 +32,16 @@ const MainSidebar: React.FC = () => {
 
   return (
     <>
-      <div className="w-[52px] h-full bg-[#f4f4f5] dark:bg-[#050505] flex flex-col items-center py-4 border-r border-[#e4e4e7] dark:border-[#1a1a1a] select-none transition-colors duration-200 z-50">
-        
+      <div className="app-sidebar-rail w-[72px] h-full flex flex-col items-center py-4 select-none transition-colors duration-200 z-50">
+
         {/* --- Top Section: Avatar --- */}
-        <div 
+        <div
           className="mb-6 flex-none"
           onClick={() => navigate(user ? ROUTES.PROFILE : ROUTES.LOGIN)}
         >
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-[10px] shadow-lg shadow-blue-900/20 cursor-pointer hover:scale-105 transition-transform ring-1 ring-black/5 dark:ring-white/10 relative group">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-[10px] shadow-lg cursor-pointer hover:scale-105 transition-transform relative group bg-primary-600">
              {user?.avatarUrl ? (
-                 <img src={user.avatarUrl} className="w-full h-full object-cover rounded-xl" alt="Avatar"/> 
+                 <img src={user.avatarUrl} className="w-full h-full object-cover rounded-xl" alt="Avatar"/>
              ) : (
                  "OS"
              )}
@@ -54,14 +49,14 @@ const MainSidebar: React.FC = () => {
         </div>
 
         {/* --- Middle Section: Dynamic Navigation --- */}
-        <div className="flex flex-col gap-3 flex-1 w-full items-center overflow-y-auto overflow-x-hidden min-h-0 no-scrollbar pb-4">
-          
+        <div className="app-ghost-scrollbar flex flex-col gap-3 flex-1 w-full items-center overflow-y-auto overflow-x-hidden min-h-0 pb-4">
+
           {runtimeMenuConfig.map((item, index) => {
               if (!item.visible) return null;
 
               // Separator
               if (item.id.startsWith('separator')) {
-                  return <div key={index} className="w-6 h-[1px] bg-gray-200 dark:bg-[#1a1a1a] my-1" />;
+                  return <div key={index} className="app-sidebar-divider w-6 h-px my-1" />;
               }
 
               // Group (Accordion/Flyout)
@@ -71,9 +66,9 @@ const MainSidebar: React.FC = () => {
                   if (visibleChildren.length === 0) return null;
 
                   const isActive = visibleChildren.some(child => child.route === currentPath);
-                  
+
                   return (
-                      <SidebarGroup 
+                      <SidebarGroup
                           key={item.id}
                           config={item}
                           isActive={isActive}
@@ -86,12 +81,12 @@ const MainSidebar: React.FC = () => {
 
               // Standard Item
               return (
-                  <SidebarItem 
+                  <SidebarItem
                       key={item.id}
-                      icon={getIconComponent(item.icon)} 
+                      icon={getIconComponent(item.icon)}
                       label={t(item.labelKey)}
-                      isActive={currentPath === item.route} 
-                      onClick={() => navigate(item.route as any)} 
+                      isActive={currentPath === item.route}
+                      onClick={() => navigate(item.route as any)}
                   />
               );
           })}
@@ -99,16 +94,16 @@ const MainSidebar: React.FC = () => {
         </div>
 
         {/* --- Bottom Section: Actions --- */}
-        <div className="flex flex-col gap-3 items-center flex-none w-full pt-4 pb-2 bg-[#f4f4f5] dark:bg-[#050505] transition-colors duration-200 border-t border-gray-200 dark:border-[#1a1a1a]">
-           
+        <div className="flex flex-col gap-3 items-center flex-none w-full pt-4 pb-2 transition-colors duration-200 border-t border-white/5">
+
            {/* VIP Button */}
            <button
              onClick={() => setShowPricing(true)}
              className={`
-                relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200 group
-                ${showPricing 
-                    ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-500' 
-                    : 'text-yellow-600 dark:text-yellow-500 hover:bg-yellow-500/10'
+                app-sidebar-item relative w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-200 group
+                ${showPricing
+                    ? 'bg-primary-500/15 text-primary-300'
+                    : 'text-primary-300 hover:bg-primary-500/10'
                 }
              `}
              title={t('sidebar.upgrade')}
@@ -116,13 +111,13 @@ const MainSidebar: React.FC = () => {
               <Crown size={18} strokeWidth={2} className="transition-transform duration-200 group-hover:scale-110" />
            </button>
 
-           <div className="w-6 h-[1px] bg-gray-200 dark:bg-[#1a1a1a]" />
+           <div className="app-sidebar-divider w-6 h-px" />
 
-           <SidebarItem 
-             icon={Settings} 
+           <SidebarItem
+             icon={Settings}
              label={t('sidebar.settings')}
-             isActive={currentPath === ROUTES.SETTINGS} 
-             onClick={() => navigate(ROUTES.SETTINGS)} 
+             isActive={currentPath === ROUTES.SETTINGS}
+             onClick={() => navigate(ROUTES.SETTINGS)}
            />
         </div>
       </div>
@@ -138,9 +133,9 @@ const MainSidebar: React.FC = () => {
 // --- Sub Components ---
 
 interface SidebarItemProps {
-    icon: any; 
-    isActive?: boolean; 
-    onClick: () => void; 
+    icon: any;
+    isActive?: boolean;
+    onClick: () => void;
     label: string;
     className?: string;
 }
@@ -152,11 +147,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     label,
     className = ""
   }) => {
-    // Debug: Log active state changes
-    React.useEffect(() => {
-        console.log('[SidebarItem] isActive changed for', label, ':', isActive);
-    }, [isActive, label]);
-
     // Handle null icon case
     if (!Icon) {
         console.warn('[SidebarItem] Icon is null for label:', label);
@@ -169,11 +159,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           onClick={onClick}
           data-active={isActive}
           className={`
-            relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200
-            ${isActive
-                ? 'bg-gray-200 dark:bg-[#1e1e20] text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#1a1a1c] hover:text-gray-900 dark:hover:text-white'
-            }
+            app-sidebar-item relative w-10 h-10 flex items-center justify-center rounded-2xl
             ${className}
           `}
         >
@@ -182,15 +168,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
         {/* Tooltip */}
         {!isActive && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[60] border border-[#333]">
+            <div className="app-sidebar-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 text-[10px] rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[60]">
                 {label}
-                <div className="absolute -left-1 top-1/2 -translate-y-1/2 border-t-[4px] border-b-[4px] border-r-[4px] border-t-transparent border-b-transparent border-r-black" />
             </div>
         )}
 
         {/* Active Indicator Dot */}
         {isActive && (
-             <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-500 rounded-r-full" />
+             <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary-500 rounded-r-full" />
         )}
     </div>
   );
@@ -225,18 +210,15 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
     };
 
     return (
-        <div 
+        <div
             className="relative group/group"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <button 
+            <button
+              data-active={isActive || isHovered}
               className={`
-                relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200
-                ${isActive || isHovered
-                    ? 'bg-gray-200 dark:bg-[#1e1e20] text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5' 
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#1a1a1c] hover:text-gray-900 dark:hover:text-white'
-                }
+                app-sidebar-item relative w-10 h-10 flex items-center justify-center rounded-2xl
               `}
             >
               <Icon size={18} strokeWidth={1.5} className="transition-transform duration-200" />
@@ -244,48 +226,48 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
 
             {/* Active Indicator */}
             {isActive && (
-                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-500 rounded-r-full" />
+                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary-500 rounded-r-full" />
             )}
 
             {/* Flyout Menu */}
             {isHovered && (
-                <div 
-                    className="fixed left-[56px] top-auto z-[60] ml-2 w-56 bg-[#1e1e1e] dark:bg-[#0a0a0a] border border-[#333] dark:border-[#1a1a1a] rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-left"
+                <div
+                    className="app-floating-panel fixed left-[72px] top-auto z-[60] ml-2 w-56 rounded-[1.25rem] overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-left"
                     style={{ marginTop: '-20px' }}
                 >
-                    <div className="px-4 py-3 border-b border-[#333] dark:border-[#1a1a1a] bg-[#252526] dark:bg-[#111] flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">{t(config.labelKey)}</span>
-                        <Icon size={14} className="text-gray-500" />
+                    <div className="px-4 py-3 border-b border-[var(--border-color)] bg-[var(--bg-panel-subtle)] flex items-center justify-between">
+                        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-[0.16em]">{t(config.labelKey)}</span>
+                        <Icon size={14} className="text-[var(--text-muted)]" />
                     </div>
-                    
+
                     <div className="p-1.5 flex flex-col gap-0.5">
                         {config.children?.filter((c: SidebarItemConfig) => c.visible).map((item: SidebarItemConfig) => {
                             const isItemActive = currentPath === item.route;
                             const ItemIcon = getIconComponent(item.icon);
-                            
+
                             if (!ItemIcon) {
                                 return null;
                             }
-                            
+
                             return (
                                 <button
                                     key={item.route}
                                     onClick={() => { navigate(item.route); setIsHovered(false); }}
                                     className={`
-                                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left group/item
-                                        ${isItemActive 
-                                            ? 'bg-[#2b2d31] dark:bg-[#1e1e20] text-white' 
-                                            : 'text-gray-400 hover:bg-[#2b2d31] dark:hover:bg-[#1a1a1c] hover:text-gray-200'
+                                        flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-left group/item
+                                        ${isItemActive
+                                            ? 'bg-[var(--text-primary)] text-[var(--bg-panel-strong)]'
+                                            : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] hover:text-[var(--text-primary)]'
                                         }
                                     `}
                                 >
-                                    <ItemIcon 
-                                        size={16} 
-                                        className={`transition-colors ${isItemActive ? 'text-blue-400' : 'text-gray-500 group-hover/item:text-gray-300'}`} 
+                                    <ItemIcon
+                                        size={16}
+                                        className={`transition-colors ${isItemActive ? 'text-primary-400' : 'text-[var(--text-muted)] group-hover/item:text-[var(--text-secondary)]'}`}
                                     />
                                     <span className="flex-1">{t(item.labelKey)}</span>
-                                    {isItemActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
-                                    {!isItemActive && <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-50 transition-opacity" />}
+                                    {isItemActive && <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />}
+                                    {!isItemActive && <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-50 transition-opacity text-[var(--text-muted)]" />}
                                 </button>
                             );
                         })}

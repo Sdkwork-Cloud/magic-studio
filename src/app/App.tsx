@@ -1,24 +1,48 @@
-
-import { useRouter } from '@sdkwork/react-core'
+import { ROUTES, useRouter } from '@sdkwork/react-core'
+import { useAuthStore } from '@sdkwork/react-auth';
 import { useTranslation } from '@sdkwork/react-i18n';
-import React, { Suspense, useEffect, useMemo } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo } from 'react';
 import { AppProvider } from './AppProvider';
-;
 import { bootstrap } from './bootstrap';
 import { APP_ROUTES } from '../router/registry';
 import { scheduleRoutePreload } from '../router/routePreload';
-
-import { MainLayout } from '../layouts/MainLayout/MainLayout';
-import { GenerationLayout } from '../layouts/GenerationLayout/GenerationLayout';
-import { CreationLayout } from '../layouts/CreationLayout/CreationLayout';
-import { VibeLayout } from '../layouts/VibeLayout/VibeLayout';
-import { MagicCutLayout } from '../layouts/MagicCutLayout/MagicCutLayout';
-import { NotesLayout } from '../layouts/NotesLayout/NotesLayout';
-import { BlankLayout } from '../layouts/BlankLayout/BlankLayout';
+import { dismissBootSplashAfterPaint } from './bootSplash';
+import { buildLoginRedirectQuery, resolveAuthRouteAccess } from './authRouteGuard';
 
 const DEFAULT_LAYOUT = 'blank';
 
-const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.ReactNode; leftPane?: React.ComponentType<any> }>> = {
+type LayoutComponentProps = {
+  children: React.ReactNode;
+  leftPane?: React.ComponentType<any>;
+};
+
+type LayoutComponentType =
+  | React.ComponentType<LayoutComponentProps>
+  | React.LazyExoticComponent<React.ComponentType<LayoutComponentProps>>;
+
+const MainLayout = lazy(() =>
+  import('../layouts/MainLayout/MainLayout').then((module) => ({ default: module.MainLayout })),
+);
+const GenerationLayout = lazy(() =>
+  import('../layouts/GenerationLayout/GenerationLayout').then((module) => ({ default: module.GenerationLayout })),
+);
+const CreationLayout = lazy(() =>
+  import('../layouts/CreationLayout/CreationLayout').then((module) => ({ default: module.CreationLayout })),
+);
+const VibeLayout = lazy(() =>
+  import('../layouts/VibeLayout/VibeLayout').then((module) => ({ default: module.VibeLayout })),
+);
+const MagicCutLayout = lazy(() =>
+  import('../layouts/MagicCutLayout/MagicCutLayout').then((module) => ({ default: module.MagicCutLayout })),
+);
+const NotesLayout = lazy(() =>
+  import('../layouts/NotesLayout/NotesLayout').then((module) => ({ default: module.NotesLayout })),
+);
+const BlankLayout = lazy(() =>
+  import('../layouts/BlankLayout/BlankLayout').then((module) => ({ default: module.BlankLayout })),
+);
+
+const LAYOUT_COMPONENTS: Record<string, LayoutComponentType> = {
     main: MainLayout,
     generation: GenerationLayout,
     creation: CreationLayout,
@@ -29,17 +53,18 @@ const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.Re
     none: BlankLayout,
 };
 
+const FALLBACK_ROUTE = APP_ROUTES.find((candidate) => candidate.path === '/') ?? APP_ROUTES[0];
+
 const RouteLoadingFallback: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-[#050505] text-gray-500 gap-3">
-      <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+    <div className="w-full h-screen flex items-center justify-center bg-[var(--bg-app)] text-[var(--text-muted)] gap-3">
+      <div className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
       <span className="text-xs font-medium">{t('appShell.loading_route')}</span>
     </div>
   );
 };
-const HomePage = React.lazy(() => import('../pages/HomePage'));
 
 const matchRoute = (routePath: string, currentPath: string): { matched: boolean; params: Record<string, string> } => {
     const routeParts = routePath.split('/');
@@ -67,7 +92,8 @@ const matchRoute = (routePath: string, currentPath: string): { matched: boolean;
 };
 
 const AppContent: React.FC = () => {
-  const { currentPath } = useRouter();
+  const { currentPath, currentQuery, navigate } = useRouter();
+  const { isAuthenticated, isAuthResolved } = useAuthStore();
   useEffect(() => {
       return scheduleRoutePreload(currentPath);
   }, [currentPath]);
@@ -82,20 +108,28 @@ const AppContent: React.FC = () => {
       return { route: undefined, params: {} };
   }, [currentPath]);
 
-  if (!route) {
-      return (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <BlankLayout>
-            <HomePage />
-          </BlankLayout>
-        </Suspense>
-      );
-  }
-
-  const { component: Component, layout, leftPane: LeftPaneComponent, provider: RouteProvider } = route;
+  const resolvedRoute = route ?? FALLBACK_ROUTE;
+  const accessDecision = resolveAuthRouteAccess({
+    requiresAuth: resolvedRoute.requiresAuth,
+    isAuthenticated,
+    isAuthResolved,
+  });
+  const { component: Component, layout, leftPane: LeftPaneComponent, provider: RouteProvider } = resolvedRoute;
 
   const layoutKey = layout ?? DEFAULT_LAYOUT;
-  const LayoutComponent = LAYOUT_COMPONENTS[layoutKey] || LAYOUT_COMPONENTS[DEFAULT_LAYOUT];
+  const LayoutComponent = (LAYOUT_COMPONENTS[layoutKey] || LAYOUT_COMPONENTS[DEFAULT_LAYOUT]) as React.ComponentType<LayoutComponentProps>;
+
+  useEffect(() => {
+    if (accessDecision !== 'redirect') {
+      return;
+    }
+
+    navigate(ROUTES.LOGIN, buildLoginRedirectQuery(currentPath, currentQuery));
+  }, [accessDecision, currentPath, currentQuery, navigate]);
+
+  if (accessDecision === 'pending' || accessDecision === 'redirect') {
+    return <RouteLoadingFallback />;
+  }
 
   const contentWithLayout = (
     <Suspense fallback={<RouteLoadingFallback />}>
@@ -120,7 +154,8 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   useEffect(() => {
-    bootstrap();
+    dismissBootSplashAfterPaint();
+    void bootstrap();
   }, []);
 
   return (

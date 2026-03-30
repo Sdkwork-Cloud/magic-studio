@@ -2,6 +2,17 @@
 ;
 import { EffectDefinition } from '../../entities/effect.entity'
 import { SHADER_LIB } from './DefaultShaders';
+import { createOfflineArtwork } from '@sdkwork/react-core';
+
+const createEffectThumbnail = (title: string, accent: string): string =>
+    createOfflineArtwork({
+        title,
+        subtitle: 'Bundled effect thumbnail',
+        eyebrow: 'Magic Cut',
+        accent,
+        width: 480,
+        height: 270,
+    });
 
 class EffectRegistry {
     private definitions: Map<string, EffectDefinition> = new Map();
@@ -28,7 +39,7 @@ class EffectRegistry {
                 u_exposure: { type: 'float', label: 'Exposure', default: 0.0, min: -2.0, max: 2.0, step: 0.01 },
                 u_vibrance: { type: 'float', label: 'Vibrance', default: 0.0, min: -1.0, max: 1.0, step: 0.01 },
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('Cinematic Grade', '#5b8cff')
         });
 
         this.register({
@@ -43,7 +54,7 @@ class EffectRegistry {
                 u_saturation: { type: 'float', label: 'Saturation', default: 1.0, min: 0.0, max: 2.0, step: 0.01 },
                 u_lightness: { type: 'float', label: 'Lightness', default: 0.0, min: -1.0, max: 1.0, step: 0.01 }
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('Hue Saturation', '#ec4899')
         });
         
         this.register({
@@ -87,7 +98,7 @@ class EffectRegistry {
                 u_scanlines: { type: 'float', label: 'Scanlines', default: 0.5, min: 0.0, max: 1.0, step: 0.01 },
                 u_vignette: { type: 'float', label: 'Vignette', default: 0.5, min: 0.0, max: 1.0, step: 0.01 }
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('CRT Monitor', '#f97316')
         });
 
         this.register({
@@ -102,7 +113,7 @@ class EffectRegistry {
                 u_sepia: { type: 'float', label: 'Sepia', default: 0.5, min: 0.0, max: 1.0, step: 0.01 },
                 u_scratch_density: { type: 'float', label: 'Scratches', default: 0.2, min: 0.0, max: 1.0, step: 0.01 },
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('Old Film', '#d97706')
         });
 
         this.register({
@@ -246,7 +257,7 @@ class EffectRegistry {
                 u_angle: { type: 'float', label: 'Angle', default: 0.0, min: 0.0, max: 360.0, step: 1.0 },
                 u_strength: { type: 'float', label: 'Length', default: 0.0, min: 0.0, max: 1.0, step: 0.01 }
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1621600411688-4be93cd68504?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('Directional Blur', '#0ea5e9')
         });
         
         this.register({
@@ -341,7 +352,7 @@ class EffectRegistry {
                 u_angle: { type: 'float', label: 'Angle', default: 45.0, min: 0.0, max: 360.0, step: 1.0 },
                 u_smoothness: { type: 'float', label: 'Softness', default: 0.2, min: 0.0, max: 1.0, step: 0.01 }
             },
-            thumbnailUrl: 'https://images.unsplash.com/photo-1558470598-a5dda9640f6b?q=80&w=480&auto=format&fit=crop'
+            thumbnailUrl: createEffectThumbnail('Directional Wipe', '#8b5cf6')
         });
 
         this.register({

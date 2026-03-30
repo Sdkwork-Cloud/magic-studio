@@ -8,10 +8,9 @@ import {
   ExternalLink,
   Globe,
   Monitor,
-  QrCode,
   Smartphone,
 } from 'lucide-react';
-import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { ROUTES, createOfflineQrCode, useRouter } from '@sdkwork/react-core';
 import { PortalHeader } from '../components/PortalHeader';
 import { PortalSidebar } from '../components/PortalSidebar';
 
@@ -43,7 +42,9 @@ interface DesktopOption {
   icon: React.ReactNode;
   version: string;
   size: string;
-  downloadUrl: string;
+  artifactName: string;
+  downloadUrl?: string;
+  deliveryNote: string;
   isPrimary?: boolean;
 }
 
@@ -52,6 +53,7 @@ interface MobileOption {
   icon: React.ReactNode;
   qrCode?: string;
   downloadUrl?: string;
+  statusNote?: string;
   isComingSoon?: boolean;
 }
 
@@ -61,7 +63,8 @@ const DESKTOP_OPTIONS: DesktopOption[] = [
     icon: <WindowsIcon size={32} />,
     version: 'v2.0.0',
     size: '156 MB',
-    downloadUrl: '/downloads/MagicStudio-Windows-x64.exe',
+    artifactName: 'MagicStudio-Windows-x64.exe',
+    deliveryNote: 'Bundled with desktop release distribution',
     isPrimary: true,
   },
   {
@@ -69,14 +72,16 @@ const DESKTOP_OPTIONS: DesktopOption[] = [
     icon: <Apple size={32} />,
     version: 'v2.0.0',
     size: '178 MB',
-    downloadUrl: '/downloads/MagicStudio-macOS-arm64.dmg',
+    artifactName: 'MagicStudio-macOS-arm64.dmg',
+    deliveryNote: 'Bundled with desktop release distribution',
   },
   {
     id: 'linux',
     icon: <LinuxIcon size={32} />,
     version: 'v2.0.0',
     size: '162 MB',
-    downloadUrl: '/downloads/MagicStudio-Linux-x64.AppImage',
+    artifactName: 'MagicStudio-Linux-x64.AppImage',
+    deliveryNote: 'Bundled with desktop release distribution',
   },
 ];
 
@@ -84,25 +89,25 @@ const MOBILE_OPTIONS: MobileOption[] = [
   {
     id: 'ios',
     icon: <Apple size={28} />,
-    qrCode: '/qr/ios-app-store.png',
+    qrCode: createOfflineQrCode({ label: 'App Store', accent: '#60a5fa' }),
     downloadUrl: 'https://apps.apple.com/app/magic-studio',
   },
   {
     id: 'android',
     icon: <Smartphone size={28} />,
-    qrCode: '/qr/android-apk.png',
-    downloadUrl: '/downloads/MagicStudio-Android.apk',
+    qrCode: createOfflineQrCode({ label: 'Android APK', accent: '#22c55e' }),
+    statusNote: 'APK distributed through the release channel',
   },
   {
     id: 'h5',
     icon: <Globe size={28} />,
-    qrCode: '/qr/h5-webapp.png',
+    qrCode: createOfflineQrCode({ label: 'Web App', accent: '#8b5cf6' }),
     downloadUrl: 'https://h5.magicstudio.com',
   },
   {
     id: 'miniprogram',
     icon: <AppWindow size={28} />,
-    qrCode: '/qr/wechat-miniprogram.png',
+    qrCode: createOfflineQrCode({ label: 'Mini Program', accent: '#10b981' }),
     isComingSoon: true,
   },
 ];
@@ -219,18 +224,32 @@ export const DownloadAppPage: React.FC = () => {
                     {t(`download.desktop.${option.id}.requirements`)}
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDownload(option.downloadUrl)}
-                    className={`flex w-full items-center justify-center gap-2 rounded-lg py-3 font-medium transition-all duration-200 ${
-                      option.isPrimary
-                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-600'
-                        : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
-                  >
-                    <Download size={18} />
-                    {t('download.download_now')}
-                  </button>
+                  <div className="space-y-3">
+                    {option.downloadUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(option.downloadUrl!)}
+                        className={`flex w-full items-center justify-center gap-2 rounded-lg py-3 font-medium transition-all duration-200 ${
+                          option.isPrimary
+                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-600'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        <Download size={18} />
+                        {t('download.download_now')}
+                      </button>
+                    ) : (
+                      <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-3 text-sm font-medium text-gray-300">
+                        <Check size={16} className="text-emerald-400" />
+                        {t('download.desktop_release_bundle', 'Included in release package')}
+                      </div>
+                    )}
+
+                    <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-gray-400">
+                      <div>{t('download.artifact_name', 'Artifact')}: {option.artifactName}</div>
+                      <div>{t('download.delivery_note', 'Delivery')}: {option.deliveryNote}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -266,9 +285,7 @@ export const DownloadAppPage: React.FC = () => {
 
                   {option.qrCode ? (
                     <div className="mb-4 aspect-square rounded-lg bg-white p-3">
-                      <div className="flex h-full w-full items-center justify-center rounded bg-gray-200 text-gray-400">
-                        <QrCode size={48} />
-                      </div>
+                      <img src={option.qrCode} alt={`${option.id}-qr`} className="h-full w-full rounded object-cover" />
                     </div>
                   ) : null}
 
@@ -277,23 +294,32 @@ export const DownloadAppPage: React.FC = () => {
                       {t('download.coming_soon', 'Coming Soon')}
                     </div>
                   ) : option.downloadUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDownload(option.downloadUrl!)}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-white/20"
-                    >
-                      {option.downloadUrl.startsWith('http') ? (
-                        <>
-                          <ExternalLink size={14} />
-                          {t('download.visit', 'Visit')}
-                        </>
-                      ) : (
-                        <>
-                          <Download size={14} />
-                          {t('download.download', 'Download')}
-                        </>
-                      )}
-                    </button>
+                    (() => {
+                      const downloadUrl = option.downloadUrl;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(downloadUrl)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-white/20"
+                        >
+                          {downloadUrl.startsWith('http') ? (
+                            <>
+                              <ExternalLink size={14} />
+                              {t('download.visit', 'Visit')}
+                            </>
+                          ) : (
+                            <>
+                              <Download size={14} />
+                              {t('download.download', 'Download')}
+                            </>
+                          )}
+                        </button>
+                      );
+                    })()
+                  ) : option.statusNote ? (
+                    <div className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-center text-xs text-gray-400">
+                      {option.statusNote}
+                    </div>
                   ) : null}
                 </div>
               ))}

@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useSettingsStore } from '../store/settingsStore';
 
 import { useTranslation } from '@sdkwork/react-i18n';
-import { 
-    Network, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, Code, TerminalSquare, Info
+import {
+    Network, Plus, Trash2, Edit2, AlertCircle, TerminalSquare, Info
 } from 'lucide-react';
 import { SettingsSection, SettingToggle, SettingInput, SettingTextArea } from './SettingsWidgets';
 
@@ -57,17 +57,17 @@ const LspSettings: React.FC = () => {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                        <Network size={28} className="text-purple-500" />
+                     <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--text-primary)]">
+                        <Network size={28} className="text-primary-500" />
                         {t('settings.lsp.title')}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1 max-w-xl">
+                    <p className="mt-1 max-w-xl text-sm text-[var(--text-muted)]">
                         {t('settings.lsp.subtitle')}
                     </p>
                 </div>
-                <button 
+                <button
                     onClick={handleCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all shadow-md hover:shadow-lg shadow-blue-900/20"
+                    className="flex items-center gap-2 rounded-xl bg-[var(--text-primary)] px-4 py-2 text-sm font-medium text-[var(--bg-panel-strong)] shadow-md transition-all hover:bg-primary-600 hover:text-white hover:shadow-lg"
                 >
                     <Plus size={16} /> {t('common.actions.add')}
                 </button>
@@ -75,56 +75,57 @@ const LspSettings: React.FC = () => {
 
             {/* Split Content */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
+
                 {/* List Column */}
                 <div className="lg:col-span-4 space-y-3">
                     {lspList.length === 0 ? (
-                         <div className="flex flex-col items-center justify-center py-16 text-gray-500 border-2 border-dashed border-gray-200 dark:border-[#333] rounded-2xl bg-gray-50 dark:bg-[#1e1e1e]/50">
+                         <div className="app-surface-subtle flex flex-col items-center justify-center rounded-3xl border-dashed py-16 text-[var(--text-muted)]">
                             <AlertCircle size={32} className="opacity-20 mb-3" />
                             <p>{t('settings.lsp.no_servers')}</p>
                         </div>
                     ) : (
                         lspList.map(lsp => (
-                            <div 
+                            <div
                                 key={lsp.id}
                                 onClick={() => setEditingId(lsp.id)}
                                 className={`
-                                    group relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all duration-200
-                                    ${editingId === lsp.id 
-                                        ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-500/50 shadow-sm' 
-                                        : 'bg-white dark:bg-[#1e1e1e] border-gray-200 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#52525b] hover:shadow-md'
+                                    group relative flex cursor-pointer flex-col rounded-[1.5rem] p-4 transition-all duration-200
+                                    ${editingId === lsp.id
+                                        ? 'app-surface-strong border-primary-500/40 bg-[color-mix(in_srgb,var(--theme-primary-500)_8%,var(--bg-panel-strong))] shadow-sm'
+                                        : 'app-surface-strong hover:border-[var(--border-strong)] hover:shadow-md'
                                     }
                                 `}
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${lsp.enabled ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-[#333] text-gray-400'}`}>
+                                        <div className="app-status-icon rounded-xl p-2" data-tone={lsp.enabled ? 'success' : 'neutral'}>
                                             <TerminalSquare size={16} />
                                         </div>
-                                        <h3 className={`font-semibold text-sm ${editingId === lsp.id ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-gray-200'}`}>
+                                        <h3 className={`text-sm font-semibold ${editingId === lsp.id ? 'text-primary-500' : 'text-[var(--text-primary)]'}`}>
                                             {lsp.name}
                                         </h3>
                                     </div>
-                                    <div 
+                                    <div
                                         onClick={(e) => { e.stopPropagation(); updateLsp(lsp.id, { enabled: !lsp.enabled }); }}
-                                        className={`w-8 h-4 rounded-full relative transition-colors cursor-pointer ${lsp.enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-[#444]'}`}
+                                        className="app-status-pill cursor-pointer"
+                                        data-tone={lsp.enabled ? 'success' : 'neutral'}
                                     >
-                                        <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${lsp.enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        {lsp.enabled ? t('common.status.enabled') : t('common.status.disabled')}
                                     </div>
                                 </div>
-                                
+
                                 <div className="pl-[44px]">
                                     <div className="flex flex-wrap gap-1.5">
                                         {lsp.languages.slice(0, 3).map(lang => (
-                                            <span key={lang} className="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-[#2d2d2d] text-gray-500 dark:text-gray-400 rounded-md border border-gray-200 dark:border-[#333] font-mono">
+                                            <span key={lang} className="app-surface-subtle rounded-md border px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)]">
                                                 {lang}
                                             </span>
                                         ))}
                                         {lsp.languages.length > 3 && (
-                                            <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{lsp.languages.length - 3}</span>
+                                            <span className="px-1.5 py-0.5 text-[10px] text-[var(--text-muted)]">+{lsp.languages.length - 3}</span>
                                         )}
                                     </div>
-                                    <div className="mt-2 text-[10px] text-gray-400 font-mono truncate opacity-60">
+                                    <div className="mt-2 truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">
                                         $ {lsp.command} {lsp.args.join(' ')}
                                     </div>
                                 </div>
@@ -136,41 +137,41 @@ const LspSettings: React.FC = () => {
                 {/* Editor Column */}
                 <div className="lg:col-span-8 relative">
                     {editingId ? (
-                        <div className="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#333] rounded-2xl p-6 sticky top-6 animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-xl shadow-black/5">
-                             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-[#2d2d2d]">
+                        <div className="app-floating-panel sticky top-6 animate-in fade-in slide-in-from-bottom-4 rounded-[1.75rem] p-6 duration-300">
+                             <div className="mb-6 flex items-center justify-between border-b border-[var(--border-color)] pb-4">
                                 <div>
-                                    <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Edit2 size={16} className="text-blue-500" />
+                                    <h3 className="flex items-center gap-2 text-base font-bold text-[var(--text-primary)]">
+                                        <Edit2 size={16} className="text-primary-500" />
                                         {t('settings.lsp.server_config')}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">ID: <span className="font-mono text-[10px]">{editingId}</span></p>
+                                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">ID: <span className="font-mono text-[10px]">{editingId}</span></p>
                                 </div>
-                                <button 
-                                    onClick={() => handleDelete(editingId)} 
-                                    className="text-red-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2 text-xs font-medium"
+                                <button
+                                    onClick={() => handleDelete(editingId)}
+                                    className="app-button-danger flex items-center gap-2 rounded-xl p-2 text-xs font-medium"
                                 >
                                     <Trash2 size={14} /> {t('common.actions.delete')}
                                 </button>
                              </div>
 
                              <SettingsSection title={t('common.form.required')}>
-                                 <SettingInput 
-                                    label={t('common.form.name')} 
+                                 <SettingInput
+                                    label={t('common.form.name')}
                                     value={settings.lsp[editingId].name}
                                     onChange={(v) => updateLsp(editingId, { name: v })}
                                     fullWidth
                                  />
-                                 <SettingInput 
+                                 <SettingInput
                                     label={t('common.form.command')}
-                                    description="Command to start the language server (must be in PATH)" 
+                                    description="Command to start the language server (must be in PATH)"
                                     value={settings.lsp[editingId].command}
                                     onChange={(v) => updateLsp(editingId, { command: v })}
                                     fullWidth
                                     fontMono
                                  />
-                                  <SettingInput 
+                                  <SettingInput
                                     label={t('settings.lsp.languages')}
-                                    description="File extensions or language IDs (comma separated)" 
+                                    description="File extensions or language IDs (comma separated)"
                                     value={settings.lsp[editingId].languages.join(', ')}
                                     onChange={(v) => updateLsp(editingId, { languages: v.split(',').map(s => s.trim()).filter(Boolean) })}
                                     fullWidth
@@ -190,16 +191,16 @@ const LspSettings: React.FC = () => {
                                 />
                              </SettingsSection>
 
-                             <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl flex gap-3 text-xs text-blue-700 dark:text-blue-300">
+                             <div className="app-banner text-xs" data-tone="info">
                                 <Info size={16} className="shrink-0 mt-0.5" />
                                 <p>
                                     {t('settings.lsp.restart_hint')}
                                 </p>
-                             </div>
+                            </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px] text-gray-400 bg-gray-50 dark:bg-[#1e1e1e] border-2 border-dashed border-gray-200 dark:border-[#333] rounded-2xl">
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-[#252526] rounded-full flex items-center justify-center mb-4">
+                        <div className="app-surface-subtle flex h-[400px] flex-col items-center justify-center rounded-3xl border-dashed text-[var(--text-muted)]">
+                            <div className="app-surface-strong mb-4 flex h-16 w-16 items-center justify-center rounded-full">
                                 <Edit2 size={24} className="opacity-40" />
                             </div>
                             <span className="text-sm font-medium">{t('settings.lsp.select_server')}</span>

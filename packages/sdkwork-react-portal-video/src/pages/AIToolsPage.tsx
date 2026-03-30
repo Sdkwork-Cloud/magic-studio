@@ -15,7 +15,7 @@ import {
 import { Button } from '@sdkwork/react-commons';
 import { Input } from '@sdkwork/react-commons/ui';
 import { useTranslation } from '@sdkwork/react-i18n';
-import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { ROUTES, createOfflineArtwork, useRouter } from '@sdkwork/react-core';
 import { PortalHeader } from '../components/PortalHeader';
 import { PortalSidebar } from '../components/PortalSidebar';
 
@@ -39,12 +39,27 @@ interface LocalizedTool extends ToolDefinition {
   badgeLabel?: string;
 }
 
+const createToolArtwork = (
+  title: string,
+  accent: string,
+  badge?: string,
+): string =>
+  createOfflineArtwork({
+    title,
+    subtitle: 'Bundled AI workflow preview',
+    eyebrow: 'Magic Studio Tools',
+    badge,
+    accent,
+    width: 640,
+    height: 360,
+  });
+
 const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     id: 'video-extender',
     localeKey: 'video_extender',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Video Extender', '#5b8cff', 'New'),
     badge: 'newest',
     icon: Layers,
     route: ROUTES.VIDEO,
@@ -53,7 +68,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'lip-sync',
     localeKey: 'lip_sync',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Lip Sync', '#14b8a6'),
     icon: Mic,
     route: ROUTES.VIDEO,
   },
@@ -61,7 +76,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'img-to-video',
     localeKey: 'img_to_video',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Image To Video', '#f97316', 'Hot'),
     badge: 'hot',
     icon: Video,
     route: ROUTES.VIDEO,
@@ -70,7 +85,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'video-upscale',
     localeKey: 'video_upscale',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Video Upscale', '#a855f7'),
     icon: Wand2,
     route: ROUTES.VIDEO,
   },
@@ -78,7 +93,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'video-enhance',
     localeKey: 'video_enhance',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Video Enhance', '#06b6d4'),
     icon: Sparkles,
     route: ROUTES.VIDEO,
   },
@@ -86,7 +101,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'face-swap',
     localeKey: 'face_swap',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Face Swap', '#ec4899', 'Beta'),
     badge: 'beta',
     icon: Video,
     route: ROUTES.VIDEO,
@@ -95,7 +110,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'baby-generator',
     localeKey: 'baby_generator',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Baby Generator', '#f59e0b'),
     icon: Mic,
     route: ROUTES.VIDEO,
   },
@@ -103,7 +118,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'pet-generator',
     localeKey: 'pet_generator',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Pet Generator', '#22c55e'),
     icon: Mic,
     route: ROUTES.VIDEO,
   },
@@ -111,7 +126,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'denoise',
     localeKey: 'denoise',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1550745165-9010d9521d51?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Denoise', '#64748b'),
     icon: Eraser,
     route: ROUTES.VIDEO,
   },
@@ -119,7 +134,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'dance-gen',
     localeKey: 'dance_gen',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Dance Gen', '#e11d48'),
     icon: Move,
     route: ROUTES.VIDEO,
   },
@@ -127,7 +142,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'subtitle-remove',
     localeKey: 'subtitle_remove',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Subtitle Remove', '#0ea5e9'),
     icon: Scissors,
     route: ROUTES.VIDEO,
   },
@@ -135,7 +150,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'anime-video',
     localeKey: 'anime_video',
     category: 'video',
-    image: 'https://images.unsplash.com/photo-1569701813229-33284b643634?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Anime Video', '#8b5cf6'),
     icon: Wand2,
     route: ROUTES.VIDEO,
   },
@@ -143,7 +158,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'face-enhance',
     localeKey: 'face_enhance',
     category: 'image',
-    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Face Enhance', '#38bdf8', 'New'),
     badge: 'newest',
     icon: Sparkles,
     route: ROUTES.IMAGE,
@@ -152,7 +167,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'img-remove-obj',
     localeKey: 'img_remove_obj',
     category: 'image',
-    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Image Remove Object', '#fb7185'),
     icon: Eraser,
     route: ROUTES.IMAGE,
   },
@@ -160,7 +175,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     id: 'bg-remove',
     localeKey: 'bg_remove',
     category: 'image',
-    image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=600&auto=format&fit=crop',
+    image: createToolArtwork('Background Remove', '#10b981'),
     icon: Scissors,
     route: ROUTES.IMAGE,
   },

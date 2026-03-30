@@ -318,9 +318,20 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
         onChange?.(resolvedText);
     };
 
+    const handlePromptTriggerMouseDown = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
+
+    const restoreEditorFocus = () => {
+        requestAnimationFrame(() => {
+            editor?.commands.focus();
+        });
+    };
+
     const handlePromptLibrarySelect = async (record: PromptLibraryRecord) => {
         applyResolvedPrompt(record.content);
         setIsPromptLibraryOpen(false);
+        restoreEditorFocus();
 
         try {
             await promptLibraryService.usePrompt(record.id, promptInstance);
@@ -332,6 +343,7 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
     const handlePromptHistorySelect = (record: PromptHistoryRecord) => {
         applyResolvedPrompt(resolvePromptHistoryContent(record));
         setIsPromptHistoryOpen(false);
+        restoreEditorFocus();
     };
 
     return (
@@ -369,8 +381,14 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                 {enablePromptLibrary && (
                                     <button
                                         type="button"
+                                        onMouseDown={handlePromptTriggerMouseDown}
                                         onClick={() => setIsPromptLibraryOpen(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-sky-400 transition-colors hover:border-sky-500/20 hover:bg-sky-500/10 hover:text-white"
+                                        aria-pressed={isPromptLibraryOpen}
+                                        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition-colors ${
+                                            isPromptLibraryOpen
+                                                ? 'border-sky-500/30 bg-sky-500/14 text-white shadow-[0_0_0_1px_rgba(14,165,233,0.12)]'
+                                                : 'border-transparent text-sky-400 hover:border-sky-500/20 hover:bg-sky-500/10 hover:text-white'
+                                        }`}
                                         title={t('assetCenter.promptInput.browseLibrary')}
                                     >
                                         <BookOpen size={12} />
@@ -381,8 +399,14 @@ export const PromptTextInput: React.FC<PromptTextInputProps> = ({
                                 {enablePromptHistory && (
                                     <button
                                         type="button"
+                                        onMouseDown={handlePromptTriggerMouseDown}
                                         onClick={() => setIsPromptHistoryOpen(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[10px] font-medium text-orange-300 transition-colors hover:border-orange-500/20 hover:bg-orange-500/10 hover:text-white"
+                                        aria-pressed={isPromptHistoryOpen}
+                                        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition-colors ${
+                                            isPromptHistoryOpen
+                                                ? 'border-orange-500/30 bg-orange-500/14 text-white shadow-[0_0_0_1px_rgba(249,115,22,0.12)]'
+                                                : 'border-transparent text-orange-300 hover:border-orange-500/20 hover:bg-orange-500/10 hover:text-white'
+                                        }`}
                                         title={t('assetCenter.promptInput.browseHistory')}
                                     >
                                         <History size={12} />
