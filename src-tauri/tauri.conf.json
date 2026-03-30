@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Magic Studio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.sdkwork.magicstudio.desktop",
   "build": {
     "beforeDevCommand": "node scripts/tauri-before-dev.mjs",

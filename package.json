@@ -1,7 +1,7 @@
 {
   "name": "magic-studio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "pnpm@10.30.2",
   "scripts": {
     "dev": "cross-env MAGIC_STUDIO_VITE_MODE=development node scripts/run-vite-dev.mjs",
