@@ -1,12 +1,15 @@
 import { spawnSync } from 'node:child_process';
+import { resolveAppMode } from './app-mode.mjs';
 import { ensureSdkModeReady, resolveSdkMode } from './sdk-mode.mjs';
 
 const sdkMode = resolveSdkMode();
+const appMode = resolveAppMode({ command: 'build' });
 ensureSdkModeReady(sdkMode);
 
 const env = {
   ...process.env,
   MAGIC_STUDIO_SDK_MODE: sdkMode,
+  MAGIC_STUDIO_VITE_MODE: appMode,
 };
 const tsconfig =
   sdkMode === 'git'
@@ -28,5 +31,6 @@ const run = command => {
 };
 
 console.log(`[build] Using SDK mode: ${sdkMode}`);
+console.log(`[build] Using app mode: ${appMode}`);
 run(`pnpm exec tsc -p "${tsconfig}"`);
-run('pnpm exec vite build');
+run(`pnpm exec vite build --mode ${appMode}`);

@@ -27,6 +27,17 @@ const GIT_SDK_COMMON_ENTRY = path.resolve(
 );
 
 const normalizeModuleId = (id: string): string => id.replace(/\\/g, '/');
+const firstNonEmptyValue = (...values: Array<string | undefined>): string | undefined => {
+  for (const value of values) {
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      if (normalized) {
+        return normalized;
+      }
+    }
+  }
+  return undefined;
+};
 
 const resolveSdkAliases = () => {
   const sdkMode = (process.env.MAGIC_STUDIO_SDK_MODE ?? 'external').trim().toLowerCase();
@@ -85,6 +96,22 @@ const resolveManualChunk = (id: string): string | undefined => {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const compatibilityApiBaseUrl = firstNonEmptyValue(
+    env.SDKWORK_API_BASE_URL,
+    env.VITE_API_BASE_URL,
+    env.VITE_APP_API_BASE_URL
+  );
+  const compatibilityAccessToken = firstNonEmptyValue(
+    env.SDKWORK_ACCESS_TOKEN,
+    env.VITE_ACCESS_TOKEN
+  );
+  const compatibilityTimeout = firstNonEmptyValue(env.SDKWORK_TIMEOUT, env.VITE_TIMEOUT);
+  const compatibilityTenantId = firstNonEmptyValue(env.SDKWORK_TENANT_ID, env.VITE_TENANT_ID);
+  const compatibilityOrganizationId = firstNonEmptyValue(
+    env.SDKWORK_ORGANIZATION_ID,
+    env.VITE_ORGANIZATION_ID
+  );
+  const compatibilityPlatform = firstNonEmptyValue(env.SDKWORK_PLATFORM, env.VITE_PLATFORM);
   return {
     server: {
       port: 9000,
@@ -98,6 +125,12 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.SDKWORK_API_BASE_URL': JSON.stringify(compatibilityApiBaseUrl),
+      'process.env.SDKWORK_ACCESS_TOKEN': JSON.stringify(compatibilityAccessToken),
+      'process.env.SDKWORK_TIMEOUT': JSON.stringify(compatibilityTimeout),
+      'process.env.SDKWORK_TENANT_ID': JSON.stringify(compatibilityTenantId),
+      'process.env.SDKWORK_ORGANIZATION_ID': JSON.stringify(compatibilityOrganizationId),
+      'process.env.SDKWORK_PLATFORM': JSON.stringify(compatibilityPlatform),
     },
     build: {
       chunkSizeWarningLimit: 1200,

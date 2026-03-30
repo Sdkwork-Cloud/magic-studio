@@ -7,11 +7,13 @@ const mockUseRouter = vi.fn();
 const mockUseAuthStore = vi.fn();
 const mockUseNotificationStore = vi.fn();
 const mockUseTranslation = vi.fn();
+const mockUsePointsAccountBalance = vi.fn();
 
 let mockPlatformMode: 'web' | 'desktop' = 'web';
 
 vi.mock('@sdkwork/react-core', () => ({
   useRouter: () => mockUseRouter(),
+  usePointsAccountBalance: () => mockUsePointsAccountBalance(),
   ROUTES: {
     PORTAL: '/portal',
     LOGIN: '/login',
@@ -70,6 +72,10 @@ describe('PortalHeader', () => {
     });
     mockUseNotificationStore.mockReturnValue({
       unreadCount: 0,
+    });
+    mockUsePointsAccountBalance.mockReturnValue({
+      pointsBalance: null,
+      isLoading: false,
     });
     mockUseTranslation.mockReturnValue({
       locale: 'en-US',
@@ -163,5 +169,24 @@ describe('PortalHeader', () => {
     expect(html).toContain(
       'href="https://clawstudio.sdkwork.com/download/app/mobile"'
     );
+  });
+
+  it('renders the real points balance from the points account hook when the user is signed in', () => {
+    mockUseAuthStore.mockReturnValue({
+      user: {
+        name: 'Alex',
+        email: 'alex@example.com',
+      },
+      logout: vi.fn(),
+    });
+    mockUsePointsAccountBalance.mockReturnValue({
+      pointsBalance: 2468,
+      isLoading: false,
+    });
+
+    const html = renderToStaticMarkup(<PortalHeader />);
+
+    expect(html).toContain('2468 Credits');
+    expect(html).not.toContain('880 Credits');
   });
 });

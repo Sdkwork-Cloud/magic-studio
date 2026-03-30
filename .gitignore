@@ -147,6 +147,11 @@ scripts/*
 !scripts/run-app-build.mjs
 !scripts/run-vite-dev.mjs
 !scripts/check-desktop-bundle-self-contained.mjs
+!scripts/check-release-api-target.mjs
+!scripts/app-mode.mjs
+!scripts/__tests__/
+!scripts/__tests__/app-mode.test.ts
+!scripts/__tests__/check-release-api-target.test.ts
 
 # Debug
 npm-debug.log*

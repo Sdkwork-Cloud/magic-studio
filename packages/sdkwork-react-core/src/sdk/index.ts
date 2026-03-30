@@ -1,4 +1,6 @@
 export * from './hooks';
+export * from './appSdkEnv';
+export * from './pointsAccountBalance';
 export * from './promptLibraryService';
 export * from './uploadViaPresignedUrl';
 

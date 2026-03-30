@@ -31,7 +31,7 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react';
-import { ROUTES, useRouter } from '@sdkwork/react-core';
+import { ROUTES, usePointsAccountBalance, useRouter } from '@sdkwork/react-core';
 import { useAuthStore } from '@sdkwork/react-auth';
 import { useWorkspaceStore } from '@sdkwork/react-workspace';
 import { NotificationCenter, useNotificationStore } from '@sdkwork/react-notifications';
@@ -74,6 +74,7 @@ const TradeHeader: React.FC = () => {
   const { navigate, currentPath } = useRouter();
   const { unreadCount } = useNotificationStore();
   const { currentWorkspace, currentProject, setCurrentProject, addProject } = useWorkspaceStore();
+  const { pointsBalance, isLoading: isPointsLoading } = usePointsAccountBalance({ enabled: Boolean(user) });
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -98,6 +99,16 @@ const TradeHeader: React.FC = () => {
     const item = headerNavItems.find((candidate) => candidate.route === currentPath);
     return item ? item.id : 'home';
   }, [currentPath, headerNavItems]);
+
+  const pointsBalanceLabel = React.useMemo(() => {
+    if (!user) {
+      return '0';
+    }
+    if (pointsBalance === null) {
+      return isPointsLoading ? '...' : '0';
+    }
+    return String(pointsBalance);
+  }, [isPointsLoading, pointsBalance, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -217,7 +228,7 @@ const TradeHeader: React.FC = () => {
         >
           <div className="w-1.5 h-1.5 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
           <span className="text-[11px] font-bold text-gray-300 group-hover:text-white">
-            {t('market.nav.credits', { count: '880' })}
+            {t('market.nav.credits', { count: pointsBalanceLabel })}
           </span>
           <Plus size={10} className="text-gray-500 group-hover:text-white transition-colors ml-1" />
         </div>

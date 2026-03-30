@@ -1,17 +1,24 @@
 
 /**
  * Environment Configuration Manager
- * 
+ *
  * Supports multiple environment files:
  * - .env.development - Development environment
+ * - .env.test - Test environment
  * - .env.staging - Staging environment
  * - .env.production - Production environment
  * - .env.local - Local overrides (gitignored)
  * - .env.example - Template for new developers
  */
+import {
+  createAppSdkClientConfigFromEnv,
+  readAppSdkEnv,
+  resolveRuntimeEnv,
+  type AppRuntimeEnv,
+} from '../../packages/sdkwork-react-core/src/sdk/appSdkEnv';
 
 // Environment type definition
-export type AppEnv = 'development' | 'staging' | 'production';
+export type AppEnv = AppRuntimeEnv;
 
 // Feature flags interface
 export interface FeatureFlags {
@@ -34,22 +41,23 @@ export interface EnvConfig {
   // Application
   appEnv: AppEnv;
   isDev: boolean;
+  isTest: boolean;
   isStaging: boolean;
   isProduction: boolean;
-  
+
   // API Configuration
   api: ApiConfig;
-  
+
   // Authentication
   accessToken: string;
-  
+
   // Debug Settings
   debug: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
-  
+
   // Feature Flags
   features: FeatureFlags;
-  
+
   // Platform
   platform: 'web' | 'tauri' | 'electron' | 'mobile';
   isTauri: boolean;
@@ -86,42 +94,61 @@ function detectPlatform(): EnvConfig['platform'] {
   return (getEnvVar('VITE_PLATFORM', 'web') as EnvConfig['platform']);
 }
 
+function deriveWsUrl(baseUrl: string): string {
+  try {
+    const url = new URL(baseUrl);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.pathname = '/ws';
+    url.search = '';
+    url.hash = '';
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return 'ws://localhost:8080/ws';
+  }
+}
+
 // Get current environment
 function detectEnv(): AppEnv {
-  const env = getEnvVar('VITE_APP_ENV', 'development');
-  if (env === 'production' || env === 'staging') return env;
-  return 'development';
+  return resolveRuntimeEnv(
+    getEnvVar('VITE_APP_ENV'),
+    getEnvVar('MODE'),
+    getEnvVar('NODE_ENV', 'development')
+  );
 }
 
 // Build environment configuration
 function buildEnvConfig(): EnvConfig {
+  const rawEnv = readAppSdkEnv();
+  const sdkConfig = createAppSdkClientConfigFromEnv(rawEnv);
   const appEnv = detectEnv();
   const isDev = appEnv === 'development';
+  const isTest = appEnv === 'test';
   const isStaging = appEnv === 'staging';
   const isProduction = appEnv === 'production';
-  
+
   return {
     // Application
     appEnv,
     isDev,
+    isTest,
     isStaging,
     isProduction,
-    
+
     // API Configuration
     api: {
-      baseUrl: getEnvVar('VITE_API_BASE_URL', 'http://localhost:8080'),
-      wsUrl: getEnvVar('VITE_WS_URL', 'ws://localhost:8080/ws'),
-      imBaseUrl: getEnvVar('VITE_IM_API_BASE_URL', 'http://localhost:8081'),
-      timeout: getEnvVarNumber('VITE_TIMEOUT', 30000),
+      baseUrl: sdkConfig.baseUrl,
+      wsUrl: getEnvVar('VITE_WS_URL', deriveWsUrl(sdkConfig.baseUrl)),
+      imBaseUrl: getEnvVar('VITE_IM_API_BASE_URL', sdkConfig.baseUrl),
+      timeout: sdkConfig.timeout ?? getEnvVarNumber('VITE_TIMEOUT', 30000),
     },
-    
+
     // Authentication
-    accessToken: getEnvVar('VITE_ACCESS_TOKEN', ''),
-    
+    accessToken: sdkConfig.accessToken?.trim() ?? '',
+
     // Debug Settings
-    debug: getEnvVarBoolean('VITE_DEBUG', isDev),
+    debug: getEnvVarBoolean('VITE_DEBUG', isDev || isTest),
     logLevel: (getEnvVar('VITE_LOG_LEVEL', isDev ? 'debug' : 'warn') as EnvConfig['logLevel']),
-    
+
     // Feature Flags
     features: {
       analytics: getEnvVarBoolean('VITE_FEATURE_ANALYTICS', isProduction),
@@ -129,9 +156,9 @@ function buildEnvConfig(): EnvConfig {
       websocket: getEnvVarBoolean('VITE_FEATURE_WEBSOCKET', true),
       cache: getEnvVarBoolean('VITE_FEATURE_CACHE', isProduction || isStaging),
     },
-    
+
     // Platform
-    platform: detectPlatform(),
+    platform: detectPlatform() || (sdkConfig.platform as EnvConfig['platform']),
     isTauri: detectTauri(),
   };
 }

@@ -12,12 +12,17 @@ import {
     type SdkworkAppConfig,
     type WorkspaceApi,
 } from '@sdkwork/app-sdk';
+import {
+    createAppSdkClientConfigFromEnv,
+    readAppSdkEnv,
+    resolveAppSdkAccessTokenFromEnv,
+    type AppRuntimeEnv,
+    type AppSdkEnvResolvedConfig,
+} from './appSdkEnv';
 
-export type AppRuntimeEnv = 'development' | 'staging' | 'production' | 'test';
+export type { AppRuntimeEnv } from './appSdkEnv';
 
-export interface AppSdkClientConfig extends SdkworkAppConfig {
-    env: AppRuntimeEnv;
-}
+export interface AppSdkClientConfig extends AppSdkEnvResolvedConfig {}
 
 export interface AppSdkClient extends SdkworkAppClient {
     readonly assets: AssetApi;
@@ -37,9 +42,6 @@ export interface AppSdkSessionTokens {
     refreshToken?: string;
 }
 
-const DEFAULT_TIMEOUT = 30000;
-const DEFAULT_DEV_BASE_URL = 'https://api-dev.sdkwork.com';
-const DEFAULT_PROD_BASE_URL = 'https://api.sdkwork.com';
 export const APP_SDK_AUTH_TOKEN_STORAGE_KEY = 'sdkwork_token';
 export const APP_SDK_ACCESS_TOKEN_STORAGE_KEY = 'sdkwork_access_token';
 export const APP_SDK_REFRESH_TOKEN_STORAGE_KEY = 'sdkwork_refresh_token';
@@ -126,20 +128,6 @@ function applySessionTokensToClient(
     }
 }
 
-function readEnv(name: string): string | undefined {
-    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
-    return env?.[name];
-}
-
-function firstDefined(...values: Array<string | undefined>): string | undefined {
-    for (const value of values) {
-        if (value !== undefined && value !== null && value !== '') {
-            return value;
-        }
-    }
-    return undefined;
-}
-
 function readStorage(key: string): string | undefined {
     if (typeof window === 'undefined') {
         return undefined;
@@ -189,63 +177,8 @@ function normalizeAuthToken(value?: string): string {
     return normalized;
 }
 
-function resolveRuntimeEnv(value?: string): AppRuntimeEnv {
-    const normalized = (value || '').trim().toLowerCase();
-    if (normalized === 'production' || normalized === 'prod') return 'production';
-    if (normalized === 'staging' || normalized === 'stage') return 'staging';
-    if (normalized === 'test') return 'test';
-    return 'development';
-}
-
-function parseTimeout(value?: string, fallback: number = DEFAULT_TIMEOUT): number {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-        return fallback;
-    }
-    return parsed;
-}
-
-function resolveDefaultBaseUrl(env: AppRuntimeEnv): string {
-    return env === 'production' ? DEFAULT_PROD_BASE_URL : DEFAULT_DEV_BASE_URL;
-}
-
-function normalizeBaseUrl(baseUrl?: string, env?: AppRuntimeEnv): string {
-    const safe = (baseUrl || resolveDefaultBaseUrl(env || 'development')).trim();
-    return safe.replace(/\/+$/g, '');
-}
-
 export function createAppSdkClientConfig(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClientConfig {
-    const env = resolveRuntimeEnv(readEnv('VITE_APP_ENV') || readEnv('MODE') || readEnv('NODE_ENV'));
-    return {
-        env,
-        baseUrl: normalizeBaseUrl(
-            firstDefined(
-                overrides.baseUrl,
-                readEnv('VITE_API_BASE_URL'),
-                readEnv('VITE_APP_API_BASE_URL'),
-                readEnv('SDKWORK_API_BASE_URL'),
-                readEnv('VITE_APP_BASE_URL'),
-                resolveDefaultBaseUrl(env)
-            ),
-            env
-        ),
-        timeout: overrides.timeout ?? parseTimeout(firstDefined(readEnv('VITE_TIMEOUT'), readEnv('SDKWORK_TIMEOUT'))),
-        apiKey: overrides.apiKey ?? firstDefined(readEnv('VITE_API_KEY'), readEnv('SDKWORK_API_KEY')),
-        authToken: overrides.authToken,
-        accessToken: overrides.accessToken ?? firstDefined(
-            readEnv('VITE_ACCESS_TOKEN'),
-            readEnv('SDKWORK_ACCESS_TOKEN')
-        ),
-        tenantId: overrides.tenantId ?? firstDefined(readEnv('VITE_TENANT_ID'), readEnv('SDKWORK_TENANT_ID')),
-        organizationId: overrides.organizationId ?? firstDefined(
-            readEnv('VITE_ORGANIZATION_ID'),
-            readEnv('SDKWORK_ORGANIZATION_ID')
-        ),
-        platform: overrides.platform ?? firstDefined(readEnv('VITE_PLATFORM'), readEnv('SDKWORK_PLATFORM')) ?? 'web',
-        tokenManager: overrides.tokenManager,
-        authMode: overrides.authMode,
-        headers: overrides.headers,
-    };
+    return createAppSdkClientConfigFromEnv(readAppSdkEnv(), overrides);
 }
 
 export function initAppSdkClient(overrides: Partial<SdkworkAppConfig> = {}): AppSdkClient {
@@ -271,10 +204,7 @@ export function resolveAppSdkAccessToken(): string {
         return fromConfig;
     }
 
-    const fromEnv = (firstDefined(
-        readEnv('VITE_ACCESS_TOKEN'),
-        readEnv('SDKWORK_ACCESS_TOKEN')
-    ) || '').trim();
+    const fromEnv = resolveAppSdkAccessTokenFromEnv(readAppSdkEnv());
     if (fromEnv) {
         return fromEnv;
     }
@@ -299,11 +229,7 @@ export function applyAppSdkSessionTokens(tokens: {
 export function readAppSdkSessionTokens(): AppSdkSessionTokens {
     const authToken = normalizeAuthToken(readStorage(APP_SDK_AUTH_TOKEN_STORAGE_KEY));
     const accessToken = (
-        firstDefined(
-            getAppSdkClientConfig()?.accessToken,
-            readEnv('VITE_ACCESS_TOKEN'),
-            readEnv('SDKWORK_ACCESS_TOKEN')
-        ) || ''
+        getAppSdkClientConfig()?.accessToken || resolveAppSdkAccessTokenFromEnv(readAppSdkEnv()) || ''
     ).trim();
     const refreshToken = (readStorage(APP_SDK_REFRESH_TOKEN_STORAGE_KEY) || '').trim();
 

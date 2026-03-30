@@ -1,4 +1,4 @@
-import { useRouter, ROUTES, platform } from '@sdkwork/react-core';
+import { useRouter, ROUTES, platform, usePointsAccountBalance } from '@sdkwork/react-core';
 import React, { useState, useRef, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -57,6 +57,7 @@ export const PortalHeader: React.FC = () => {
     const currentPath = routerContext?.currentPath || '/';
     const { unreadCount } = useNotificationStore();
     const isDesktopRuntime = platform.getPlatform() === 'desktop';
+    const { pointsBalance, isLoading: isPointsLoading } = usePointsAccountBalance({ enabled: Boolean(user) });
 
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -93,6 +94,16 @@ export const PortalHeader: React.FC = () => {
             avatar: user.avatar,
         };
     }, [t, user]);
+
+    const pointsBalanceLabel = React.useMemo(() => {
+        if (!user) {
+            return '0';
+        }
+        if (pointsBalance === null) {
+            return isPointsLoading ? '...' : '0';
+        }
+        return String(pointsBalance);
+    }, [isPointsLoading, pointsBalance, user]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -177,7 +188,7 @@ export const PortalHeader: React.FC = () => {
                 >
                     <div className="w-1.5 h-1.5 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                     <span className="text-[11px] font-bold text-gray-300 group-hover:text-white">
-                        {t('market.nav.credits', { count: '880' })}
+                        {t('market.nav.credits', { count: pointsBalanceLabel })}
                     </span>
                     <Plus size={10} className="text-gray-500 group-hover:text-white transition-colors ml-1" />
                 </div>
