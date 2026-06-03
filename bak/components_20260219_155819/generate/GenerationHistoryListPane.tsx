@@ -6,7 +6,7 @@ import { ImportData } from './upload/types';
 import { UploadImageGenerationModal } from './upload/UploadImageGenerationModal';
 import { UploadVideoGenerationModal } from './upload/UploadVideoGenerationModal';
 import { UploadMusicGenerationModal } from './upload/UploadMusicGenerationModal';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from 'sdkwork-magic-studio-i18n';
 
 export interface HistoryTab {
     id: string;

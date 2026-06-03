@@ -1,20 +1,10 @@
-
-import { useRouter, ROUTES } from '@sdkwork/react-core'
+import { ROUTES } from '@sdkwork/magic-studio-core/router';
 import React from 'react';
-import { LoginPage as AuthLoginPage } from '@sdkwork/react-auth';
+import { LoginPage as AuthLoginPage } from '@sdkwork/magic-studio-auth';
+import '../styles/auth.css';
 
 const LoginPage: React.FC = () => {
-  const { navigate } = useRouter();
-
-  const handleLoginSuccess = () => {
-    navigate(ROUTES.HOME);
-  };
-
-  return (
-    <AuthLoginPage 
-      onLoginSuccess={handleLoginSuccess} 
-    />
-  );
+  return <AuthLoginPage homePath={ROUTES.HOME} />;
 };
 
 export default LoginPage;

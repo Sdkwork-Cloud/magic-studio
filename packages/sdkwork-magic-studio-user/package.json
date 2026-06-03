@@ -1,0 +1,60 @@
+{
+  "name": "@sdkwork/magic-studio-user",
+  "version": "0.1.0",
+  "description": "User profile management package for Magic Studio",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./services": {
+      "import": "./src/services/index.ts",
+      "types": "./src/services/index.ts"
+    },
+    "./i18n": {
+      "import": "./src/i18n/index.ts",
+      "types": "./src/i18n/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "node ../../scripts/run-package-vite-build.mjs --watch",
+    "build": "node ../../scripts/run-package-typecheck.mjs tsconfig.json && node ../../scripts/run-package-vite-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json",
+    "typecheck:contract": "node ../../scripts/run-package-typecheck.mjs tsconfig.contract.json"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@sdkwork/magic-studio-auth": "workspace:*",
+    "@sdkwork/magic-studio-commons": "workspace:*",
+    "@sdkwork/magic-studio-core": "workspace:*",
+    "@sdkwork/magic-studio-i18n": "workspace:*",
+    "@sdkwork/magic-studio-server": "workspace:*",
+    "@sdkwork/ui-pc-react": "workspace:*",
+    "@sdkwork/user-center-core-pc-react": "workspace:*",
+    "@sdkwork/user-center-pc-react": "workspace:*",
+    "@sdkwork/user-center-validation-pc-react": "workspace:*",
+    "@sdkwork/user-pc-react": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

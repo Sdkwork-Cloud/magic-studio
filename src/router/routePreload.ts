@@ -1,117 +1,98 @@
-import { ROUTES } from './routes';
-
-type RoutePreloadKey =
-  | 'assets'
-  | 'image'
-  | 'video'
-  | 'music'
-  | 'sfx'
-  | 'voice'
-  | 'audio'
-  | 'character'
-  | 'magiccut'
-  | 'film'
-  | 'portal-video'
-  | 'skills'
-  | 'plugins'
-  | 'editor'
-  | 'drive'
-  | 'notes'
-  | 'chatppt'
-  | 'canvas'
-  | 'trade';
+import { routeSpecs } from './registry/specs';
+import type { RoutePreloadKey } from './registry/types';
+import { matchRoutePrefix } from './routeMatching';
 
 type PreloadLoader = () => Promise<unknown>;
+const MAX_PRELOAD_KEYS_PER_ROUTE = 2;
 
 const PRELOAD_LOADERS: Record<RoutePreloadKey, PreloadLoader> = {
-  assets: () => import('@sdkwork/react-assets'),
-  image: () => import('@sdkwork/react-image'),
-  video: () => import('@sdkwork/react-video'),
-  music: () => import('@sdkwork/react-music'),
-  sfx: () => import('@sdkwork/react-sfx'),
-  voice: () => import('@sdkwork/react-voicespeaker'),
-  audio: () => import('@sdkwork/react-audio'),
-  character: () => import('@sdkwork/react-character'),
-  magiccut: () => import('@sdkwork/react-magiccut'),
-  film: () => import('@sdkwork/react-film'),
-  'portal-video': () => import('@sdkwork/react-portal-video'),
-  skills: () => import('@sdkwork/react-skills'),
-  plugins: () => import('@sdkwork/react-plugins'),
-  editor: () => import('@sdkwork/react-editor'),
-  drive: () => import('@sdkwork/react-drive'),
-  notes: () => import('@sdkwork/react-notes'),
-  chatppt: () => import('@sdkwork/react-chatppt'),
-  canvas: () => import('@sdkwork/react-canvas'),
-  trade: () => import('@sdkwork/react-trade')
+  assets: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-assets/pages'),
+      import('@sdkwork/magic-studio-assets/store'),
+    ]),
+  image: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-image/pages'),
+      import('@sdkwork/magic-studio-image/store'),
+      import('@sdkwork/magic-studio-image/panels'),
+    ]),
+  video: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-video/pages'),
+      import('@sdkwork/magic-studio-video/store'),
+      import('@sdkwork/magic-studio-video/panels'),
+    ]),
+  music: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-music/pages'),
+      import('@sdkwork/magic-studio-music/store'),
+      import('@sdkwork/magic-studio-music/panels'),
+    ]),
+  sfx: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-sfx/pages'),
+      import('@sdkwork/magic-studio-sfx/store'),
+      import('@sdkwork/magic-studio-sfx/panels'),
+    ]),
+  voice: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-voicespeaker/pages'),
+      import('@sdkwork/magic-studio-voicespeaker/store'),
+      import('@sdkwork/magic-studio-voicespeaker/panels'),
+    ]),
+  audio: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-audio/pages'),
+      import('@sdkwork/magic-studio-audio/store'),
+      import('@sdkwork/magic-studio-audio/panels'),
+    ]),
+  character: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-character/pages'),
+      import('@sdkwork/magic-studio-character/store'),
+      import('@sdkwork/magic-studio-character/panels'),
+    ]),
+  magiccut: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-magiccut/pages'),
+      import('@sdkwork/magic-studio-magiccut/store'),
+    ]),
+  film: () => import('@sdkwork/magic-studio-film/pages'),
+  'portal-video': () => import('@sdkwork/magic-studio-portal-video/pages'),
+  skills: () => import('@sdkwork/magic-studio-skills/pages'),
+  plugins: () => import('@sdkwork/magic-studio-plugins/pages'),
+  editor: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-editor/pages'),
+      import('@sdkwork/magic-studio-editor/store'),
+    ]),
+  drive: () => import('@sdkwork/magic-studio-drive/pages'),
+  notes: () => import('@sdkwork/magic-studio-notes/pages'),
+  chatppt: () =>
+    Promise.all([
+      import('@sdkwork/magic-studio-chatppt/pages'),
+      import('@sdkwork/magic-studio-chatppt/store'),
+      import('@sdkwork/magic-studio-chatppt/panels'),
+    ]),
+  canvas: () => import('@sdkwork/magic-studio-canvas/pages'),
+  trade: () => import('@sdkwork/magic-studio-trade/pages')
 };
 
 const preloadedKeys = new Set<RoutePreloadKey>();
 
-const normalizePath = (path: string): string => {
-  const trimmed = (path || '').trim();
-  if (!trimmed) {
-    return ROUTES.HOME;
-  }
-  if (trimmed.length > 1 && trimmed.endsWith('/')) {
-    return trimmed.slice(0, -1);
-  }
-  return trimmed;
-};
-
-const isRoute = (currentPath: string, routePrefix: string): boolean => {
-  const current = normalizePath(currentPath);
-  const prefix = normalizePath(routePrefix);
-  return current === prefix || current.startsWith(`${prefix}/`);
-};
+const routePreloadSpecs = routeSpecs.filter(
+  (spec): spec is (typeof routeSpecs)[number] & { preload: readonly RoutePreloadKey[] } =>
+    'preload' in spec && Array.isArray(spec.preload) && spec.preload.length > 0,
+);
 
 const resolvePreloadKeys = (currentPath: string): RoutePreloadKey[] => {
-  if (isRoute(currentPath, ROUTES.PORTAL)) {
-    return ['portal-video', 'skills', 'plugins', 'film'];
+  for (const routeSpec of routePreloadSpecs) {
+    if (matchRoutePrefix(routeSpec.path, currentPath)) {
+      return routeSpec.preload.slice(0, MAX_PRELOAD_KEYS_PER_ROUTE);
+    }
   }
-  if (isRoute(currentPath, ROUTES.FILM)) {
-    return ['assets', 'image', 'video', 'magiccut'];
-  }
-  if (isRoute(currentPath, ROUTES.MAGIC_CUT)) {
-    return ['assets', 'video', 'audio', 'music'];
-  }
-  if (isRoute(currentPath, ROUTES.ASSETS)) {
-    return ['image', 'video', 'magiccut'];
-  }
-  if (isRoute(currentPath, ROUTES.IMAGE)) {
-    return ['video', 'assets', 'magiccut'];
-  }
-  if (isRoute(currentPath, ROUTES.VIDEO)) {
-    return ['image', 'assets', 'magiccut'];
-  }
-  if (
-    isRoute(currentPath, ROUTES.MUSIC) ||
-    isRoute(currentPath, ROUTES.AUDIO) ||
-    isRoute(currentPath, ROUTES.SFX) ||
-    isRoute(currentPath, ROUTES.VOICE)
-  ) {
-    return ['assets', 'magiccut', 'video'];
-  }
-  if (isRoute(currentPath, ROUTES.CHARACTER)) {
-    return ['voice', 'video', 'assets'];
-  }
-  if (isRoute(currentPath, ROUTES.NOTES)) {
-    return ['assets', 'image', 'drive'];
-  }
-  if (isRoute(currentPath, ROUTES.DRIVE)) {
-    return ['editor', 'assets', 'notes'];
-  }
-  if (isRoute(currentPath, ROUTES.EDITOR)) {
-    return ['drive', 'assets', 'notes', 'chatppt'];
-  }
-  if (isRoute(currentPath, ROUTES.CHAT_PPT)) {
-    return ['editor', 'drive', 'canvas'];
-  }
-  if (isRoute(currentPath, ROUTES.TASK_MARKET) || isRoute(currentPath, ROUTES.MY_TASKS)) {
-    return ['portal-video', 'film', 'assets'];
-  }
-  if (isRoute(currentPath, ROUTES.HOME)) {
-    return [];
-  }
+
   return [];
 };
 
@@ -141,13 +122,22 @@ export const scheduleRoutePreload = (currentPath: string): CancelFn => {
   }
 
   let cancelled = false;
+  const preloadSequentially = async () => {
+    for (const key of keys) {
+      if (cancelled) {
+        return;
+      }
+
+      await preloadByKey(key);
+    }
+  };
+
   const run = () => {
     if (cancelled) {
       return;
     }
-    for (const key of keys) {
-      void preloadByKey(key);
-    }
+
+    void preloadSequentially();
   };
 
   const win = window as Window & {

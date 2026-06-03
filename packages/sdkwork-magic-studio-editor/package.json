@@ -1,0 +1,59 @@
+{
+  "name": "@sdkwork/magic-studio-editor",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./file-icon": {
+      "import": "./src/file-icon/index.ts",
+      "types": "./src/file-icon/index.ts"
+    },
+    "./file-picker": {
+      "import": "./src/file-picker/index.ts",
+      "types": "./src/file-picker/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "node ../../scripts/run-package-vite-build.mjs --watch",
+    "build": "node ../../scripts/run-package-typecheck.mjs tsconfig.json && node ../../scripts/run-package-vite-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "catalog:",
+    "@sdkwork/magic-studio-chat": "workspace:*",
+    "@sdkwork/magic-studio-compression": "workspace:*",
+    "@sdkwork/magic-studio-commons": "workspace:*",
+    "@sdkwork/magic-studio-core": "workspace:*",
+    "@sdkwork/magic-studio-fs": "workspace:*",
+    "@sdkwork/magic-studio-i18n": "workspace:*",
+    "@sdkwork/magic-studio-settings": "workspace:*",
+    "@sdkwork/magic-studio-types": "workspace:*",
+    "@sdkwork/magic-studio-workspace": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  },
+  "private": true,
+  "description": "Code editor with Monaco package for Magic Studio"
+}

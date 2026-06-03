@@ -9,7 +9,7 @@ description: Guides Magic Studio remote business modules onto generated app SDK 
 
 Drive `apps/magic-studio-v2` to one remote-business path:
 
-`src shell / feature package / store -> packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+`src shell / feature package / store -> packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
 
 Keep Tauri, local filesystem, process, editor, media pipeline, and device work on native boundaries. Route only remote business capability through the shared app SDK. If a method is missing, close the backend/OpenAPI/generator gap first, then return and delete the workaround.
 
@@ -27,7 +27,7 @@ Treat every round as a recursive closure loop: self-review the touched app or cl
 
 - Use `spring-ai-plus-app-api` as the single contract source for remote business capability.
 - Use `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript` as the only shared TypeScript SDK source and consume it through `@sdkwork/app-sdk`.
-- If the shared wrapper is incomplete, finish it in `packages/sdkwork-react-core` before editing feature packages.
+- If the shared wrapper is incomplete, finish it in `packages/sdkwork-magic-studio-core` before editing feature packages.
 - Keep Tauri plugins, local files, shell commands, editor runtime, and media processing out of the app SDK path.
 - Replace package-local business HTTP with the wrapper path. Do not add raw `fetch`, generic HTTP helpers, manual auth headers, mock branches, or app-local SDK forks.
 - Never hand-edit generated SDK output. Fix backend or generator inputs, then regenerate.
@@ -36,7 +36,7 @@ Treat every round as a recursive closure loop: self-review the touched app or cl
 ## Default Loop
 
 1. Classify the target as remote-business, local-native, or mixed.
-2. Audit the touched package and `sdkwork-react-core` for raw HTTP, duplicated DTOs, manual headers, mock branches, or stale shortcuts.
+2. Audit the touched package and `sdkwork-magic-studio-core` for raw HTTP, duplicated DTOs, manual headers, mock branches, or stale shortcuts.
 3. Verify the real generated SDK export and the shared wrapper surface.
 4. If the method exists, refactor to the wrapper path and delete the bypass.
 5. If the method is missing, close the gap in `spring-ai-plus-app-api` and backend modules, regenerate the SDK, then finish the integration.

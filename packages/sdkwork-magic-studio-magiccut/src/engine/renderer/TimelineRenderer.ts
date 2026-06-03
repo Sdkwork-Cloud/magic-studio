@@ -1,0 +1,470 @@
+
+import { RenderContext, FBO, RenderOverrideClip } from '../types';
+import { resolveEntityKey } from '@sdkwork/magic-studio-types/entity';
+import type { AnyMediaResource } from '@sdkwork/magic-studio-types/media';
+
+import { CutTimeline, CutTrack, CutClip, CutLayer, CutClipTransform } from '../../entities/magicCut.entity';
+import { TrackRenderer, TextureResult } from './TrackRenderer';
+import { TrackIntervalIndex } from '@sdkwork/magic-studio-commons/algorithms';
+import { Matrix3Ops, RenderMatrices } from '../config/RenderConfig';
+import { RenderSortUtils } from '../utils/RenderSortUtils';
+import { clampTimelineTimeToClipStart } from '../../domain/playback/transitionPlayback';
+import { normalizeClipTransform, resolveClipTransformScaleFactors } from '../../domain/transform/clipTransform';
+import {
+    findMagicCutClipByKey,
+    findMagicCutClipByRef,
+    findMagicCutResourceByRef,
+} from '../../store/stateIdentity';
+
+export class TimelineRenderer {
+    private trackRenderer: TrackRenderer;
+    private trackIndices = new Map<string, TrackIntervalIndex>();
+    private lastTrackVersion = new Map<string, number>();
+    private lastEffectSize = new Map<string, { width: number; height: number }>();
+
+    private projectionMatrix = Matrix3Ops.create();
+    private modelMatrix = Matrix3Ops.create();
+
+    constructor() {
+        this.trackRenderer = new TrackRenderer();
+    }
+
+    private getTrackTree(track: CutTrack, clips: Record<string, CutClip>): TrackIntervalIndex {
+        const trackKey = resolveEntityKey(track);
+        if (!this.trackIndices.has(trackKey) || this.lastTrackVersion.get(trackKey) !== track.updatedAt) {
+            const tree = new TrackIntervalIndex();
+            track.clips.forEach((ref) => {
+                const clip = findMagicCutClipByRef({ clips }, ref);
+                if (clip) {
+                    const clipKey = resolveEntityKey(clip);
+                    tree.insert({
+                        id: clipKey,
+                        start: clip.start,
+                        end: clip.start + clip.duration,
+                        data: clip
+                    });
+                }
+            });
+            this.trackIndices.set(trackKey, tree);
+            const updatedAt = typeof track.updatedAt === 'number' ? track.updatedAt : new Date(track.updatedAt).getTime();
+            this.lastTrackVersion.set(trackKey, updatedAt);
+        }
+        return this.trackIndices.get(trackKey)!;
+    }
+
+    public renderTimeline(
+        ctx: RenderContext,
+        timeline: CutTimeline,
+        resources: Record<string, AnyMediaResource>,
+        tracks: Record<string, CutTrack>,
+        clips: Record<string, CutClip>,
+        layers: Record<string, CutLayer>,
+        overrideClip: RenderOverrideClip | null,
+        time: number,
+        isPlaying: boolean,
+        mainFBO: FBO,
+        hiddenClipIds?: Set<string>
+    ) {
+        const { gl } = ctx;
+
+        // 1. Clear Main Output
+        gl.bindFramebuffer(gl.FRAMEBUFFER, mainFBO.fbo);
+        gl.viewport(0, 0, ctx.width, ctx.height);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // 2. Setup Projection
+        Matrix3Ops.projection(this.projectionMatrix, ctx.width, ctx.height);
+
+        // 3. Render Tracks
+        const renderOrderTracks = RenderSortUtils.getRenderOrder(timeline, tracks);
+
+        for (const track of renderOrderTracks) {
+            const tree = this.getTrackTree(track, clips);
+            const visibleIntervals = tree.queryOverlapping(time, time + 0.01);
+            const consumedClipIds = new Set<string>();
+
+            const activeClips: CutClip[] = visibleIntervals
+                .filter(i => i.id)
+                .map((interval) => findMagicCutClipByKey({ clips }, interval.id || null))
+                .filter((clip): clip is CutClip => clip !== null && (!overrideClip || resolveEntityKey(clip) !== overrideClip.id));
+
+            // Handle Drag Override
+            if (overrideClip && overrideClip.type.startsWith('trim')) {
+                const original = findMagicCutClipByKey({ clips }, overrideClip.id);
+                if (original && resolveEntityKey(original.track) === resolveEntityKey(track)) {
+                    const { type: _type, ...restOverride } = overrideClip;
+                    const tempClip = { ...original, ...restOverride };
+                    if (time >= tempClip.start && time < tempClip.start + tempClip.duration) {
+                        activeClips.push(tempClip as unknown as CutClip);
+                    }
+                }
+            }
+
+            activeClips.sort((a, b) => a.start - b.start);
+
+            for (const clip of activeClips) {
+                const clipKey = resolveEntityKey(clip);
+                if (hiddenClipIds && hiddenClipIds.has(clipKey)) continue;
+                if (consumedClipIds.has(clipKey)) continue;
+
+                const resource = findMagicCutResourceByRef({ resources }, clip.resource);
+                const clipTime = time - clip.start;
+                const tf = this.resolveTransform(clip, clipTime);
+                const filterCount = (clip.layers || [])
+                    .map((ref) => layers[resolveEntityKey(ref)])
+                    .filter(l => l && l.enabled && l.layerType === 'filter').length;
+                const renderSize = this.getEffectRenderSize(ctx, tf, clipKey, filterCount);
+                const transitionResult = this.prepareTransitionTexture(
+                    ctx,
+                    clip,
+                    resources,
+                    clips,
+                    layers,
+                    time,
+                    isPlaying,
+                    renderSize
+                );
+                const result = transitionResult?.result || (
+                    resource
+                        ? this.trackRenderer.prepareClipTexture(ctx, clip, resource, layers, time, isPlaying, renderSize)
+                        : null
+                );
+
+                if (transitionResult?.consumedClipId) {
+                    consumedClipIds.add(transitionResult.consumedClipId);
+                }
+
+                if (result) {
+                    this.compositeClip(ctx, mainFBO, clip, time, result, tf);
+                }
+            }
+        }
+
+        // 4. Ghost Render
+        if (overrideClip && overrideClip.type === 'move') {
+            const originalClip = findMagicCutClipByKey({ clips }, overrideClip.id);
+            if (originalClip) {
+                const ghostClip: CutClip = {
+                    ...originalClip,
+                    start: overrideClip.start,
+                    track: { id: 'ghost', uuid: '', type: 'CutTrack' },
+                    transform: originalClip.transform,
+                };
+
+                const resource = findMagicCutResourceByRef({ resources }, overrideClip.resource);
+                if (resource) {
+                    const clipTime = time - ghostClip.start;
+                    const tf = this.resolveTransform(ghostClip, clipTime);
+                    const renderSize = this.getEffectRenderSize(ctx, tf, resolveEntityKey(ghostClip), 0);
+                    const result = this.trackRenderer.prepareClipTexture(ctx, ghostClip, resource, {}, time, false, renderSize);
+
+                    if (result) {
+                        const ghostTf = { ...(ghostClip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 }) };
+                        ghostTf.opacity = (ghostTf.opacity || 1) * 0.6;
+                        this.compositeClip(ctx, mainFBO, { ...ghostClip, transform: ghostTf }, time, result, ghostTf);
+                    }
+                }
+            }
+        }
+    }
+
+    private prepareTransitionTexture(
+        ctx: RenderContext,
+        clip: CutClip,
+        resources: Record<string, AnyMediaResource>,
+        clips: Record<string, CutClip>,
+        layers: Record<string, CutLayer>,
+        time: number,
+        isPlaying: boolean,
+        renderSize: { width: number; height: number }
+    ): { result: TextureResult; consumedClipId: string } | null {
+        const transitionLayer = (clip.layers || [])
+            .map((ref) => layers[resolveEntityKey(ref)])
+            .find(layer => layer && layer.enabled && (layer.layerType === 'transition' || layer.layerType === 'transition_out'));
+
+        if (!transitionLayer) {
+            return null;
+        }
+
+        const duration = Math.max(0.1, Number(transitionLayer.params.duration || 0.5));
+        const transitionStart = clip.start + clip.duration - duration;
+        const transitionEnd = clip.start + clip.duration;
+        if (time < transitionStart || time > transitionEnd) {
+            return null;
+        }
+
+        const nextClipId = typeof transitionLayer.params.nextClipId === 'string'
+            ? transitionLayer.params.nextClipId
+            : '';
+        const nextClip = findMagicCutClipByKey({ clips }, nextClipId);
+        const currentResource = findMagicCutResourceByRef({ resources }, clip.resource);
+        const nextResource = nextClip ? findMagicCutResourceByRef({ resources }, nextClip.resource) : undefined;
+        if (!nextClip || !currentResource || !nextResource) {
+            return null;
+        }
+
+        const fromTexture = this.trackRenderer.prepareClipTexture(
+            ctx,
+            clip,
+            currentResource,
+            layers,
+            time,
+            isPlaying,
+            renderSize
+        );
+        const toTexture = this.trackRenderer.prepareClipTexture(
+            ctx,
+            nextClip,
+            nextResource,
+            layers,
+            clampTimelineTimeToClipStart(time, nextClip.start),
+            false,
+            renderSize
+        );
+
+        if (!fromTexture || !toTexture) {
+            if (fromTexture?.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+            if (toTexture?.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+            return null;
+        }
+
+        const transitionShader = ctx.effectSystem.getTransitionShader(transitionLayer);
+        if (!transitionShader?.shader) {
+            if (fromTexture.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+            if (toTexture.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+            return null;
+        }
+
+        const { gl } = ctx;
+        const transitionFbo = ctx.compositor.requestFBO(renderSize.width, renderSize.height);
+        const progress = Math.max(0, Math.min(1, (time - transitionStart) / duration));
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, transitionFbo.fbo);
+        gl.viewport(0, 0, transitionFbo.width, transitionFbo.height);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.useProgram(transitionShader.shader.program);
+        gl.bindVertexArray(ctx.vaoQuad);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, toTexture.texture);
+        if (transitionShader.shader.uniforms.u_image) {
+            gl.uniform1i(transitionShader.shader.uniforms.u_image, 0);
+        }
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, fromTexture.texture);
+        if (transitionShader.shader.uniforms.u_backdrop) {
+            gl.uniform1i(transitionShader.shader.uniforms.u_backdrop, 1);
+        }
+
+        ctx.effectSystem.bindTransitionUniforms(
+            gl,
+            transitionShader.shader,
+            transitionShader.def,
+            transitionLayer,
+            progress,
+            { width: transitionFbo.width, height: transitionFbo.height }
+        );
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        if (fromTexture.fbo) ctx.compositor.releaseFBO(fromTexture.fbo);
+        if (toTexture.fbo) ctx.compositor.releaseFBO(toTexture.fbo);
+
+        return {
+            result: { texture: transitionFbo.texture, isFBO: true, fbo: transitionFbo },
+            consumedClipId: resolveEntityKey(nextClip)
+        };
+    }
+
+    public prepareAndRenderSingleClip(
+        ctx: RenderContext,
+        targetFBO: FBO,
+        clip: CutClip,
+        resource: AnyMediaResource,
+        time: number,
+        isPlaying: boolean
+    ) {
+        const { gl } = ctx;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO.fbo);
+        gl.viewport(0, 0, targetFBO.width, targetFBO.height);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        Matrix3Ops.projection(this.projectionMatrix, ctx.width, ctx.height);
+
+        const projectW = ctx.width;
+        const projectH = ctx.height;
+        let mediaW = 1920;
+        let mediaH = 1080;
+
+        if ((resource as any).width && (resource as any).height) {
+            mediaW = (resource as any).width;
+            mediaH = (resource as any).height;
+        } else if (resource.metadata?.width && resource.metadata?.height) {
+            mediaW = resource.metadata.width;
+            mediaH = resource.metadata.height;
+        }
+
+        const mediaRatio = mediaW / mediaH;
+        const projRatio = projectW / projectH;
+        const { width: finalW, height: finalH } = mediaRatio > projRatio
+            ? { width: projectW, height: projectW / mediaRatio }
+            : { width: projectH * mediaRatio, height: projectH };
+
+        const x = (projectW - finalW) / 2;
+        const y = (projectH - finalH) / 2;
+
+        const tempClip: CutClip = {
+            ...clip,
+            transform: { x, y, width: finalW, height: finalH, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 }
+        };
+
+        const clipTime = time - tempClip.start;
+        const tf = this.resolveTransform(tempClip, clipTime);
+        const renderSize = this.getEffectRenderSize(ctx, tf, resolveEntityKey(tempClip), 0);
+        const result = this.trackRenderer.prepareClipTexture(
+            ctx, tempClip, resource, {}, time, isPlaying, renderSize
+        );
+        if (!result) return;
+
+        this.compositeClip(ctx, targetFBO, tempClip, time, result, tf);
+    }
+
+    private compositeClip(ctx: RenderContext, targetFBO: FBO, clip: CutClip, time: number, result: TextureResult, resolvedTransform?: CutClipTransform) {
+        const { gl, compositor } = ctx;
+        const clipTime = time - clip.start;
+        const tf = normalizeClipTransform(resolvedTransform || this.resolveTransform(clip, clipTime));
+        const opacity = tf.opacity ?? 1.0;
+
+        const w = tf.width;
+        const h = tf.height;
+        const rotationDeg = tf.rotation || 0;
+        const { effectiveScaleX, effectiveScaleY } = resolveClipTransformScaleFactors(tf);
+
+        this.modelMatrix.set(this.projectionMatrix);
+
+        const cx = tf.x + (w / 2);
+        const cy = tf.y + (h / 2);
+
+        Matrix3Ops.translate(this.modelMatrix, this.modelMatrix, cx, cy);
+        Matrix3Ops.rotate(this.modelMatrix, this.modelMatrix, rotationDeg * Math.PI / 180);
+        Matrix3Ops.scale(this.modelMatrix, this.modelMatrix, w * effectiveScaleX, h * effectiveScaleY);
+        Matrix3Ops.translate(this.modelMatrix, this.modelMatrix, -0.5, -0.5);
+
+        // CRITICAL: Flip Y Correction
+        // All textures (Raw or FBO) are effectively stored "Top-Down" in memory 
+        // (Row 0 is Visual Top), but GL sampling expects Bottom-Up.
+        // So we ALWAYS flip Y to correct this mismatch.
+        const textureMatrix = RenderMatrices.FLIP_Y;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO.fbo);
+        gl.viewport(0, 0, targetFBO.width, targetFBO.height);
+
+        compositor.blit(ctx, result.texture, opacity, clip.blendMode || 'normal', this.modelMatrix, textureMatrix);
+
+        if (result.fbo && result.fbo !== targetFBO) {
+            compositor.releaseFBO(result.fbo);
+        }
+    }
+
+    private getEffectRenderSize(ctx: RenderContext, tf: CutClipTransform, clipId?: string, filterCount: number = 0): { width: number; height: number } {
+        const { effectiveScaleX, effectiveScaleY } = resolveClipTransformScaleFactors(tf);
+        const rawW = Math.max(2, Math.round((tf.width || 1) * Math.max(0.01, Math.abs(effectiveScaleX))));
+        const rawH = Math.max(2, Math.round((tf.height || 1) * Math.max(0.01, Math.abs(effectiveScaleY))));
+
+        const area = rawW * rawH;
+        let downscale = 1;
+        if (area >= 3840 * 2160) {
+            downscale = Math.min(downscale, 0.66);
+        }
+        if (filterCount >= 1 && area >= 2560 * 1440) {
+            downscale = Math.min(downscale, 0.75);
+        }
+        if (filterCount >= 2 && area >= 1920 * 1080) {
+            downscale = Math.min(downscale, 0.66);
+        }
+        if (filterCount >= 3 && area >= 1920 * 1080) {
+            downscale = Math.min(downscale, 0.5);
+        }
+
+        const scaledW = Math.max(2, Math.round(rawW * downscale));
+        const scaledH = Math.max(2, Math.round(rawH * downscale));
+
+        const quant = 16;
+        const quantize = (v: number) => Math.max(2, Math.ceil(v / quant) * quant);
+
+        const maxW = Math.max(2, ctx.width);
+        const maxH = Math.max(2, ctx.height);
+
+        const nextSize = {
+            width: Math.min(quantize(scaledW), maxW),
+            height: Math.min(quantize(scaledH), maxH)
+        };
+
+        if (clipId) {
+            const last = this.lastEffectSize.get(clipId);
+            if (last) {
+                const dw = Math.abs(nextSize.width - last.width) / Math.max(1, last.width);
+                const dh = Math.abs(nextSize.height - last.height) / Math.max(1, last.height);
+                if (dw < 0.15 && dh < 0.15) {
+                    return last;
+                }
+            }
+            this.lastEffectSize.set(clipId, nextSize);
+        }
+
+        return nextSize;
+    }
+
+    private resolveTransform(clip: CutClip, clipTime: number): CutClipTransform {
+        const base = normalizeClipTransform(clip.transform || { x: 0, y: 0, width: 100, height: 100, rotation: 0, scale: 1, scaleX: 1, scaleY: 1, opacity: 1 });
+
+        if (!clip.keyframes) return base;
+
+        return {
+            x: this.resolveAnimatedValue(clip.keyframes.x, clipTime, base.x),
+            y: this.resolveAnimatedValue(clip.keyframes.y, clipTime, base.y),
+            width: this.resolveAnimatedValue(clip.keyframes.width, clipTime, base.width),
+            height: this.resolveAnimatedValue(clip.keyframes.height, clipTime, base.height),
+            rotation: this.resolveAnimatedValue(clip.keyframes.rotation, clipTime, base.rotation),
+            scale: this.resolveAnimatedValue(clip.keyframes.scale, clipTime, base.scale),
+            scaleX: base.scaleX,
+            scaleY: base.scaleY,
+            opacity: this.resolveAnimatedValue(clip.keyframes.opacity, clipTime, base.opacity)
+        };
+    }
+
+    private resolveAnimatedValue(keyframes: any[], clipTime: number, defaultValue: number): number {
+        if (!keyframes || keyframes.length === 0) return defaultValue;
+        if (clipTime <= keyframes[0].time) return keyframes[0].value;
+        if (clipTime >= keyframes[keyframes.length - 1].time) return keyframes[keyframes.length - 1].value;
+
+        for (let i = 0; i < keyframes.length - 1; i++) {
+            const kfA = keyframes[i];
+            const kfB = keyframes[i + 1];
+            if (clipTime >= kfA.time && clipTime < kfB.time) {
+                const range = kfB.time - kfA.time;
+                let t = (clipTime - kfA.time) / range;
+                // Apply easing function from keyframe
+                t = this.applyEasing(t, kfA.easing || 'linear');
+                return kfA.value + (kfB.value - kfA.value) * t;
+            }
+        }
+        return defaultValue;
+    }
+
+    private applyEasing(t: number, easing: string): number {
+        switch (easing) {
+            case 'easeIn': return t * t;
+            case 'easeOut': return t * (2 - t);
+            case 'easeInOut': return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            case 'step': return t < 1 ? 0 : 1;
+            case 'linear':
+            default: return t;
+        }
+    }
+}

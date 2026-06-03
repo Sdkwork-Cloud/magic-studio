@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Github, Rocket } from 'lucide-react';
-import { useTranslation } from '@sdkwork/react-i18n';
-import { useEditorStore } from '@sdkwork/react-editor';
-import { GitHubSyncModal } from '@sdkwork/react-editor';
-import { PublishAppModal } from '@sdkwork/react-editor';
+import { GitBranch, Rocket } from 'lucide-react';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import {
+  GitHubSyncModal,
+  PublishAppModal,
+  useEditorStore,
+} from '@sdkwork/magic-studio-editor/project-actions';
 
 interface EditorProjectActionsProps {
   projectName?: string;
@@ -28,7 +30,7 @@ const EditorProjectActions: React.FC<EditorProjectActionsProps> = ({ projectName
           className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-200 dark:hover:bg-[#2d2d2d] rounded transition-colors"
           title={t('editor.explorer.git.title')}
         >
-          <Github size={14} />
+          <GitBranch size={14} />
         </button>
         <button
           onClick={() => setShowPublishModal(true)}

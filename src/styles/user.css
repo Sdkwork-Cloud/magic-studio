@@ -1,0 +1,103 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) source(none);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../../packages/sdkwork-magic-studio-user/src/pages";
+@source "../../packages/sdkwork-magic-studio-user/src/components";
+
+[data-magic-iam-screen="user"] {
+  min-height: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--sdk-color-surface-canvas, #f5f5f5);
+}
+
+.dark [data-magic-iam-screen="user"] {
+  background: var(--sdk-color-surface-canvas, #09090b);
+}
+
+[data-magic-iam-screen="user"] .magic-iam-theme {
+  min-height: 100%;
+  color: inherit;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-feature-settings: normal;
+  font-variant-numeric: normal;
+}
+
+[data-magic-iam-screen="user"] .magic-iam-theme > div {
+  min-height: 100%;
+}
+
+[data-magic-iam-screen="user"] [data-sdk-pattern="settings-center"] {
+  width: min(100%, 1480px);
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+[data-magic-iam-screen="user"] [data-sdk-region="settings-nav"] {
+  position: sticky;
+  top: 0;
+}
+
+[data-magic-iam-screen="user"] [data-sdk-region="settings-nav"],
+[data-magic-iam-screen="user"] [data-sdk-pattern="workspace-panel"] {
+  border-color: var(--sdk-color-border-default);
+  background: var(--sdk-color-surface-panel);
+}
+
+.dark [data-magic-iam-screen="user"] [data-sdk-region="settings-nav"],
+.dark [data-magic-iam-screen="user"] [data-sdk-pattern="workspace-panel"] {
+  border-color: var(--sdk-color-border-default);
+  background: var(--sdk-color-surface-panel);
+}
+
+[data-magic-iam-screen="user"] [data-sdk-region="workspace-panel-header"] {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--sdk-color-surface-panel) 92%, transparent);
+}
+
+.dark [data-magic-iam-screen="user"] [data-sdk-region="workspace-panel-header"] {
+  background: color-mix(in srgb, var(--sdk-color-surface-panel) 92%, transparent);
+}
+
+[data-magic-iam-screen="user"] [data-sdk-pattern="settings-nav-item"] {
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+[data-magic-iam-screen="user"] [data-sdk-pattern="settings-nav-item"][data-state="active"] {
+  background: var(--sdk-color-surface-panel);
+  color: var(--sdk-color-text-primary);
+}
+
+[data-magic-iam-screen="user"] [data-sdk-ui="settings-section"] {
+  border-color: var(--sdk-color-border-default);
+  background: var(--sdk-color-surface-panel);
+}
+
+.dark [data-magic-iam-screen="user"] [data-sdk-ui="settings-section"] {
+  border-color: var(--sdk-color-border-default);
+  background: var(--sdk-color-surface-panel);
+}
+
+[data-magic-iam-screen="user"] [data-sdk-ui="status-notice"],
+[data-magic-iam-screen="user"] [data-sdk-ui="loading-block"] {
+  border-radius: var(--sdk-radius-panel);
+}
+
+[data-magic-iam-screen="user"] [data-sdk-ui="loading-block"] {
+  min-height: 14rem;
+}
+
+@media (max-width: 1023px) {
+  [data-magic-iam-screen="user"] [data-sdk-region="settings-nav"] {
+    position: static;
+    max-height: none;
+  }
+}

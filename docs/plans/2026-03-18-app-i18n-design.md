@@ -4,7 +4,7 @@
 
 ## Current state
 
-- The app already uses `@sdkwork/react-i18n` as the shared translation runtime.
+- The app already uses `@sdkwork/magic-studio-i18n` as the shared translation runtime.
 - Locale resolution currently supports URL query override, stored locale, and browser language fallback.
 - The settings store already persists a language preference and synchronizes `i18nService`.
 - A large number of components, pages, constants, comments, and helper strings still contain hardcoded Chinese or mixed-language UI copy.
@@ -12,7 +12,7 @@
 
 ## Design decisions
 
-1. Keep `@sdkwork/react-i18n` as the single runtime authority.
+1. Keep `@sdkwork/magic-studio-i18n` as the single runtime authority.
 2. Treat locale resources as the only permitted place for Chinese UI strings.
 3. Add a repository-level regression test that fails when source files outside locale resources contain Han characters.
 4. Normalize remaining hardcoded UI strings into translation keys under existing global namespaces:

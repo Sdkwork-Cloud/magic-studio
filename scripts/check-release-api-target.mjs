@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PROD_API_BASE_URL = 'https://api.sdkwork.com';
+export const CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND =
+  'node scripts/run-pnpm-cli.mjs run build:git-sdk';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,11 +35,29 @@ export function parseDotEnv(content) {
 }
 
 function hasProductionMode(script) {
-  return typeof script === 'string' && /MAGIC_STUDIO_VITE_MODE=production/.test(script);
+  return typeof script === 'string'
+    && /(MAGIC_STUDIO_VITE_MODE=production|--app-mode=production)/.test(script);
 }
 
 function hasGitSdk(script) {
-  return typeof script === 'string' && /MAGIC_STUDIO_SDK_MODE=git/.test(script);
+  return typeof script === 'string'
+    && /(MAGIC_STUDIO_SDK_MODE=git|--sdk-mode=git)/.test(script);
+}
+
+function escapeForRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasLiteralEnvValue(source, key, value) {
+  if (typeof source !== 'string') {
+    return false;
+  }
+
+  const pattern = new RegExp(
+    `\\b${escapeForRegex(key)}\\s*:\\s*(['"\`])${escapeForRegex(value)}\\1`
+  );
+
+  return pattern.test(source);
 }
 
 export function analyzeReleaseApiTarget({ packageJson, envProduction, tauriProdConfig }) {
@@ -69,9 +89,9 @@ export function analyzeReleaseApiTarget({ packageJson, envProduction, tauriProdC
     errors.push('package.json script "build:git-sdk" must set MAGIC_STUDIO_SDK_MODE=git');
   }
 
-  if (tauriProdConfig?.build?.beforeBuildCommand !== 'pnpm run build:git-sdk') {
+  if (tauriProdConfig?.build?.beforeBuildCommand !== CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND) {
     errors.push(
-      'src-tauri/tauri.prod.conf.json beforeBuildCommand must call "pnpm run build:git-sdk"'
+      `src-tauri/tauri.prod.conf.json beforeBuildCommand must call "${CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND}"`
     );
   }
 
@@ -94,15 +114,15 @@ export function analyzeBuiltBundle(content) {
   const source = String(content ?? '');
   const errors = [];
 
-  if (!source.includes('MODE:"production"') && !source.includes("MODE:'production'")) {
+  if (!hasLiteralEnvValue(source, 'MODE', 'production')) {
     errors.push('Built bundle MODE must be "production"');
   }
 
-  if (!source.includes(`VITE_API_BASE_URL:"${PROD_API_BASE_URL}"`)) {
+  if (!hasLiteralEnvValue(source, 'VITE_API_BASE_URL', PROD_API_BASE_URL)) {
     errors.push(`Built bundle VITE_API_BASE_URL must be ${PROD_API_BASE_URL}`);
   }
 
-  if (!source.includes('VITE_APP_ENV:"production"') && !source.includes("VITE_APP_ENV:'production'")) {
+  if (!hasLiteralEnvValue(source, 'VITE_APP_ENV', 'production')) {
     errors.push('Built bundle VITE_APP_ENV must be "production"');
   }
 

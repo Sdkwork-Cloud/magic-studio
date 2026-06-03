@@ -1,190 +1,89 @@
-# Package-Based Routing System Documentation
+# Package Routing System
+
+## Authority
+
+This document is a routing specialization subordinate to:
+
+- `docs/README.md`
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/framework-standard-architecture.md`
+
+It does not redefine host ownership or runtime capability boundaries.
 
 ## Overview
-This document describes the refactored package-based routing system for the Magic Studio application. The system loads all pages and components from individual packages, creating a modular and maintainable architecture.
 
-## Architecture Design
+Magic Studio now uses a single canonical route registry. Package routes, layouts, lazy-loading boundaries, and route-level providers are owned by `src/router/registry.tsx`.
 
-### 1. Package Structure
-Each feature is contained in its own package with the following structure:
-```
-packages/
-├── sdkwork-react-chat/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   └── ChatPage.tsx
-│   │   ├── components/
-│   │   ├── store/
-│   │   ├── services/
-│   │   └── index.ts
-├── sdkwork-react-image/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── ImagePage.tsx
-│   │   │   └── ImageChatPage.tsx
-│   │   ├── components/
-│   │   │   └── ImageLeftGeneratorPanel.tsx
-│   │   ├── store/
-│   │   └── index.ts
-└── ... (other packages)
-```
+The legacy files `src/router/packageRoutes.tsx` and `src/router/packageRouteLoader.tsx` remain only as thin compatibility facades. They do not own real route definitions anymore.
 
-### 2. Route Registry Structure
-The routing system is organized into three main files:
+This removes the previous three-way drift problem where the same route graph could diverge across multiple files.
 
-1. **`routes.ts`** - Defines all route paths as constants
-2. **`packageRouteLoader.tsx`** - Loads routes from packages with lazy loading
-3. **`registry.tsx`** - Maintains backward compatibility with existing routes
+## Canonical Structure
 
-### 3. Route Definition Interface
-```typescript
-interface RouteDefinition {
-    path: RoutePath;
-    component: React.ComponentType<any>;
-    layout: LayoutType;
-    leftPane?: React.ComponentType<any>;
-    provider?: React.ComponentType<any>;
+1. `src/router/routes.ts`
+Defines stable route path constants.
+
+2. `src/router/registry.tsx`
+Owns the public `APP_ROUTES` composition root and remains the single canonical route registry import.
+
+3. `src/router/registry/runtime.tsx`
+Private runtime support module for lazy page imports, route-level providers, left-pane components, and suspense boundaries.
+
+4. `src/router/registry/specs.ts`
+Pure data route specification module. This is the canonical owner of route paths, layout intent, provider/left-pane attachment, and adjacent preload relationships.
+
+5. `src/router/registry/sections.tsx`
+Private route section module that materializes `RouteDefinition[]` from the canonical specs and runtime registries before `registry.tsx` composes them into `APP_ROUTES`.
+
+6. `src/router/packageRoutes.tsx`
+Legacy facade that re-exports the canonical registry as `PACKAGE_ROUTES`.
+
+7. `src/router/packageRouteLoader.tsx`
+Legacy facade that re-exports canonical registry aliases such as `COMPLETE_ROUTE_REGISTRY`.
+
+## Route Contract
+
+```ts
+export type LayoutType =
+  | 'main'
+  | 'none'
+  | 'blank'
+  | 'generation'
+  | 'vibe'
+  | 'magic-cut'
+  | 'creation'
+  | 'notes';
+
+export interface RouteDefinition {
+  path: RoutePath;
+  component: React.ComponentType<any>;
+  layout?: LayoutType;
+  leftPane?: React.ComponentType<any>;
+  provider?: React.ComponentType<any>;
 }
 ```
 
-## Implementation Status
+## Standards
 
-### ✅ Completed Features:
-1. **Route Constants** - Centralized route path definitions
-2. **Package-Based Loading** - Routes loaded from individual packages
-3. **Lazy Loading** - Heavy components loaded on-demand
-4. **Suspense Integration** - Loading states for asynchronous components
-5. **Layout System** - Different layout types for different pages
-6. **Provider Integration** - Store providers for state management
-7. **Left Pane Support** - Generator panels for creation tools
+- `registry.tsx` is the only public ownership point for the route graph.
+- Private support modules under `src/router/registry/` may split lazy runtime details and route sections, but they must compose back through `registry.tsx`.
+- Route metadata and route preload relationships must be declared in `src/router/registry/specs.ts`, then consumed by both the canonical registry and preload scheduler.
+- Route composition must use focused package subpaths such as `@sdkwork/magic-studio-image/pages` and `@sdkwork/magic-studio-image/store`.
+- Route-level providers must stay lazy when they gate heavy feature state.
+- Desktop and server delivery share the same frontend route registry. Platform differences belong in runtime/platform boundaries, not in route ownership.
+- Compatibility facades must delegate to `registry.tsx` and must not grow business logic.
 
-### ⚠️ Current Limitations:
-1. **Module Resolution** - Development environment needs package builds
-2. **Fallback Routes** - Some pages still load from local src/pages
-3. **Type Checking** - TypeScript errors due to unresolved modules
+## Adding Or Changing A Route
 
-## Package Export Requirements
+1. Add or update the path constant in `src/router/routes.ts`.
+2. Add or update the canonical route entry in `src/router/registry.tsx`.
+3. Keep imports on focused package subpaths such as `pages`, `store`, `panels`, `i18n`, or other public sub-entries.
+4. Run the relevant route boundary tests and the app build.
 
-Each package must export the following components:
+## Why This Structure
 
-### Essential Exports:
-```typescript
-// pages/index.ts or src/index.ts
-export { default as PageName } from './pages/PageName';
-export { StoreProvider, useStore } from './store/store';
-export { LeftGeneratorPanel } from './components/LeftGeneratorPanel';
-```
-
-### Example Package Index:
-```typescript
-// packages/sdkwork-react-image/src/index.ts
-export { default as ImagePage } from './pages/ImagePage';
-export { default as ImageChatPage } from './pages/ImageChatPage';
-export { ImageLeftGeneratorPanel } from './components/ImageLeftGeneratorPanel';
-export { ImageStoreProvider, useImageStore } from './store/imageStore';
-export * from './entities/image.entity';
-export * from './services/imageService';
-export * from './constants';
-```
-
-## Migration Strategy
-
-### Phase 1: Current Implementation
-- ✅ Package-based route definitions created
-- ✅ Lazy loading system implemented
-- ✅ Backward compatibility maintained
-
-### Phase 2: Package Completion
-- [ ] Ensure all packages export required components
-- [ ] Build all packages for module resolution
-- [ ] Remove fallback routes
-
-### Phase 3: Optimization
-- [ ] Preload critical routes
-- [ ] Implement route-based code splitting
-- [ ] Add route analytics
-
-## Usage Examples
-
-### Defining a New Route:
-```typescript
-// In packageRouteLoader.tsx
-{
-    path: ROUTES.NEW_FEATURE,
-    component: LazyPageWrapper(lazy(() => import('sdkwork-react-new-feature').then(m => ({ default: m.NewFeaturePage })))),
-    layout: 'main',
-    leftPane: withSuspense(lazy(() => import('sdkwork-react-new-feature').then(m => ({ default: m.NewFeatureLeftPanel })))),
-    provider: lazy(() => import('sdkwork-react-new-feature').then(m => ({ default: m.NewFeatureStoreProvider })))
-}
-```
-
-### Adding a New Package:
-1. Create package directory structure
-2. Implement required components
-3. Export components in index.ts
-4. Add route definition to packageRouteLoader.tsx
-5. Build package with `pnpm run build`
-
-## Performance Benefits
-
-### 1. Code Splitting
-- Each route loads only required code
-- Initial bundle size reduced significantly
-- Faster application startup
-
-### 2. Modular Development
-- Teams can work on individual features
-- Independent testing and deployment
-- Better maintainability
-
-### 3. Scalability
-- Easy to add new features
-- Reduced coupling between features
-- Improved developer experience
-
-## Troubleshooting
-
-### Common Issues:
-
-1. **Module Not Found Errors**
-   ```
-   Solution: Ensure package is built and exports are correct
-   Command: cd packages/package-name && pnpm run build
-   ```
-
-2. **TypeScript Errors**
-   ```
-   Solution: Check package.json dependencies and tsconfig settings
-   ```
-
-3. **Lazy Loading Failures**
-   ```
-   Solution: Verify dynamic import syntax and component exports
-   ```
-
-## Future Enhancements
-
-### Planned Features:
-1. **Route Preloading** - Predictive loading based on user behavior
-2. **Progressive Enhancement** - Enhanced loading states
-3. **Route Analytics** - Track navigation patterns
-4. **Accessibility** - Improved screen reader support
-5. **Internationalization** - Multi-language route support
-
-## Testing Strategy
-
-### Automated Tests:
-- Route resolution tests
-- Lazy loading verification
-- Layout rendering tests
-- Provider integration tests
-
-### Manual Testing:
-- Navigation flow verification
-- Loading state observation
-- Error boundary testing
-- Performance benchmarking
-
----
-
-This package-based routing system provides a solid foundation for scalable, maintainable application architecture while maintaining backward compatibility during the migration process.
+- One source of truth prevents route drift.
+- Shared pure-data route specs prevent route path logic and preload policy from diverging.
+- Focused public subpaths keep package boundaries explicit.
+- Thin legacy facades preserve internal compatibility without duplicating architecture.
+- The route layer stays shell-neutral and works equally for standalone server deployment and embedded desktop delivery.

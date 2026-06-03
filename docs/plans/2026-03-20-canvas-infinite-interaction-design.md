@@ -2,7 +2,7 @@
 
 ## Goal
 
-Polish `packages/sdkwork-react-canvas` so the infinite canvas feels coherent and dependable across pan, zoom, minimap navigation, node/group editing, and undo/redo.
+Polish `packages/sdkwork-magic-studio-canvas` so the infinite canvas feels coherent and dependable across pan, zoom, minimap navigation, node/group editing, and undo/redo.
 
 ## Current Issues
 

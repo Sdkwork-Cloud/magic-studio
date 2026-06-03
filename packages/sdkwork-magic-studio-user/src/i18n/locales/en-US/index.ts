@@ -1,0 +1,107 @@
+import type { I18nNamespaceResource } from '@sdkwork/magic-studio-i18n';
+
+export const userEnUS: I18nNamespaceResource = {
+  accountCenterDescription: 'Manage your Magic Studio profile, security, and workspace preferences from one shared desktop account center.',
+  accountCenterTitle: 'Magic Studio Account Center',
+  groups: {
+    account: 'Account',
+    security: 'Security',
+    workspace: 'Workspace',
+  },
+  header: {
+    badge: 'IAM workspace',
+    sharedStandards: 'Shared standards',
+  },
+  highlights: {
+    accountCenter: {
+      description: 'Keep profile, notifications, and security flows in one reusable Magic Studio account workspace.',
+      title: 'Unified account center',
+    },
+    securityBoundary: {
+      description: 'Security preferences and password updates remain centralized in the shared IAM boundary.',
+      title: 'Shared security boundary',
+    },
+    settingsSurfaces: {
+      description: 'Settings stay on the shared desktop primitives instead of drifting into app-local variants.',
+      title: 'Consistent settings surfaces',
+    },
+  },
+  loading: 'Loading account center...',
+  nav: {
+    notifications: 'Notifications',
+    notificationsDescription: 'In-app and email notification preferences.',
+    overview: 'Overview',
+    overviewDescription: 'Workspace usage and preference summary.',
+    profile: 'Profile',
+    profileDescription: 'Profile, avatar, and account details.',
+    security: 'Security',
+    securityDescription: 'Password updates and protection preferences.',
+  },
+  overview: {
+    description: 'Shared account settings powered by the common SDKWORK user controller and desktop settings center patterns.',
+    general: 'General',
+    notifications: 'Notifications',
+    security: 'Security',
+    summaryDisabled: 'Disabled',
+    summaryEnabled: 'Enabled',
+  },
+  placeholders: {
+    avatarUrl: 'https://example.com/avatar.png',
+    currentPassword: 'Current password',
+    email: 'name@example.com',
+    firstName: 'First name',
+    lastName: 'Last name',
+    newPassword: 'New password',
+  },
+  profile: {
+    avatarUrl: 'Avatar URL',
+    description: 'Profile fields stay in the shared IAM boundary while the Magic Studio host controls copy and presentation.',
+    email: 'Email',
+    firstName: 'First name',
+    lastName: 'Last name',
+    title: 'Account profile',
+  },
+  searchPlaceholder: 'Search account settings',
+  security: {
+    currentPassword: 'Current password',
+    description: 'Security preferences remain in the shared IAM layer and do not leak into app-local settings implementations.',
+    loginAlerts: 'Login alerts',
+    newPassword: 'New password',
+    passwordDescription: 'Password updates stay on the shared user service so application packages do not reimplement credential flows.',
+    passwordTitle: 'Password',
+    protectionTitle: 'Protection',
+    reusableBoundary: 'This section keeps profile and security logic inside the shared IAM package while leaving application-level workflow settings to other domains.',
+    title: 'Security',
+    twoFactorAuth: 'Two-factor authentication',
+  },
+  notifications: {
+    description: 'Desktop notification defaults stay aligned with the shared IAM capability while Magic Studio owns visible copy and presentation.',
+    items: {
+      newMessages: 'New messages',
+      securityAlerts: 'Security alerts',
+      systemUpdates: 'System updates',
+      taskCompletions: 'Task completions',
+      taskFailures: 'Task failures',
+    },
+    title: 'Notifications',
+  },
+  actions: {
+    saveNotifications: 'Save notifications',
+    saveProfile: 'Save profile',
+    saveSecurity: 'Save security',
+    updatePassword: 'Update password',
+  },
+  toasts: {
+    notificationPreferencesUpdated: 'Notification preferences updated.',
+    passwordUpdated: 'Password updated.',
+    profileSaved: 'Profile saved.',
+    securityPreferencesUpdated: 'Security preferences updated.',
+  },
+  errors: {
+    accountCenterError: 'Account center error',
+    saveNotificationsFailed: 'Failed to save notification preferences.',
+    saveProfileFailed: 'Failed to save profile.',
+    saveSecurityFailed: 'Failed to save security settings.',
+    updatePasswordFailed: 'Failed to update password.',
+  },
+};

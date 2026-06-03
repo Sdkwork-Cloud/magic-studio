@@ -1,0 +1,62 @@
+replicaCount: 1
+
+image:
+  repository: magic-studio-server
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 4318
+  targetPort: 4318
+
+resources: {}
+
+podAnnotations: {}
+
+automountServiceAccountToken: false
+
+podSecurityContext:
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+server:
+  host: 0.0.0.0
+  port: 4318
+  runtimeMode: server
+  dataRoot: /var/lib/magic-studio
+
+userCenter:
+  mode: builtin-local
+  providerKey: magic-studio-local
+  appId: magic-studio-v2
+  localApiBasePath: /api/app/v1/user-center
+  sqlitePath: /var/lib/magic-studio/user-center.db
+  schemaName: ""
+  tablePrefix: ms_uc_
+  appApiBaseUrl: ""
+  externalBaseUrl: ""
+  secretId: ""
+  authorizationHeaderName: Authorization
+  accessTokenHeaderName: Access-Token
+  refreshTokenHeaderName: Refresh-Token
+  sessionHeaderName: x-sdkwork-user-center-session-id
+  authorizationScheme: Bearer
+  allowAuthorizationFallbackToAccessToken: true
+  handshakeFreshnessWindowMs: 30000
+
+secrets:
+  existingSecret: ""
+  userCenterDatabaseUrl: ""
+  userCenterSharedSecret: ""

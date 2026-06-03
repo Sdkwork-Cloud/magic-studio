@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Popover } from '../../Popover';
-import { InputAttachment } from 'sdkwork-react-commons';
+import { InputAttachment } from 'sdkwork-magic-studio-commons';
 import { Music, Video, Image as ImageIcon, FileText, Maximize2 } from 'lucide-react';
-import { getAssetLabel } from 'sdkwork-react-commons';
+import { getAssetLabel } from 'sdkwork-magic-studio-commons';
 
 interface MentionPreviewPopoverProps {
     anchorEl: HTMLElement | null;

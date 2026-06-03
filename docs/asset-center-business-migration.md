@@ -1,12 +1,22 @@
 # Asset Center Business Migration Standard
 
+## Authority
+
+This document is a migration and rollout reference subordinate to:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/asset-center-unified-architecture.md`
+- `docs/asset-center-high-standard-spec.md`
+
+It does not override the canonical host/runtime/storage standards.
+
 ## Objective
 
 Unify all business domains on the same asset kernel:
 
-- type model: `@sdkwork/react-types`
-- business operations: `@sdkwork/react-assets/asset-center`
-- storage abstraction: VFS (`browser-vfs`, `tauri-fs`, `remote-url`)
+- type model: `@sdkwork/magic-studio-types`
+- business operations: `@sdkwork/magic-studio-assets/asset-center`
+- storage abstraction: VFS (`browser-vfs`, `desktop-fs`, `remote-url`)
 - pagination: Spring Boot page contract
 
 ## Mandatory API Usage Rules
@@ -31,7 +41,7 @@ Bridge rule during migration:
 
 - legacy `assetService` now auto-registers imported/generated assets into `asset-center` index
 - query path prefers `assetCenterService` and falls back to legacy only when needed
-- `sdkwork-react-assets` shared store (`assetStore`) has switched to `assetBusinessFacade.queryByDomain` and no longer uses legacy query fallback
+- `sdkwork-magic-studio-assets` shared store (`assetStore`) has switched to `assetBusinessFacade.queryByDomain` and no longer uses legacy query fallback
 - shared picker local upload (`ChooseAsset`) now writes through `assetBusinessFacade.importByDomain`
 - shared picker supports true multi-select in `ChooseAssetModal(multiple)` with domain-scoped query/import
 - shared gallery/voice playback read paths now use `resolveAssetUrlByAssetIdFirst` (assetId-first resolver)
@@ -55,7 +65,7 @@ Bridge rule during migration:
 
 To reduce coupling and remove duplicated resolver logic, all business packages should reuse:
 
-- `resolveAssetUrlByAssetIdFirst(...)` from `@sdkwork/react-assets`
+- `resolveAssetUrlByAssetIdFirst(...)` from `@sdkwork/magic-studio-assets`
 - `getPrimaryAssetIdCandidate(...)` for render cache keys
 - `hasResolvableAssetReference(...)` for pointer existence checks (replace direct `*.url` booleans)
 

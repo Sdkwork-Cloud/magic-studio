@@ -1,5 +1,17 @@
 # Unified Asset Center Architecture
 
+## Authority
+
+This document specializes the canonical Magic Studio standards for asset-center data ownership and storage behavior.
+
+Primary references:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/local-media-toolkit-architecture.md`
+- `docs/platform-runtime-capability-matrix.md`
+
+If this document conflicts with the canonical host/storage/runtime standards, follow those documents first.
+
 ## 1. Goal
 
 Build a single asset system across all business domains:
@@ -18,14 +30,14 @@ Build a single asset system across all business domains:
 The system must support:
 
 - browser VFS (IndexedDB-backed)
-- tauri/local filesystem
+- desktop-local filesystem
 - remote URL storage
 
 No legacy compatibility constraints are required.
 
 ## 2. Canonical Data Model
 
-All canonical types are defined in `@sdkwork/react-types`:
+All canonical types are defined in `@sdkwork/magic-studio-types`:
 
 - `UnifiedDigitalAsset`
 - `UnifiedAssetPayload`
@@ -55,7 +67,7 @@ Multi-content uses:
 
 This is now encoded by `UnifiedAssetPayload` and `AssetMediaResource`.
 
-## 3. Layered Architecture (`@sdkwork/react-assets/src/asset-center`)
+## 3. Layered Architecture (`@sdkwork/magic-studio-assets/src/asset-center`)
 
 - `domain`
   - import command model
@@ -68,7 +80,7 @@ This is now encoded by `UnifiedAssetPayload` and `AssetMediaResource`.
 - `application`
   - `AssetCenterService` (aggregate operations)
 - `infrastructure`
-  - `BrowserTauriAssetVfs`
+  - `BrowserDesktopAssetVfs`
   - `JsonAssetIndexRepository`
   - `DefaultAssetUrlResolver`
   - `CoreMediaAnalysisAdapter`
@@ -79,14 +91,14 @@ This is now encoded by `UnifiedAssetPayload` and `AssetMediaResource`.
 `AssetStorageDescriptor.mode`:
 
 - `browser-vfs`: local persisted storage in browser runtime
-- `tauri-fs`: desktop local filesystem
+- `desktop-fs`: desktop local filesystem
 - `remote-url`: server URL only
 - `hybrid`: primary + replicas
 
 `AssetLocator` is protocol-driven:
 
 - `assets://...` internal virtual path
-- `file://` / tauri local path
+- `file://` or `desktop://` explicit local path outside managed assets
 - `http(s)://` remote
 
 ## 5. Business Domain Rules

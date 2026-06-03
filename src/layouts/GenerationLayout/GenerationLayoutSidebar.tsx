@@ -1,5 +1,5 @@
 
-import { useRouter } from '@sdkwork/react-core'
+import { useRouter } from '@sdkwork/magic-studio-core/router'
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
     ChevronLeft, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 ;
 import { ROUTES } from '../../router/routes';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
 
 interface GenerationLayoutSidebarProps {
     className?: string;
@@ -19,11 +19,6 @@ export const GenerationLayoutSidebar: React.FC<GenerationLayoutSidebarProps> = (
     const { t } = useTranslation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-
-    // Debug: Log path changes
-    React.useEffect(() => {
-        console.log('[GenerationLayoutSidebar] currentPath changed:', currentPath);
-    }, [currentPath]);
 
     const TOOLS = useMemo(() => [
         { id: 'video', labelKey: 'sidebar.video_workspace', route: ROUTES.VIDEO, icon: Video, color: 'text-pink-400', bgColor: 'bg-pink-500/10', borderColor: 'border-pink-500/20' },

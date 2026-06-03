@@ -1,0 +1,33 @@
+{
+  "name": "@sdkwork/magic-studio-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "cargo run --manifest-path src-host/Cargo.toml",
+    "build": "node ../../scripts/run-magic-studio-server-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json"
+  },
+  "dependencies": {
+    "@sdkwork/magic-studio-host-core": "workspace:*",
+    "@sdkwork/magic-studio-host-types": "workspace:*",
+    "@sdkwork/magic-studio-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ]
+}

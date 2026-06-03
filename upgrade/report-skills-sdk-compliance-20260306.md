@@ -2,7 +2,7 @@
 
 ## Scope
 - Application: `apps/magic-studio-v2`
-- Module: `packages/sdkwork-react-skills`
+- Module: `packages/sdkwork-magic-studio-skills`
 - Required architecture: `Service -> SDK` only
 - SDK baseline: `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
 
@@ -14,7 +14,7 @@
 
 ## Changes Implemented
 1. Added SDK-driven service:
-   - File: `packages/sdkwork-react-skills/src/services/skillsService.ts`
+   - File: `packages/sdkwork-magic-studio-skills/src/services/skillsService.ts`
    - Uses `getAppSdkClientWithSession()` and `client.skill.*` methods:
      - `list`
      - `get`
@@ -23,10 +23,10 @@
      - `enable`
      - `disable`
 2. Upgraded business adapter:
-   - File: `packages/sdkwork-react-skills/src/services/skillsBusinessService.ts`
+   - File: `packages/sdkwork-magic-studio-skills/src/services/skillsBusinessService.ts`
    - `SkillsBusinessAdapter` now equals real `SkillsService` contract.
 3. Extended service exports:
-   - File: `packages/sdkwork-react-skills/src/services/index.ts`
+   - File: `packages/sdkwork-magic-studio-skills/src/services/index.ts`
    - Exposes `skillsService` and related query/result types.
 4. Reworked page integrations:
    - `SkillsPage.tsx`: loads categories/skills from `skillsBusinessService`.
@@ -35,7 +35,7 @@
    - Supports list/page-like response shapes.
    - Handles category mapping, tab filters, and safe defaults.
 6. Removed static skills export path from constants to prevent accidental fallback to fake data:
-   - `packages/sdkwork-react-skills/src/constants.ts`
+   - `packages/sdkwork-magic-studio-skills/src/constants.ts`
 
 ## SDK Gap Assessment
 - No additional SDK method gap identified for current skills page capabilities.
@@ -44,17 +44,17 @@
 ## Verification
 1. Direct HTTP/bypass scan:
    - Command:
-     - `rg -n -e "fetch\(" -e "axios" -e "XMLHttpRequest" -e "/app/v3/api" -e "http://" -e "https://" apps/magic-studio-v2/packages/sdkwork-react-skills/src`
+     - `rg -n -e "fetch\(" -e "axios" -e "XMLHttpRequest" -e "/app/v3/api" -e "http://" -e "https://" apps/magic-studio-v2/packages/sdkwork-magic-studio-skills/src`
    - Result: no matches (no direct request bypass found in skills module).
 2. Type check:
    - Command:
-     - `pnpm --filter @sdkwork/react-skills typecheck`
+     - `pnpm --filter @sdkwork/magic-studio-skills typecheck`
    - Result: failed due pre-existing cross-package workspace issues outside skills module:
-     - missing module declarations in sibling packages (`@sdkwork/react-auth`, `@sdkwork/react-audio`)
+     - missing module declarations in sibling packages (`@sdkwork/magic-studio-auth`, `@sdkwork/magic-studio-audio`)
      - existing unused local symbol errors in sibling packages
    - Skills module changes in this report did not introduce new direct type errors in the reported output.
 
 ## Compliance Conclusion
-- `sdkwork-react-skills` is now migrated to SDK-driven interaction for list/detail/enable flows.
+- `sdkwork-magic-studio-skills` is now migrated to SDK-driven interaction for list/detail/enable flows.
 - Service layer no longer depends on static fake data for core skill retrieval.
 - Interaction path conforms to `Service -> SDK` for this module.

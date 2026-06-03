@@ -2,8 +2,8 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Palette, ChevronDown, Check, Sparkles, Image as ImageIcon, User, ScanFace, LayoutTemplate, Search, X, Copy, Languages } from 'lucide-react';
 import { Popover } from '../Popover';
-import { platform } from 'sdkwork-react-core';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { platform } from 'sdkwork-magic-studio-core';
+import { useTranslation } from 'sdkwork-magic-studio-i18n';
 
 export interface StyleAsset {
     url: string;

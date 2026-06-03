@@ -1,7 +1,7 @@
 
-import { useRouter } from '@sdkwork/react-core'
+import { useRouter } from '@sdkwork/magic-studio-core/router'
 import React from 'react';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
 import { 
     Scissors, Layout, BookOpen, ChevronLeft, FolderOpen, HardDrive
 } from 'lucide-react';

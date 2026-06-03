@@ -1,0 +1,68 @@
+{
+  "name": "@sdkwork/magic-studio-trade",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./components": {
+      "types": "./src/components/index.ts",
+      "import": "./src/components/index.ts"
+    },
+    "./services": {
+      "types": "./src/services/index.ts",
+      "import": "./src/services/index.ts"
+    },
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts"
+    },
+    "./hooks": {
+      "types": "./src/hooks/index.ts",
+      "import": "./src/hooks/index.ts"
+    },
+    "./pages": {
+      "types": "./src/pages/index.ts",
+      "import": "./src/pages/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "node ../../scripts/run-package-vite-build.mjs --watch",
+    "build": "node ../../scripts/run-package-typecheck.mjs tsconfig.json && node ../../scripts/run-package-vite-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json",
+    "typecheck:contract": "node ../../scripts/run-package-typecheck.mjs tsconfig.contract.json"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "lucide-react": "catalog:",
+    "classnames": "catalog:",
+    "zustand": "catalog:",
+    "@sdkwork/magic-studio-core": "workspace:*",
+    "@sdkwork/magic-studio-commons": "workspace:*",
+    "@sdkwork/magic-studio-server": "workspace:*",
+    "@sdkwork/magic-studio-auth": "workspace:*",
+    "@sdkwork/magic-studio-workspace": "workspace:*",
+    "@sdkwork/magic-studio-notifications": "workspace:*",
+    "@sdkwork/magic-studio-vip": "workspace:*",
+    "@sdkwork/magic-studio-i18n": "workspace:*",
+    "@sdkwork/sdk-common": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  },
+  "module": "./src/index.ts",
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ]
+}

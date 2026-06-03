@@ -27,6 +27,45 @@ Run the desktop app in Tauri development mode:
 pnpm tauri:dev
 ```
 
+Run the local Rust server in server mode:
+
+```bash
+pnpm server:dev
+```
+
+Run the canonical Rust server verification suite:
+
+```bash
+pnpm check:server
+```
+
+## Architecture
+
+Magic Studio V2 uses one canonical Rust business kernel at `packages/sdkwork-magic-studio-server/src-host`.
+
+Host modes:
+
+- `pnpm server:dev`: standalone Rust server deployment
+- `pnpm tauri:dev`: Tauri desktop shell embedding the same Rust server
+- `pnpm check:server`: contract, client, typecheck, and Rust host verification for the shared server-first stack
+- `src-tauri` is shell-only and not a second business backend
+- desktop filesystem CRUD is served by the embedded Rust HTTP contract instead of Tauri invoke commands
+- browser-hosted `server` runtime resolves canonical system paths from Rust runtime summary and uses the same Rust HTTP filesystem contract as desktop
+- legacy React + Tauri architecture docs remain only as redirect stubs
+
+Current standards:
+
+Primary source of truth:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/README.md` is the documentation entrypoint and authority map
+
+Specialized references:
+
+- `docs/tauri-rust-framework-architecture.md`
+- `docs/platform-runtime-capability-matrix.md`
+- `docs/local-media-toolkit-architecture.md`
+
 ## Build
 
 Build the web app:
@@ -45,6 +84,12 @@ Build the desktop installer bundle:
 
 ```bash
 pnpm tauri:bundle
+```
+
+Build the standalone Rust server:
+
+```bash
+pnpm server:build
 ```
 
 Windows installer output:

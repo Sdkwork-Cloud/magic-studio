@@ -1,20 +1,23 @@
 
-import { WindowControls } from '@sdkwork/react-commons'
+import { WindowControls, getDesktopShellDragRegionProps } from '@sdkwork/magic-studio-commons'
 import React, { Suspense, lazy, useState, useRef, useEffect } from 'react';
 import {
   ChevronRight, Home, Terminal, Code, Settings, User,
   BookOpen, Bug, RefreshCw, Zap
 } from 'lucide-react';
 import { ROUTES } from '../../router/routes';
-import { useAuthStore } from '@sdkwork/react-auth';
-import { useWorkspaceStore, WorkspaceProjectSelector } from '@sdkwork/react-workspace';
-import { useSettingsStore } from '@sdkwork/react-settings';
-import { useTranslation } from '@sdkwork/react-i18n';
-import { useRouter, platform } from '@sdkwork/react-core';
+import { useAuthStore } from '@sdkwork/magic-studio-auth/store';
+import { WorkspaceProjectSelector } from '@sdkwork/magic-studio-workspace/components';
+import { useWorkspaceStore } from '@sdkwork/magic-studio-workspace/store';
+import { useSettingsStore } from '@sdkwork/magic-studio-settings/store';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import { useRouter } from '@sdkwork/magic-studio-core/router';
+import { getPlatformRuntime } from '@sdkwork/magic-studio-core/platform';
 
 const EditorProjectActions = lazy(() => import('./EditorProjectActions'));
 
 const MainGlobalHeader: React.FC = () => {
+  const runtime = getPlatformRuntime();
   const { currentPath } = useRouter();
   const { user } = useAuthStore();
   const { t } = useTranslation();
@@ -62,7 +65,7 @@ const MainGlobalHeader: React.FC = () => {
         </div>
 
         {/* CENTER: Draggable Region Space */}
-        <div className="flex-1 h-full" data-tauri-drag-region />
+        <div className="flex-1 h-full" {...getDesktopShellDragRegionProps()} />
 
         {/* RIGHT: Breadcrumbs & Controls */}
         <div className="flex items-center h-full">
@@ -99,13 +102,13 @@ const MainGlobalHeader: React.FC = () => {
                           <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-[#1a1a1a] rounded-lg shadow-2xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-75">
                               <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('header.developer_menu')}</div>
                               <button 
-                                  onClick={() => { platform.restartApp(); setShowDevMenu(false); }}
+                                  onClick={() => { void runtime.app.restart(); setShowDevMenu(false); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
                                   <RefreshCw size={14} className="text-blue-500" /> {t('header.reload_app')}
                               </button>
                               <button 
-                                  onClick={() => { platform.toggleDevTools(); setShowDevMenu(false); }}
+                                  onClick={() => { void runtime.app.toggleDevTools(); setShowDevMenu(false); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-[#1a1a1c] transition-colors text-gray-700 dark:text-gray-200"
                               >
                                   <Terminal size={14} className="text-green-500" /> {t('header.toggle_devtools')}

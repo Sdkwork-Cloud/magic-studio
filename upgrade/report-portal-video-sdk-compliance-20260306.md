@@ -2,7 +2,7 @@
 
 ## Scope
 - App: `apps/magic-studio-v2`
-- Package: `packages/sdkwork-react-portal-video`
+- Package: `packages/sdkwork-magic-studio-portal-video`
 - Focus pages/components:
   - `src/pages/DiscoverPage.tsx`
   - `src/pages/CommunityPage.tsx`
@@ -39,7 +39,7 @@
 
 ## Post-Check Results
 - Service policy validation: passed.
-- Service encapsulation audit: `sdkwork-react-portal-video` row shows:
+- Service encapsulation audit: `sdkwork-magic-studio-portal-video` row shows:
   - `Violations=0`
   - `SDK Seam=yes`
   - `Services Index Exports=yes`
@@ -53,7 +53,7 @@
 - SDK regeneration for this scope: not required.
 
 ## Evidence Commands
-- `pnpm --dir apps/magic-studio-v2 --filter @sdkwork/react-portal-video typecheck`
+- `pnpm --dir apps/magic-studio-v2 --filter @sdkwork/magic-studio-portal-video typecheck`
 - `node scripts/validate-service-encapsulation-policy.mjs`
 - `node scripts/audit-service-encapsulation.mjs`
 - package scan via `Select-String` (no bypass/no mock hits)
@@ -67,9 +67,9 @@
 ## Additional Hardening (Same Date)
 
 1. Unified SDK client entry import in portal-video service:
-   - File: `packages/sdkwork-react-portal-video/src/services/portalVideoService.ts`
-   - Change: `getAppSdkClientWithSession` import path switched from `@sdkwork/react-auth` to `@sdkwork/react-core`.
+   - File: `packages/sdkwork-magic-studio-portal-video/src/services/portalVideoService.ts`
+   - Change: `getAppSdkClientWithSession` import path switched from `@sdkwork/magic-studio-auth` to `@sdkwork/magic-studio-core`.
 2. Verification:
-   - `pnpm --filter @sdkwork/react-portal-video typecheck` passed after the change.
+   - `pnpm --filter @sdkwork/magic-studio-portal-video typecheck` passed after the change.
 3. Architecture impact:
    - Keeps service-side SDK access path aligned with core runtime client policy.

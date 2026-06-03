@@ -4,8 +4,8 @@ import { X, Upload, FileText, Box, Layers, Image as ImageIcon, Film } from 'luci
 import { Button } from '../../Button/Button';
 import { ImageUpload, VideoUpload } from '../../upload';
 import { PromptTextInput } from '../PromptTextInput';
-import { useTranslation } from 'sdkwork-react-i18n';
-import { generateUUID } from 'sdkwork-react-commons';
+import { useTranslation } from 'sdkwork-magic-studio-i18n';
+import { generateUUID } from 'sdkwork-magic-studio-commons';
 
 export interface ImportData {
     id: string;

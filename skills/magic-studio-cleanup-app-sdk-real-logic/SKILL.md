@@ -9,7 +9,7 @@ description: Guides Magic Studio cleanup work toward the shared generated app SD
 
 Drive `apps/magic-studio-v2-type-contract-cleanup` toward the same generated app-SDK path as the main workspace:
 
-`src shell / feature package / store -> packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+`src shell / feature package / store -> packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
 
 This cleanup workspace must remove divergent contract and service patterns, not become a second architecture. If a method is missing, close the backend/OpenAPI/generator gap first, then return and delete the workaround.
 
@@ -27,7 +27,7 @@ Treat every round as a recursive closure loop: self-review the touched app or cl
 
 - Use `spring-ai-plus-app-api` as the single contract source for remote business capability.
 - Use `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript` as the only shared TypeScript SDK source and consume it through `@sdkwork/app-sdk`.
-- Cleanup work must converge on `packages/sdkwork-react-core`. Do not create a cleanup-only client, wrapper, or parallel contract namespace.
+- Cleanup work must converge on `packages/sdkwork-magic-studio-core`. Do not create a cleanup-only client, wrapper, or parallel contract namespace.
 - Keep Tauri, local files, shell commands, and package tooling out of the app SDK path.
 - Replace package-local business HTTP with the wrapper path. Do not add raw `fetch`, generic HTTP helpers, manual auth headers, compat DTO shims, or cleanup-only fallback branches.
 - Never hand-edit generated SDK output. Fix backend or generator inputs, then regenerate.

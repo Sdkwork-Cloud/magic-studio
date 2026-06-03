@@ -1,1 +1,1 @@
-export { Popover, type PopoverProps } from 'sdkwork-react-commons';
+export { Popover, type PopoverProps } from 'sdkwork-magic-studio-commons';

@@ -1,0 +1,107 @@
+import type { I18nNamespaceResource } from '@sdkwork/magic-studio-i18n';
+
+export const userZhCN: I18nNamespaceResource = {
+  accountCenterDescription: '在统一的桌面账户中心管理 Magic Studio 的资料、安全和工作区偏好。',
+  accountCenterTitle: 'Magic Studio 账户中心',
+  groups: {
+    account: '账户',
+    security: '安全',
+    workspace: '工作区',
+  },
+  header: {
+    badge: '身份工作区',
+    sharedStandards: '共享标准',
+  },
+  highlights: {
+    accountCenter: {
+      description: '将资料、通知和安全流程保持在可复用的 Magic Studio 身份工作区中。',
+      title: '统一账户中心',
+    },
+    securityBoundary: {
+      description: '安全偏好和密码更新集中在共享身份边界内。',
+      title: '共享安全边界',
+    },
+    settingsSurfaces: {
+      description: '设置界面沿用共享桌面基础能力，避免漂移为应用内私有实现。',
+      title: '一致的设置界面',
+    },
+  },
+  loading: '正在加载账户中心...',
+  nav: {
+    notifications: '通知',
+    notificationsDescription: '应用内和邮件通知偏好。',
+    overview: '概览',
+    overviewDescription: '工作区使用情况和偏好摘要。',
+    profile: '资料',
+    profileDescription: '身份、头像和账户资料详情。',
+    security: '安全',
+    securityDescription: '密码更新和保护偏好。',
+  },
+  overview: {
+    description: '由通用 SDKWORK 用户控制器和桌面设置中心模式提供支持的共享身份设置。',
+    general: '通用',
+    notifications: '通知',
+    security: '安全',
+    summaryDisabled: '已停用',
+    summaryEnabled: '已启用',
+  },
+  placeholders: {
+    avatarUrl: 'https://example.com/avatar.png',
+    currentPassword: '当前密码',
+    email: 'name@example.com',
+    firstName: '名',
+    lastName: '姓',
+    newPassword: '新密码',
+  },
+  profile: {
+    avatarUrl: '头像 URL',
+    description: '资料字段保留在共享身份边界内，Magic Studio 主机负责可见文案和呈现。',
+    email: '邮箱',
+    firstName: '名',
+    lastName: '姓',
+    title: '身份资料',
+  },
+  searchPlaceholder: '搜索账户设置',
+  security: {
+    currentPassword: '当前密码',
+    description: '安全偏好保留在共享身份层，不泄露到应用本地设置实现中。',
+    loginAlerts: '登录提醒',
+    newPassword: '新密码',
+    passwordDescription: '密码更新沿用共享用户服务，应用包不重新实现凭据流程。',
+    passwordTitle: '密码',
+    protectionTitle: '保护',
+    reusableBoundary: '本区域将资料和安全逻辑保留在共享身份包中，应用级工作流设置由其他领域负责。',
+    title: '安全',
+    twoFactorAuth: '双因素认证',
+  },
+  notifications: {
+    description: '桌面通知默认值与共享身份能力保持一致，Magic Studio 负责可见文案和呈现。',
+    items: {
+      newMessages: '新消息',
+      securityAlerts: '安全提醒',
+      systemUpdates: '系统更新',
+      taskCompletions: '任务完成',
+      taskFailures: '任务失败',
+    },
+    title: '通知',
+  },
+  actions: {
+    saveNotifications: '保存通知设置',
+    saveProfile: '保存资料',
+    saveSecurity: '保存安全设置',
+    updatePassword: '更新密码',
+  },
+  toasts: {
+    notificationPreferencesUpdated: '通知偏好已更新。',
+    passwordUpdated: '密码已更新。',
+    profileSaved: '资料已保存。',
+    securityPreferencesUpdated: '安全偏好已更新。',
+  },
+  errors: {
+    accountCenterError: '账户中心错误',
+    saveNotificationsFailed: '保存通知偏好失败。',
+    saveProfileFailed: '保存资料失败。',
+    saveSecurityFailed: '保存安全设置失败。',
+    updatePasswordFailed: '更新密码失败。',
+  },
+};

@@ -1,10 +1,10 @@
 
-import { useRouter } from '@sdkwork/react-core'
+import { useRouter } from '@sdkwork/magic-studio-core/router'
 import React from 'react';
 import { 
     Home, Presentation, ChevronLeft, Layout 
 } from 'lucide-react';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
 import { ROUTES } from '../../router/routes';
 
 export const VibeLayoutSidebar: React.FC = () => {

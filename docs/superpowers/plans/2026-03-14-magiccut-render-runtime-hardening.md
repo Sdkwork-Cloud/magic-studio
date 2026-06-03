@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Remove two professional-grade runtime gaps in `@sdkwork/react-magiccut`: placeholder export fallback and transition lead-in playback/render desynchronization.
+**Goal:** Remove two professional-grade runtime gaps in `@sdkwork/magic-studio-magiccut`: placeholder export fallback and transition lead-in playback/render desynchronization.
 
-**Architecture:** Keep the new logic in package-local domain helpers so export/runtime policy stays inside `sdkwork-react-magiccut` and remains aligned with `ARCHITECT.md` boundaries. Wire the helpers into the existing export service and render engine with minimal surface-area changes.
+**Architecture:** Keep the new logic in package-local domain helpers so export/runtime policy stays inside `sdkwork-magic-studio-magiccut` and remains aligned with `ARCHITECT.md` boundaries. Wire the helpers into the existing export service and render engine with minimal surface-area changes.
 
 **Tech Stack:** TypeScript, Vitest, React package-local domain helpers, existing WebGL/export runtime services
 
@@ -15,8 +15,8 @@
 ### Task 1: Define encoder selection behavior in tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/exportCapabilities.test.ts`
-- Create: `packages/sdkwork-react-magiccut/src/domain/export/exportCapabilities.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/exportCapabilities.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/export/exportCapabilities.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -33,7 +33,7 @@ it('falls back to media recorder when WebCodecs lacks a muxer', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportCapabilities.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportCapabilities.test.ts`
 Expected: FAIL because the helper module does not exist yet.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -52,15 +52,15 @@ export function resolvePreferredExportEncoder(capabilities) {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportCapabilities.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportCapabilities.test.ts`
 Expected: PASS
 
 ### Task 2: Wire runtime probing into export selection
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/src/services/export/videoExportService.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/services/export/encoders/WebCodecsEncoder.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/services/export/encoders/BrowserMediaEncoder.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/export/videoExportService.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/export/encoders/WebCodecsEncoder.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/export/encoders/BrowserMediaEncoder.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -68,7 +68,7 @@ Extend the encoder-capability tests to cover the final runtime decision surface.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportCapabilities.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportCapabilities.test.ts`
 Expected: FAIL until the service/encoder helpers consume the new capability rules.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -77,7 +77,7 @@ Add muxer probing to `WebCodecsEncoder`, support probing to `BrowserMediaEncoder
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportCapabilities.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportCapabilities.test.ts`
 Expected: PASS
 
 ## Chunk 2: Transition-Aware Playback Sync
@@ -85,8 +85,8 @@ Expected: PASS
 ### Task 3: Define transition lead-in playback rules in tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/transitionPlayback.test.ts`
-- Create: `packages/sdkwork-react-magiccut/src/domain/playback/transitionPlayback.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/transitionPlayback.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/playback/transitionPlayback.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -102,7 +102,7 @@ it('extends a clip activation window by the full incoming transition lead-in', (
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/transitionPlayback.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/transitionPlayback.test.ts`
 Expected: FAIL because the helper module does not exist yet.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -111,14 +111,14 @@ Add helpers to compute incoming transition lead-ins, activation start times, and
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/transitionPlayback.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/transitionPlayback.test.ts`
 Expected: PASS
 
 ### Task 4: Wire transition helpers into render playback
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/src/engine/WebGLEngine.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/engine/renderer/TimelineRenderer.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/engine/WebGLEngine.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/engine/renderer/TimelineRenderer.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -126,7 +126,7 @@ Extend the transition-playback tests to verify long transitions stay active befo
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/transitionPlayback.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/transitionPlayback.test.ts`
 Expected: FAIL until runtime consumers use the helper outputs.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -135,7 +135,7 @@ Update the engine to use incoming transition lead-ins for warmup/seek windows an
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/transitionPlayback.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/transitionPlayback.test.ts`
 Expected: PASS
 
 ## Chunk 3: Verification
@@ -148,22 +148,22 @@ Expected: PASS
 - [ ] **Step 1: Run targeted tests**
 
 Run:
-- `pnpm --filter @sdkwork/react-magiccut test tests/exportCapabilities.test.ts`
-- `pnpm --filter @sdkwork/react-magiccut test tests/transitionPlayback.test.ts`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportCapabilities.test.ts`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test tests/transitionPlayback.test.ts`
 
 - [ ] **Step 2: Run package regression suite**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test`
 Expected: PASS
 
 - [ ] **Step 3: Run build verification**
 
-Run: `pnpm --filter @sdkwork/react-magiccut build`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut build`
 Expected: PASS
 
 - [ ] **Step 4: Run typecheck verification**
 
-Run: `pnpm --filter @sdkwork/react-magiccut typecheck`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut typecheck`
 Expected: local package clean; report any external workspace blockers explicitly if they remain.
 
 ## Chunk 4: Timeline Navigation And Retimed Edit Integrity
@@ -171,8 +171,8 @@ Expected: local package clean; report any external workspace blockers explicitly
 ### Task 6: Define minimap viewport and navigation math in tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/timelineMinimap.test.ts`
-- Create: `packages/sdkwork-react-magiccut/src/domain/timeline/minimap.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/timelineMinimap.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/timeline/minimap.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -184,7 +184,7 @@ Add tests that verify:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/timelineMinimap.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/timelineMinimap.test.ts`
 Expected: FAIL because the minimap helper does not exist yet.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -197,14 +197,14 @@ Add a package-local timeline helper that:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/timelineMinimap.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/timelineMinimap.test.ts`
 Expected: PASS
 
 ### Task 7: Wire the minimap into the timeline shell
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/src/components/Timeline/TimelineMinimap.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Timeline/MagicCutTimeline.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Timeline/TimelineMinimap.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Timeline/MagicCutTimeline.tsx`
 
 - [ ] **Step 1: Extend the UI to consume helper outputs**
 
@@ -221,8 +221,8 @@ Check that:
 ### Task 8: Correct retimed edit operations in tests first
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/tests/timelineEditService.test.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/services/TimelineEditService.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/tests/timelineEditService.test.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/TimelineEditService.ts`
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -234,7 +234,7 @@ Add tests for retimed clips where `speed !== 1` covering:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/timelineEditService.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/timelineEditService.test.ts`
 Expected: FAIL because existing edit math assumes 1x speed in several paths.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -243,7 +243,7 @@ Update `TimelineEditService` to scale source-offset deltas by clip speed and cla
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/timelineEditService.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/timelineEditService.test.ts`
 Expected: PASS
 
 ## Chunk 5: Export Runtime Truth In The UI
@@ -251,8 +251,8 @@ Expected: PASS
 ### Task 9: Define runtime-driven export presentation rules in tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/exportRuntimePresentation.test.ts`
-- Create: `packages/sdkwork-react-magiccut/src/domain/export/exportRuntimePresentation.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/exportRuntimePresentation.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/export/exportRuntimePresentation.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -265,7 +265,7 @@ Add tests that prove:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportRuntimePresentation.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportRuntimePresentation.test.ts`
 Expected: FAIL because the presentation helper does not exist yet.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -278,14 +278,14 @@ Add a package-local helper that converts raw runtime support into:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/exportRuntimePresentation.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportRuntimePresentation.test.ts`
 Expected: PASS
 
 ### Task 10: Replace misleading export affordances with runtime-driven UI
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/src/services/export/videoExportService.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Export/ExportModal.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/export/videoExportService.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Export/ExportModal.tsx`
 
 - [ ] **Step 1: Expose runtime support snapshot**
 
@@ -307,8 +307,8 @@ Update the modal so it:
 - [ ] **Step 3: Verify locally**
 
 Run:
-- `pnpm --filter @sdkwork/react-magiccut test tests/exportRuntimePresentation.test.ts`
-- `pnpm --filter @sdkwork/react-magiccut build`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test tests/exportRuntimePresentation.test.ts`
+- `pnpm --filter @sdkwork/magic-studio-magiccut build`
 
 Expected: tests pass, package builds, any workspace-external declaration/type issues are reported explicitly.
 
@@ -317,8 +317,8 @@ Expected: tests pass, package builds, any workspace-external declaration/type is
 ### Task 11: Define clip flip transform rules in tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/clipTransform.test.ts`
-- Create: `packages/sdkwork-react-magiccut/src/domain/transform/clipTransform.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/clipTransform.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/transform/clipTransform.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -329,7 +329,7 @@ Add tests that prove:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/clipTransform.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/clipTransform.test.ts`
 Expected: FAIL because the helper does not exist yet.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -341,20 +341,20 @@ Add a transform helper that:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @sdkwork/react-magiccut test tests/clipTransform.test.ts`
+Run: `pnpm --filter @sdkwork/magic-studio-magiccut test tests/clipTransform.test.ts`
 Expected: PASS
 
 ### Task 12: Wire real flip state into UI and renderer
 
 **Files:**
-- Modify: `packages/sdkwork-react-types/src/magiccut.types.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Properties/panels/VisualTransformPanel.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Properties/MagicCutPropertyPanel.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Properties/panels/ImageSettingsPanel.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/store/magicCutStore.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/engine/WebGLEngine.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/engine/renderer/ClipRenderStrategies.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/engine/renderer/TimelineRenderer.ts`
+- Modify: `packages/sdkwork-magic-studio-types/src/magiccut.types.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Properties/panels/VisualTransformPanel.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Properties/MagicCutPropertyPanel.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Properties/panels/ImageSettingsPanel.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/store/magicCutStore.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/engine/WebGLEngine.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/engine/renderer/ClipRenderStrategies.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/engine/renderer/TimelineRenderer.ts`
 
 - [ ] **Step 1: Extend the transform model**
 
@@ -377,9 +377,9 @@ Update the transform panel so the flip buttons:
 - [ ] **Step 4: Verify locally**
 
 Run:
-- `pnpm --filter @sdkwork/react-magiccut test tests/clipTransform.test.ts`
-- `pnpm --filter @sdkwork/react-magiccut test`
-- `pnpm --filter @sdkwork/react-magiccut build`
-- `pnpm --filter @sdkwork/react-magiccut typecheck`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test tests/clipTransform.test.ts`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test`
+- `pnpm --filter @sdkwork/magic-studio-magiccut build`
+- `pnpm --filter @sdkwork/magic-studio-magiccut typecheck`
 
-Expected: package tests pass, build passes, and any typecheck failure still comes only from workspace-external `sdkwork-react-core` issues.
+Expected: package tests pass, build passes, and any typecheck failure still comes only from workspace-external `sdkwork-magic-studio-core` issues.

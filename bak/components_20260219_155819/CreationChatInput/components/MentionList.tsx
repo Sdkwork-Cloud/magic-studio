@@ -6,8 +6,8 @@ import React, {
   useState,
 } from 'react';
 import { FileText, Image as ImageIcon, Video, Mic } from 'lucide-react';
-import { InputAttachment } from 'sdkwork-react-commons';
-import { getAssetLabel } from 'sdkwork-react-commons';
+import { InputAttachment } from 'sdkwork-magic-studio-commons';
+import { getAssetLabel } from 'sdkwork-magic-studio-commons';
 
 export interface MentionListProps {
   items: InputAttachment[];

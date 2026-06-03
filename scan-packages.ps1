@@ -1,11 +1,11 @@
-# Scan all sdkwork-react-* packages for self-imports and circular exports
+# Scan all sdkwork-magic-studio-* packages for self-imports and circular exports
 $packagesDir = "packages"
 $results = @()
 
-Get-ChildItem -Path $packagesDir -Directory | Where-Object { $_.Name -like "sdkwork-react-*" } | ForEach-Object {
+Get-ChildItem -Path $packagesDir -Directory | Where-Object { $_.Name -like "sdkwork-magic-studio-*" } | ForEach-Object {
     $packageName = $_.Name
     $packagePath = $_.FullName
-    $moduleName = $packageName -replace "sdkwork-react-", ""
+    $moduleName = $packageName -replace "sdkwork-magic-studio-", ""
     
     Write-Host "Scanning $packageName..." -ForegroundColor Yellow
     

@@ -130,6 +130,17 @@ This preserves portability, diagnostics, packaging, relinking, and consistent te
 
   system/
     settings.json
+    library/
+      video/
+      image/
+      audio/
+      text/
+      other/
+    cache/
+      thumbnails/
+      waveforms/
+      peaks/
+      analysis/
     indexes/
       assets-index.json
       projects-index.json
@@ -138,6 +149,7 @@ This preserves portability, diagnostics, packaging, relinking, and consistent te
       queue/
       checkpoints/
     logs/
+    temp/
     temp/
 ```
 
@@ -152,6 +164,26 @@ Stores user-specific but project-independent material:
 - reusable templates
 - LUT packs
 - user shortcuts
+
+### `system/library/`
+
+Stores workspace-independent managed assets that belong to the global MagicStudio runtime rather than one project.
+
+Rules:
+
+- the only canonical typed directories are `video`, `image`, `audio`, `text`, and `other`
+- feature code must not invent alternate buckets such as `downloads`, `images`, `models`, or `misc`
+- desktop-embedded and standalone server hosts must resolve these paths through the same shared layout helpers
+
+### `system/cache/` and `system/temp/`
+
+Stores rebuildable runtime-wide artifacts:
+
+- thumbnails
+- waveforms
+- peaks
+- analysis outputs
+- temporary intermediates under `system/temp/`
 
 ### `workspaces/{workspaceId}/projects/{projectId}/project.json`
 
@@ -377,7 +409,7 @@ Migration should include:
 
 ## Component Responsibilities
 
-### `@sdkwork/react-settings`
+### `@sdkwork/magic-studio-settings`
 
 Owns:
 
@@ -385,7 +417,7 @@ Owns:
 - default root configuration
 - settings UI for root overrides and mode selection
 
-### `@sdkwork/react-core`
+### `@sdkwork/magic-studio-core`
 
 Owns:
 
@@ -394,7 +426,7 @@ Owns:
 - migration helpers
 - workspace toolkit defaults for `MagicStudio`
 
-### `@sdkwork/react-assets`
+### `@sdkwork/magic-studio-assets`
 
 Owns:
 
@@ -403,7 +435,7 @@ Owns:
 - locator resolution
 - asset-center registration with project-aware local paths
 
-### `@sdkwork/react-magiccut`
+### `@sdkwork/magic-studio-magiccut`
 
 Owns:
 

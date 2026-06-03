@@ -20,7 +20,7 @@ interface WorkerResponse {
     error?: string;
 }
 
-// Video decoding using WebCodecs API (if available) or fallback message
+// Video decoding using browser-native worker-safe capabilities or a neutral fallback message
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     const { id, type } = e.data;
 
@@ -32,22 +32,23 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     try {
         // Note: Web Workers cannot access DOM (video elements, canvas)
         // We use OffscreenCanvas for image processing
-        // Video decoding would require WebCodecs API or ffmpeg.wasm
-        
-        // For now, this worker serves as a placeholder for future ffmpeg.wasm integration
+        // Video decoding would require browser video decode support or a worker-safe native media runtime
+
+        // For now, this worker serves as a placeholder for future worker-safe video decode integration
         // Current implementation still needs main thread for video element access
-        
-        self.postMessage({ 
-            id, 
-            type: 'error', 
-            error: 'Worker-based thumbnail generation requires WebCodecs API or ffmpeg.wasm integration' 
+
+        self.postMessage({
+            id,
+            type: 'error',
+            error:
+                'Worker-based thumbnail generation requires browser video decode support or a native media runtime',
         } as WorkerResponse);
-        
+
     } catch (err) {
-        self.postMessage({ 
-            id, 
-            type: 'error', 
-            error: err instanceof Error ? err.message : 'Unknown error' 
+        self.postMessage({
+            id,
+            type: 'error',
+            error: err instanceof Error ? err.message : 'Unknown error',
         } as WorkerResponse);
     }
 };

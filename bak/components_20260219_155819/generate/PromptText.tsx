@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Copy, Check, Maximize2, Minimize2, ChevronDown, ChevronUp } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from 'sdkwork-magic-studio-core';
 
 export interface PromptTextProps {
     text: string;

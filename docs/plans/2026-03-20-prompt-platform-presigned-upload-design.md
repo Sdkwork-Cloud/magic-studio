@@ -9,27 +9,27 @@
 - The official SDK already exposes a dedicated `PromptApi` with prompt library and prompt history operations in `@sdkwork/app-sdk/dist/api/prompt.d.ts`.
 - The frontend core layer currently maps `sdk.prompt` and `usePrompt` to `generation` instead of the SDK's real `prompt` module.
 - Existing server upload logic is partially unified:
-  - `packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts` already performs presigned PUT uploads and metadata registration.
-  - `packages/sdkwork-react-assets/src/services/assetSdkQueryService.ts` and `packages/sdkwork-react-drive/src/services/driveBusinessService.ts` already reuse that helper.
-  - `packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts` still carries a parallel "upload intent" implementation instead of reusing the shared upload helper.
-- `PromptTextInput` in `packages/sdkwork-react-assets/src/components/generate/PromptTextInput.tsx` is the shared prompt input used across image, video, audio, music, film, and other generation experiences.
+  - `packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts` already performs presigned PUT uploads and metadata registration.
+  - `packages/sdkwork-magic-studio-assets/src/services/assetSdkQueryService.ts` and `packages/sdkwork-magic-studio-drive/src/services/driveBusinessService.ts` already reuse that helper.
+  - `packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts` still carries a parallel "upload intent" implementation instead of reusing the shared upload helper.
+- `PromptTextInput` in `packages/sdkwork-magic-studio-assets/src/components/generate/PromptTextInput.tsx` is the shared prompt input used across image, video, audio, music, film, and other generation experiences.
 
 ## Problems
 
 ### 1. Prompt SDK Access Is Incorrect
 
-- `packages/sdkwork-react-core/src/sdk/index.ts` exports `sdk.prompt` as `generation`.
-- `packages/sdkwork-react-core/src/sdk/hooks.ts` exports `usePrompt()` as `generation`.
+- `packages/sdkwork-magic-studio-core/src/sdk/index.ts` exports `sdk.prompt` as `generation`.
+- `packages/sdkwork-magic-studio-core/src/sdk/hooks.ts` exports `usePrompt()` as `generation`.
 - Any future prompt-library UI built on top of the core SDK facade would be wired to the wrong backend API.
 
 ### 2. Global SDK Client Mutation Breaks Instance Safety
 
-- `getAppSdkClientWithSession(overrides)` in `packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts` mutates the shared singleton when overrides are provided.
+- `getAppSdkClientWithSession(overrides)` in `packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts` mutates the shared singleton when overrides are provided.
 - This makes it unsafe to load prompt libraries or histories from multiple SDK instances inside the same app session.
 
 ### 3. Prompt Library and History Are Not Encapsulated as Frontend Capabilities
 
-- The app has a prompt-focused package (`@sdkwork/react-prompt`) but it only implements prompt optimization logic today.
+- The app has a prompt-focused package (`@sdkwork/magic-studio-prompt`) but it only implements prompt optimization logic today.
 - The shared prompt input does not have a reusable, configurable capability layer for:
   - prompt library list loading
   - prompt history loading
@@ -47,12 +47,12 @@
 ### A. Treat Prompt Capabilities as an Official SDK Domain
 
 - Correct the core SDK facade so prompt functionality is always routed through the official SDK `prompt` module.
-- Add typed prompt capability services in `@sdkwork/react-core` instead of binding `@sdkwork/react-assets` directly to raw SDK payloads.
+- Add typed prompt capability services in `@sdkwork/magic-studio-core` instead of binding `@sdkwork/magic-studio-assets` directly to raw SDK payloads.
 - Keep prompt optimization in `generation`; keep prompt library / history in `prompt`.
 
 ### B. Introduce Scoped SDK Clients
 
-- Add a non-mutating client factory in `@sdkwork/react-core` that can create a temporary SDK client for a specific runtime instance:
+- Add a non-mutating client factory in `@sdkwork/magic-studio-core` that can create a temporary SDK client for a specific runtime instance:
   - `baseUrl`
   - `tenantId`
   - `organizationId`
@@ -62,7 +62,7 @@
 
 ### C. Build a Shared Prompt Capability Service
 
-- Add a reusable service layer in `@sdkwork/react-core` that normalizes official prompt payloads into frontend-friendly records.
+- Add a reusable service layer in `@sdkwork/magic-studio-core` that normalizes official prompt payloads into frontend-friendly records.
 - Required capabilities:
   - list prompt library entries
   - list popular prompts
@@ -89,7 +89,7 @@
 
 ### E. Unify All Server Uploads Behind One Core Upload Kernel
 
-- `packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts` becomes the single upload kernel for all server uploads.
+- `packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts` becomes the single upload kernel for all server uploads.
 - Update it to prefer the official SDK method name `registerPresigned`, while remaining backward-compatible with `registerPresignedUpload` or HTTP fallback.
 - Refactor `ServerProvider` so it reuses the same upload helper instead of maintaining a second presigned-flow implementation.
 - Keep local-only VFS writes out of scope; only uploads that go to a server-managed object store must move to the presigned flow.
@@ -98,25 +98,25 @@
 
 ### Core SDK and Instance Isolation
 
-- Modify `packages/sdkwork-react-core/src/sdk/index.ts`
-- Modify `packages/sdkwork-react-core/src/sdk/hooks.ts`
-- Modify `packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts`
-- Create `packages/sdkwork-react-core/src/sdk/promptLibraryService.ts`
-- Create tests under `packages/sdkwork-react-core/src/sdk/__tests__/`
+- Modify `packages/sdkwork-magic-studio-core/src/sdk/index.ts`
+- Modify `packages/sdkwork-magic-studio-core/src/sdk/hooks.ts`
+- Modify `packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts`
+- Create `packages/sdkwork-magic-studio-core/src/sdk/promptLibraryService.ts`
+- Create tests under `packages/sdkwork-magic-studio-core/src/sdk/__tests__/`
 
 ### Shared Upload Kernel
 
-- Modify `packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts`
-- Modify `packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts`
-- Modify `packages/sdkwork-react-core/src/services/storage/types.ts` if needed to align terminology
+- Modify `packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts`
+- Modify `packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts`
+- Modify `packages/sdkwork-magic-studio-core/src/services/storage/types.ts` if needed to align terminology
 - Create / extend tests under:
-  - `packages/sdkwork-react-core/src/sdk/__tests__/`
-  - `packages/sdkwork-react-core/src/services/storage/providers/__tests__/`
+  - `packages/sdkwork-magic-studio-core/src/sdk/__tests__/`
+  - `packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/`
 
 ### Prompt Input UI
 
-- Modify `packages/sdkwork-react-assets/src/components/generate/PromptTextInput.tsx`
-- Create prompt picker UI helpers under `packages/sdkwork-react-assets/src/components/generate/`
+- Modify `packages/sdkwork-magic-studio-assets/src/components/generate/PromptTextInput.tsx`
+- Create prompt picker UI helpers under `packages/sdkwork-magic-studio-assets/src/components/generate/`
 - Re-export new prompt service hooks or types if required from package entrypoints
 - Add focused tests for new prompt capability wiring if the package test setup supports it
 

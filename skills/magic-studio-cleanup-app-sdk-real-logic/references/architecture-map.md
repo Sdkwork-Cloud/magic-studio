@@ -10,7 +10,7 @@
 
 Use this path for any business capability backed by `spring-ai-plus-app-api`:
 
-`src shell / feature package / store -> packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+`src shell / feature package / store -> packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
 
 Cleanup work must converge on this path. It must not create a cleanup-only parallel architecture.
 

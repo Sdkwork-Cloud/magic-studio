@@ -7,9 +7,9 @@ import { AudioUpload, ImageUpload } from '../../upload';
 import { PromptTextInput } from '../PromptTextInput';
 import { ImportData } from './types';
 import { SettingInput, SettingToggle } from '../../../modules/settings/components/SettingsWidgets';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from 'sdkwork-magic-studio-i18n';
 import { PreviewModal, PreviewData } from './PreviewModal';
-import { generateUUID } from 'sdkwork-react-commons';
+import { generateUUID } from 'sdkwork-magic-studio-commons';
 
 interface UploadMusicGenerationModalProps {
     onClose: () => void;

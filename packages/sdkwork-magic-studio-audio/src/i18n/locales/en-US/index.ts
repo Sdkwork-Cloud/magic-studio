@@ -1,0 +1,24 @@
+import type { I18nNamespaceResource } from '@sdkwork/magic-studio-i18n';
+
+export const audioEnUS: I18nNamespaceResource = {
+    common: {
+        title: 'Speech Studio',
+        subtitle: 'Text to Speech',
+        generate: 'Generate Speech',
+        creating: 'Generating...',
+    },
+    actions: {
+        addToTimeline: 'Add to Timeline',
+    },
+    page: {
+        script: 'Script',
+        duration: 'Duration',
+        settings: 'Settings',
+        speed: 'Speed',
+        placeholder: 'Enter text to synthesize...',
+    },
+    message: {
+        noHistory: 'No History Yet',
+        startCreating: 'Start creating to see your generations here.',
+    },
+};

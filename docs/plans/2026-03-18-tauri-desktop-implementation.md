@@ -13,10 +13,10 @@
 ### Task 1: Formalize Desktop Runtime Capabilities
 
 **Files:**
-- Modify: `packages/sdkwork-react-core/src/platform/types.ts`
-- Modify: `packages/sdkwork-react-core/src/platform/platform.ts`
-- Modify: `packages/sdkwork-react-core/src/platform/desktop.ts`
-- Modify: `packages/sdkwork-react-core/src/platform/web.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/platform/types.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/platform/platform.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/platform/desktop.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/platform/web.ts`
 
 **Step 1: Write the failing test**
 
@@ -55,7 +55,7 @@ Expected:
 ### Task 2: Make Sidebar Desktop-Aware
 
 **Files:**
-- Modify: `packages/sdkwork-react-settings/src/constants.ts`
+- Modify: `packages/sdkwork-magic-studio-settings/src/constants.ts`
 - Modify: `src/layouts/MainLayout/MainSidebar.tsx`
 
 **Step 1: Write the failing behavior expectation**
@@ -95,8 +95,8 @@ Expected:
 ### Task 3: Upgrade Window Controls and Shared Title Bar Rules
 
 **Files:**
-- Modify: `packages/sdkwork-react-commons/src/components/Desktop/WindowControls/WindowControls.tsx`
-- Modify: `packages/sdkwork-react-commons/src/services/windowControlService.ts`
+- Modify: `packages/sdkwork-magic-studio-commons/src/components/Desktop/WindowControls/WindowControls.tsx`
+- Modify: `packages/sdkwork-magic-studio-commons/src/services/windowControlService.ts`
 - Modify: `src/layouts/MainLayout/MainGlobalHeader.tsx`
 - Modify: `src/layouts/MagicCutLayout/MagicCutLayoutHeader.tsx`
 - Modify: `src/index.css`
@@ -255,6 +255,6 @@ Verify:
 **Step 6: Commit**
 
 ```bash
-git add package.json README.md src/index.css src/layouts/MainLayout/MainSidebar.tsx src/layouts/MainLayout/MainGlobalHeader.tsx src/layouts/MagicCutLayout/MagicCutLayoutHeader.tsx packages/sdkwork-react-core/src/platform/types.ts packages/sdkwork-react-core/src/platform/platform.ts packages/sdkwork-react-core/src/platform/desktop.ts packages/sdkwork-react-core/src/platform/web.ts packages/sdkwork-react-commons/src/components/Desktop/WindowControls/WindowControls.tsx packages/sdkwork-react-commons/src/services/windowControlService.ts packages/sdkwork-react-settings/src/constants.ts src-tauri/tauri.conf.json src-tauri/tauri.prod.conf.json docs/plans/2026-03-18-tauri-desktop-design.md docs/plans/2026-03-18-tauri-desktop-implementation.md
+git add package.json README.md src/index.css src/layouts/MainLayout/MainSidebar.tsx src/layouts/MainLayout/MainGlobalHeader.tsx src/layouts/MagicCutLayout/MagicCutLayoutHeader.tsx packages/sdkwork-magic-studio-core/src/platform/types.ts packages/sdkwork-magic-studio-core/src/platform/platform.ts packages/sdkwork-magic-studio-core/src/platform/desktop.ts packages/sdkwork-magic-studio-core/src/platform/web.ts packages/sdkwork-magic-studio-commons/src/components/Desktop/WindowControls/WindowControls.tsx packages/sdkwork-magic-studio-commons/src/services/windowControlService.ts packages/sdkwork-magic-studio-settings/src/constants.ts src-tauri/tauri.conf.json src-tauri/tauri.prod.conf.json docs/plans/2026-03-18-tauri-desktop-design.md docs/plans/2026-03-18-tauri-desktop-implementation.md
 git commit -m "feat: polish tauri desktop shell experience"
 ```

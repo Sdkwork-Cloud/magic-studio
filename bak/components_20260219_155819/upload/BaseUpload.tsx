@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, Loader2, X, FolderOpen, Replace, Trash2, Eye } from 'lucide-react';
-import { platform, uploadHelper } from 'sdkwork-react-core';
+import { platform, uploadHelper } from 'sdkwork-magic-studio-core';
 import { BaseUploadProps } from './types';
 
 interface InternalBaseUploadProps extends BaseUploadProps {

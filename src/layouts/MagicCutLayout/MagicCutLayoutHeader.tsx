@@ -2,17 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     ChevronLeft, Scissors, Share2, Save, ChevronDown, FileJson
 } from 'lucide-react';
-import { WindowControls } from '@sdkwork/react-commons';
+import { WindowControls, getDesktopShellDragRegionProps } from '@sdkwork/magic-studio-commons';
 import { ROUTES } from '../../router/routes';
-import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
-import { useTranslation } from '@sdkwork/react-i18n';
-import { useMagicCutStore } from '@sdkwork/react-magiccut';
-import { useRouter, platform } from '@sdkwork/react-core';
+import { WorkspaceProjectSelector } from '@sdkwork/magic-studio-workspace/components';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import { useMagicCutStore } from '@sdkwork/magic-studio-magiccut/store';
+import {
+    getPlatformRuntime,
+    isDesktopShellRuntimeKind,
+} from '@sdkwork/magic-studio-core/platform';
+import { useRouter } from '@sdkwork/magic-studio-core/router';
 
 export const MagicCutLayoutHeader: React.FC = () => {
     const { navigate, currentQuery } = useRouter();
     const { t } = useTranslation();
-    const isDesktopRuntime = platform.getPlatform() === 'desktop';
+    const runtime = getPlatformRuntime();
+    const isDesktopRuntime = isDesktopShellRuntimeKind(runtime.system.kind());
     const { project } = useMagicCutStore();
     const searchParams = new URLSearchParams(currentQuery);
     const fromSource = searchParams.get('from');
@@ -37,7 +42,7 @@ export const MagicCutLayoutHeader: React.FC = () => {
         try {
             const json = JSON.stringify(project, null, 2);
             const filename = `${project.name.replace(/\s+/g, '_')}_project.json`;
-            await platform.saveFile(json, filename);
+            await runtime.fileSystem.saveText(json, filename);
             setShowExportMenu(false);
         } catch (e) {
             console.error("Export JSON failed", e);
@@ -48,7 +53,7 @@ export const MagicCutLayoutHeader: React.FC = () => {
         <>
             <div className="h-14 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between pl-4 pr-0 z-[1000] select-none shrink-0 relative overflow-hidden">
                 {isDesktopRuntime && (
-                    <div className="absolute inset-0 z-0" data-tauri-drag-region />
+                    <div className="absolute inset-0 z-0" {...getDesktopShellDragRegionProps()} />
                 )}
 
                 {/* Left: Navigation & Branding */}

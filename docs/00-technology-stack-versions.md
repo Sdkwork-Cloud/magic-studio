@@ -1,88 +1,78 @@
-# 架构文档技术栈版本统一规范
+# Magic Studio V2 Technology Stack Reference
 
-## 目的
-确保所有架构文档中的技术栈版本号保持一致，避免混淆。
+## Authority
 
-## 统一版本号（2026-02-20 更新）
+This document is a supporting technology-stack reference subordinate to:
 
-### 核心技术栈
-| 技术 | 统一版本 | 说明 |
-|------|----------|------|
-| React | `^19.0.0` | 所有文档统一使用此版本 |
-| React DOM | `^19.0.0` | 与 React 版本一致 |
-| TypeScript | `^5.9.0` | 严格模式 |
-| Vite | `^7.0.0` | 构建工具 |
-| Zustand | `^5.0.0` | 状态管理 |
-| Tailwind CSS | `^4.0.0` | 样式方案 |
+- `docs/README.md`
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/tauri-rust-framework-architecture.md`
 
-### 桌面应用技术栈（Tauri）
-| 技术 | 统一版本 | 说明 |
-|------|----------|------|
-| Tauri | `^2.0.0` | 桌面应用框架 |
-| @tauri-apps/api | `^2.0.0` | Tauri API |
-| @tauri-apps/cli | `^2.0.0` | Tauri CLI |
+It does not redefine host ownership, API boundaries, or shell-only capability rules.
 
-### 移动应用技术栈（Capacitor）
-| 技术 | 统一版本 | 说明 |
-|------|----------|------|
-| Capacitor | `^7.0.0` | 移动应用框架 |
-| @capacitor/core | `^7.0.0` | Capacitor 核心 |
-| @capacitor/cli | `^7.0.0` | Capacitor CLI |
-| @capacitor/ios | `^7.0.0` | iOS 平台 |
-| @capacitor/android | `^7.0.0` | Android 平台 |
+## Delivery Model
 
-### 编辑器技术栈
-| 技术 | 统一版本 | 说明 |
-|------|----------|------|
-| Monaco Editor | `^0.47.0` | 代码编辑器 |
-| TipTap | `^2.0.0` | 富文本编辑器 |
-| xterm.js | `^5.0.0` | 终端模拟器 |
+Magic Studio V2 is standardized around:
 
-### 工具库
-| 技术 | 统一版本 | 说明 |
-|------|----------|------|
-| Lucide React | `^0.475.0` | 图标库 |
-| classnames | `^2.5.0` | 类名拼接 |
-| immer | `^11.0.0` | 不可变数据 |
-| JSZip | `^3.10.0` | ZIP 处理 |
-| markdown-it | `^14.0.0` | Markdown 解析 |
-| date-fns | `^4.0.0` | 日期处理 |
-| uuid | `^11.0.0` | UUID 生成 |
-| zod | `^3.24.0` | Schema 验证 |
+- one React frontend workspace
+- one canonical Rust business kernel at `packages/sdkwork-magic-studio-server/src-host`
+- one standalone server deployment mode
+- one Tauri desktop shell embedding the same Rust server
 
-### 开发工具
-| 工具 | 统一版本 | 说明 |
-|------|----------|------|
-| ESLint | `^9.0.0` | 代码检查 |
-| Prettier | `^3.0.0` | 代码格式化 |
-| Vitest | `^2.0.0` | 测试框架 |
-| @testing-library/react | `^16.0.0` | React 测试库 |
-| @types/node | `^22.0.0` | Node.js 类型 |
-| @types/react | `^19.0.0` | React 类型 |
-| @types/react-dom | `^19.0.0` | React DOM 类型 |
+Capacitor/mobile host architecture is not part of the active Magic Studio V2 stack.
 
-## 文档更新清单
+## Workspace and Tooling
 
-### 已更新文档
-- [x] architect-standard-react+tauri.md
-- [x] architect-standard-react+capacitor.md
-- [ ] architect-react+tauri.md（待更新）
-- [ ] architect-react+capacitor.md（待更新）
+| Area | Version / Value | Source |
+| --- | --- | --- |
+| App version | `0.1.1` | `package.json`, `src-tauri/Cargo.toml` |
+| Package manager | `pnpm@10.30.2` | `package.json` |
+| Monorepo task runner | `turbo@^2.9.3` | `package.json` |
+| Node test runner | built-in `node --test` for focused boundary checks | repo scripts/tests |
 
-## 更新规则
+## Frontend Runtime Stack
 
-1. **技术栈表格**：统一使用 `^` 前缀格式
-2. **package.json 示例**：所有依赖版本使用统一版本号
-3. **代码示例**：确保导入的版本号与统一版本一致
-4. **ASCII 架构图**：更新图中显示的技术栈版本
+| Technology | Version | Source |
+| --- | --- | --- |
+| React | `^19.2.4` | `pnpm-workspace.yaml` catalog |
+| React DOM | `^19.2.4` | `pnpm-workspace.yaml` catalog |
+| TypeScript | `^6.0.2` | `pnpm-workspace.yaml` catalog |
+| Vite | `^8.0.3` | `pnpm-workspace.yaml` catalog |
+| Zustand | `^5.0.12` | `pnpm-workspace.yaml` catalog |
+| Tailwind CSS | `^4.2.2` | `pnpm-workspace.yaml` catalog |
+| Vitest | `^4.1.2` | `package.json` |
 
-## 注意事项
+## Desktop Shell Stack
 
-- 避免使用 `x` 通配符格式（如 `19.2.x`），统一使用 `^` 语义化版本格式
-- 所有文档中的同一技术版本号必须完全一致
-- 更新文档时同步更新此规范文件
+| Technology | Version | Source |
+| --- | --- | --- |
+| Tauri CLI / JS API baseline | `^2.10.1` | `pnpm-workspace.yaml` catalog |
+| Rust `tauri` crate | `2.10.3` | `src-tauri/Cargo.toml` |
+| `tauri-build` | `2.5.6` | `src-tauri/Cargo.toml` |
+| Desktop updater plugin | `2.10.0` | `src-tauri/Cargo.toml` |
+| Desktop shell log plugin | `2.8.0` | `src-tauri/Cargo.toml` |
 
----
+## Rust Server Kernel Stack
 
-**最后更新**: 2026-02-20
-**维护者**: SDKWork Team
+| Technology | Version | Source |
+| --- | --- | --- |
+| Rust edition | `2021` | `src-tauri/Cargo.toml` |
+| Tokio | `1` | `src-tauri/Cargo.toml` |
+| Serde | `1.0` | `src-tauri/Cargo.toml` |
+| rusqlite | `0.39` with `bundled` | `src-tauri/Cargo.toml` |
+| portable-pty | `0.9.0` | `src-tauri/Cargo.toml` |
+| zip | `8.5` | `src-tauri/Cargo.toml` |
+
+## Canonical Implementation Packages
+
+- Frontend app shell: `src/`
+- Desktop shell host: `src-tauri/`
+- Canonical Rust server host: `packages/sdkwork-magic-studio-server/src-host/`
+- Typed server contract facade: `packages/sdkwork-magic-studio-server/src/`
+- Shared platform/runtime surface: `packages/sdkwork-magic-studio-core/src/platform/`
+
+## Maintenance Rules
+
+1. Update this document only after the underlying manifest files or canonical standards change.
+2. If package manifests and this document disagree, the manifests win until the document is refreshed.
+3. Do not add Capacitor/mobile versions here unless Magic Studio V2 formally adopts that host model.

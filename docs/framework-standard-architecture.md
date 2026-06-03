@@ -1,5 +1,14 @@
 # Magic Studio Framework Standard Architecture (V1)
 
+## Authority
+
+This document is a framework/package-boundary specialization subordinate to:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/platform-runtime-capability-matrix.md`
+
+It does not define host ownership, backend topology, or shell-boundary exceptions.
+
 ## 1. Objectives
 
 1. Build one consistent base framework for all product domains:
@@ -12,25 +21,25 @@
    - voice speaker
    - magic cut / film editor
 2. Enforce high cohesion and low coupling across packages.
-3. Make browser mode and tauri mode share the same domain and UI contracts.
+3. Make browser-hosted runtime and desktop shell runtime share the same domain and UI contracts.
 4. Standardize component IO contracts, events, and imperative handles.
 5. Make future feature packages additive, not invasive.
 6. Use `Character` as the unified role domain term across type, API, UI, and asset categories.
 
 ## 2. Package Layering
 
-1. `@sdkwork/react-types`
+1. `@sdkwork/magic-studio-types`
    - Domain entities and cross-package contracts.
    - No UI logic.
-2. `@sdkwork/react-core`
+2. `@sdkwork/magic-studio-core`
    - Runtime orchestration and platform abstractions.
    - Route, state primitives, common service patterns.
-3. `@sdkwork/react-fs`, `@sdkwork/react-compression`, `@sdkwork/react-i18n`
+3. `@sdkwork/magic-studio-fs`, `@sdkwork/magic-studio-compression`, `@sdkwork/magic-studio-i18n`
    - Infrastructure capability layer.
-4. `@sdkwork/react-commons`
+4. `@sdkwork/magic-studio-commons`
    - Reusable UI primitives and framework composites.
    - No direct business rules.
-5. `@sdkwork/react-assets` + `feature-*`
+5. `@sdkwork/magic-studio-assets` + `feature-*`
    - Business use cases, business components, business workflows.
 6. App assembly layer (`src/app`, `src/layouts`)
    - Composition only.
@@ -39,15 +48,15 @@
 ## 3. Dependency Guardrails
 
 1. `feature-*` packages can depend on:
-   - `@sdkwork/react-types`
-   - `@sdkwork/react-core`
-   - `@sdkwork/react-commons`
+   - `@sdkwork/magic-studio-types`
+   - `@sdkwork/magic-studio-core`
+   - `@sdkwork/magic-studio-commons`
    - infrastructure packages
-2. `@sdkwork/react-commons` must never depend on `feature-*`.
+2. `@sdkwork/magic-studio-commons` must never depend on `feature-*`.
 3. `feature-*` packages should not depend on each other directly.
 4. Cross-feature orchestration must happen through:
-   - shared type contracts in `@sdkwork/react-types`
-   - shared infra/service interfaces in `@sdkwork/react-core`
+   - shared type contracts in `@sdkwork/magic-studio-types`
+   - shared infra/service interfaces in `@sdkwork/magic-studio-core`
 5. Naming guardrail:
    - avoid product-level terms that bind to a specific implementation detail
    - prefer `Character` instead of `Digital Human`
@@ -230,7 +239,7 @@
 
 ## 8. Current Iteration Deliverables
 
-1. Added framework components in `@sdkwork/react-commons/components/framework`:
+1. Added framework components in `@sdkwork/magic-studio-commons/components/framework`:
    - `SplitView`
    - `FormPanel`
    - `VirtualizedList`

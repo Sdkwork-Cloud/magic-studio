@@ -1,17 +1,17 @@
-import { platform, useRouter } from '@sdkwork/react-core'
+import { getPlatformRuntime, isDesktopShellRuntimeKind } from '@sdkwork/magic-studio-core/platform'
+import { useRouter } from '@sdkwork/magic-studio-core/router'
 import React, { useState, useRef } from 'react';
 import {
     Settings, Crown, ChevronRight
 } from 'lucide-react';
-;
 import { ROUTES } from '../../router/routes';
-import { useAuthStore } from '@sdkwork/react-auth';
-import { useSettingsStore } from '@sdkwork/react-settings';
-import { PricingModal } from '@sdkwork/react-vip';
-import { useTranslation } from '@sdkwork/react-i18n';
-import { getIconComponent } from '@sdkwork/react-commons';
-import { SidebarItemConfig } from '@sdkwork/react-settings';
-import { SIDEBAR_TEMPLATES } from '@sdkwork/react-settings';
+import { useAuthStore } from '@sdkwork/magic-studio-auth/store';
+import { useSettingsStore } from '@sdkwork/magic-studio-settings/store';
+import { PricingModal } from '@sdkwork/magic-studio-vip/pricing-modal';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import { getIconComponent } from '@sdkwork/magic-studio-commons';
+import type { SidebarItemConfig } from '@sdkwork/magic-studio-settings/entities';
+import { SIDEBAR_TEMPLATES } from '@sdkwork/magic-studio-settings/constants';
 
 const MainSidebar: React.FC = () => {
   const [showPricing, setShowPricing] = useState(false);
@@ -19,12 +19,7 @@ const MainSidebar: React.FC = () => {
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
   const { t } = useTranslation();
-  const isDesktopRuntime = platform.getPlatform() === 'desktop';
-
-  // Debug: Log path changes
-  React.useEffect(() => {
-      console.log('[MainSidebar] currentPath changed:', currentPath);
-  }, [currentPath]);
+  const isDesktopRuntime = isDesktopShellRuntimeKind(getPlatformRuntime().system.kind());
 
   // Load Config (Fallback to Default Template if missing)
   const menuConfig = settings.appearance.sidebarConfig || SIDEBAR_TEMPLATES[0].config;
@@ -88,7 +83,7 @@ const MainSidebar: React.FC = () => {
               return (
                   <SidebarItem 
                       key={item.id}
-                      icon={getIconComponent(item.icon)} 
+                      icon={item.icon ? getIconComponent(item.icon) : null}
                       label={t(item.labelKey)}
                       isActive={currentPath === item.route} 
                       onClick={() => navigate(item.route as any)} 
@@ -145,6 +140,17 @@ interface SidebarItemProps {
     className?: string;
 }
 
+const renderSidebarIcon = (
+    iconName: string | undefined,
+    props: { size?: number; strokeWidth?: number; className?: string }
+): React.ReactNode => {
+    if (!iconName) {
+        return null;
+    }
+    const IconComponent = getIconComponent(iconName);
+    return IconComponent ? <IconComponent {...props} /> : null;
+};
+
 const SidebarItem: React.FC<SidebarItemProps> = ({
     icon: Icon,
     isActive,
@@ -152,11 +158,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     label,
     className = ""
   }) => {
-    // Debug: Log active state changes
-    React.useEffect(() => {
-        console.log('[SidebarItem] isActive changed for', label, ':', isActive);
-    }, [isActive, label]);
-
     // Handle null icon case
     if (!Icon) {
         console.warn('[SidebarItem] Icon is null for label:', label);
@@ -207,9 +208,17 @@ interface GroupProps {
 const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, currentPath, t }) => {
     const [isHovered, setIsHovered] = useState(false);
     const timeoutRef = useRef<any>(null);
-    const Icon = getIconComponent(config.icon);
+    const buttonIcon = renderSidebarIcon(config.icon, {
+        size: 18,
+        strokeWidth: 1.5,
+        className: "transition-transform duration-200",
+    });
+    const headerIcon = renderSidebarIcon(config.icon, {
+        size: 14,
+        className: "text-gray-500",
+    });
 
-    if (!Icon) {
+    if (!buttonIcon || !headerIcon) {
         return null;
     }
 
@@ -239,7 +248,7 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
                 }
               `}
             >
-              <Icon size={18} strokeWidth={1.5} className="transition-transform duration-200" />
+              {buttonIcon}
             </button>
 
             {/* Active Indicator */}
@@ -255,15 +264,18 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
                 >
                     <div className="px-4 py-3 border-b border-[#333] dark:border-[#1a1a1a] bg-[#252526] dark:bg-[#111] flex items-center justify-between">
                         <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">{t(config.labelKey)}</span>
-                        <Icon size={14} className="text-gray-500" />
+                        {headerIcon}
                     </div>
                     
                     <div className="p-1.5 flex flex-col gap-0.5">
                         {config.children?.filter((c: SidebarItemConfig) => c.visible).map((item: SidebarItemConfig) => {
                             const isItemActive = currentPath === item.route;
-                            const ItemIcon = getIconComponent(item.icon);
+                            const itemIcon = renderSidebarIcon(item.icon, {
+                                size: 16,
+                                className: `transition-colors ${isItemActive ? 'text-blue-400' : 'text-gray-500 group-hover/item:text-gray-300'}`,
+                            });
                             
-                            if (!ItemIcon) {
+                            if (!itemIcon) {
                                 return null;
                             }
                             
@@ -279,10 +291,7 @@ const SidebarGroup: React.FC<GroupProps> = ({ config, isActive, navigate, curren
                                         }
                                     `}
                                 >
-                                    <ItemIcon 
-                                        size={16} 
-                                        className={`transition-colors ${isItemActive ? 'text-blue-400' : 'text-gray-500 group-hover/item:text-gray-300'}`} 
-                                    />
+                                    {itemIcon}
                                     <span className="flex-1">{t(item.labelKey)}</span>
                                     {isItemActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                                     {!isItemActive && <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-50 transition-opacity" />}

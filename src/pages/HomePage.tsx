@@ -1,9 +1,9 @@
 
 import React, { Suspense, lazy } from 'react';
-import { useSettingsStore } from '@sdkwork/react-settings';
-import { useTranslation } from '@sdkwork/react-i18n';
+import { useSettingsStore } from '@sdkwork/magic-studio-settings';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
 
-const PortalPage = lazy(() => import('@sdkwork/react-portal-video').then(m => ({ default: m.PortalPage })));
+const PortalPage = lazy(() => import('@sdkwork/magic-studio-portal-video').then(m => ({ default: m.PortalPage })));
 
 const LoadingFallback = () => {
     const { t } = useTranslation();

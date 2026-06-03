@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "build": {
-    "beforeBuildCommand": "pnpm run build:git-sdk"
+    "beforeBuildCommand": "node scripts/run-pnpm-cli.mjs run build:git-sdk"
   },
   "bundle": {
     "createUpdaterArtifacts": false,

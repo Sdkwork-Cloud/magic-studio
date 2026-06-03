@@ -1,0 +1,15 @@
+[sdk-compliance] scanned target files: 1882
+[sdk-compliance] total violations: 7
+[sdk-compliance] baseline entries: 0
+[sdk-compliance] new violations: 7
+[sdk-compliance] fixed since baseline: 0
+
+[new violations]
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:177:MANUAL_AUTH_HEADER
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:271:FETCH_BACKEND
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:367:FETCH_BACKEND
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:392:FETCH_BACKEND
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:538:FETCH_BACKEND
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:573:FETCH_BACKEND
+apps/sdkwork-chat-pc-react/packages/sdkwork-openchat-pc-commons/src/services/file.service.ts:611:FETCH_BACKEND
+

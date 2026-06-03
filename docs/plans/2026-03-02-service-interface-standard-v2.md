@@ -27,7 +27,7 @@ Status: Iteration Passed (v2.7 candidate, pending policy confirmation)
 
 4. Infrastructure exceptions
 - Allowed direct platform interaction:
-  - `packages/sdkwork-react-core/src/platform/**`
+  - `packages/sdkwork-magic-studio-core/src/platform/**`
   - `packages/sdkwork-app-sdk-typescript/**`
 - These are boundary adapters by design.
 
@@ -111,7 +111,7 @@ Enforcement:
 
 1. Is it acceptable to force `Promise<ServiceResult<T>>` even for pure capability checks (for example `hasNativeImportCapability`), or should those stay `Promise<boolean>` to reduce wrapper overhead?
 2. Should `src/services` be mandatory for every package, or exempt pure type/sdk boundary packages?
-3. Should infra exceptions remain limited to `react-core/platform` and `app-sdk-typescript`, or broaden to other boundary packages?
+3. Should infra exceptions remain limited to `magic-studio-core/platform` and `app-sdk-typescript`, or broaden to other boundary packages?
 4. Should package root `src/index.ts` always re-export `./services` to guarantee SDK-side injection entry points?
 5. Should service-bearing package contracts force both `src/services/index.ts` export and root `src/index.ts` re-export, or allow internal-only service modules in special cases?
 6. Should enforcement artifacts (`scripts/audit-service-encapsulation.mjs`, standards docs, audit reports) be tracked in VCS by default?

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Minus, Square, X } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from 'sdkwork-magic-studio-core';
 
 const WindowControls: React.FC = () => {
   const handleMinimize = () => platform.minimizeWindow();

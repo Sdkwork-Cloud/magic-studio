@@ -1,0 +1,147 @@
+{
+  "name": "@sdkwork/magic-studio-core",
+  "version": "0.1.0",
+  "description": "Core functionality module package for Magic Studio - routing, state management, platform abstraction, event bus, and AI services",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./router": {
+      "import": "./src/router/index.ts",
+      "types": "./src/router/index.ts"
+    },
+    "./store": {
+      "import": "./src/store/index.ts",
+      "types": "./src/store/index.ts"
+    },
+    "./eventBus": {
+      "import": "./src/eventBus/index.ts",
+      "types": "./src/eventBus/index.ts"
+    },
+    "./platform": {
+      "import": "./src/platform/index.ts",
+      "types": "./src/platform/index.ts"
+    },
+    "./services": {
+      "import": "./src/services/index.ts",
+      "types": "./src/services/index.ts"
+    },
+    "./storage": {
+      "import": "./src/storage/index.ts",
+      "types": "./src/storage/index.ts"
+    },
+    "./ai": {
+      "import": "./src/ai/index.ts",
+      "types": "./src/ai/index.ts"
+    },
+    "./utils": {
+      "import": "./src/utils/index.ts",
+      "types": "./src/utils/index.ts"
+    },
+    "./sdk": {
+      "import": "./src/sdk/index.ts",
+      "types": "./src/sdk/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "node ../../scripts/run-package-vite-build.mjs --watch",
+    "build": "node ../../scripts/run-package-typecheck.mjs tsconfig.json && node ../../scripts/run-package-vite-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "zustand": "^5.0.0",
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-notification": "^2.0.0",
+    "@tauri-apps/plugin-opener": "^2.0.0",
+    "@tauri-apps/plugin-os": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0",
+    "@tauri-apps/plugin-store": "^2.0.0",
+    "@tauri-apps/plugin-updater": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zustand": {
+      "optional": true
+    },
+    "@tauri-apps/api": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-clipboard-manager": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-dialog": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-notification": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-opener": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-os": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-process": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-store": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-updater": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@google/genai": "catalog:",
+    "@sdkwork/app-sdk": "workspace:*",
+    "@sdkwork/core-pc-react": "workspace:*",
+    "@sdkwork/magic-studio-server": "workspace:*",
+    "@sdkwork/magic-studio-types": "workspace:*",
+    "@sdkwork/magic-studio-fs": "workspace:*",
+    "@sdkwork/magic-studio-commons": "workspace:*"
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-clipboard-manager": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-notification": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:",
+    "@tauri-apps/plugin-os": "catalog:",
+    "@tauri-apps/plugin-process": "catalog:",
+    "@tauri-apps/plugin-store": "catalog:",
+    "@tauri-apps/plugin-updater": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "zustand": "catalog:"
+  },
+  "keywords": [
+    "magic-studio",
+    "core",
+    "router",
+    "state",
+    "platform",
+    "ai",
+    "sdkwork"
+  ],
+  "author": "SDKWork",
+  "license": "MIT",
+  "private": true
+}

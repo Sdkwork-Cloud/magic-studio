@@ -9,7 +9,7 @@ const mockUseMagicCutStore = vi.fn();
 
 let mockPlatformMode: 'web' | 'desktop' = 'desktop';
 
-vi.mock('@sdkwork/react-core', () => ({
+vi.mock('@sdkwork/magic-studio-core', () => ({
   ROUTES: {
     PORTAL: '/portal',
     CANVAS: '/canvas',
@@ -21,20 +21,20 @@ vi.mock('@sdkwork/react-core', () => ({
   },
 }));
 
-vi.mock('@sdkwork/react-i18n', () => ({
+vi.mock('@sdkwork/magic-studio-i18n', () => ({
   useTranslation: () => mockUseTranslation(),
 }));
 
-vi.mock('@sdkwork/react-workspace', () => ({
+vi.mock('@sdkwork/magic-studio-workspace/components', () => ({
   WorkspaceProjectSelector: () =>
     React.createElement('div', { 'data-testid': 'workspace-selector' }, 'WorkspaceSelector'),
 }));
 
-vi.mock('@sdkwork/react-magiccut', () => ({
+vi.mock('@sdkwork/magic-studio-magiccut/store', () => ({
   useMagicCutStore: () => mockUseMagicCutStore(),
 }));
 
-vi.mock('@sdkwork/react-commons', () => ({
+vi.mock('@sdkwork/magic-studio-commons', () => ({
   WindowControls: () =>
     React.createElement('div', { 'data-testid': 'window-controls' }, 'Minimize Maximize Close'),
 }));

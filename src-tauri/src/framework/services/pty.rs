@@ -4,7 +4,7 @@ use tauri::Window;
 
 use crate::framework::error::{FrameworkError, FrameworkResult};
 use crate::framework::services::{NativeSystemService, SystemService};
-use crate::pty::PtyState;
+use crate::shell::PtyState;
 
 pub trait PtyService: Send + Sync {
     fn create(
@@ -22,7 +22,6 @@ pub trait PtyService: Send + Sync {
     fn kill(&self, pid: String) -> FrameworkResult<()>;
     fn sync(&self, window_label: String, active_ids: Vec<String>) -> FrameworkResult<()>;
     fn kill_all(&self) -> FrameworkResult<()>;
-    fn check_executable(&self, name: String) -> FrameworkResult<bool>;
 }
 
 impl PtyService for PtyState {
@@ -76,9 +75,5 @@ impl PtyService for PtyState {
     fn kill_all(&self) -> FrameworkResult<()> {
         self.kill_all()
             .map_err(|error| FrameworkError::new("PTY_KILL_ALL_FAILED", error))
-    }
-
-    fn check_executable(&self, name: String) -> FrameworkResult<bool> {
-        NativeSystemService::default().command_exists(name)
     }
 }

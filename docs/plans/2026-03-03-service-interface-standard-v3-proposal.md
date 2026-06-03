@@ -1,4 +1,4 @@
-﻿# Service Interface Standard v3 (Proposal)
+# Service Interface Standard v3 (Proposal)
 
 Date: 2026-03-03
 Status: Proposed (waiting for policy confirmation)
@@ -33,19 +33,19 @@ The following should be treated as service-boundary interactions in v3:
 ## 3. Recursive scan snapshot (2026-03-03)
 
 Examples of uncovered interaction usage outside service layer were found in modules including:
-- `sdkwork-react-canvas`
-- `sdkwork-react-film`
-- `sdkwork-react-audio`
-- `sdkwork-react-voicespeaker`
-- `sdkwork-react-editor`
-- `sdkwork-react-prompt`
-- `sdkwork-react-portal-video`
-- `sdkwork-react-drive`
-- `sdkwork-react-settings`
-- `sdkwork-react-skills`
-- `sdkwork-react-magiccut`
-- `sdkwork-react-image`
-- `sdkwork-react-commons`
+- `sdkwork-magic-studio-canvas`
+- `sdkwork-magic-studio-film`
+- `sdkwork-magic-studio-audio`
+- `sdkwork-magic-studio-voicespeaker`
+- `sdkwork-magic-studio-editor`
+- `sdkwork-magic-studio-prompt`
+- `sdkwork-magic-studio-portal-video`
+- `sdkwork-magic-studio-drive`
+- `sdkwork-magic-studio-settings`
+- `sdkwork-magic-studio-skills`
+- `sdkwork-magic-studio-magiccut`
+- `sdkwork-magic-studio-image`
+- `sdkwork-magic-studio-commons`
 
 These are policy blind spots under v2, not necessarily implementation bugs.
 

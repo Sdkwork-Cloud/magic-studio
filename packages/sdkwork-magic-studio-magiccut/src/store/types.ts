@@ -1,0 +1,90 @@
+
+import { CutTimeline, CutTrack, CutClip, CutLayer } from '../entities';
+import type { UnifiedDigitalAsset } from '@sdkwork/magic-studio-types/asset-center';
+import type { AnyMediaResource } from '@sdkwork/magic-studio-types/media';
+import type { ProjectGraphDocument } from '@sdkwork/magic-studio-types/project-graph';
+import type { MediaResourceType } from '@sdkwork/magic-studio-types/vocabulary';
+import type { ResourceDropPreview } from '../domain/dnd/dropPreview';
+import type { LinkedClipMove } from '../domain/timeline/linkedMove';
+import type { MagicCutTimelineResourceView } from '../domain/assets/magicCutAssetState';
+
+export interface NormalizedState {
+    assets: Record<string, UnifiedDigitalAsset>;
+    resourceViews: Record<string, MagicCutTimelineResourceView>;
+    resources: Record<string, AnyMediaResource>;
+    timelines: Record<string, CutTimeline>;
+    tracks: Record<string, CutTrack>;
+    clips: Record<string, CutClip>;
+    layers: Record<string, CutLayer>;
+    projectGraph?: ProjectGraphDocument;
+}
+
+export type EditTool = 'select' | 'trim' | 'ripple' | 'roll' | 'slip' | 'slide' | 'razor';
+
+export type InteractionType = 'move' | 'trim-start' | 'trim-end' | 'idle' | 'marquee' | 'select-region' | 'ripple-trim' | 'roll-trim' | 'slip-trim' | 'slide-trim' | 'razor-cut';
+
+export interface MarqueeState {
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+    startTime: number;
+    endTime: number;
+    trackIds: string[];
+}
+
+export interface InteractionState {
+    type: InteractionType;
+    clipId: string | null;       
+    initialX: number;            
+    initialY: number;            
+    initialStartTime: number;    
+    initialDuration: number;     
+    initialTrackId: string;      
+    initialOffset: number;       
+    currentTrackId: string | null; 
+    currentTime: number; 
+    isSnapping: boolean;
+    snapLines: number[]; 
+    validDrop: boolean;
+    hasCollision: boolean;
+    insertTrackIndex: number | null;
+    marqueeStart?: { x: number, y: number };
+    marqueeCurrent?: { x: number, y: number };
+    marquee?: MarqueeState;
+    editTool?: EditTool;
+    razorTime?: number;
+    trimEdge?: 'start' | 'end';
+    dropPreview?: ResourceDropPreview;
+    linkedMoves?: LinkedClipMove[];
+}
+
+export interface DragOperation {
+    type: 'resource';
+    payload: AnyMediaResource; 
+    resourceType: MediaResourceType; 
+    duration: number; 
+    ghostWidth: number; 
+    initialX?: number;
+    initialY?: number;
+}
+
+export interface SelectionState {
+    selectedClipIds: Set<string>;
+    selectedTrackId: string | null;
+    lastSelectedClipId: string | null;
+    selectionAnchorTime: number | null;
+}
+
+export interface ClipLink {
+    id: string;
+    linkedClipIds: Set<string>;
+    linkType: 'video-audio' | 'group';
+}
+
+export interface EditModeState {
+    currentTool: EditTool;
+    rippleMode: boolean;
+    linkedSelection: boolean;
+}
+

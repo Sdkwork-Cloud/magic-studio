@@ -7,11 +7,11 @@ Make `magic-studio-v2` behave like a polished desktop application when running i
 ## Current State
 
 - The project already contains a functional `src-tauri/` host and can produce a Windows NSIS installer.
-- Desktop detection exists in `packages/sdkwork-react-core/src/platform/platform.ts`, but desktop-aware UX rules are not consistently applied across layouts.
+- Desktop detection exists in `packages/sdkwork-magic-studio-core/src/platform/platform.ts`, but desktop-aware UX rules are not consistently applied across layouts.
 - The current Tauri configuration is split between development and production:
   - `src-tauri/tauri.conf.json` uses a frameless transparent window.
   - `src-tauri/tauri.prod.conf.json` uses standard decorations and overlay title bar.
-- Sidebar entries are driven by `packages/sdkwork-react-settings/src/constants.ts`, so desktop-only visibility rules are not centralized.
+- Sidebar entries are driven by `packages/sdkwork-magic-studio-settings/src/constants.ts`, so desktop-only visibility rules are not centralized.
 - The existing `WindowControls` component is a basic static control cluster and does not yet provide a professional desktop title bar experience.
 
 ## Design Principles
@@ -36,7 +36,7 @@ The main target for this iteration is a refined Windows desktop experience. The 
 
 ### Frontend Platform Layer
 
-Keep `@sdkwork/react-core` as the platform contract owner and runtime selector.
+Keep `@sdkwork/magic-studio-core` as the platform contract owner and runtime selector.
 
 Add or refine platform APIs so the UI can consume:
 

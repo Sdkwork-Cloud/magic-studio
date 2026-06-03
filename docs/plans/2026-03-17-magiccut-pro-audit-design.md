@@ -4,7 +4,7 @@
 
 ## Goal
 
-Bring `packages/sdkwork-react-magiccut` closer to an AI-era professional editing baseline by fixing the highest-leverage workflow, interaction, and performance problems while documenting the remaining product gaps against leading editors.
+Bring `packages/sdkwork-magic-studio-magiccut` closer to an AI-era professional editing baseline by fixing the highest-leverage workflow, interaction, and performance problems while documenting the remaining product gaps against leading editors.
 
 ## Benchmark Signals
 
@@ -24,14 +24,14 @@ These products differ in market position, but they agree on a few baseline expec
 
 ## Current State Summary
 
-`@sdkwork/react-magiccut` already has strong structural ambition:
+`@sdkwork/magic-studio-magiccut` already has strong structural ambition:
 
 - Multi-panel editing layout with resource browser, player, timeline, properties, export, templates, and AI generators.
 - WebGL-based preview path, offline export path, and domain-driven timeline logic.
 - Voice generation and script-driven caption cue generation.
 - Rich shortcut manifest, edit tools, minimap, snapping, skimming, and linked selection.
 
-The biggest quality problems are not “missing everything”; they are inconsistent finishing around critical workflows:
+The biggest quality problems are not “missing everything�? they are inconsistent finishing around critical workflows:
 
 - Professional J/K/L transport exists in `PlayerController` but is not wired through the active shortcut layer.
 - Resource browser fetching is coupled to `state.resources`, which can cause unnecessary remote reloads when local editor state changes.
@@ -100,9 +100,9 @@ Use TDD for every behavior change:
 
 Minimum required verification before claiming success:
 
-- `pnpm --filter @sdkwork/react-magiccut test`
-- `pnpm --filter @sdkwork/react-magiccut typecheck`
-- `pnpm --filter @sdkwork/react-magiccut build`
+- `pnpm --filter @sdkwork/magic-studio-magiccut test`
+- `pnpm --filter @sdkwork/magic-studio-magiccut typecheck`
+- `pnpm --filter @sdkwork/magic-studio-magiccut build`
 
 ## Remaining Product Gaps After This Pass
 

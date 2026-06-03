@@ -1,0 +1,657 @@
+
+import React, { useCallback, useRef, useState } from 'react';
+import {
+    Scissors, Trash2, MousePointer2, Magnet, ScanLine,
+    Undo, Redo, ArrowLeftToLine, ArrowRightToLine, MapPin, Minimize2, ZoomIn, ZoomOut,
+    Sparkles, Film, Mic, AudioWaveform, Music,
+    ArrowRightLeft, MoveHorizontal, GitBranch, Eraser, Slice, Link2
+} from 'lucide-react';
+import type { GenerationResultSelection } from '@sdkwork/magic-studio-assets/generation';
+import { useMagicCutStore } from '../../store/magicCutStore';
+import { useMagicCutBus } from '../../providers/MagicCutEventProvider';
+import { MagicCutEvents, ZoomPayload, TimelineAddClipPayload } from '../../events';
+import { ImageGeneratorModal } from '@sdkwork/magic-studio-image/modals';
+import { VideoGeneratorModal } from '@sdkwork/magic-studio-video/modals';
+import { AudioGeneratorModal } from '@sdkwork/magic-studio-audio/modals';
+import { SfxGeneratorModal } from '@sdkwork/magic-studio-sfx/modals';
+import { MusicGeneratorModal } from '@sdkwork/magic-studio-music/modals';
+import { TIMELINE_CONSTANTS } from '../../constants';
+import { useMagicCutTranslation } from '../../hooks/useMagicCutTranslation';
+import { resolveMagicCutGeneratedSelectionResource } from '../../utils/generatedSelectionImport';
+
+// --- Constants & Math Helpers ---
+const LOG_MIN = Math.log(TIMELINE_CONSTANTS.MIN_ZOOM);
+const LOG_MAX = Math.log(TIMELINE_CONSTANTS.MAX_ZOOM);
+const SCALE_RANGE = LOG_MAX - LOG_MIN;
+
+// Convert Zoom Level (Real World) -> Slider Value (0-100)
+const zoomToSlider = (zoom: number) => {
+    const logZoom = Math.log(zoom);
+    const percent = (logZoom - LOG_MIN) / SCALE_RANGE;
+    return Math.max(0, Math.min(100, percent * 100));
+};
+
+// Convert Slider Value (0-100) -> Zoom Level (Real World)
+const sliderToZoom = (val: number) => {
+    const percent = val / 100;
+    const logZoom = LOG_MIN + (percent * SCALE_RANGE);
+    return Math.exp(logZoom);
+};
+
+// --- Custom High-Performance Zoom Control ---
+const ZoomSlider: React.FC<{
+    currentZoom: number;
+    onZoomChange: (level: number) => void;
+    title: string;
+}> = ({ currentZoom, onZoomChange, title }) => {
+    // Local state for buttery smooth UI updates, independent of parent render cycles
+    const [localValue, setLocalValue] = useState(zoomToSlider(currentZoom));
+    const [isDragging, setIsDragging] = useState(false);
+    const effectiveLocalValue = isDragging ? localValue : zoomToSlider(currentZoom);
+
+    // Refs for drag logic
+    const containerRef = useRef<HTMLDivElement>(null);
+    const startX = useRef(0);
+    const startVal = useRef(0);
+    const rafRef = useRef<number | null>(null);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setIsDragging(true);
+        startX.current = e.clientX;
+        startVal.current = effectiveLocalValue;
+
+        // Critical UX: Lock cursor globally
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+
+        const handleMouseMove = (ev: MouseEvent) => {
+            if (!containerRef.current) return;
+
+            const rect = containerRef.current.getBoundingClientRect();
+            const width = rect.width;
+            const dx = ev.clientX - startX.current;
+
+            // Calculate delta percentage based on pixel movement
+            // Adding Shift key support for precision zooming
+            const sensitivity = ev.shiftKey ? 0.2 : 1.0;
+            const deltaPercent = (dx / width) * 100 * sensitivity;
+
+            let newValue = startVal.current + deltaPercent;
+            newValue = Math.max(0, Math.min(100, newValue));
+
+            // 1. Update Visuals Immediately (60fps)
+            setLocalValue(newValue);
+
+            // 2. Throttle the expensive Event Emission using RAF
+            if (rafRef.current === null) {
+                rafRef.current = requestAnimationFrame(() => {
+                    onZoomChange(sliderToZoom(newValue));
+                    rafRef.current = null;
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+
+            // Reset cursor
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+
+            // Cleanup listeners
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+
+            // Cleanup RAF
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+            }
+
+            // Ensure final value is committed
+            // We use the state-setter version to get the latest value closure isn't an issue here usually but safe practice
+            setLocalValue(prev => {
+                onZoomChange(sliderToZoom(prev));
+                return prev;
+            });
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    // Reset on double click
+    const handleDoubleClick = () => {
+        const defaultVal = zoomToSlider(1.0); // 100% zoom
+        setLocalValue(defaultVal);
+        onZoomChange(1.0);
+    };
+
+    return (
+        <div
+            className="group relative w-28 h-4 flex items-center cursor-ew-resize select-none"
+            ref={containerRef}
+            onMouseDown={handleMouseDown}
+            onDoubleClick={handleDoubleClick}
+            title={title}
+        >
+            {/* Track Background */}
+            <div className="absolute left-0 right-0 h-1 bg-[#27272a] rounded-full overflow-hidden pointer-events-none group-hover:bg-[#333] transition-colors">
+                {/* Active Fill */}
+                <div
+                    className={`h-full bg-blue-600 transition-all duration-75 ease-linear ${isDragging ? 'bg-blue-500' : ''}`}
+                    style={{ width: `${effectiveLocalValue}%` }}
+                />
+            </div>
+
+            {/* Thumb / Handle */}
+            <div
+                className={`
+                    absolute top-1/2 -translate-y-1/2 h-3 w-3 
+                    bg-[#e4e4e7] rounded-full shadow-md z-10 
+                    border border-[#52525b] 
+                    transform transition-transform duration-75 ease-out
+                    ${isDragging ? 'scale-125 bg-white border-blue-400 cursor-grabbing' : 'scale-100 group-hover:scale-110 cursor-ew-resize'}
+                `}
+                style={{
+                    left: `${effectiveLocalValue}%`,
+                    transform: 'translate(-50%, -50%)'
+                }}
+            />
+
+            {/* Invisible Hit Area expansion for easier grabbing */}
+            <div className="absolute inset-0 -top-2 -bottom-2 bg-transparent z-20 cursor-ew-resize" />
+        </div>
+    );
+};
+
+// --- Custom Toolbar Button Component ---
+const ToolbarButton: React.FC<{
+    onClick?: () => void;
+    icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+    title: string;
+    disabled?: boolean;
+    isActive?: boolean;
+    hoverColor?: string;
+    activeColor?: string;
+}> = ({ onClick, icon: Icon, title, disabled, isActive, hoverColor, activeColor }) => (
+    <button
+        onClick={onClick}
+        disabled={disabled}
+        title={title}
+        className={`
+            p-1.5 rounded-md transition-all duration-200 flex items-center justify-center
+            ${disabled ? 'text-gray-600 cursor-not-allowed opacity-50' : ''}
+            ${!disabled && !isActive ? `text-gray-400 hover:bg-[#27272a] hover:shadow-sm ${hoverColor || 'hover:text-white'}` : ''}
+            ${isActive ? (activeColor || 'bg-[#27272a] text-white shadow-inner') : ''}
+            active:scale-95
+        `}
+    >
+        <Icon size={14} strokeWidth={2} />
+    </button>
+);
+
+export const MagicCutTimelineToolbar: React.FC = React.memo(() => {
+    const bus = useMagicCutBus();
+    const { t, tc, tl } = useMagicCutTranslation();
+    const [showImageGen, setShowImageGen] = useState(false);
+    const [showVideoGen, setShowVideoGen] = useState(false);
+    const [showAudioGen, setShowAudioGen] = useState(false);
+    const [showSfxGen, setShowSfxGen] = useState(false);
+    const [showMusicGen, setShowMusicGen] = useState(false);
+
+    // Only subscribe to state needed for rendering (Selection, Enablement)
+    const {
+        isSnappingEnabled,
+        isSkimmingEnabled,
+        canUndo,
+        canRedo,
+        selectedClipId,
+        selectedTrackId,
+        state,
+        store,
+        useTransientState
+    } = useMagicCutStore();
+
+    const zoomLevel = useTransientState(s => s.zoomLevel);
+    const editMode = useTransientState(s => s.editMode);
+    const setEditTool = store.getState().setEditTool;
+    const toggleLinkedSelection = store.getState().toggleLinkedSelection;
+
+    const hasSelection = !!selectedClipId;
+
+    const selectedTrack = selectedTrackId ? state.tracks[selectedTrackId] : null;
+    const trackType = selectedTrack?.trackType;
+
+    const isVisualTrack = trackType === 'video' || trackType === 'ai';
+    const isAudioTrack = trackType === 'audio';
+    const aiLabels = {
+        image: t('toolbar.ai.image'),
+        video: t('toolbar.ai.video'),
+        speech: t('toolbar.ai.speech'),
+        sfx: t('toolbar.ai.sfx'),
+        music: t('toolbar.ai.music'),
+    };
+    const withShortcut = (label: string, shortcut: string) => `${label} (${shortcut})`;
+
+    const getVisualTooltip = (action: string) => {
+        if (!selectedTrackId) return t('toolbar.messages.selectTrackFirst');
+        if (!isVisualTrack) return t('toolbar.messages.cannotGenerateVisualOnAudio', { action });
+        return t('toolbar.messages.generateAtPlayhead', { action });
+    };
+
+    const getAudioTooltip = (action: string) => {
+        if (!selectedTrackId) return t('toolbar.messages.selectTrackFirst');
+        if (!isAudioTrack) return t('toolbar.messages.cannotGenerateAudioOnVideo', { action });
+        return t('toolbar.messages.generateAtPlayhead', { action });
+    };
+
+    // --- Action Handlers (Pure Event Emitters) ---
+
+    const handleUndo = () => bus.emit(MagicCutEvents.HISTORY_UNDO);
+    const handleRedo = () => bus.emit(MagicCutEvents.HISTORY_REDO);
+
+    const handleSplit = () => bus.emit(MagicCutEvents.CLIP_SPLIT);
+    const handleDelete = () => bus.emit(MagicCutEvents.CLIP_DELETE);
+    const handleTrimStart = () => bus.emit(MagicCutEvents.CLIP_TRIM_START);
+    const handleTrimEnd = () => bus.emit(MagicCutEvents.CLIP_TRIM_END);
+    const handleAddMarker = () => bus.emit(MagicCutEvents.TIMELINE_ADD_MARKER);
+
+    const handleToggleSnap = () => bus.emit(MagicCutEvents.TIMELINE_SNAP_TOGGLE);
+    const handleToggleSkim = () => bus.emit(MagicCutEvents.TIMELINE_SKIMMING_TOGGLE);
+    const handleFit = () => bus.emit(MagicCutEvents.VIEW_FIT);
+
+    const handleZoomChange = useCallback((level: number) => {
+        const safeLevel = Math.max(TIMELINE_CONSTANTS.MIN_ZOOM, Math.min(TIMELINE_CONSTANTS.MAX_ZOOM, level));
+        bus.emit<ZoomPayload>(MagicCutEvents.VIEW_ZOOM, { level: safeLevel });
+    }, [bus]);
+
+    const stepZoom = (direction: -1 | 1) => {
+        const currentSliderVal = zoomToSlider(zoomLevel);
+        const stepSize = 10;
+        const newSliderVal = currentSliderVal + (direction * stepSize);
+        handleZoomChange(sliderToZoom(newSliderVal));
+    };
+
+    // --- AI Generation Callbacks (Decoupled) ---
+
+    const emitAddClip = (resource: any, duration: number) => {
+        if (!selectedTrackId) return;
+        const currentT = store.getState().currentTime; // Use live time from store
+        bus.emit<TimelineAddClipPayload>(MagicCutEvents.TIMELINE_ADD_CLIP, {
+            trackId: selectedTrackId,
+            resource,
+            start: currentT,
+            duration
+        });
+    };
+
+    const handleImageGenSuccess = async (selection: GenerationResultSelection) => {
+        try {
+            if (!selectedTrackId) return;
+            const duration = 5;
+            const resource = await resolveMagicCutGeneratedSelectionResource({
+                selection,
+                type: 'image',
+                name: `magiccut_ai_image_${Date.now()}.png`,
+                metadata: {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration,
+                    width: 1024,
+                    height: 1024
+                },
+            });
+            emitAddClip(resource, duration);
+        } catch (error) {
+            console.error('Failed to import generated image into asset center', error);
+        } finally {
+            setShowImageGen(false);
+        }
+    };
+
+    const handleVideoGenSuccess = async (selection: GenerationResultSelection) => {
+        try {
+            if (!selectedTrackId) return;
+            const duration = selection.duration || 5;
+            const resource = await resolveMagicCutGeneratedSelectionResource({
+                selection,
+                type: 'video',
+                name: `magiccut_ai_video_${Date.now()}.mp4`,
+                metadata: {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration,
+                    width: 1280,
+                    height: 720
+                },
+            });
+            emitAddClip(resource, duration);
+        } catch (error) {
+            console.error('Failed to import generated video into asset center', error);
+        } finally {
+            setShowVideoGen(false);
+        }
+    };
+
+    const handleAudioGenSuccess = async (selection: GenerationResultSelection) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = selection.duration || 10;
+            const resource = await resolveMagicCutGeneratedSelectionResource({
+                selection,
+                type: 'audio',
+                name: `magiccut_ai_speech_${Date.now()}.wav`,
+                metadata: {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                },
+            });
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated speech into asset center', error);
+        } finally {
+            setShowAudioGen(false);
+        }
+    };
+
+    const handleSfxGenSuccess = async (selection: GenerationResultSelection) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = selection.duration || 5;
+            const resource = await resolveMagicCutGeneratedSelectionResource({
+                selection,
+                type: 'sfx',
+                name: `magiccut_ai_sfx_${Date.now()}.wav`,
+                metadata: {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                },
+            });
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated sfx into asset center', error);
+        } finally {
+            setShowSfxGen(false);
+        }
+    };
+
+    const handleMusicGenSuccess = async (selection: GenerationResultSelection) => {
+        try {
+            if (!selectedTrackId) return;
+            const clipDuration = selection.duration || 120;
+            const resource = await resolveMagicCutGeneratedSelectionResource({
+                selection,
+                type: 'music',
+                name: `magiccut_ai_music_${Date.now()}.mp3`,
+                metadata: {
+                    origin: 'ai',
+                    source: 'magiccut-timeline-toolbar',
+                    duration: clipDuration
+                },
+            });
+            emitAddClip(resource, clipDuration);
+        } catch (error) {
+            console.error('Failed to import generated music into asset center', error);
+        } finally {
+            setShowMusicGen(false);
+        }
+    };
+
+    return (
+        <>
+            <div className="h-10 border-b border-[#27272a] bg-[#09090b] flex items-center justify-between px-3 flex-none z-30 select-none shadow-sm relative">
+
+                {/* Left Tools Group */}
+                <div className="flex items-center gap-2">
+
+                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                        <ToolbarButton onClick={handleUndo} disabled={!canUndo} icon={Undo} title={withShortcut(tc('undo'), 'Ctrl+Z')} />
+                        <ToolbarButton onClick={handleRedo} disabled={!canRedo} icon={Redo} title={withShortcut(tc('redo'), 'Ctrl+Shift+Z')} />
+                    </div>
+
+                    <div className="w-[1px] h-4 bg-[#27272a]" />
+
+                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                        <ToolbarButton
+                            onClick={handleSplit}
+                            icon={Scissors}
+                            title={withShortcut(tl('splitClip'), 'Ctrl+B')}
+                            disabled={!hasSelection}
+                            hoverColor="hover:text-blue-400"
+                        />
+                        <ToolbarButton
+                            onClick={handleTrimStart}
+                            icon={ArrowLeftToLine}
+                            title={withShortcut(tl('trimStartToPlayhead'), 'Q')}
+                            disabled={!hasSelection}
+                        />
+                        <ToolbarButton
+                            onClick={handleTrimEnd}
+                            icon={ArrowRightToLine}
+                            title={withShortcut(tl('trimEndToPlayhead'), 'W')}
+                            disabled={!hasSelection}
+                        />
+                        <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
+                        <ToolbarButton
+                            onClick={handleDelete}
+                            icon={Trash2}
+                            title={withShortcut(t('shortcuts.delete'), 'Del')}
+                            hoverColor="hover:text-red-400"
+                            disabled={!hasSelection}
+                        />
+                    </div>
+
+                    <div className="w-[1px] h-4 bg-[#27272a]" />
+
+                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                        <ToolbarButton
+                            onClick={() => setEditTool('select')}
+                            icon={MousePointer2}
+                            title={withShortcut(t('shortcuts.toolSelect'), 'V')}
+                            isActive={editMode.currentTool === 'select'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('trim')}
+                            icon={Scissors}
+                            title={withShortcut(t('shortcuts.toolTrim'), 'T')}
+                            isActive={editMode.currentTool === 'trim'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('ripple')}
+                            icon={GitBranch}
+                            title={withShortcut(t('shortcuts.toolRipple'), 'R')}
+                            isActive={editMode.currentTool === 'ripple'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('roll')}
+                            icon={ArrowRightLeft}
+                            title={withShortcut(t('shortcuts.toolRoll'), 'E')}
+                            isActive={editMode.currentTool === 'roll'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('slip')}
+                            icon={MoveHorizontal}
+                            title={withShortcut(t('shortcuts.toolSlip'), 'Y')}
+                            isActive={editMode.currentTool === 'slip'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('slide')}
+                            icon={Eraser}
+                            title={withShortcut(t('shortcuts.toolSlide'), 'U')}
+                            isActive={editMode.currentTool === 'slide'}
+                        />
+                        <ToolbarButton
+                            onClick={() => setEditTool('razor')}
+                            icon={Slice}
+                            title={withShortcut(t('shortcuts.toolRazor'), 'C')}
+                            isActive={editMode.currentTool === 'razor'}
+                        />
+                    </div>
+
+                    <div className="w-[1px] h-4 bg-[#27272a]" />
+
+                    <div className="flex items-center bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+                        <ToolbarButton
+                            onClick={handleAddMarker}
+                            icon={MapPin}
+                            title={withShortcut(tl('addMarker'), 'M')}
+                            hoverColor="hover:text-yellow-400"
+                        />
+                        <div className="w-[1px] h-3 bg-[#27272a] mx-1" />
+                        <ToolbarButton
+                            onClick={handleToggleSnap}
+                            icon={Magnet}
+                            title={withShortcut(tl('snapping'), 'N')}
+                            isActive={isSnappingEnabled}
+                            activeColor="text-blue-400 bg-blue-500/10"
+                        />
+                        <ToolbarButton
+                            onClick={handleToggleSkim}
+                            icon={ScanLine}
+                            title={withShortcut(tl('skimming'), 'S')}
+                            isActive={isSkimmingEnabled}
+                            activeColor="text-pink-400 bg-pink-500/10"
+                        />
+                        <ToolbarButton
+                            onClick={toggleLinkedSelection}
+                            icon={Link2}
+                            title={withShortcut(tl('linkedSelection'), 'Shift+L')}
+                            isActive={editMode.linkedSelection}
+                            activeColor="text-emerald-400 bg-emerald-500/10"
+                        />
+                    </div>
+                </div>
+
+                {/* Center: AI Generation Tools */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                    <button
+                        onClick={() => setShowImageGen(true)}
+                        disabled={!isVisualTrack}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            ${isVisualTrack
+                                ? 'bg-[#18181b] text-white hover:border-purple-500 hover:text-purple-400 border-[#27272a] hover:bg-[#202023]'
+                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                            }
+                        `}
+                        title={getVisualTooltip(aiLabels.image)}
+                    >
+                        <Sparkles size={12} className={isVisualTrack ? "text-purple-500" : ""} />
+                        {aiLabels.image}
+                    </button>
+
+                    <button
+                        onClick={() => setShowVideoGen(true)}
+                        disabled={!isVisualTrack}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            ${isVisualTrack
+                                ? 'bg-[#18181b] text-white hover:border-pink-500 hover:text-pink-400 border-[#27272a] hover:bg-[#202023]'
+                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                            }
+                        `}
+                        title={getVisualTooltip(aiLabels.video)}
+                    >
+                        <Film size={12} className={isVisualTrack ? "text-pink-500" : ""} />
+                        {aiLabels.video}
+                    </button>
+
+                    <button
+                        onClick={() => setShowAudioGen(true)}
+                        disabled={!isAudioTrack}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            ${isAudioTrack
+                                ? 'bg-[#18181b] text-white hover:border-emerald-500 hover:text-emerald-400 border-[#27272a] hover:bg-[#202023]'
+                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                            }
+                        `}
+                        title={getAudioTooltip(aiLabels.speech)}
+                    >
+                        <Mic size={12} className={isAudioTrack ? "text-emerald-500" : ""} />
+                        {aiLabels.speech}
+                    </button>
+
+                    <button
+                        onClick={() => setShowSfxGen(true)}
+                        disabled={!isAudioTrack}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            ${isAudioTrack
+                                ? 'bg-[#18181b] text-white hover:border-orange-500 hover:text-orange-400 border-[#27272a] hover:bg-[#202023]'
+                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                            }
+                        `}
+                        title={getAudioTooltip(aiLabels.sfx)}
+                    >
+                        <AudioWaveform size={12} className={isAudioTrack ? "text-orange-500" : ""} />
+                        {aiLabels.sfx}
+                    </button>
+
+                    <button
+                        onClick={() => setShowMusicGen(true)}
+                        disabled={!isAudioTrack}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm border
+                            ${isAudioTrack
+                                ? 'bg-[#18181b] text-white hover:border-indigo-500 hover:text-indigo-400 border-[#27272a] hover:bg-[#202023]'
+                                : 'bg-[#18181b] text-gray-600 cursor-not-allowed border-[#27272a]'
+                            }
+                        `}
+                        title={getAudioTooltip(aiLabels.music)}
+                    >
+                        <Music size={12} className={isAudioTrack ? "text-indigo-500" : ""} />
+                        {aiLabels.music}
+                    </button>
+                </div>
+
+                {/* Right Zoom Controls */}
+                <div className="flex items-center gap-3 pr-1">
+                    <button
+                        onClick={handleFit}
+                        className="flex items-center justify-center p-1.5 hover:bg-[#18181b] rounded-md text-gray-400 hover:text-white transition-colors border border-transparent hover:border-[#27272a]"
+                        title={withShortcut(tl('fitToView'), 'Shift+Z')}
+                    >
+                        <Minimize2 size={14} />
+                    </button>
+
+                    <div className="flex items-center bg-[#18181b] rounded-md border border-[#27272a] px-2 py-1 gap-2 h-7">
+                        <button
+                            onClick={() => stepZoom(-1)}
+                            className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
+                            title={tl('zoomOut')}
+                        >
+                            <ZoomOut size={13} />
+                        </button>
+
+                        <ZoomSlider
+                            currentZoom={zoomLevel}
+                            onZoomChange={handleZoomChange}
+                            title={tl('zoomTimelineHelp')}
+                        />
+
+                        <button
+                            onClick={() => stepZoom(1)}
+                            className="text-gray-500 hover:text-white transition-colors p-0.5 rounded hover:bg-[#27272a] active:scale-95"
+                            title={tl('zoomIn')}
+                        >
+                            <ZoomIn size={13} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {showImageGen && <ImageGeneratorModal onClose={() => setShowImageGen(false)} onSuccess={handleImageGenSuccess} />}
+            {showVideoGen && <VideoGeneratorModal onClose={() => setShowVideoGen(false)} onSuccess={handleVideoGenSuccess} />}
+            {showAudioGen && <AudioGeneratorModal onClose={() => setShowAudioGen(false)} onSuccess={handleAudioGenSuccess} />}
+            {showSfxGen && <SfxGeneratorModal onClose={() => setShowSfxGen(false)} onSuccess={handleSfxGenSuccess} />}
+            {showMusicGen && <MusicGeneratorModal onClose={() => setShowMusicGen(false)} onSuccess={handleMusicGenSuccess} />}
+        </>
+    );
+});

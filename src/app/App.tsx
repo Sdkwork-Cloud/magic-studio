@@ -1,24 +1,43 @@
 
-import { useRouter } from '@sdkwork/react-core'
-import { useTranslation } from '@sdkwork/react-i18n';
-import React, { Suspense, useEffect, useMemo } from 'react';
+import { useRouter } from '@sdkwork/magic-studio-core/router'
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { AppProvider } from './AppProvider';
-;
 import { bootstrap } from './bootstrap';
 import { APP_ROUTES } from '../router/registry';
 import { scheduleRoutePreload } from '../router/routePreload';
-
-import { MainLayout } from '../layouts/MainLayout/MainLayout';
-import { GenerationLayout } from '../layouts/GenerationLayout/GenerationLayout';
-import { CreationLayout } from '../layouts/CreationLayout/CreationLayout';
-import { VibeLayout } from '../layouts/VibeLayout/VibeLayout';
-import { MagicCutLayout } from '../layouts/MagicCutLayout/MagicCutLayout';
-import { NotesLayout } from '../layouts/NotesLayout/NotesLayout';
+import { matchRoutePath } from '../router/routeMatching';
 import { BlankLayout } from '../layouts/BlankLayout/BlankLayout';
 
 const DEFAULT_LAYOUT = 'blank';
+type AppLayoutProps = {
+  children: React.ReactNode;
+  leftPane?: React.ComponentType<any>;
+};
 
-const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.ReactNode; leftPane?: React.ComponentType<any> }>> = {
+const NoneLayout: React.FC<AppLayoutProps> = ({
+  children,
+}) => <>{children}</>;
+const MainLayout = lazy(() => import('../layouts/MainLayout/MainLayout').then((module) => ({
+  default: module.MainLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+const GenerationLayout = lazy(() => import('../layouts/GenerationLayout/GenerationLayout').then((module) => ({
+  default: module.GenerationLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+const CreationLayout = lazy(() => import('../layouts/CreationLayout/CreationLayout').then((module) => ({
+  default: module.CreationLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+const VibeLayout = lazy(() => import('../layouts/VibeLayout/VibeLayout').then((module) => ({
+  default: module.VibeLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+const NotesLayout = lazy(() => import('../layouts/NotesLayout/NotesLayout').then((module) => ({
+  default: module.NotesLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+const MagicCutLayout = lazy(() => import('../layouts/MagicCutLayout/MagicCutLayout').then((module) => ({
+  default: module.MagicCutLayout,
+}))) as unknown as React.ComponentType<AppLayoutProps>;
+
+const LAYOUT_COMPONENTS: Record<string, React.ComponentType<AppLayoutProps>> = {
     main: MainLayout,
     generation: GenerationLayout,
     creation: CreationLayout,
@@ -26,7 +45,7 @@ const LAYOUT_COMPONENTS: Record<string, React.ComponentType<{ children: React.Re
     'magic-cut': MagicCutLayout,
     notes: NotesLayout,
     blank: BlankLayout,
-    none: BlankLayout,
+    none: NoneLayout,
 };
 
 const RouteLoadingFallback: React.FC = () => {
@@ -41,29 +60,15 @@ const RouteLoadingFallback: React.FC = () => {
 };
 const HomePage = React.lazy(() => import('../pages/HomePage'));
 
-const matchRoute = (routePath: string, currentPath: string): { matched: boolean; params: Record<string, string> } => {
-    const routeParts = routePath.split('/');
-    const pathParts = currentPath.split('/');
-
-    if (routeParts.length !== pathParts.length) {
-        return { matched: false, params: {} };
-    }
-
-    const params: Record<string, string> = {};
-
-    for (let i = 0; i < routeParts.length; i++) {
-        const routePart = routeParts[i];
-        const pathPart = pathParts[i];
-
-        if (routePart.startsWith(':')) {
-            const paramName = routePart.slice(1);
-            params[paramName] = pathPart;
-        } else if (routePart !== pathPart) {
-            return { matched: false, params: {} };
+const resolveAppRoute = (currentPath: string) => {
+    for (const route of APP_ROUTES) {
+        const result = matchRoutePath(route.path, currentPath);
+        if (result.matched) {
+            return { route, params: result.params };
         }
     }
 
-    return { matched: true, params };
+    return { route: undefined, params: {} as Record<string, string> };
 };
 
 const AppContent: React.FC = () => {
@@ -72,15 +77,7 @@ const AppContent: React.FC = () => {
       return scheduleRoutePreload(currentPath);
   }, [currentPath]);
 
-  const { route, params } = useMemo(() => {
-      for (const r of APP_ROUTES) {
-          const result = matchRoute(r.path, currentPath);
-          if (result.matched) {
-              return { route: r, params: result.params };
-          }
-      }
-      return { route: undefined, params: {} };
-  }, [currentPath]);
+  const { route, params } = resolveAppRoute(currentPath);
 
   if (!route) {
       return (

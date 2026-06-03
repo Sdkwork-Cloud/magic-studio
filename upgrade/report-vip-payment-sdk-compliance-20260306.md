@@ -2,7 +2,7 @@
 
 ## Scope
 - App: `apps/magic-studio-v2`
-- Package: `packages/sdkwork-react-vip`
+- Package: `packages/sdkwork-magic-studio-vip`
 - Focus:
   - `src/components/PaymentModal.tsx`
   - `src/services/vipService.ts`
@@ -28,9 +28,9 @@
 
 ## Verification Evidence
 - VIP package typecheck passed:
-  - `pnpm --filter @sdkwork/react-vip typecheck`
+  - `pnpm --filter @sdkwork/magic-studio-vip typecheck`
 - Source scan shows no mock QR / direct API path / fetch-axios in VIP package source:
-  - `rg -n "api.qrserver|mockQrCode|fetch\\(|axios\\.|/app/v3/api|/api/" apps/magic-studio-v2/packages/sdkwork-react-vip/src`
+  - `rg -n "api.qrserver|mockQrCode|fetch\\(|axios\\.|/app/v3/api|/api/" apps/magic-studio-v2/packages/sdkwork-magic-studio-vip/src`
 
 ## SDK / Backend Upgrade Need
 - Missing SDK methods for this scope: none.
@@ -39,10 +39,10 @@
 
 ## Additional Hardening (Same Date)
 1. Unified SDK client entry import:
-   - `packages/sdkwork-react-vip/src/services/vipService.ts`
-   - changed `getAppSdkClientWithSession` import from `@sdkwork/react-auth` to `@sdkwork/react-core`.
+   - `packages/sdkwork-magic-studio-vip/src/services/vipService.ts`
+   - changed `getAppSdkClientWithSession` import from `@sdkwork/magic-studio-auth` to `@sdkwork/magic-studio-core`.
 2. Removed obsolete compatibility shim:
-   - deleted `packages/sdkwork-react-vip/src/types/react-auth-shim.d.ts`.
+   - deleted `packages/sdkwork-magic-studio-vip/src/types/magic-studio-auth-shim.d.ts`.
 3. Recheck:
-   - no remaining `@sdkwork/react-auth` import in `sdkwork-react-vip/src`.
-   - `pnpm --filter @sdkwork/react-vip typecheck` passed after cleanup.
+   - no remaining `@sdkwork/magic-studio-auth` import in `sdkwork-magic-studio-vip/src`.
+   - `pnpm --filter @sdkwork/magic-studio-vip typecheck` passed after cleanup.

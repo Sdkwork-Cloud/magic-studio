@@ -17,31 +17,34 @@ const { sidebarConfig } = vi.hoisted(() => ({
   ],
 }));
 
-vi.mock('@sdkwork/react-core', () => ({
+vi.mock('@sdkwork/magic-studio-core', () => ({
   useRouter: () => mockUseRouter(),
   platform: {
     getPlatform: () => mockPlatformMode,
   },
 }));
 
-vi.mock('@sdkwork/react-auth', () => ({
+vi.mock('@sdkwork/magic-studio-auth/store', () => ({
   useAuthStore: () => mockUseAuthStore(),
 }));
 
-vi.mock('@sdkwork/react-settings', () => ({
+vi.mock('@sdkwork/magic-studio-settings/store', () => ({
   useSettingsStore: () => mockUseSettingsStore(),
+}));
+
+vi.mock('@sdkwork/magic-studio-settings/constants', () => ({
   SIDEBAR_TEMPLATES: [{ config: sidebarConfig }],
 }));
 
-vi.mock('@sdkwork/react-vip', () => ({
+vi.mock('@sdkwork/magic-studio-vip/pricing-modal', () => ({
   PricingModal: () => null,
 }));
 
-vi.mock('@sdkwork/react-i18n', () => ({
+vi.mock('@sdkwork/magic-studio-i18n', () => ({
   useTranslation: () => mockUseTranslation(),
 }));
 
-vi.mock('@sdkwork/react-commons', () => ({
+vi.mock('@sdkwork/magic-studio-commons', () => ({
   getIconComponent: () => () => React.createElement('span', null, 'icon'),
 }));
 

@@ -32,7 +32,7 @@
 ## 4. 接口规范
 
 1. 外部可失败业务能力优先使用显式返回契约：
-   - `Promise<ServiceResult<T>>`（对齐现有 `@sdkwork/react-types`）。
+   - `Promise<ServiceResult<T>>`（对齐现有 `@sdkwork/magic-studio-types`）。
 2. 纯内部 helper 允许返回原始类型（如 `Promise<Uint8Array | undefined>`），但必须在 service 文件中定义与导出。
 3. 不允许 `any` 暴露到公共 service API（仅可在适配边界做最小化收敛）。
 
@@ -44,7 +44,7 @@
    - `navigator.clipboard`
    - `@tauri-apps/api/core.invoke(...)`
 2. 基础设施例外（允许保留）：
-   - `@sdkwork/react-core/src/platform/web.ts`
+   - `@sdkwork/magic-studio-core/src/platform/web.ts`
    - `@sdkwork/app-sdk-typescript/*`
 
 ## 6. SDK 接入预留标准
@@ -78,6 +78,6 @@
 1. 是否要求**所有** service 方法都强制 `ServiceResult<T>`？
    - 建议：仅对“跨边界业务调用”强制，底层 infra helper 保持轻量返回。
 2. 是否要求**每个包**都必须有 `src/services`？
-   - 建议：类型包/基础 SDK 包可豁免（例如 `react-types`、`app-sdk-typescript`）。
+   - 建议：类型包/基础 SDK 包可豁免（例如 `magic-studio-types`、`app-sdk-typescript`）。
 3. 是否要求零例外（包括 core/platform）？
    - 建议：`core/platform` 和 `app-sdk` 作为基础设施层保留平台直连是合理的。

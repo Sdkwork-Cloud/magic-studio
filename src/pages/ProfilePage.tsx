@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { ProfilePage as UserProfilePage } from '@sdkwork/react-user';
+import { ProfilePage as UserProfilePage } from '@sdkwork/magic-studio-user';
+import '../styles/user.css';
 
 const ProfilePage: React.FC = () => {
   return <UserProfilePage />;

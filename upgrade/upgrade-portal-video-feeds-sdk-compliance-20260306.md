@@ -2,7 +2,7 @@
 
 ## Module
 - App: `apps/magic-studio-v2`
-- Package: `packages/sdkwork-react-portal-video`
+- Package: `packages/sdkwork-magic-studio-portal-video`
 - SDK baseline: `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
 
 ## Findings (Before)
@@ -34,16 +34,16 @@
 
 ## Verification
 1. `node scripts/validate-service-encapsulation-policy.mjs` -> passed.
-2. `node scripts/audit-service-encapsulation.mjs` -> generated latest report, `sdkwork-react-portal-video` has:
+2. `node scripts/audit-service-encapsulation.mjs` -> generated latest report, `sdkwork-magic-studio-portal-video` has:
    - `Violations=0`
    - `SDK Seam=yes`
    - `Services Index Exports=yes`
 3. Source scan in portal-video package confirms:
    - no direct `fetch/axios/client.http` in scoped page/component flow
    - SDK invocation centralized in `src/services/portalVideoService.ts`
-4. `pnpm --dir apps/magic-studio-v2 --filter @sdkwork/react-portal-video typecheck` -> passed.
+4. `pnpm --dir apps/magic-studio-v2 --filter @sdkwork/magic-studio-portal-video typecheck` -> passed.
 5. Latest service encapsulation audit (`docs/reports/2026-03-06-service-encapsulation-audit.md`) shows:
-   - `sdkwork-react-portal-video`: `Violations=0`, `SDK Seam=yes`, `Services Index Exports=yes`.
+   - `sdkwork-magic-studio-portal-video`: `Violations=0`, `SDK Seam=yes`, `Services Index Exports=yes`.
 
 ## Residual Items For Next Loop
 1. Continue the same loop for remaining modules (for example: contacts, vip purchase flow cross-app parity, and route-level auth refresh regression checks).

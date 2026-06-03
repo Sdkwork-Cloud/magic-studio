@@ -2,7 +2,7 @@
 
 ## Scope
 - App: `apps/magic-studio-v2`
-- Package: `packages/sdkwork-react-workspace`
+- Package: `packages/sdkwork-magic-studio-workspace`
 - Focus:
   - `src/services/workspaceService.ts`
   - `src/store/workspaceStore.tsx`
@@ -23,10 +23,10 @@
 
 ## Verification Evidence
 - Bypass scan:
-  - command: `rg -n "fetch\\(|axios\\.|XMLHttpRequest|/app/v3/api|/api/|http://|https://" apps/magic-studio-v2/packages/sdkwork-react-workspace/src`
+  - command: `rg -n "fetch\\(|axios\\.|XMLHttpRequest|/app/v3/api|/api/|http://|https://" apps/magic-studio-v2/packages/sdkwork-magic-studio-workspace/src`
   - result: no matches
 - Type check:
-  - command: `pnpm --filter @sdkwork/react-workspace typecheck`
+  - command: `pnpm --filter @sdkwork/magic-studio-workspace typecheck`
   - result: passed
 
 ## SDK / Backend Upgrade Need

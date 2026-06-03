@@ -6,7 +6,7 @@
 
 ## Context
 
-- The creation chatinput UI in `@sdkwork/react-assets` persists `target`, `model`, `styleId`, `resolution`, and `duration`.
+- The creation chatinput UI in `@sdkwork/magic-studio-assets` persists `target`, `model`, `styleId`, `resolution`, and `duration`.
 - Existing backend `/app/v3/api/models/**` APIs are generic directory endpoints and do not provide the aggregate response shape needed by the creation entry flow.
 - Existing style management endpoints under `/app/v3/api/generation/style/**` already expose style data, but frontend needs a lightweight creation-oriented style option list embedded in the same capability response.
 
@@ -42,7 +42,7 @@
 
 ## Frontend Integration
 
-- Add a new service in `@sdkwork/react-assets` to fetch creation capabilities from `@sdkwork/app-sdk`.
+- Add a new service in `@sdkwork/magic-studio-assets` to fetch creation capabilities from `@sdkwork/app-sdk`.
 - Export normalized frontend types aligned with the creation chatinput.
 - Replace hardcoded or local-only capability defaults with SDK-backed loading paths where creation entry points consume them.
 

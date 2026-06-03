@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND,
   PROD_API_BASE_URL,
   analyzeBuiltBundle,
   analyzeReleaseApiTarget,
@@ -43,7 +44,7 @@ describe('analyzeReleaseApiTarget', () => {
       `),
       tauriProdConfig: {
         build: {
-          beforeBuildCommand: 'pnpm run build:git-sdk',
+          beforeBuildCommand: CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND,
         },
       },
     });
@@ -78,7 +79,7 @@ describe('analyzeReleaseApiTarget', () => {
           'package.json script "build:git-sdk" must set MAGIC_STUDIO_VITE_MODE=production'
         ),
         expect.stringContaining(
-          'src-tauri/tauri.prod.conf.json beforeBuildCommand must call "pnpm run build:git-sdk"'
+          `src-tauri/tauri.prod.conf.json beforeBuildCommand must call "${CANONICAL_TAURI_PROD_BEFORE_BUILD_COMMAND}"`
         ),
       ])
     );
@@ -90,6 +91,14 @@ describe('analyzeBuiltBundle', () => {
     const result = analyzeBuiltBundle(`
       const env={MODE:"production",VITE_API_BASE_URL:"https://api.sdkwork.com",VITE_APP_ENV:"production"};
     `);
+
+    expect(result.errors).toEqual([]);
+  });
+
+  it('accepts minified Vite bundle env payloads that use template literals', () => {
+    const result = analyzeBuiltBundle(
+      'const env={MODE:`production`,VITE_API_BASE_URL:`https://api.sdkwork.com`,VITE_APP_ENV:`production`};'
+    );
 
     expect(result.errors).toEqual([]);
   });

@@ -1,0 +1,410 @@
+import React, { useMemo, useState, useEffect } from 'react';
+import { RefreshCw, User, Settings2, Captions, Type } from 'lucide-react';
+import { PropertySection, ScrubbableInput, Dropdown, ActionButton } from '../widgets/PropertyWidgets';
+import { PRESET_VOICES } from '@sdkwork/magic-studio-voicespeaker/constants';
+import { toGeneratedVoiceResult, voiceBusinessService } from '@sdkwork/magic-studio-voicespeaker/services';
+import { generateUUID } from '@sdkwork/magic-studio-commons/utils/helpers';
+import { CutClip } from '../../../entities/magicCut.entity';
+import { useMagicCutStore } from '../../../store/magicCutStore';
+import {
+    PromptTextInput,
+    createPromptTextInputCapabilityProps,
+} from '@sdkwork/magic-studio-assets/generation';
+import { persistGenerationOutcomeAsset } from '@sdkwork/magic-studio-assets/services';
+import { enhanceMagicCutPrompt } from '../../../services';
+import { subtitleService } from '../../../services/subtitle/SubtitleService';
+import {
+    buildVoiceCaptionCues,
+    resolveVoiceCaptionTrackPlacement
+} from '../../../domain/subtitle/voiceCaptioning';
+import {
+    buildVoiceGenerationConfig,
+    resolveGeneratedVoiceUpdates
+} from '../../../domain/voice/voiceGeneration';
+import { useMagicCutTranslation } from '../../../hooks/useMagicCutTranslation';
+import { AnyMediaResource } from '@sdkwork/magic-studio-types/media';
+import { MediaResourceType } from '@sdkwork/magic-studio-types/vocabulary';
+import { resolveEntityKey } from '@sdkwork/magic-studio-types/entity';
+
+interface VoiceSettingsPanelProps {
+    clip: CutClip;
+    resource: AnyMediaResource;
+    onUpdate: (updates: Partial<CutClip>) => void;
+    onUpdateResource: (updates: Partial<AnyMediaResource>) => void;
+}
+
+export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({ clip, resource, onUpdate, onUpdateResource }) => {
+    const { t, tpr } = useMagicCutTranslation();
+    const {
+        project,
+        state,
+        activeTimeline,
+        setClipSpeed,
+        addTrack,
+        addClip,
+        updateClip,
+        updateClipTransform,
+        applyTimelineEditResult,
+        beginTransaction,
+        commitTransaction
+    } = useMagicCutStore();
+
+    const [script, setScript] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isEnhancing, setIsEnhancing] = useState(false);
+    const [isCaptioning, setIsCaptioning] = useState(false);
+    const [generationError, setGenerationError] = useState<string | null>(null);
+    const [lastGenerationSummary, setLastGenerationSummary] = useState<string | null>(null);
+    const clipKey = resolveEntityKey(clip);
+    
+    // Metadata holds voice configuration
+    const meta = resource.metadata || {};
+    const voiceId = meta.voiceId || 'Kore';
+    const speed = clip.speed || 1.0;
+    const pitch = meta.pitch || 1.0;
+    const generationSpeed =
+        typeof meta.ttsSpeed === 'number' && Number.isFinite(meta.ttsSpeed) ? meta.ttsSpeed : 1.0;
+    const generatedCaptions = Array.isArray(meta.generatedCaptions) ? meta.generatedCaptions : [];
+    const captionCues = useMemo(
+        () => buildVoiceCaptionCues({ text: script, duration: clip.duration }),
+        [script, clip.duration]
+    );
+
+    // Load initial script from clip content or metadata
+    useEffect(() => {
+        setScript(clip.content || meta.text || t('voiceSettings.defaults.script'));
+    }, [clipKey, clip.content, meta.text, t]);
+
+    const handleRegenerate = async () => {
+        const normalizedScript = script.trim();
+        if (!normalizedScript) return;
+
+        setIsGenerating(true);
+        setGenerationError(null);
+
+        try {
+            const config = buildVoiceGenerationConfig({
+                script: normalizedScript,
+                voiceId,
+                pitch,
+                speed: generationSpeed,
+                metadata: meta
+            });
+            const selectedSpeakerLabel =
+                config.name ||
+                PRESET_VOICES.find((voice) => voice.id === config.voiceId)?.name ||
+                'Custom Voice';
+
+            const outcomes = await voiceBusinessService.voiceService.generateSpeech(config);
+            const primaryOutcome = outcomes[0];
+
+            if (!primaryOutcome) {
+                throw new Error(t('voiceSettings.errors.noPlayableResult'));
+            }
+
+            const persisted = await persistGenerationOutcomeAsset({
+                outcome: primaryOutcome,
+                type: 'voice',
+                domain: 'magiccut',
+                name: `magiccut_voice_${generateUUID()}.wav`,
+            });
+            const persistedResult = toGeneratedVoiceResult({
+                outcome: primaryOutcome,
+                persisted,
+                speakerId: config.voiceId,
+                avatarUrl: config.avatarUrl,
+            });
+
+            const { clipUpdates, resourceUpdates } = resolveGeneratedVoiceUpdates({
+                resource,
+                clip,
+                script: normalizedScript,
+                result: persistedResult,
+                voiceId,
+                pitch
+            });
+
+            onUpdate(clipUpdates);
+            onUpdateResource(resourceUpdates);
+            setLastGenerationSummary(
+                t('voiceSettings.summary', {
+                    speakerLabel: selectedSpeakerLabel,
+                    duration: persistedResult.duration.toFixed(1),
+                })
+            );
+        } catch (error) {
+            setGenerationError(error instanceof Error ? error.message : t('voiceSettings.errors.generationFailed'));
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleEnhanceScript = async (currentText: string): Promise<string> => {
+        if (!currentText) return "";
+        setIsEnhancing(true);
+        try {
+            const enhanced = await enhanceMagicCutPrompt(currentText);
+            setScript(enhanced);
+            return enhanced;
+        } finally {
+            setIsEnhancing(false);
+        }
+    };
+
+    const handleExportSrt = () => {
+        const exportCues = generatedCaptions.length > 0 ? generatedCaptions : captionCues;
+        if (exportCues.length === 0) return;
+
+        subtitleService.downloadSRT(
+            exportCues.map((cue, index) => ({
+                id: `caption-${clipKey}-${index + 1}`,
+                index: cue.index || index + 1,
+                startTime: cue.startTime,
+                endTime: cue.endTime,
+                text: cue.text
+            })),
+            `${(resource.name || t('voiceSettings.defaults.voiceAssetName')).replace(/\.[^.]+$/, '')}.srt`
+        );
+    };
+
+    const handleAutoCaption = () => {
+        if (!activeTimeline || captionCues.length === 0) return;
+
+        setIsCaptioning(true);
+
+        try {
+            beginTransaction();
+
+            const timelineTracks = activeTimeline.tracks
+                .map((trackRef) => state.tracks[resolveEntityKey(trackRef)])
+                .filter(Boolean)
+                .map((track) => ({ id: resolveEntityKey(track), trackType: track.trackType }));
+            const trackPlacement = resolveVoiceCaptionTrackPlacement(timelineTracks, resolveEntityKey(clip.track));
+            const subtitleTrackId =
+                trackPlacement.trackId ||
+                addTrack('subtitle', t('voiceSettings.defaults.captionTrackName'), false, trackPlacement.insertIndex);
+
+            if (!subtitleTrackId) return;
+
+            const existingCaptionClipIds = Object.values(state.clips)
+                .filter((item) => {
+                    if (item.linkedClipId !== clipKey) return false;
+                    return state.resources[resolveEntityKey(item.resource)]?.type === MediaResourceType.SUBTITLE;
+                })
+                .map((item) => resolveEntityKey(item));
+
+            if (existingCaptionClipIds.length > 0) {
+                applyTimelineEditResult({ clipsToUpdate: [], clipsToDelete: existingCaptionClipIds });
+            }
+
+            const [projectWidth, projectHeight] = (project.settings.resolution || '1920x1080')
+                .split('x')
+                .map(Number);
+            const resolvedWidth = Number.isFinite(projectWidth) ? projectWidth : 1920;
+            const resolvedHeight = Number.isFinite(projectHeight) ? projectHeight : 1080;
+            const subtitleStyle = {
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontSize: 54,
+                fontWeight: 'bold',
+                color: '#ffffff',
+                strokeColor: '#000000',
+                strokeWidth: 10,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                backgroundPadding: 18,
+                backgroundCornerRadius: 18,
+                textAlign: 'center'
+            };
+
+            captionCues.forEach((cue) => {
+                const subtitleResourceKey = generateUUID();
+                const subtitleResource: AnyMediaResource = {
+                    id: subtitleResourceKey,
+                    uuid: subtitleResourceKey,
+                    type: MediaResourceType.SUBTITLE,
+                    name: t('voiceSettings.defaults.captionName', { index: cue.index }),
+                    extension: 'srt',
+                    metadata: {
+                        text: cue.text,
+                        language: meta.language || 'auto',
+                        sourceVoiceClipId: clipKey,
+                        generatedBy: 'magiccut-auto-caption',
+                        ...subtitleStyle
+                    },
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                };
+
+                const subtitleClipId = addClip(
+                    subtitleTrackId,
+                    subtitleResource,
+                    clip.start + cue.startTime,
+                    cue.endTime - cue.startTime
+                );
+
+                if (!subtitleClipId) return;
+
+                updateClip(subtitleClipId, {
+                    linkedClipId: clipKey,
+                    content: cue.text,
+                    style: subtitleStyle
+                });
+
+                const estimatedWidth = Math.min(resolvedWidth - 160, Math.max(420, cue.text.length * 26));
+                updateClipTransform(
+                    subtitleClipId,
+                    {
+                        x: Math.round((resolvedWidth - estimatedWidth) / 2),
+                        y: Math.round(resolvedHeight - 220),
+                        width: estimatedWidth
+                    },
+                    true
+                );
+            });
+
+            onUpdateResource({
+                metadata: {
+                    ...meta,
+                    text: script,
+                    generatedCaptions: captionCues
+                }
+            });
+        } finally {
+            commitTransaction();
+            setIsCaptioning(false);
+        }
+    };
+
+    return (
+        <>
+            {/* 1. Script Editor */}
+            <div className="p-3 border-b border-[#1f1f22] bg-[#141414]">
+                <div className="flex items-center justify-between mb-2">
+                     <div className="flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-wider">
+                        <Type size={12} /> {t('voiceSettings.sections.script')}
+                    </div>
+                </div>
+                
+                <PromptTextInput 
+                    {...createPromptTextInputCapabilityProps('TEXT')}
+                    label={null}
+                    value={script}
+                    onChange={setScript}
+                    className="bg-[#09090b]"
+                    placeholder={t('voiceSettings.placeholders.textToSpeak')}
+                    rows={4}
+                    onEnhance={handleEnhanceScript}
+                    isEnhancing={isEnhancing}
+                />
+
+                {(generationError || lastGenerationSummary) && (
+                    <div className={`mt-3 rounded-xl border px-3 py-3 ${
+                        generationError
+                            ? 'border-red-500/20 bg-red-500/10'
+                            : 'border-emerald-500/20 bg-emerald-500/10'
+                    }`}>
+                        {generationError ? (
+                            <>
+                                <div className="text-[10px] font-semibold uppercase tracking-wider text-red-100">
+                                    {t('voiceSettings.status.generationFailed')}
+                                </div>
+                                <p className="mt-1 text-[10px] leading-4 text-red-100/75">{generationError}</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">
+                                    {t('voiceSettings.status.voiceRegenerated')}
+                                </div>
+                                <p className="mt-1 text-[10px] leading-4 text-emerald-100/75">{lastGenerationSummary}</p>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                <div className="mt-2">
+                    <ActionButton 
+                        label={t('voiceSettings.actions.generateAudio')} 
+                        icon={<RefreshCw />} 
+                        onClick={handleRegenerate} 
+                        isLoading={isGenerating}
+                        disabled={!script.trim()}
+                        className="w-full bg-green-900/20 text-green-400 border-green-500/30 hover:bg-green-900/30"
+                    />
+                </div>
+            </div>
+
+            {/* 2. Voice Persona */}
+            <PropertySection title={t('voiceSettings.sections.speaker')}>
+                <Dropdown 
+                    label={t('voiceSettings.fields.voiceId')}
+                    value={voiceId as string}
+                    onChange={(v: string) => onUpdateResource({ 
+                         metadata: { ...meta, voiceId: v } 
+                    })}
+                    options={PRESET_VOICES.map((v: { id: string; name: string }) => ({ label: v.name, value: v.id, icon: <User size={12}/> }))}
+                />
+            </PropertySection>
+
+            {/* 3. Audio Properties */}
+            <PropertySection title={t('voiceSettings.sections.properties')}>
+                <div className="space-y-3">
+                    <ScrubbableInput 
+                        label={t('voiceSettings.fields.speed')} 
+                        value={speed} 
+                        onChange={(v) => setClipSpeed(clipKey, v)} 
+                        step={0.1} min={0.5} max={3.0} 
+                        suffix="x"
+                    />
+                    <ScrubbableInput 
+                        label={t('voiceSettings.fields.pitch')} 
+                        value={pitch} 
+                        onChange={(v) => onUpdateResource({ metadata: { ...meta, pitch: v } })} 
+                        step={0.1} min={0.5} max={2.0} 
+                    />
+                    <ScrubbableInput 
+                        label={tpr('volume')} 
+                        value={clip.volume || 1} 
+                        onChange={(v) => onUpdate({ volume: v })} 
+                        step={0.1} min={0} max={2} 
+                    />
+                </div>
+            </PropertySection>
+            
+            {/* 4. Subtitles */}
+            <PropertySection title={t('voiceSettings.sections.captions')}>
+                 <div className="space-y-3">
+                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-3">
+                         <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">
+                             {t('voiceSettings.captions.title')}
+                         </div>
+                         <p className="mt-1 text-[10px] leading-4 text-emerald-100/75">
+                             {t('voiceSettings.captions.description')}
+                         </p>
+                         <div className="mt-2 text-[10px] text-emerald-100/65">
+                             {captionCues.length > 0
+                                ? t('voiceSettings.captions.ready', { count: captionCues.length })
+                                : t('voiceSettings.captions.empty')}
+                         </div>
+                     </div>
+                     <div className="flex gap-2">
+                         <ActionButton
+                            label={t('voiceSettings.actions.autoCaption')}
+                            icon={<Captions />}
+                            onClick={handleAutoCaption}
+                            isLoading={isCaptioning}
+                            disabled={captionCues.length === 0}
+                            className="flex-1"
+                         />
+                         <ActionButton
+                            label={t('voiceSettings.actions.exportSrt')}
+                            icon={<Settings2 />}
+                            onClick={handleExportSrt}
+                            disabled={captionCues.length === 0 && generatedCaptions.length === 0}
+                            className="flex-1"
+                         />
+                     </div>
+                 </div>
+            </PropertySection>
+        </>
+    );
+};
+

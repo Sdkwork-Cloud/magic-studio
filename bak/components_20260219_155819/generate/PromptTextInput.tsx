@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Copy, Check, Sparkles, Loader2, ChevronLeft, ChevronRight, History } from 'lucide-react';
-import { platform } from 'sdkwork-react-core';
+import { platform } from 'sdkwork-magic-studio-core';
 import { InputAttachment } from '../CreationChatInput/types'; // Shared types
 import { MentionPreviewPopover } from '../CreationChatInput/components/MentionPreviewPopover';
 import { getSuggestionConfig } from '../CreationChatInput/suggestion';

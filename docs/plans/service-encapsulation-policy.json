@@ -1,21 +1,24 @@
 {
   "infrastructurePackages": [
     "sdkwork-app-sdk-typescript",
-    "sdkwork-react-types"
+    "sdkwork-magic-studio-types"
   ],
   "seamExemptPackages": [
-    "sdkwork-react-core"
+    "sdkwork-magic-studio-core"
   ],
   "rootServiceExportExemptPackages": [
-    "sdkwork-react-core"
+    "sdkwork-magic-studio-core"
   ],
   "allowedOutsideServicePatterns": [
-    "packages\\/sdkwork-react-core\\/src\\/platform\\/web\\.ts$",
-    "packages\\/sdkwork-react-core\\/src\\/platform\\/platform\\.ts$",
-    "packages\\/sdkwork-react-core\\/src\\/platform\\/runtime\\/manager\\.ts$",
-    "packages\\/sdkwork-react-core\\/src\\/sdk\\/useAppSdkClient\\.ts$",
-    "packages\\/sdkwork-react-core\\/src\\/sdk\\/uploadViaPresignedUrl\\.ts$",
-    "packages\\/sdkwork-react-core\\/src\\/ai\\/genAIService\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/desktop\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/server\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/web\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/platform\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/runtime\\/manager\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/platform\\/runtime\\/windowGlobal\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/sdk\\/useAppSdkClient\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/sdk\\/uploadViaPresignedUrl\\.ts$",
+    "packages\\/sdkwork-magic-studio-core\\/src\\/ai\\/genAIService\\.ts$",
     "packages\\/sdkwork-app-sdk-typescript\\/"
   ],
   "interactionRules": [
@@ -37,7 +40,7 @@
     },
     {
       "key": "runtimePlatform",
-      "label": "Runtime Platform Bridge"
+      "label": "Runtime Capability Global"
     },
     {
       "key": "runtimeUploadHelper",

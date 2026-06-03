@@ -1,10 +1,10 @@
 
-import { useRouter } from '@sdkwork/react-core'
+import { useRouter } from '@sdkwork/magic-studio-core/router'
 import React from 'react';
 import { ChevronLeft, BookOpen, Settings } from 'lucide-react';
 import { ROUTES } from '../../router/routes';
-import { useTranslation } from '@sdkwork/react-i18n';
-import { WorkspaceProjectSelector } from '@sdkwork/react-workspace';
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import { WorkspaceProjectSelector } from '@sdkwork/magic-studio-workspace/components';
 
 export const NotesHeader: React.FC = () => {
     const { navigate } = useRouter();

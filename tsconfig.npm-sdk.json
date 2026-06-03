@@ -4,91 +4,902 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@sdkwork/react-types": ["packages/sdkwork-react-types/src/index.ts"],
-      "@sdkwork/react-i18n": ["packages/sdkwork-react-i18n/src/index.ts"],
-      "@sdkwork/react-commons": ["packages/sdkwork-react-commons/src/index.ts"],
-      "@sdkwork/react-commons/ui": ["packages/sdkwork-react-commons/src/components/ui/index.tsx"],
-      "@sdkwork/react-core": ["packages/sdkwork-react-core/src/index.ts"],
-      "@sdkwork/react-fs": ["packages/sdkwork-react-fs/src/index.ts"],
-      "@sdkwork/react-assets": ["packages/sdkwork-react-assets/src/index.ts"],
-      "@sdkwork/react-auth": ["packages/sdkwork-react-auth/src/index.ts"],
-      "@sdkwork/react-user": ["packages/sdkwork-react-user/src/index.ts"],
-      "@sdkwork/react-vip": ["packages/sdkwork-react-vip/src/index.ts"],
-      "@sdkwork/react-image": ["packages/sdkwork-react-image/src/index.ts"],
-      "@sdkwork/react-video": ["packages/sdkwork-react-video/src/index.ts"],
-      "@sdkwork/react-audio": ["packages/sdkwork-react-audio/src/index.ts"],
-      "@sdkwork/react-music": ["packages/sdkwork-react-music/src/index.ts"],
-      "@sdkwork/react-sfx": ["packages/sdkwork-react-sfx/src/index.ts"],
-      "@sdkwork/react-voicespeaker": ["packages/sdkwork-react-voicespeaker/src/index.ts"],
-      "@sdkwork/react-editor": ["packages/sdkwork-react-editor/src/index.ts"],
-      "@sdkwork/react-chat": ["packages/sdkwork-react-chat/src/index.ts"],
-      "@sdkwork/react-notes": ["packages/sdkwork-react-notes/src/index.ts"],
-      "@sdkwork/react-drive": ["packages/sdkwork-react-drive/src/index.ts"],
-      "@sdkwork/react-canvas": ["packages/sdkwork-react-canvas/src/index.ts"],
-      "@sdkwork/react-magiccut": ["packages/sdkwork-react-magiccut/src/index.ts"],
-      "@sdkwork/react-film": ["packages/sdkwork-react-film/src/index.ts"],
-      "@sdkwork/react-chatppt": ["packages/sdkwork-react-chatppt/src/index.ts"],
-      "@sdkwork/react-portal-video": ["packages/sdkwork-react-portal-video/src/index.ts"],
-      "@sdkwork/react-settings": ["packages/sdkwork-react-settings/src/index.ts"],
-      "@sdkwork/react-workspace": ["packages/sdkwork-react-workspace/src/index.ts"],
-      "@sdkwork/react-notifications": ["packages/sdkwork-react-notifications/src/index.ts"],
-      "@sdkwork/react-browser": ["packages/sdkwork-react-browser/src/index.ts"],
-      "@sdkwork/react-character": ["packages/sdkwork-react-character/src/index.ts"],
-      "@sdkwork/react-generation-history": ["packages/sdkwork-react-generation-history/src/index.ts"],
-      "@sdkwork/react-compression": ["packages/sdkwork-react-compression/src/index.ts"],
-      "@sdkwork/react-ide-config": ["packages/sdkwork-react-ide-config/src/index.ts"],
-      "@sdkwork/react-plugins": ["packages/sdkwork-react-plugins/src/index.ts"],
-      "@sdkwork/react-skills": ["packages/sdkwork-react-skills/src/index.ts"],
-      "@sdkwork/react-prompt": ["packages/sdkwork-react-prompt/src/index.ts"],
-      "@sdkwork/react-trade": ["packages/sdkwork-react-trade/src/index.ts"],
-      "@sdkwork/app-sdk": ["node_modules/@sdkwork/app-sdk/dist/index.d.ts"],
-      "@sdkwork/sdk-common": ["node_modules/@sdkwork/sdk-common/dist/index.d.ts"],
-      "sdkwork-react-types": ["packages/sdkwork-react-types/src/index.ts"],
-      "sdkwork-react-i18n": ["packages/sdkwork-react-i18n/src/index.ts"],
-      "sdkwork-react-commons": ["packages/sdkwork-react-commons/src/index.ts"],
-      "sdkwork-react-commons/ui": ["packages/sdkwork-react-commons/src/components/ui/index.tsx"],
-      "sdkwork-react-core": ["packages/sdkwork-react-core/src/index.ts"],
-      "sdkwork-react-fs": ["packages/sdkwork-react-fs/src/index.ts"],
-      "sdkwork-react-assets": ["packages/sdkwork-react-assets/src/index.ts"],
-      "sdkwork-react-auth": ["packages/sdkwork-react-auth/src/index.ts"],
-      "sdkwork-react-user": ["packages/sdkwork-react-user/src/index.ts"],
-      "sdkwork-react-vip": ["packages/sdkwork-react-vip/src/index.ts"],
-      "sdkwork-react-image": ["packages/sdkwork-react-image/src/index.ts"],
-      "sdkwork-react-video": ["packages/sdkwork-react-video/src/index.ts"],
-      "sdkwork-react-audio": ["packages/sdkwork-react-audio/src/index.ts"],
-      "sdkwork-react-music": ["packages/sdkwork-react-music/src/index.ts"],
-      "sdkwork-react-sfx": ["packages/sdkwork-react-sfx/src/index.ts"],
-      "sdkwork-react-voicespeaker": ["packages/sdkwork-react-voicespeaker/src/index.ts"],
-      "sdkwork-react-editor": ["packages/sdkwork-react-editor/src/index.ts"],
-      "sdkwork-react-chat": ["packages/sdkwork-react-chat/src/index.ts"],
-      "sdkwork-react-notes": ["packages/sdkwork-react-notes/src/index.ts"],
-      "sdkwork-react-drive": ["packages/sdkwork-react-drive/src/index.ts"],
-      "sdkwork-react-canvas": ["packages/sdkwork-react-canvas/src/index.ts"],
-      "sdkwork-react-magiccut": ["packages/sdkwork-react-magiccut/src/index.ts"],
-      "sdkwork-react-film": ["packages/sdkwork-react-film/src/index.ts"],
-      "sdkwork-react-chatppt": ["packages/sdkwork-react-chatppt/src/index.ts"],
-      "sdkwork-react-portal-video": ["packages/sdkwork-react-portal-video/src/index.ts"],
-      "sdkwork-react-settings": ["packages/sdkwork-react-settings/src/index.ts"],
-      "sdkwork-react-workspace": ["packages/sdkwork-react-workspace/src/index.ts"],
-      "sdkwork-react-notifications": ["packages/sdkwork-react-notifications/src/index.ts"],
-      "sdkwork-react-browser": ["packages/sdkwork-react-browser/src/index.ts"],
-      "sdkwork-react-character": ["packages/sdkwork-react-character/src/index.ts"],
-      "sdkwork-react-generation-history": ["packages/sdkwork-react-generation-history/src/index.ts"],
-      "sdkwork-react-compression": ["packages/sdkwork-react-compression/src/index.ts"],
-      "sdkwork-react-ide-config": ["packages/sdkwork-react-ide-config/src/index.ts"],
-      "sdkwork-react-plugins": ["packages/sdkwork-react-plugins/src/index.ts"],
-      "sdkwork-react-skills": ["packages/sdkwork-react-skills/src/index.ts"]
+      "@/*": [
+        "./*"
+      ],
+      "@sdkwork/magic-studio-types": [
+        "packages/sdkwork-magic-studio-types/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-types/asset-reference": [
+        "packages/sdkwork-magic-studio-types/src/asset-reference.ts"
+      ],
+      "@sdkwork/magic-studio-types/entity": [
+        "packages/sdkwork-magic-studio-types/src/entity.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/service": [
+        "packages/sdkwork-magic-studio-types/src/service.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/pagination": [
+        "packages/sdkwork-magic-studio-types/src/pagination.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/storage": [
+        "packages/sdkwork-magic-studio-types/src/storage.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/media": [
+        "packages/sdkwork-magic-studio-types/src/media.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/assets": [
+        "packages/sdkwork-magic-studio-types/src/assets.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/asset-center": [
+        "packages/sdkwork-magic-studio-types/src/asset-center.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/drive": [
+        "packages/sdkwork-magic-studio-types/src/drive.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/image": [
+        "packages/sdkwork-magic-studio-types/src/image.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/canvas": [
+        "packages/sdkwork-magic-studio-types/src/canvas.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/video": [
+        "packages/sdkwork-magic-studio-types/src/video.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/audio": [
+        "packages/sdkwork-magic-studio-types/src/audio.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/music": [
+        "packages/sdkwork-magic-studio-types/src/music.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/film": [
+        "packages/sdkwork-magic-studio-types/src/film.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/character": [
+        "packages/sdkwork-magic-studio-types/src/character.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/voice": [
+        "packages/sdkwork-magic-studio-types/src/voice.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/sfx": [
+        "packages/sdkwork-magic-studio-types/src/sfx.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/chat": [
+        "packages/sdkwork-magic-studio-types/src/chat.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/chatppt": [
+        "packages/sdkwork-magic-studio-types/src/chatppt.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/agi": [
+        "packages/sdkwork-magic-studio-types/src/agi.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/input-resource": [
+        "packages/sdkwork-magic-studio-types/src/input-resource.utils.ts"
+      ],
+      "@sdkwork/magic-studio-types/vocabulary": [
+        "packages/sdkwork-magic-studio-types/src/vocabulary.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/catalog": [
+        "packages/sdkwork-magic-studio-types/src/catalog.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/content": [
+        "packages/sdkwork-magic-studio-types/src/content.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/auth": [
+        "packages/sdkwork-magic-studio-types/src/auth.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/notes": [
+        "packages/sdkwork-magic-studio-types/src/notes.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/user": [
+        "packages/sdkwork-magic-studio-types/src/user.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/workspace": [
+        "packages/sdkwork-magic-studio-types/src/workspace.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/runtime": [
+        "packages/sdkwork-magic-studio-types/src/runtime.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/theme-mode": [
+        "packages/sdkwork-magic-studio-types/src/theme-mode.ts"
+      ],
+      "@sdkwork/magic-studio-types/infrastructure": [
+        "packages/sdkwork-magic-studio-types/src/infrastructure.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/magiccut": [
+        "packages/sdkwork-magic-studio-types/src/magiccut.types.ts"
+      ],
+      "@sdkwork/magic-studio-types/project-graph": [
+        "packages/sdkwork-magic-studio-types/src/project-graph.types.ts"
+      ],
+      "@sdkwork/magic-studio-i18n": [
+        "packages/sdkwork-magic-studio-i18n/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons": [
+        "packages/sdkwork-magic-studio-commons/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/framework/tokens": [
+        "packages/sdkwork-magic-studio-commons/src/components/framework/tokens.ts"
+      ],
+      "@sdkwork/magic-studio-commons/types": [
+        "packages/sdkwork-magic-studio-commons/src/types.ts"
+      ],
+      "@sdkwork/magic-studio-commons/ui": [
+        "packages/sdkwork-magic-studio-commons/src/components/ui/index.tsx"
+      ],
+      "@sdkwork/magic-studio-core": [
+        "packages/sdkwork-magic-studio-core/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/platform": [
+        "packages/sdkwork-magic-studio-core/src/platform/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/router": [
+        "packages/sdkwork-magic-studio-core/src/router/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/sdk": [
+        "packages/sdkwork-magic-studio-core/src/sdk/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/services": [
+        "packages/sdkwork-magic-studio-core/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/utils": [
+        "packages/sdkwork-magic-studio-core/src/utils/index.ts"
+      ],
+      "@sdkwork/magic-studio-fs": [
+        "packages/sdkwork-magic-studio-fs/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets": [
+        "packages/sdkwork-magic-studio-assets/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/asset-center": [
+        "packages/sdkwork-magic-studio-assets/src/asset-center/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/asset-service": [
+        "packages/sdkwork-magic-studio-assets/src/asset-service/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/choose-asset": [
+        "packages/sdkwork-magic-studio-assets/src/choose-asset/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/creation-chat": [
+        "packages/sdkwork-magic-studio-assets/src/creation-chat/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/entities": [
+        "packages/sdkwork-magic-studio-assets/src/entities/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/generation": [
+        "packages/sdkwork-magic-studio-assets/src/generation/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/hooks": [
+        "packages/sdkwork-magic-studio-assets/src/hooks/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/i18n": [
+        "packages/sdkwork-magic-studio-assets/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/pages": [
+        "packages/sdkwork-magic-studio-assets/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/services": [
+        "packages/sdkwork-magic-studio-assets/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/store": [
+        "packages/sdkwork-magic-studio-assets/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-assets/style-selector": [
+        "packages/sdkwork-magic-studio-assets/src/style-selector/index.ts"
+      ],
+      "@sdkwork/magic-studio-auth": [
+        "packages/sdkwork-magic-studio-auth/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-auth/i18n": [
+        "packages/sdkwork-magic-studio-auth/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-auth/store": [
+        "packages/sdkwork-magic-studio-auth/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-user": [
+        "packages/sdkwork-magic-studio-user/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-user/i18n": [
+        "packages/sdkwork-magic-studio-user/src/i18n/index.ts"
+      ],
+      "@sdkwork/core-pc-react": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/index.ts"
+      ],
+      "@sdkwork/core-pc-react/app": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/app/index.ts"
+      ],
+      "@sdkwork/core-pc-react/env": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/env/index.ts"
+      ],
+      "@sdkwork/core-pc-react/hooks": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/hooks/index.ts"
+      ],
+      "@sdkwork/core-pc-react/preferences": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/preferences/index.ts"
+      ],
+      "@sdkwork/core-pc-react/runtime": [
+        "../sdkwork-core/sdkwork-core-pc-react/src/runtime/index.ts"
+      ],
+      "@sdkwork/auth-pc-react": [
+        "src/shims/auth-pc-react.ts"
+      ],
+      "@sdkwork/user-pc-react": [
+        "src/shims/user-pc-react.ts"
+      ],
+      "@sdkwork/appbase-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts"
+      ],
+      "@sdkwork/search-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
+      ],
+      "@sdkwork/ui-pc-react": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/theme": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/theme/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/ui/actions": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/components/ui/actions/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/ui/data-entry": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/components/ui/data-entry/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/ui/feedback": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/components/ui/feedback/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/ui/form": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/components/ui/form/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/patterns/workspace": [
+        "../sdkwork-ui/sdkwork-ui-pc-react/src/components/patterns/workspace/index.ts"
+      ],
+      "@sdkwork/ui-pc-react/components/patterns/settings": [
+        "src/shims/sdkwork-ui-settings.tsx"
+      ],
+      "@sdkwork/user-center-core-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-core-pc-react/src/index.ts"
+      ],
+      "@sdkwork/user-center-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-pc-react/src/index.ts"
+      ],
+      "@sdkwork/user-center-validation-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-validation-pc-react/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-vip": [
+        "packages/sdkwork-magic-studio-vip/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-vip/pages": [
+        "packages/sdkwork-magic-studio-vip/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-vip/pricing-modal": [
+        "packages/sdkwork-magic-studio-vip/src/pricing-modal/index.ts"
+      ],
+      "@sdkwork/magic-studio-vip/store": [
+        "packages/sdkwork-magic-studio-vip/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-image": [
+        "packages/sdkwork-magic-studio-image/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/constants": [
+        "packages/sdkwork-magic-studio-image/src/constants.ts"
+      ],
+      "@sdkwork/magic-studio-image/entities": [
+        "packages/sdkwork-magic-studio-image/src/entities/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/i18n": [
+        "packages/sdkwork-magic-studio-image/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/modals": [
+        "packages/sdkwork-magic-studio-image/src/modals/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/pages": [
+        "packages/sdkwork-magic-studio-image/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/panels": [
+        "packages/sdkwork-magic-studio-image/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/selectors": [
+        "packages/sdkwork-magic-studio-image/src/selectors/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/services": [
+        "packages/sdkwork-magic-studio-image/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-image/store": [
+        "packages/sdkwork-magic-studio-image/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-video": [
+        "packages/sdkwork-magic-studio-video/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/entities": [
+        "packages/sdkwork-magic-studio-video/src/entities/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/i18n": [
+        "packages/sdkwork-magic-studio-video/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/modals": [
+        "packages/sdkwork-magic-studio-video/src/modals/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/pages": [
+        "packages/sdkwork-magic-studio-video/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/panels": [
+        "packages/sdkwork-magic-studio-video/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/selectors": [
+        "packages/sdkwork-magic-studio-video/src/selectors/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/services": [
+        "packages/sdkwork-magic-studio-video/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-video/store": [
+        "packages/sdkwork-magic-studio-video/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio": [
+        "packages/sdkwork-magic-studio-audio/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/i18n": [
+        "packages/sdkwork-magic-studio-audio/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/modals": [
+        "packages/sdkwork-magic-studio-audio/src/modals/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/pages": [
+        "packages/sdkwork-magic-studio-audio/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/panels": [
+        "packages/sdkwork-magic-studio-audio/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/recorder": [
+        "packages/sdkwork-magic-studio-audio/src/recorder/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/services": [
+        "packages/sdkwork-magic-studio-audio/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-audio/store": [
+        "packages/sdkwork-magic-studio-audio/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-music": [
+        "packages/sdkwork-magic-studio-music/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-music/i18n": [
+        "packages/sdkwork-magic-studio-music/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-music/modals": [
+        "packages/sdkwork-magic-studio-music/src/modals/index.ts"
+      ],
+      "@sdkwork/magic-studio-music/pages": [
+        "packages/sdkwork-magic-studio-music/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-music/panels": [
+        "packages/sdkwork-magic-studio-music/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-music/store": [
+        "packages/sdkwork-magic-studio-music/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx": [
+        "packages/sdkwork-magic-studio-sfx/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx/i18n": [
+        "packages/sdkwork-magic-studio-sfx/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx/modals": [
+        "packages/sdkwork-magic-studio-sfx/src/modals/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx/pages": [
+        "packages/sdkwork-magic-studio-sfx/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx/panels": [
+        "packages/sdkwork-magic-studio-sfx/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-sfx/store": [
+        "packages/sdkwork-magic-studio-sfx/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/constants": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/constants.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/entities": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/entities/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/i18n": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/pages": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/panels": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/picker": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/picker/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/services": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-voicespeaker/store": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor": [
+        "packages/sdkwork-magic-studio-editor/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor/file-icon": [
+        "packages/sdkwork-magic-studio-editor/src/file-icon/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor/file-picker": [
+        "packages/sdkwork-magic-studio-editor/src/file-picker/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor/pages": [
+        "packages/sdkwork-magic-studio-editor/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor/project-actions": [
+        "packages/sdkwork-magic-studio-editor/src/project-actions/index.ts"
+      ],
+      "@sdkwork/magic-studio-editor/store": [
+        "packages/sdkwork-magic-studio-editor/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-chat": [
+        "packages/sdkwork-magic-studio-chat/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-chat/embedded-pane": [
+        "packages/sdkwork-magic-studio-chat/src/embedded-pane/index.ts"
+      ],
+      "@sdkwork/magic-studio-chat/i18n": [
+        "packages/sdkwork-magic-studio-chat/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-chat/pages": [
+        "packages/sdkwork-magic-studio-chat/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-chat/store": [
+        "packages/sdkwork-magic-studio-chat/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-notes": [
+        "packages/sdkwork-magic-studio-notes/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-notes/pages": [
+        "packages/sdkwork-magic-studio-notes/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-drive": [
+        "packages/sdkwork-magic-studio-drive/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-drive/pages": [
+        "packages/sdkwork-magic-studio-drive/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-canvas": [
+        "packages/sdkwork-magic-studio-canvas/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-magiccut": [
+        "packages/sdkwork-magic-studio-magiccut/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-magiccut/pages": [
+        "packages/sdkwork-magic-studio-magiccut/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-magiccut/store": [
+        "packages/sdkwork-magic-studio-magiccut/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-film": [
+        "packages/sdkwork-magic-studio-film/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-chatppt": [
+        "packages/sdkwork-magic-studio-chatppt/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-portal-video": [
+        "packages/sdkwork-magic-studio-portal-video/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-settings": [
+        "packages/sdkwork-magic-studio-settings/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-settings/constants": [
+        "packages/sdkwork-magic-studio-settings/src/constants.ts"
+      ],
+      "@sdkwork/magic-studio-settings/entities": [
+        "packages/sdkwork-magic-studio-settings/src/entities/index.ts"
+      ],
+      "@sdkwork/magic-studio-settings/services": [
+        "packages/sdkwork-magic-studio-settings/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-settings/store": [
+        "packages/sdkwork-magic-studio-settings/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-workspace": [
+        "packages/sdkwork-magic-studio-workspace/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-workspace/components": [
+        "packages/sdkwork-magic-studio-workspace/src/components/index.ts"
+      ],
+      "@sdkwork/magic-studio-workspace/store": [
+        "packages/sdkwork-magic-studio-workspace/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-notifications": [
+        "packages/sdkwork-magic-studio-notifications/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-notifications/store": [
+        "packages/sdkwork-magic-studio-notifications/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-browser": [
+        "packages/sdkwork-magic-studio-browser/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-character": [
+        "packages/sdkwork-magic-studio-character/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-generation-history": [
+        "packages/sdkwork-magic-studio-generation-history/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-compression": [
+        "packages/sdkwork-magic-studio-compression/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-ide-config": [
+        "packages/sdkwork-magic-studio-ide-config/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-plugins": [
+        "packages/sdkwork-magic-studio-plugins/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-skills": [
+        "packages/sdkwork-magic-studio-skills/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-prompt": [
+        "packages/sdkwork-magic-studio-prompt/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-trade": [
+        "packages/sdkwork-magic-studio-trade/src/index.ts"
+      ],
+      "@sdkwork/app-sdk": [
+        "node_modules/@sdkwork/app-sdk/dist/index.d.ts"
+      ],
+      "@sdkwork/app-sdk/api/*": [
+        "node_modules/@sdkwork/app-sdk/dist/api/*"
+      ],
+      "@sdkwork/app-sdk/http/*": [
+        "node_modules/@sdkwork/app-sdk/dist/http/*"
+      ],
+      "@sdkwork/app-sdk/types/*": [
+        "node_modules/@sdkwork/app-sdk/dist/types/*"
+      ],
+      "@sdkwork/sdk-common": [
+        "node_modules/@sdkwork/sdk-common/dist/index.d.ts"
+      ],
+      "react-router-dom": [
+        "src/shims/react-router-dom.tsx"
+      ],
+      "qrcode": [
+        "src/shims/qrcode.ts"
+      ],
+      "qrcode/lib/browser.js": [
+        "src/shims/qrcode-browser.d.ts"
+      ],
+      "sdkwork-magic-studio-types": [
+        "packages/sdkwork-magic-studio-types/src/index.ts"
+      ],
+      "sdkwork-magic-studio-types/asset-reference": [
+        "packages/sdkwork-magic-studio-types/src/asset-reference.ts"
+      ],
+      "sdkwork-magic-studio-types/entity": [
+        "packages/sdkwork-magic-studio-types/src/entity.types.ts"
+      ],
+      "sdkwork-magic-studio-types/service": [
+        "packages/sdkwork-magic-studio-types/src/service.types.ts"
+      ],
+      "sdkwork-magic-studio-types/pagination": [
+        "packages/sdkwork-magic-studio-types/src/pagination.types.ts"
+      ],
+      "sdkwork-magic-studio-types/storage": [
+        "packages/sdkwork-magic-studio-types/src/storage.types.ts"
+      ],
+      "sdkwork-magic-studio-types/media": [
+        "packages/sdkwork-magic-studio-types/src/media.types.ts"
+      ],
+      "sdkwork-magic-studio-types/assets": [
+        "packages/sdkwork-magic-studio-types/src/assets.types.ts"
+      ],
+      "sdkwork-magic-studio-types/asset-center": [
+        "packages/sdkwork-magic-studio-types/src/asset-center.types.ts"
+      ],
+      "sdkwork-magic-studio-types/drive": [
+        "packages/sdkwork-magic-studio-types/src/drive.types.ts"
+      ],
+      "sdkwork-magic-studio-types/image": [
+        "packages/sdkwork-magic-studio-types/src/image.types.ts"
+      ],
+      "sdkwork-magic-studio-types/canvas": [
+        "packages/sdkwork-magic-studio-types/src/canvas.types.ts"
+      ],
+      "sdkwork-magic-studio-types/video": [
+        "packages/sdkwork-magic-studio-types/src/video.types.ts"
+      ],
+      "sdkwork-magic-studio-types/audio": [
+        "packages/sdkwork-magic-studio-types/src/audio.types.ts"
+      ],
+      "sdkwork-magic-studio-types/music": [
+        "packages/sdkwork-magic-studio-types/src/music.types.ts"
+      ],
+      "sdkwork-magic-studio-types/film": [
+        "packages/sdkwork-magic-studio-types/src/film.types.ts"
+      ],
+      "sdkwork-magic-studio-types/character": [
+        "packages/sdkwork-magic-studio-types/src/character.types.ts"
+      ],
+      "sdkwork-magic-studio-types/voice": [
+        "packages/sdkwork-magic-studio-types/src/voice.types.ts"
+      ],
+      "sdkwork-magic-studio-types/sfx": [
+        "packages/sdkwork-magic-studio-types/src/sfx.types.ts"
+      ],
+      "sdkwork-magic-studio-types/chat": [
+        "packages/sdkwork-magic-studio-types/src/chat.types.ts"
+      ],
+      "sdkwork-magic-studio-types/chatppt": [
+        "packages/sdkwork-magic-studio-types/src/chatppt.types.ts"
+      ],
+      "sdkwork-magic-studio-types/agi": [
+        "packages/sdkwork-magic-studio-types/src/agi.types.ts"
+      ],
+      "sdkwork-magic-studio-types/input-resource": [
+        "packages/sdkwork-magic-studio-types/src/input-resource.utils.ts"
+      ],
+      "sdkwork-magic-studio-types/vocabulary": [
+        "packages/sdkwork-magic-studio-types/src/vocabulary.types.ts"
+      ],
+      "sdkwork-magic-studio-types/catalog": [
+        "packages/sdkwork-magic-studio-types/src/catalog.types.ts"
+      ],
+      "sdkwork-magic-studio-types/content": [
+        "packages/sdkwork-magic-studio-types/src/content.types.ts"
+      ],
+      "sdkwork-magic-studio-types/auth": [
+        "packages/sdkwork-magic-studio-types/src/auth.types.ts"
+      ],
+      "sdkwork-magic-studio-types/notes": [
+        "packages/sdkwork-magic-studio-types/src/notes.types.ts"
+      ],
+      "sdkwork-magic-studio-types/user": [
+        "packages/sdkwork-magic-studio-types/src/user.types.ts"
+      ],
+      "sdkwork-magic-studio-types/workspace": [
+        "packages/sdkwork-magic-studio-types/src/workspace.types.ts"
+      ],
+      "sdkwork-magic-studio-types/runtime": [
+        "packages/sdkwork-magic-studio-types/src/runtime.types.ts"
+      ],
+      "sdkwork-magic-studio-types/theme-mode": [
+        "packages/sdkwork-magic-studio-types/src/theme-mode.ts"
+      ],
+      "sdkwork-magic-studio-types/infrastructure": [
+        "packages/sdkwork-magic-studio-types/src/infrastructure.types.ts"
+      ],
+      "sdkwork-magic-studio-types/magiccut": [
+        "packages/sdkwork-magic-studio-types/src/magiccut.types.ts"
+      ],
+      "sdkwork-magic-studio-types/project-graph": [
+        "packages/sdkwork-magic-studio-types/src/project-graph.types.ts"
+      ],
+      "sdkwork-magic-studio-i18n": [
+        "packages/sdkwork-magic-studio-i18n/src/index.ts"
+      ],
+      "sdkwork-magic-studio-commons": [
+        "packages/sdkwork-magic-studio-commons/src/index.ts"
+      ],
+      "sdkwork-magic-studio-commons/ui": [
+        "packages/sdkwork-magic-studio-commons/src/components/ui/index.tsx"
+      ],
+      "sdkwork-magic-studio-core": [
+        "packages/sdkwork-magic-studio-core/src/index.ts"
+      ],
+      "sdkwork-magic-studio-fs": [
+        "packages/sdkwork-magic-studio-fs/src/index.ts"
+      ],
+      "sdkwork-magic-studio-assets": [
+        "packages/sdkwork-magic-studio-assets/src/index.ts"
+      ],
+      "sdkwork-magic-studio-auth": [
+        "packages/sdkwork-magic-studio-auth/src/index.ts"
+      ],
+      "sdkwork-magic-studio-user": [
+        "packages/sdkwork-magic-studio-user/src/index.ts"
+      ],
+      "sdkwork-magic-studio-vip": [
+        "packages/sdkwork-magic-studio-vip/src/index.ts"
+      ],
+      "sdkwork-magic-studio-image": [
+        "packages/sdkwork-magic-studio-image/src/index.ts"
+      ],
+      "sdkwork-magic-studio-video": [
+        "packages/sdkwork-magic-studio-video/src/index.ts"
+      ],
+      "sdkwork-magic-studio-audio": [
+        "packages/sdkwork-magic-studio-audio/src/index.ts"
+      ],
+      "sdkwork-magic-studio-music": [
+        "packages/sdkwork-magic-studio-music/src/index.ts"
+      ],
+      "sdkwork-magic-studio-sfx": [
+        "packages/sdkwork-magic-studio-sfx/src/index.ts"
+      ],
+      "sdkwork-magic-studio-voicespeaker": [
+        "packages/sdkwork-magic-studio-voicespeaker/src/index.ts"
+      ],
+      "sdkwork-magic-studio-editor": [
+        "packages/sdkwork-magic-studio-editor/src/index.ts"
+      ],
+      "sdkwork-magic-studio-chat": [
+        "packages/sdkwork-magic-studio-chat/src/index.ts"
+      ],
+      "sdkwork-magic-studio-notes": [
+        "packages/sdkwork-magic-studio-notes/src/index.ts"
+      ],
+      "sdkwork-magic-studio-drive": [
+        "packages/sdkwork-magic-studio-drive/src/index.ts"
+      ],
+      "sdkwork-magic-studio-canvas": [
+        "packages/sdkwork-magic-studio-canvas/src/index.ts"
+      ],
+      "sdkwork-magic-studio-magiccut": [
+        "packages/sdkwork-magic-studio-magiccut/src/index.ts"
+      ],
+      "sdkwork-magic-studio-film": [
+        "packages/sdkwork-magic-studio-film/src/index.ts"
+      ],
+      "sdkwork-magic-studio-chatppt": [
+        "packages/sdkwork-magic-studio-chatppt/src/index.ts"
+      ],
+      "sdkwork-magic-studio-portal-video": [
+        "packages/sdkwork-magic-studio-portal-video/src/index.ts"
+      ],
+      "sdkwork-magic-studio-settings": [
+        "packages/sdkwork-magic-studio-settings/src/index.ts"
+      ],
+      "sdkwork-magic-studio-workspace": [
+        "packages/sdkwork-magic-studio-workspace/src/index.ts"
+      ],
+      "sdkwork-magic-studio-notifications": [
+        "packages/sdkwork-magic-studio-notifications/src/index.ts"
+      ],
+      "sdkwork-magic-studio-browser": [
+        "packages/sdkwork-magic-studio-browser/src/index.ts"
+      ],
+      "sdkwork-magic-studio-character": [
+        "packages/sdkwork-magic-studio-character/src/index.ts"
+      ],
+      "sdkwork-magic-studio-generation-history": [
+        "packages/sdkwork-magic-studio-generation-history/src/index.ts"
+      ],
+      "sdkwork-magic-studio-compression": [
+        "packages/sdkwork-magic-studio-compression/src/index.ts"
+      ],
+      "sdkwork-magic-studio-ide-config": [
+        "packages/sdkwork-magic-studio-ide-config/src/index.ts"
+      ],
+      "sdkwork-magic-studio-plugins": [
+        "packages/sdkwork-magic-studio-plugins/src/index.ts"
+      ],
+      "sdkwork-magic-studio-skills": [
+        "packages/sdkwork-magic-studio-skills/src/index.ts"
+      ],
+      "sdkwork-auth-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts"
+      ],
+      "sdkwork-user-pc-react": [
+        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-pc-react/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/hooks": [
+        "packages/sdkwork-magic-studio-commons/src/hooks/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/utils/serviceAdapter": [
+        "packages/sdkwork-magic-studio-commons/src/utils/serviceAdapter.ts"
+      ],
+      "@sdkwork/magic-studio-commons/utils/helpers": [
+        "packages/sdkwork-magic-studio-commons/src/utils/helpers.ts"
+      ],
+      "@sdkwork/magic-studio-commons/utils/logger": [
+        "packages/sdkwork-magic-studio-commons/src/utils/logger.ts"
+      ],
+      "@sdkwork/magic-studio-commons/utils/assetIdentity": [
+        "packages/sdkwork-magic-studio-commons/src/utils/assetIdentity.ts"
+      ],
+      "@sdkwork/magic-studio-core/eventBus": [
+        "packages/sdkwork-magic-studio-core/src/eventBus/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/ai": [
+        "packages/sdkwork-magic-studio-core/src/ai/index.ts"
+      ],
+      "@sdkwork/magic-studio-core/storage": [
+        "packages/sdkwork-magic-studio-core/src/storage/index.ts"
+      ],
+      "@sdkwork/magic-studio-canvas/pages": [
+        "packages/sdkwork-magic-studio-canvas/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-film/pages": [
+        "packages/sdkwork-magic-studio-film/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-film/i18n": [
+        "packages/sdkwork-magic-studio-film/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-chatppt/pages": [
+        "packages/sdkwork-magic-studio-chatppt/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-chatppt/store": [
+        "packages/sdkwork-magic-studio-chatppt/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-chatppt/panels": [
+        "packages/sdkwork-magic-studio-chatppt/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-portal-video/pages": [
+        "packages/sdkwork-magic-studio-portal-video/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-portal-video/portal-header": [
+        "packages/sdkwork-magic-studio-portal-video/src/portal-header/index.ts"
+      ],
+      "@sdkwork/magic-studio-browser/pages": [
+        "packages/sdkwork-magic-studio-browser/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-character/pages": [
+        "packages/sdkwork-magic-studio-character/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-character/store": [
+        "packages/sdkwork-magic-studio-character/src/store/index.ts"
+      ],
+      "@sdkwork/magic-studio-character/panels": [
+        "packages/sdkwork-magic-studio-character/src/panels/index.ts"
+      ],
+      "@sdkwork/magic-studio-character/i18n": [
+        "packages/sdkwork-magic-studio-character/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-plugins/pages": [
+        "packages/sdkwork-magic-studio-plugins/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-skills/pages": [
+        "packages/sdkwork-magic-studio-skills/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-prompt/pages": [
+        "packages/sdkwork-magic-studio-prompt/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-prompt/i18n": [
+        "packages/sdkwork-magic-studio-prompt/src/i18n/index.ts"
+      ],
+      "@sdkwork/magic-studio-trade/pages": [
+        "packages/sdkwork-magic-studio-trade/src/pages/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/algorithms": [
+        "packages/sdkwork-magic-studio-commons/src/algorithms/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/components": [
+        "packages/sdkwork-magic-studio-commons/src/components/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/constants": [
+        "packages/sdkwork-magic-studio-commons/src/constants/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/services": [
+        "packages/sdkwork-magic-studio-commons/src/services/index.ts"
+      ],
+      "@sdkwork/magic-studio-commons/utils": [
+        "packages/sdkwork-magic-studio-commons/src/utils/index.ts"
+      ],
+      "@sdkwork/magic-studio-server": [
+        "packages/sdkwork-magic-studio-server/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-host-core": [
+        "packages/sdkwork-magic-studio-host-core/src/index.ts"
+      ],
+      "@sdkwork/magic-studio-host-types": [
+        "packages/sdkwork-magic-studio-host-types/src/index.ts"
+      ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
@@ -105,6 +916,12 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "packages"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "packages"
+  ]
 }

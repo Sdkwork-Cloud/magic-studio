@@ -4,7 +4,7 @@
 
 **Goal:** Correct the frontend's prompt SDK integration, add instance-safe prompt capability services for `PromptTextInput`, and unify all server uploads behind the shared client-side presigned upload flow.
 
-**Architecture:** The work starts in `@sdkwork/react-core` by repairing the official SDK prompt facade and adding a scoped SDK client factory that does not mutate the global singleton. Prompt library/history flows are then normalized in a shared core service and surfaced through `PromptTextInput`, while all server-side file uploads are routed through the existing `uploadViaPresignedUrl` kernel so asset, drive, and storage-provider uploads share one presigned URL implementation.
+**Architecture:** The work starts in `@sdkwork/magic-studio-core` by repairing the official SDK prompt facade and adding a scoped SDK client factory that does not mutate the global singleton. Prompt library/history flows are then normalized in a shared core service and surfaced through `PromptTextInput`, while all server-side file uploads are routed through the existing `uploadViaPresignedUrl` kernel so asset, drive, and storage-provider uploads share one presigned URL implementation.
 
 **Tech Stack:** TypeScript, React, Vitest, Vite, `@sdkwork/app-sdk`, Tiptap, shared SDKWork package exports.
 
@@ -13,9 +13,9 @@
 ### Task 1: Fix the core prompt SDK facade
 
 **Files:**
-- Modify: `packages/sdkwork-react-core/src/sdk/index.ts`
-- Modify: `packages/sdkwork-react-core/src/sdk/hooks.ts`
-- Test: `packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/index.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/hooks.ts`
+- Test: `packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -44,15 +44,15 @@ it('routes sdk.prompt to the official prompt module', async () => {
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts
 ```
 
 Expected: FAIL because `sdk.prompt` currently resolves to `generation`.
 
 **Step 3: Write minimal implementation**
 
-- Update `sdk.prompt` in `packages/sdkwork-react-core/src/sdk/index.ts` to return `getSdkworkClient().prompt`.
-- Update `usePrompt()` in `packages/sdkwork-react-core/src/sdk/hooks.ts` to return `c.prompt`.
+- Update `sdk.prompt` in `packages/sdkwork-magic-studio-core/src/sdk/index.ts` to return `getSdkworkClient().prompt`.
+- Update `usePrompt()` in `packages/sdkwork-magic-studio-core/src/sdk/hooks.ts` to return `c.prompt`.
 - Keep `generation`-based prompt enhancement logic untouched.
 
 **Step 4: Run test to verify it passes**
@@ -60,7 +60,7 @@ Expected: FAIL because `sdk.prompt` currently resolves to `generation`.
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts
 ```
 
 Expected: PASS.
@@ -68,16 +68,16 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-core/src/sdk/index.ts packages/sdkwork-react-core/src/sdk/hooks.ts packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts
+git add packages/sdkwork-magic-studio-core/src/sdk/index.ts packages/sdkwork-magic-studio-core/src/sdk/hooks.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts
 git commit -m "fix: map prompt sdk facade to official prompt api"
 ```
 
 ### Task 2: Add an instance-scoped SDK client factory
 
 **Files:**
-- Modify: `packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts`
-- Modify: `packages/sdkwork-react-core/src/sdk/index.ts`
-- Test: `packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/index.ts`
+- Test: `packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -101,7 +101,7 @@ it('creates a scoped client without mutating the global singleton config', async
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
 ```
 
 Expected: FAIL because no scoped client factory exists yet.
@@ -111,14 +111,14 @@ Expected: FAIL because no scoped client factory exists yet.
 - Add a new non-mutating helper such as `createScopedAppSdkClient(overrides)` in `useAppSdkClient.ts`.
 - Reuse `createAppSdkClientConfig()` and `createClient()` to build a temporary compat client.
 - Apply session tokens to the scoped client without touching the module-level `appSdkClient` / `appSdkConfig`.
-- Re-export the new helper from `packages/sdkwork-react-core/src/sdk/index.ts`.
+- Re-export the new helper from `packages/sdkwork-magic-studio-core/src/sdk/index.ts`.
 
 **Step 4: Run test to verify it passes**
 
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
 ```
 
 Expected: PASS.
@@ -126,16 +126,16 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts packages/sdkwork-react-core/src/sdk/index.ts packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
+git add packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts packages/sdkwork-magic-studio-core/src/sdk/index.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts
 git commit -m "feat: add scoped sdk client factory"
 ```
 
 ### Task 3: Normalize official prompt library and history capabilities
 
 **Files:**
-- Create: `packages/sdkwork-react-core/src/sdk/promptLibraryService.ts`
-- Modify: `packages/sdkwork-react-core/src/sdk/index.ts`
-- Test: `packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts`
+- Create: `packages/sdkwork-magic-studio-core/src/sdk/promptLibraryService.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/index.ts`
+- Test: `packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -161,7 +161,7 @@ it('normalizes prompt library and prompt history records from the official sdk',
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts
 ```
 
 Expected: FAIL because the service does not exist yet.
@@ -185,14 +185,14 @@ Expected: FAIL because the service does not exist yet.
   - `updatePrompt`
   - `deletePrompt`
 - Resolve the client through either the global singleton or the scoped client factory.
-- Export the service and types from `packages/sdkwork-react-core/src/sdk/index.ts`.
+- Export the service and types from `packages/sdkwork-magic-studio-core/src/sdk/index.ts`.
 
 **Step 4: Run test to verify it passes**
 
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts
 ```
 
 Expected: PASS.
@@ -200,15 +200,15 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-core/src/sdk/promptLibraryService.ts packages/sdkwork-react-core/src/sdk/index.ts packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts
+git add packages/sdkwork-magic-studio-core/src/sdk/promptLibraryService.ts packages/sdkwork-magic-studio-core/src/sdk/index.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts
 git commit -m "feat: add official prompt library service"
 ```
 
 ### Task 4: Make the shared presigned upload kernel fully official-SDK compatible
 
 **Files:**
-- Modify: `packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts`
-- Test: `packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts`
+- Test: `packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -235,7 +235,7 @@ it('prefers upload.registerPresigned when registering presigned uploads', async 
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
 ```
 
 Expected: FAIL because the helper only checks `registerPresignedUpload` today.
@@ -252,7 +252,7 @@ Expected: FAIL because the helper only checks `registerPresignedUpload` today.
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
 ```
 
 Expected: PASS.
@@ -260,15 +260,15 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
+git add packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts
 git commit -m "fix: align presigned upload helper with official sdk"
 ```
 
 ### Task 5: Route `ServerProvider` through the shared upload kernel
 
 **Files:**
-- Modify: `packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts`
-- Modify: `packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts`
+- Modify: `packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -290,7 +290,7 @@ it('delegates server-mode uploads to the shared presigned upload helper', async 
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
 ```
 
 Expected: FAIL or require substantial mocking updates because `ServerProvider` still owns a parallel upload-intent implementation.
@@ -310,7 +310,7 @@ Expected: FAIL or require substantial mocking updates because `ServerProvider` s
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
+pnpm test -- packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
 ```
 
 Expected: PASS.
@@ -318,19 +318,19 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
+git add packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts
 git commit -m "refactor: reuse shared presigned upload kernel in server provider"
 ```
 
 ### Task 6: Add configurable prompt library and history to `PromptTextInput`
 
 **Files:**
-- Modify: `packages/sdkwork-react-assets/src/components/generate/PromptTextInput.tsx`
-- Create: `packages/sdkwork-react-assets/src/components/generate/PromptPickerDialog.tsx`
-- Create: `packages/sdkwork-react-assets/src/components/generate/PromptHistoryDialog.tsx`
-- Modify: `packages/sdkwork-react-assets/src/index.ts`
-- Modify: `packages/sdkwork-react-assets/src/components/index.ts`
-- Test: `packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx`
+- Modify: `packages/sdkwork-magic-studio-assets/src/components/generate/PromptTextInput.tsx`
+- Create: `packages/sdkwork-magic-studio-assets/src/components/generate/PromptPickerDialog.tsx`
+- Create: `packages/sdkwork-magic-studio-assets/src/components/generate/PromptHistoryDialog.tsx`
+- Modify: `packages/sdkwork-magic-studio-assets/src/index.ts`
+- Modify: `packages/sdkwork-magic-studio-assets/src/components/index.ts`
+- Test: `packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx`
 
 **Step 1: Write the failing test**
 
@@ -357,7 +357,7 @@ it('replaces the current prompt when a library prompt is selected', async () => 
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx
+pnpm test -- packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx
 ```
 
 Expected: FAIL because the picker UI and prompt capability props do not exist yet.
@@ -376,7 +376,7 @@ Expected: FAIL because the picker UI and prompt capability props do not exist ye
 Run:
 
 ```bash
-pnpm test -- packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx
+pnpm test -- packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx
 ```
 
 Expected: PASS.
@@ -384,15 +384,15 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-assets/src/components/generate/PromptTextInput.tsx packages/sdkwork-react-assets/src/components/generate/PromptPickerDialog.tsx packages/sdkwork-react-assets/src/components/generate/PromptHistoryDialog.tsx packages/sdkwork-react-assets/src/index.ts packages/sdkwork-react-assets/src/components/index.ts packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx
+git add packages/sdkwork-magic-studio-assets/src/components/generate/PromptTextInput.tsx packages/sdkwork-magic-studio-assets/src/components/generate/PromptPickerDialog.tsx packages/sdkwork-magic-studio-assets/src/components/generate/PromptHistoryDialog.tsx packages/sdkwork-magic-studio-assets/src/index.ts packages/sdkwork-magic-studio-assets/src/components/index.ts packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx
 git commit -m "feat: add prompt library and history to prompt text input"
 ```
 
 ### Task 7: Verify existing upload callers still use the shared kernel
 
 **Files:**
-- Verify: `packages/sdkwork-react-assets/src/services/assetSdkQueryService.ts`
-- Verify: `packages/sdkwork-react-drive/src/services/driveBusinessService.ts`
+- Verify: `packages/sdkwork-magic-studio-assets/src/services/assetSdkQueryService.ts`
+- Verify: `packages/sdkwork-magic-studio-drive/src/services/driveBusinessService.ts`
 - Verify: any remaining server-upload callers discovered during grep audit
 
 **Step 1: Write the audit expectation**
@@ -408,7 +408,7 @@ Run:
 
 ```bash
 git grep -n "uploadViaPresignedUrl\\|registerPresigned\\|getPresignedUrl" -- packages src
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx
 ```
 
 Expected:
@@ -429,7 +429,7 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add packages/sdkwork-react-assets/src/services/assetSdkQueryService.ts packages/sdkwork-react-drive/src/services/driveBusinessService.ts packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts
+git add packages/sdkwork-magic-studio-assets/src/services/assetSdkQueryService.ts packages/sdkwork-magic-studio-drive/src/services/driveBusinessService.ts packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts
 git commit -m "refactor: standardize server uploads on presigned client flow"
 ```
 
@@ -441,7 +441,7 @@ git commit -m "refactor: standardize server uploads on presigned client flow"
 **Step 1: Run the targeted tests**
 
 ```bash
-pnpm test -- packages/sdkwork-react-core/src/sdk/__tests__/promptSdkFacade.test.ts packages/sdkwork-react-core/src/sdk/__tests__/scopedAppSdkClient.test.ts packages/sdkwork-react-core/src/sdk/__tests__/promptLibraryService.test.ts packages/sdkwork-react-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts packages/sdkwork-react-core/src/services/storage/providers/__tests__/ServerProvider.test.ts packages/sdkwork-react-assets/tests/promptTextInputPromptPicker.test.tsx
+pnpm test -- packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptSdkFacade.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/scopedAppSdkClient.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/promptLibraryService.test.ts packages/sdkwork-magic-studio-core/src/sdk/__tests__/uploadViaPresignedUrl.test.ts packages/sdkwork-magic-studio-core/src/services/storage/providers/__tests__/ServerProvider.test.ts packages/sdkwork-magic-studio-assets/tests/promptTextInputPromptPicker.test.tsx
 ```
 
 Expected: PASS.
@@ -480,7 +480,7 @@ Verify:
 **Step 5: Commit**
 
 ```bash
-git add docs/plans/2026-03-20-prompt-platform-presigned-upload-design.md docs/plans/2026-03-20-prompt-platform-presigned-upload.md packages/sdkwork-react-core/src/sdk/index.ts packages/sdkwork-react-core/src/sdk/hooks.ts packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts packages/sdkwork-react-core/src/sdk/promptLibraryService.ts packages/sdkwork-react-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-react-core/src/services/storage/providers/ServerProvider.ts packages/sdkwork-react-assets/src/components/generate/PromptTextInput.tsx
+git add docs/plans/2026-03-20-prompt-platform-presigned-upload-design.md docs/plans/2026-03-20-prompt-platform-presigned-upload.md packages/sdkwork-magic-studio-core/src/sdk/index.ts packages/sdkwork-magic-studio-core/src/sdk/hooks.ts packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts packages/sdkwork-magic-studio-core/src/sdk/promptLibraryService.ts packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts packages/sdkwork-magic-studio-core/src/services/storage/providers/ServerProvider.ts packages/sdkwork-magic-studio-assets/src/components/generate/PromptTextInput.tsx
 git commit -m "feat: unify prompt platform and presigned uploads"
 ```
 

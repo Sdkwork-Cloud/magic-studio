@@ -2,103 +2,34 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
 
+import {
+  loadServiceEncapsulationPolicy,
+  ServiceEncapsulationPolicyError,
+} from './service-encapsulation-policy.mjs';
+
 const ROOT_DIR = process.cwd();
 const PACKAGES_DIR = path.join(ROOT_DIR, 'packages');
 const REPORT_DIR = path.join(ROOT_DIR, 'docs', 'reports');
 const DATE_TAG = new Date().toISOString().slice(0, 10);
 const STRICT_MODE = process.argv.includes('--strict');
-const POLICY_FILE = path.join(ROOT_DIR, 'docs', 'plans', 'service-encapsulation-policy.json');
-const normalizePath = (value) => value.split(path.sep).join('/');
-const DEFAULT_POLICY = {
-  infrastructurePackages: ['sdkwork-app-sdk-typescript', 'sdkwork-react-types'],
-  seamExemptPackages: ['sdkwork-react-core'],
-  rootServiceExportExemptPackages: ['sdkwork-react-core'],
-  allowedOutsideServicePatterns: [
-    'packages\\/sdkwork-react-core\\/src\\/platform\\/web\\.ts$',
-    'packages\\/sdkwork-react-core\\/src\\/ai\\/genAIService\\.ts$',
-    'packages\\/sdkwork-app-sdk-typescript\\/'
-  ],
-  interactionRules: [
-    { key: 'fetch', label: 'Network Fetch' },
-    { key: 'storage', label: 'Web Storage' },
-    { key: 'clipboard', label: 'Clipboard API' },
-    { key: 'invoke', label: 'Tauri Invoke' },
-    { key: 'runtimePlatform', label: 'Runtime Platform Bridge' },
-    { key: 'runtimeUploadHelper', label: 'Runtime Upload Helper Bridge' }
-  ]
-};
 
-const toStringArray = (value, fallback) => {
-  if (!Array.isArray(value)) {
-    return [...fallback];
-  }
-  return value.filter((item) => typeof item === 'string');
-};
-
-const toInteractionRules = (value, fallback) => {
-  if (!Array.isArray(value)) {
-    return [...fallback];
-  }
-  const rules = value
-    .filter(
-      (item) =>
-        item &&
-        typeof item === 'object' &&
-        typeof item.key === 'string' &&
-        typeof item.label === 'string'
-    )
-    .map((item) => ({ key: item.key, label: item.label }));
-  return rules.length > 0 ? rules : [...fallback];
-};
-
-const loadPolicy = () => {
-  if (!fs.existsSync(POLICY_FILE)) {
-    return {
-      policy: DEFAULT_POLICY,
-      policySource: 'default'
-    };
-  }
+const readPolicyOrExit = () => {
   try {
-    const raw = fs.readFileSync(POLICY_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    return {
-      policy: {
-        infrastructurePackages: toStringArray(
-          parsed.infrastructurePackages,
-          DEFAULT_POLICY.infrastructurePackages
-        ),
-        seamExemptPackages: toStringArray(
-          parsed.seamExemptPackages,
-          DEFAULT_POLICY.seamExemptPackages
-        ),
-        rootServiceExportExemptPackages: toStringArray(
-          parsed.rootServiceExportExemptPackages,
-          DEFAULT_POLICY.rootServiceExportExemptPackages
-        ),
-        allowedOutsideServicePatterns: toStringArray(
-          parsed.allowedOutsideServicePatterns,
-          DEFAULT_POLICY.allowedOutsideServicePatterns
-        ),
-        interactionRules: toInteractionRules(
-          parsed.interactionRules,
-          DEFAULT_POLICY.interactionRules
-        )
-      },
-      policySource: normalizePath(path.relative(ROOT_DIR, POLICY_FILE))
-    };
+    return loadServiceEncapsulationPolicy({ rootDir: ROOT_DIR });
   } catch (error) {
-    console.error(
-      `[ServiceAudit] Failed to parse policy file: ${normalizePath(path.relative(ROOT_DIR, POLICY_FILE))}. Falling back to defaults.`,
-      error
-    );
-    return {
-      policy: DEFAULT_POLICY,
-      policySource: 'default (fallback due parse error)'
-    };
+    if (error instanceof ServiceEncapsulationPolicyError) {
+      console.error(`[ServiceAudit] ${error.message}`);
+      for (const issue of error.issues ?? []) {
+        console.error(`- ${issue}`);
+      }
+    } else {
+      console.error('[ServiceAudit] Failed to load service encapsulation policy.', error);
+    }
+    process.exit(1);
   }
 };
 
-const { policy, policySource } = loadPolicy();
+const { policy, policySource } = readPolicyOrExit();
 
 const INFRASTRUCTURE_PACKAGES = new Set(policy.infrastructurePackages);
 const SEAM_EXEMPT_PACKAGES = new Set([
@@ -127,6 +58,9 @@ const isCodeFile = (filePath) => {
   if (filePath.endsWith('.d.ts')) {
     return false;
   }
+  if (/(\.test|\.spec)\.tsx?$/.test(filePath)) {
+    return false;
+  }
   return true;
 };
 
@@ -138,7 +72,7 @@ const walkFiles = (dirPath, list = []) => {
   for (const entry of entries) {
     const abs = path.join(dirPath, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === 'dist' || entry.name === 'node_modules') {
+      if (entry.name === 'dist' || entry.name === 'node_modules' || entry.name === '__tests__') {
         continue;
       }
       walkFiles(abs, list);
@@ -235,7 +169,7 @@ const scanInteractionHits = (sourceFile) => {
 
     if (ts.isIdentifier(node)) {
       const name = node.text;
-      if (name === '__sdkworkPlatform') {
+      if (name === '__sdkworkPlatformRuntime') {
         hits.runtimePlatform += 1;
       } else if (name === '__sdkworkUploadHelper') {
         hits.runtimeUploadHelper += 1;

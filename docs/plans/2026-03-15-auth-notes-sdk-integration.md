@@ -14,9 +14,9 @@
 
 **Files:**
 - Modify: `docs/reports/2026-03-15-auth-notes-contract-audit.md`
-- Inspect: `packages/sdkwork-react-auth/src/services/appAuthService.ts`
-- Inspect: `packages/sdkwork-react-auth/src/store/authStore.tsx`
-- Inspect: `packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts`
+- Inspect: `packages/sdkwork-magic-studio-auth/src/services/appAuthService.ts`
+- Inspect: `packages/sdkwork-magic-studio-auth/src/store/authStore.tsx`
+- Inspect: `packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts`
 
 **Step 1: Write the failing auth contract test**
 
@@ -30,7 +30,7 @@ it('restores a persisted session only when profile lookup succeeds', async () =>
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-auth`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-auth`
 Expected: FAIL on current contract mismatch or missing coverage.
 
 **Step 3: Document actual SDK method names and payload shapes**
@@ -43,15 +43,15 @@ Use the generated SDK response shape instead of assumptions where they differ.
 
 **Step 5: Run auth tests again**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-auth`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-auth`
 Expected: PASS for the audited auth scenarios.
 
 ### Task 2: Audit Current Notes Contract
 
 **Files:**
 - Modify: `docs/reports/2026-03-15-auth-notes-contract-audit.md`
-- Inspect: `packages/sdkwork-react-notes/src/services/noteService.ts`
-- Inspect: `packages/sdkwork-react-notes/src/store/noteStore.tsx`
+- Inspect: `packages/sdkwork-magic-studio-notes/src/services/noteService.ts`
+- Inspect: `packages/sdkwork-magic-studio-notes/src/store/noteStore.tsx`
 
 **Step 1: Write the failing notes contract tests**
 
@@ -66,7 +66,7 @@ it('loads notes via generated sdk methods without raw-http-only dependencies', a
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-notes`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-notes`
 Expected: FAIL where current assumptions do not match the real SDK.
 
 **Step 3: Record method gaps**
@@ -91,7 +91,7 @@ Capture exact method names and missing endpoints in the audit report.
 
 **Step 5: Re-run notes tests**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-notes`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-notes`
 Expected: still FAIL until contract gaps are fixed downstream.
 
 ### Task 3: Add Missing Backend APIs For Auth Or Notes
@@ -125,10 +125,10 @@ Run the workspace SDK generation flow and confirm the new methods exist.
 ### Task 4: Refit Frontend Auth To The Regenerated SDK
 
 **Files:**
-- Modify: `packages/sdkwork-react-auth/src/services/appAuthService.ts`
-- Modify: `packages/sdkwork-react-auth/src/store/authStore.tsx`
+- Modify: `packages/sdkwork-magic-studio-auth/src/services/appAuthService.ts`
+- Modify: `packages/sdkwork-magic-studio-auth/src/store/authStore.tsx`
 - Modify: `src/pages/LoginPage.tsx`
-- Modify: any auth tests added in `packages/sdkwork-react-auth`
+- Modify: any auth tests added in `packages/sdkwork-magic-studio-auth`
 
 **Step 1: Write or update failing tests for final auth behaviors**
 
@@ -136,7 +136,7 @@ Cover login, restore, refresh, logout, and invalid-session clearing.
 
 **Step 2: Run tests to verify RED**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-auth`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-auth`
 Expected: FAIL before implementation changes.
 
 **Step 3: Implement minimal auth changes**
@@ -145,7 +145,7 @@ Align service mapping, session persistence, and store recovery with the regenera
 
 **Step 4: Run tests to verify GREEN**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-auth`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-auth`
 Expected: PASS.
 
 **Step 5: Check login routing behavior**
@@ -155,10 +155,10 @@ Confirm `/login` still transitions to `ROUTES.HOME` after successful auth.
 ### Task 5: Refine Notes Service To Formal SDK Methods
 
 **Files:**
-- Modify: `packages/sdkwork-react-notes/src/services/noteService.ts`
-- Modify: `packages/sdkwork-react-notes/src/services/noteBusinessService.ts`
-- Modify: `packages/sdkwork-react-notes/src/store/noteStore.tsx`
-- Modify: notes tests in `packages/sdkwork-react-notes`
+- Modify: `packages/sdkwork-magic-studio-notes/src/services/noteService.ts`
+- Modify: `packages/sdkwork-magic-studio-notes/src/services/noteBusinessService.ts`
+- Modify: `packages/sdkwork-magic-studio-notes/src/store/noteStore.tsx`
+- Modify: notes tests in `packages/sdkwork-magic-studio-notes`
 
 **Step 1: Write or update failing tests for final note behaviors**
 
@@ -166,7 +166,7 @@ Cover CRUD, folder operations, trash lifecycle, and debounced content persistenc
 
 **Step 2: Run tests to verify RED**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-notes`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-notes`
 Expected: FAIL before final service refit.
 
 **Step 3: Replace provisional fallback logic where formal methods now exist**
@@ -179,7 +179,7 @@ Ensure optimistic updates reconcile correctly with authoritative backend state.
 
 **Step 5: Run tests to verify GREEN**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-notes`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-notes`
 Expected: PASS.
 
 ### Task 6: Integrate And Verify In The App
@@ -214,7 +214,7 @@ Expected: PASS.
 
 **Step 1: Run notes and auth test suites**
 
-Run: `pnpm.cmd exec vitest run packages/sdkwork-react-auth packages/sdkwork-react-notes`
+Run: `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-auth packages/sdkwork-magic-studio-notes`
 Expected: PASS.
 
 **Step 2: Run service encapsulation audit**

@@ -45,21 +45,21 @@ describe('Magic Studio branding', () => {
   it('removes legacy branded compatibility artifacts from active code', () => {
     const chatStorage = readFromRoot(
       'packages',
-      'sdkwork-react-chat',
+      'sdkwork-magic-studio-chat',
       'src',
       'services',
       'chatSessionStorage.ts'
     );
     const storageIndex = readFromRoot(
       'packages',
-      'sdkwork-react-core',
+      'sdkwork-magic-studio-core',
       'src',
       'storage',
       'index.ts'
     );
     const ideConfigTest = readFromRoot(
       'packages',
-      'sdkwork-react-ide-config',
+      'sdkwork-magic-studio-ide-config',
       'tests',
       'ideConfigMagicStudioPaths.test.ts'
     );
@@ -80,7 +80,7 @@ describe('Magic Studio branding', () => {
       fs.existsSync(
         resolveFromRoot(
           'packages',
-          'sdkwork-react-core',
+          'sdkwork-magic-studio-core',
           'src',
           'storage',
           'magicStudioMigration.ts'
@@ -92,7 +92,7 @@ describe('Magic Studio branding', () => {
       fs.existsSync(
         resolveFromRoot(
           'packages',
-          'sdkwork-react-core',
+          'sdkwork-magic-studio-core',
           'src',
           'storage',
           '__tests__',

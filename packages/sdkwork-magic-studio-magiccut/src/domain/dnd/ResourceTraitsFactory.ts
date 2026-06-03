@@ -1,0 +1,120 @@
+
+import { IResourceTraits } from './IResourceTraits';
+import { CutTrackType } from '../../entities/magicCut.entity';
+import { GhostFactory } from '../../components/Timeline/dnd/visuals/GhostFactory';
+import type { AnyMediaResource } from '@sdkwork/magic-studio-types/media';
+import { MediaResourceType } from '@sdkwork/magic-studio-types/vocabulary';
+
+// --- Abstract Base Trait ---
+abstract class BaseResourceTraits implements IResourceTraits {
+    abstract getDefaultDuration(resource: AnyMediaResource): number;
+    abstract getPreferredTrackType(): CutTrackType;
+    
+    getGhostConfig(isValid: boolean, isInsert: boolean, trackHeight?: number) {
+        return GhostFactory.getConfig(this.getResourceType(), isValid, isInsert, trackHeight);
+    }
+
+    abstract getResourceType(): MediaResourceType;
+
+    getPreferredTrackTypes(): string[] {
+        return [this.getPreferredTrackType()];
+    }
+
+    protected resolveResourceDuration(resource: AnyMediaResource): number | null {
+        const directDuration =
+            'duration' in resource ? Number(resource.duration) : Number.NaN;
+        if (Number.isFinite(directDuration) && directDuration > 0) {
+            return directDuration;
+        }
+
+        const metadataDuration = Number((resource.metadata as Record<string, unknown> | undefined)?.duration);
+        if (Number.isFinite(metadataDuration) && metadataDuration > 0) {
+            return metadataDuration;
+        }
+
+        return null;
+    }
+}
+
+// --- Concrete Traits ---
+
+class VideoResourceTraits extends BaseResourceTraits {
+    getResourceType() { return MediaResourceType.VIDEO; }
+    getDefaultDuration(resource: AnyMediaResource): number {
+        return this.resolveResourceDuration(resource) ?? 5;
+    }
+    getPreferredTrackType(): CutTrackType { return 'video'; }
+}
+
+class AudioResourceTraits extends BaseResourceTraits {
+    getResourceType() { return MediaResourceType.AUDIO; }
+    getDefaultDuration(resource: AnyMediaResource): number {
+        return this.resolveResourceDuration(resource) ?? 10;
+    }
+    getPreferredTrackType(): CutTrackType { return 'audio'; }
+}
+
+class ImageResourceTraits extends BaseResourceTraits {
+    getResourceType() { return MediaResourceType.IMAGE; }
+    getDefaultDuration(): number {
+        return 5; // Static images default to 5s
+    }
+    getPreferredTrackType(): CutTrackType { return 'video'; } // Images go on video tracks
+}
+
+class TextResourceTraits extends BaseResourceTraits {
+    getResourceType() { return MediaResourceType.TEXT; }
+    getDefaultDuration(): number {
+        return 5;
+    }
+    getPreferredTrackType(): CutTrackType { return 'text'; }
+}
+
+class EffectResourceTraits extends BaseResourceTraits {
+    getResourceType() { return MediaResourceType.EFFECT; }
+    getDefaultDuration(): number {
+        return 5;
+    }
+    getPreferredTrackType(): CutTrackType { return 'effect'; }
+}
+
+export class ResourceTraitsFactory {
+    private static cache: Map<string, IResourceTraits> = new Map();
+
+    static getTraits(resourceType: MediaResourceType): IResourceTraits {
+        if (this.cache.has(resourceType)) {
+            return this.cache.get(resourceType)!;
+        }
+
+        let traits: IResourceTraits;
+
+        switch (resourceType) {
+            case MediaResourceType.VIDEO:
+                traits = new VideoResourceTraits();
+                break;
+            case MediaResourceType.AUDIO:
+            case MediaResourceType.MUSIC:
+            case MediaResourceType.VOICE:
+            case MediaResourceType.SPEECH:
+                traits = new AudioResourceTraits();
+                break;
+            case MediaResourceType.IMAGE:
+                traits = new ImageResourceTraits();
+                break;
+            case MediaResourceType.TEXT:
+            case MediaResourceType.SUBTITLE:
+                traits = new TextResourceTraits();
+                break;
+            case MediaResourceType.EFFECT:
+            case MediaResourceType.TRANSITION:
+                traits = new EffectResourceTraits();
+                break;
+            default:
+                traits = new VideoResourceTraits(); // Fallback
+        }
+
+        this.cache.set(resourceType, traits);
+        return traits;
+    }
+}
+

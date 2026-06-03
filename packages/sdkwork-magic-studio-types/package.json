@@ -1,0 +1,176 @@
+{
+  "name": "@sdkwork/magic-studio-types",
+  "version": "0.1.0",
+  "description": "Type definitions for Magic Studio",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./asset-reference": {
+      "import": "./src/asset-reference.ts",
+      "types": "./src/asset-reference.ts"
+    },
+    "./entity": {
+      "import": "./src/entity.types.ts",
+      "types": "./src/entity.types.ts"
+    },
+    "./service": {
+      "import": "./src/service.types.ts",
+      "types": "./src/service.types.ts"
+    },
+    "./pagination": {
+      "import": "./src/pagination.types.ts",
+      "types": "./src/pagination.types.ts"
+    },
+    "./storage": {
+      "import": "./src/storage.types.ts",
+      "types": "./src/storage.types.ts"
+    },
+    "./media": {
+      "import": "./src/media.types.ts",
+      "types": "./src/media.types.ts"
+    },
+    "./assets": {
+      "import": "./src/assets.types.ts",
+      "types": "./src/assets.types.ts"
+    },
+    "./asset-center": {
+      "import": "./src/asset-center.types.ts",
+      "types": "./src/asset-center.types.ts"
+    },
+    "./image": {
+      "import": "./src/image.types.ts",
+      "types": "./src/image.types.ts"
+    },
+    "./canvas": {
+      "import": "./src/canvas.types.ts",
+      "types": "./src/canvas.types.ts"
+    },
+    "./video": {
+      "import": "./src/video.types.ts",
+      "types": "./src/video.types.ts"
+    },
+    "./audio": {
+      "import": "./src/audio.types.ts",
+      "types": "./src/audio.types.ts"
+    },
+    "./music": {
+      "import": "./src/music.types.ts",
+      "types": "./src/music.types.ts"
+    },
+    "./film": {
+      "import": "./src/film.types.ts",
+      "types": "./src/film.types.ts"
+    },
+    "./character": {
+      "import": "./src/character.types.ts",
+      "types": "./src/character.types.ts"
+    },
+    "./voice": {
+      "import": "./src/voice.types.ts",
+      "types": "./src/voice.types.ts"
+    },
+    "./sfx": {
+      "import": "./src/sfx.types.ts",
+      "types": "./src/sfx.types.ts"
+    },
+    "./chat": {
+      "import": "./src/chat.types.ts",
+      "types": "./src/chat.types.ts"
+    },
+    "./chatppt": {
+      "import": "./src/chatppt.types.ts",
+      "types": "./src/chatppt.types.ts"
+    },
+    "./agi": {
+      "import": "./src/agi.types.ts",
+      "types": "./src/agi.types.ts"
+    },
+    "./input-resource": {
+      "import": "./src/input-resource.utils.ts",
+      "types": "./src/input-resource.utils.ts"
+    },
+    "./vocabulary": {
+      "import": "./src/vocabulary.types.ts",
+      "types": "./src/vocabulary.types.ts"
+    },
+    "./catalog": {
+      "import": "./src/catalog.types.ts",
+      "types": "./src/catalog.types.ts"
+    },
+    "./content": {
+      "import": "./src/content.types.ts",
+      "types": "./src/content.types.ts"
+    },
+    "./auth": {
+      "import": "./src/auth.types.ts",
+      "types": "./src/auth.types.ts"
+    },
+    "./notes": {
+      "import": "./src/notes.types.ts",
+      "types": "./src/notes.types.ts"
+    },
+    "./user": {
+      "import": "./src/user.types.ts",
+      "types": "./src/user.types.ts"
+    },
+    "./workspace": {
+      "import": "./src/workspace.types.ts",
+      "types": "./src/workspace.types.ts"
+    },
+    "./drive": {
+      "import": "./src/drive.types.ts",
+      "types": "./src/drive.types.ts"
+    },
+    "./runtime": {
+      "import": "./src/runtime.types.ts",
+      "types": "./src/runtime.types.ts"
+    },
+    "./theme-mode": {
+      "import": "./src/theme-mode.ts",
+      "types": "./src/theme-mode.ts"
+    },
+    "./infrastructure": {
+      "import": "./src/infrastructure.types.ts",
+      "types": "./src/infrastructure.types.ts"
+    },
+    "./magiccut": {
+      "import": "./src/magiccut.types.ts",
+      "types": "./src/magiccut.types.ts"
+    },
+    "./project-graph": {
+      "import": "./src/project-graph.types.ts",
+      "types": "./src/project-graph.types.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "node ../../scripts/run-package-vite-build.mjs --watch",
+    "build": "node ../../scripts/run-package-typecheck.mjs tsconfig.json && node ../../scripts/run-package-vite-build.mjs",
+    "typecheck": "node ../../scripts/run-package-typecheck.mjs tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  },
+  "keywords": [
+    "magic-studio",
+    "types",
+    "typescript",
+    "sdkwork"
+  ],
+  "author": "SDKWork",
+  "license": "MIT",
+  "private": true
+}

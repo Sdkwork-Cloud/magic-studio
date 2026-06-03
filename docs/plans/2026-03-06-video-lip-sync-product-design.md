@@ -372,7 +372,7 @@ export interface LipSyncProviderAdapter {
 
 ## 11. 与当前代码集成点
 
-前端（`@sdkwork/react-video`）：
+前端（`@sdkwork/magic-studio-video`）：
 
 1. `VideoLeftGeneratorPanel.tsx`
 - `mode === 'lip-sync'` 时渲染独立表单区（不复用核心四模式字段）。

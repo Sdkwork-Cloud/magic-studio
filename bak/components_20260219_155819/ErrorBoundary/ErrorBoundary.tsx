@@ -1,5 +1,5 @@
 import React, { ErrorInfo, ReactNode } from 'react';
-import { logger } from 'sdkwork-react-commons';
+import { logger } from 'sdkwork-magic-studio-commons';
 
 export interface ErrorBoundaryProps {
     children?: ReactNode;

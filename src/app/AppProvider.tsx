@@ -1,12 +1,12 @@
-import { RouterProvider } from '@sdkwork/react-core'
+import { RouterProvider } from '@sdkwork/magic-studio-core/router'
 import React, { ReactNode, useEffect } from 'react';
-import { SettingsStoreProvider } from '@sdkwork/react-settings';
-import { AuthStoreProvider, useAuthStore } from '@sdkwork/react-auth';
-import { VipStoreProvider } from '@sdkwork/react-vip';
-import { WorkspaceStoreProvider } from '@sdkwork/react-workspace';
-import { ChatStoreProvider } from '@sdkwork/react-chat';
+import { SettingsStoreProvider } from '@sdkwork/magic-studio-settings/store';
+import { AuthStoreProvider, useAuthStore } from '@sdkwork/magic-studio-auth/store';
+import { VipStoreProvider } from '@sdkwork/magic-studio-vip/store';
+import { WorkspaceStoreProvider } from '@sdkwork/magic-studio-workspace/store';
+import { ChatStoreProvider } from '@sdkwork/magic-studio-chat/store';
 import { themeManager } from './theme/ThemeManager';
-import { NotificationStoreProvider } from '@sdkwork/react-notifications';
+import { NotificationStoreProvider } from '@sdkwork/magic-studio-notifications/store';
 
 interface AppProviderProps {
   children: ReactNode;

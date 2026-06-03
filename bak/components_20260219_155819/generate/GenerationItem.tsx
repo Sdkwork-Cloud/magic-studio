@@ -4,7 +4,7 @@ import {
     Trash2, Copy, Repeat2, Check, Maximize2, Play, Image as ImageIcon, Film, Mic, Music, Volume2, Box, Save
 } from 'lucide-react';
 import { ImageTask, GeneratedResult, MediaType } from '../../modules/image/entities/image.entity';
-import { platform } from 'sdkwork-react-core';
+import { platform } from 'sdkwork-magic-studio-core';
 import { PromptText } from './PromptText';
 import { assetService } from '../../modules/assets/services/assetService';
 import { AssetType } from '../../modules/assets/entities/asset.entity';

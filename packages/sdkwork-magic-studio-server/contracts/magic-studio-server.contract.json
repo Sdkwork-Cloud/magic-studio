@@ -1,0 +1,4077 @@
+{
+  "apiVersion": "v1",
+  "meta": {
+    "healthRouteId": "coreHealthStatusRead",
+    "docsPath": "/docs",
+    "openApiPath": "/openapi/magic-studio-server-v1.json",
+    "liveOpenApiPath": "/openapi.json",
+    "routeCatalogRouteId": "coreRoutesList",
+    "runtimeSummaryRouteId": "coreRuntimeSummaryRead"
+  },
+  "surfaces": [
+    {
+      "name": "core",
+      "authMode": "host",
+      "basePath": "/api/core/v1",
+      "description": "Core local runtime capabilities."
+    },
+    {
+      "name": "app",
+      "authMode": "user",
+      "basePath": "/api/app/v1",
+      "description": "Application-facing local APIs."
+    },
+    {
+      "name": "admin",
+      "authMode": "admin",
+      "basePath": "/api/admin/v1",
+      "description": "Administrative governance APIs."
+    }
+  ],
+  "routes": [
+    {
+      "id": "coreHealthStatusRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/healthz",
+      "summary": "Read server health status",
+      "successResponseSchema": "MagicStudioServerHealthStatusEnvelope"
+    },
+    {
+      "id": "coreRoutesList",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/routes",
+      "summary": "List server routes",
+      "successResponseSchema": "MagicStudioApiRouteCatalogEnvelope"
+    },
+    {
+      "id": "coreRuntimeSummaryRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/runtime/summary",
+      "summary": "Read runtime summary",
+      "successResponseSchema": "MagicStudioRuntimeSummaryEnvelope"
+    },
+    {
+      "id": "coreToolkitCapabilitiesRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/toolkit/capabilities",
+      "summary": "Read toolkit capabilities",
+      "successResponseSchema": "MagicStudioToolkitCapabilityMatrixEnvelope"
+    },
+    {
+      "id": "coreFileSystemReadDir",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/read-dir",
+      "summary": "List filesystem directory entries",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioFileSystemEntryListEnvelope"
+    },
+    {
+      "id": "coreFileSystemReadText",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/read-text",
+      "summary": "Read filesystem text content",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioFileSystemTextPayloadEnvelope"
+    },
+    {
+      "id": "coreFileSystemReadBytes",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/read-bytes",
+      "summary": "Read filesystem binary content",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioFileSystemBytesPayloadEnvelope"
+    },
+    {
+      "id": "coreFileSystemWriteText",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/write-text",
+      "summary": "Write filesystem text content",
+      "requestBodySchema": "MagicStudioFileSystemWriteTextRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemWriteBytes",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/write-bytes",
+      "summary": "Write filesystem binary content",
+      "requestBodySchema": "MagicStudioFileSystemWriteBytesRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemStat",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/stat",
+      "summary": "Read filesystem metadata",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioFileSystemStatEnvelope"
+    },
+    {
+      "id": "coreFileSystemExists",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/exists",
+      "summary": "Check whether a filesystem path exists",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioFileSystemExistsResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemEnsureDir",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/ensure-dir",
+      "summary": "Ensure a filesystem directory exists",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemRemove",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/remove",
+      "summary": "Remove a filesystem path",
+      "requestBodySchema": "MagicStudioFileSystemPathRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemRename",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/rename",
+      "summary": "Rename a filesystem path",
+      "requestBodySchema": "MagicStudioFileSystemRenameRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreFileSystemCopyFile",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/filesystem/copy-file",
+      "summary": "Copy a filesystem file",
+      "requestBodySchema": "MagicStudioFileSystemCopyFileRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreMediaProbe",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/probe",
+      "summary": "Probe media metadata",
+      "requestBodySchema": "MagicStudioMediaProbeRequest",
+      "successResponseSchema": "MagicStudioMediaProbeResultEnvelope"
+    },
+    {
+      "id": "coreMediaImageResize",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/image/resize",
+      "summary": "Resize a local image with a structured media request",
+      "requestBodySchema": "MagicStudioMediaImageResizeRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaVideoConcat",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/video/concat",
+      "summary": "Concatenate local video inputs",
+      "requestBodySchema": "MagicStudioMediaVideoConcatRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaVideoTranscode",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/video/transcode",
+      "summary": "Transcode local video with a structured media request",
+      "requestBodySchema": "MagicStudioMediaVideoTranscodeRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaVideoTrim",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/video/trim",
+      "summary": "Trim local video with copy-safe media arguments",
+      "requestBodySchema": "MagicStudioMediaVideoTrimRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaVideoExtractAudio",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/video/extract-audio",
+      "summary": "Extract audio from local video",
+      "requestBodySchema": "MagicStudioMediaVideoExtractAudioRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaVideoThumbnail",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/video/thumbnail",
+      "summary": "Create a thumbnail from local video",
+      "requestBodySchema": "MagicStudioMediaVideoThumbnailRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaAudioConvert",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/audio/convert",
+      "summary": "Convert local audio with a structured media request",
+      "requestBodySchema": "MagicStudioMediaAudioConvertRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaAudioNormalize",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/audio/normalize",
+      "summary": "Normalize local audio loudness",
+      "requestBodySchema": "MagicStudioMediaAudioNormalizeRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreMediaAudioMix",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/media/audio/mix",
+      "summary": "Mix local audio inputs into a single output",
+      "requestBodySchema": "MagicStudioMediaAudioMixRequest",
+      "successResponseSchema": "MagicStudioToolkitCommandResultEnvelope"
+    },
+    {
+      "id": "coreCompressionZip",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/compression/zip",
+      "summary": "Create a zip archive from local paths",
+      "requestBodySchema": "MagicStudioCompressionZipRequest",
+      "successResponseSchema": "MagicStudioCompressionZipResultEnvelope"
+    },
+    {
+      "id": "coreCompressionUnzip",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/compression/unzip",
+      "summary": "Extract a local zip archive",
+      "requestBodySchema": "MagicStudioCompressionUnzipRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreDatabaseSqliteExecute",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/database/sqlite/execute",
+      "summary": "Execute a SQLite statement",
+      "requestBodySchema": "MagicStudioSqlExecuteRequest",
+      "successResponseSchema": "MagicStudioSqlExecuteResultEnvelope"
+    },
+    {
+      "id": "coreDatabaseSqliteQuery",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/database/sqlite/query",
+      "summary": "Query SQLite rows",
+      "requestBodySchema": "MagicStudioSqlExecuteRequest",
+      "successResponseSchema": "MagicStudioSqlRowListEnvelope"
+    },
+    {
+      "id": "coreDatabaseSqliteExecuteBatch",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/database/sqlite/execute-batch",
+      "summary": "Execute a SQLite batch",
+      "requestBodySchema": "MagicStudioSqlExecuteBatchRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "coreJobsSubmit",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/jobs",
+      "summary": "Submit an asynchronous local job",
+      "successResponseSchema": "MagicStudioToolkitJobSnapshotEnvelope",
+      "requestBodySchema": "MagicStudioToolkitJobSubmission"
+    },
+    {
+      "id": "coreJobsList",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/jobs",
+      "summary": "List asynchronous local jobs",
+      "successResponseSchema": "MagicStudioToolkitJobSnapshotListEnvelope"
+    },
+    {
+      "id": "coreJobsRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/jobs/:jobId",
+      "summary": "Read an asynchronous local job",
+      "successResponseSchema": "MagicStudioToolkitJobSnapshotEnvelope"
+    },
+    {
+      "id": "coreJobsCancel",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/jobs/:jobId/cancel",
+      "summary": "Cancel an asynchronous local job",
+      "successResponseSchema": "MagicStudioToolkitJobSnapshotEnvelope"
+    },
+    {
+      "id": "corePolicyValidatePath",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/policy/validate-path",
+      "summary": "Validate local path access against policy",
+      "successResponseSchema": "MagicStudioPolicyValidationResultEnvelope",
+      "requestBodySchema": "MagicStudioPolicyPathValidationRequest"
+    },
+    {
+      "id": "corePolicyValidateCommand",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/policy/validate-command",
+      "summary": "Validate local command execution against policy",
+      "successResponseSchema": "MagicStudioPolicyValidationResultEnvelope",
+      "requestBodySchema": "MagicStudioPolicyCommandValidationRequest"
+    },
+    {
+      "id": "corePolicySnapshotRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "GET",
+      "path": "/api/core/v1/policy/snapshot",
+      "summary": "Read current policy snapshot",
+      "successResponseSchema": "MagicStudioPolicySnapshotEnvelope"
+    },
+    {
+      "id": "coreMigrationsStatusRead",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/migrations/status",
+      "summary": "Read migration status for a local SQLite database",
+      "successResponseSchema": "MagicStudioMigrationStatusEnvelope",
+      "requestBodySchema": "MagicStudioMigrationStatusRequest"
+    },
+    {
+      "id": "coreMigrationsApply",
+      "surface": "core",
+      "authMode": "host",
+      "method": "POST",
+      "path": "/api/core/v1/migrations/apply",
+      "summary": "Apply a migration plan to a local SQLite database",
+      "successResponseSchema": "MagicStudioMigrationApplyResultEnvelope",
+      "requestBodySchema": "MagicStudioMigrationApplyRequest"
+    },
+    {
+      "id": "appPluginsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/plugins",
+      "summary": "List registered plugins",
+      "successResponseSchema": "MagicStudioPluginManifestListEnvelope"
+    },
+    {
+      "id": "appSettingsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/settings",
+      "summary": "Read application settings",
+      "successResponseSchema": "MagicStudioAppSettingsDocumentEnvelope"
+    },
+    {
+      "id": "appSettingsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/settings",
+      "summary": "Update application settings",
+      "requestBodySchema": "MagicStudioAppSettingsUpdateRequest",
+      "successResponseSchema": "MagicStudioAppSettingsDocumentEnvelope"
+    },
+    {
+      "id": "appNotificationsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notifications",
+      "summary": "List application notifications",
+      "successResponseSchema": "MagicStudioNotificationRecordListEnvelope"
+    },
+    {
+      "id": "appNotificationsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notifications",
+      "summary": "Create an application notification",
+      "requestBodySchema": "MagicStudioNotificationCreateRequest",
+      "successResponseSchema": "MagicStudioNotificationRecordEnvelope"
+    },
+    {
+      "id": "appNotificationsReadUnreadCount",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notifications/unread-count",
+      "summary": "Read unread notification count",
+      "successResponseSchema": "MagicStudioNotificationUnreadCountEnvelope"
+    },
+    {
+      "id": "appNotificationsMarkAllRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notifications/read-all",
+      "summary": "Mark all notifications as read",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotificationsMarkRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notifications/:notificationId/read",
+      "summary": "Mark a notification as read",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotificationsDeleteBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notifications/delete",
+      "summary": "Delete application notifications",
+      "requestBodySchema": "MagicStudioNotificationBatchDeleteRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appWorkspacesList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces",
+      "summary": "List workspaces",
+      "successResponseSchema": "StudioWorkspaceListEnvelope"
+    },
+    {
+      "id": "appWorkspacesCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces",
+      "summary": "Create a workspace",
+      "requestBodySchema": "MagicStudioWorkspaceCreateRequest",
+      "successResponseSchema": "StudioWorkspaceEnvelope"
+    },
+    {
+      "id": "appWorkspacesRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId",
+      "summary": "Read a workspace",
+      "successResponseSchema": "StudioWorkspaceEnvelope"
+    },
+    {
+      "id": "appWorkspacesUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/workspaces/:workspaceId",
+      "summary": "Update a workspace",
+      "requestBodySchema": "MagicStudioWorkspaceUpdateRequest",
+      "successResponseSchema": "StudioWorkspaceEnvelope"
+    },
+    {
+      "id": "appWorkspacesDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/workspaces/:workspaceId",
+      "summary": "Delete a workspace",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsListRecent",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/recent-projects",
+      "summary": "List recent workspace projects",
+      "successResponseSchema": "StudioProjectListEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects",
+      "summary": "List workspace projects",
+      "successResponseSchema": "StudioProjectListEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects",
+      "summary": "Create a workspace project",
+      "requestBodySchema": "MagicStudioProjectCreateRequest",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId",
+      "summary": "Read a workspace project",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsOpen",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/open",
+      "summary": "Mark a workspace project as opened",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsDuplicate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/duplicate",
+      "summary": "Duplicate a workspace project",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsArchive",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/archive",
+      "summary": "Archive a workspace project",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsRestore",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/restore",
+      "summary": "Restore an archived workspace project",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/session",
+      "summary": "Read a workspace project session",
+      "successResponseSchema": "StudioProjectSessionSnapshotEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsUpsertSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/session",
+      "summary": "Upsert a workspace project session",
+      "requestBodySchema": "MagicStudioProjectSessionUpsertRequest",
+      "successResponseSchema": "StudioProjectSessionEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsDeleteSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/session",
+      "summary": "Delete a workspace project session",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsGitSync",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/git-sync",
+      "summary": "Synchronize a workspace project to a git remote",
+      "requestBodySchema": "MagicStudioProjectGitSyncRequest",
+      "successResponseSchema": "StudioProjectGitSyncEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsListGitSyncs",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/git-syncs",
+      "summary": "List workspace project git sync records",
+      "successResponseSchema": "StudioProjectGitSyncListEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadLatestGitSync",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/git-syncs/latest",
+      "summary": "Read the latest workspace project git sync record",
+      "successResponseSchema": "StudioProjectGitSyncEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadGitSync",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/git-syncs/:syncId",
+      "summary": "Read a workspace project git sync record",
+      "successResponseSchema": "StudioProjectGitSyncEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsRetryGitSync",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/git-syncs/:syncId/retry",
+      "summary": "Retry a workspace project git sync from a canonical sync record",
+      "requestBodySchema": "MagicStudioProjectGitSyncRetryRequest",
+      "successResponseSchema": "StudioProjectGitSyncEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsListReleases",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases",
+      "summary": "List workspace project releases",
+      "successResponseSchema": "StudioProjectReleaseListEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadReleaseStats",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/stats",
+      "summary": "Read workspace project release retention statistics",
+      "successResponseSchema": "StudioProjectReleaseStatsEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsPruneReleases",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/prune",
+      "summary": "Permanently prune soft-deleted workspace project releases",
+      "requestBodySchema": "MagicStudioProjectReleasePruneRequest",
+      "successResponseSchema": "StudioProjectReleasePruneResultEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadReleaseRetentionPolicy",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/retention-policy",
+      "summary": "Read workspace project release retention policy",
+      "successResponseSchema": "StudioProjectReleaseRetentionPolicyEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsUpdateReleaseRetentionPolicy",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/retention-policy",
+      "summary": "Replace workspace project release retention policy",
+      "requestBodySchema": "MagicStudioProjectReleaseRetentionPolicyRequest",
+      "successResponseSchema": "StudioProjectReleaseRetentionPolicyEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsApplyReleaseRetentionPolicy",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/retention-policy/apply",
+      "summary": "Apply workspace project release retention policy",
+      "requestBodySchema": "MagicStudioProjectReleaseRetentionPolicyApplyRequest",
+      "successResponseSchema": "StudioProjectReleaseRetentionPolicyApplyResultEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsCreateRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases",
+      "summary": "Create a workspace project release",
+      "requestBodySchema": "MagicStudioProjectReleaseCreateRequest",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadLatestRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/latest",
+      "summary": "Read the latest workspace project release",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId",
+      "summary": "Read a workspace project release",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsDeleteRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId",
+      "summary": "Soft delete a workspace project release",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsRestoreRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId/restore",
+      "summary": "Restore a soft-deleted workspace project release",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadReleaseManifest",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId/manifest",
+      "summary": "Read a workspace project release manifest",
+      "successResponseSchema": "StudioProjectReleaseManifestEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsReadReleaseArtifact",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId/artifact",
+      "summary": "Download a workspace project release artifact"
+    },
+    {
+      "id": "appWorkspaceProjectsRebuildRelease",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId/releases/:releaseId/rebuild",
+      "summary": "Rebuild a workspace project release from its canonical release configuration",
+      "successResponseSchema": "StudioProjectReleaseEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId",
+      "summary": "Update a workspace project",
+      "requestBodySchema": "MagicStudioProjectUpdateRequest",
+      "successResponseSchema": "StudioProjectEnvelope"
+    },
+    {
+      "id": "appWorkspaceProjectsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/workspaces/:workspaceId/projects/:projectId",
+      "summary": "Delete a workspace project",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appAssetsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/assets",
+      "summary": "List unified digital assets",
+      "successResponseSchema": "UnifiedDigitalAssetListEnvelope"
+    },
+    {
+      "id": "appAssetsReadStats",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/assets/stats",
+      "summary": "Read unified digital asset statistics",
+      "successResponseSchema": "AssetCenterStatsEnvelope"
+    },
+    {
+      "id": "appAssetsListCategories",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/assets/categories",
+      "summary": "List supported asset categories",
+      "successResponseSchema": "AssetCategoryListEnvelope"
+    },
+    {
+      "id": "appAssetsImportFile",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/assets/import/file",
+      "summary": "Import a local file into the managed asset catalog",
+      "requestBodySchema": "MagicStudioAssetImportFileRequest",
+      "successResponseSchema": "UnifiedDigitalAssetEnvelope"
+    },
+    {
+      "id": "appAssetsImportUrl",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/assets/import/url",
+      "summary": "Register a remote URL in the managed asset catalog",
+      "requestBodySchema": "MagicStudioAssetImportUrlRequest",
+      "successResponseSchema": "UnifiedDigitalAssetEnvelope"
+    },
+    {
+      "id": "appAssetsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/assets/:assetId",
+      "summary": "Read a unified digital asset",
+      "successResponseSchema": "UnifiedDigitalAssetEnvelope"
+    },
+    {
+      "id": "appAssetsUpsert",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/assets/:assetId",
+      "summary": "Create or replace a unified digital asset",
+      "requestBodySchema": "MagicStudioAssetUpsertRequest",
+      "successResponseSchema": "UnifiedDigitalAssetEnvelope"
+    },
+    {
+      "id": "appAssetsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/assets/:assetId",
+      "summary": "Update unified digital asset metadata",
+      "requestBodySchema": "MagicStudioAssetUpdateRequest",
+      "successResponseSchema": "UnifiedDigitalAssetEnvelope"
+    },
+    {
+      "id": "appAssetsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/assets/:assetId",
+      "summary": "Delete a unified digital asset",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appDriveReadRoot",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/drive/root",
+      "summary": "Read drive root descriptor",
+      "successResponseSchema": "DriveRootDescriptorEnvelope"
+    },
+    {
+      "id": "appDriveListEntries",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/drive/entries",
+      "summary": "List drive entries",
+      "successResponseSchema": "DriveItemListEnvelope"
+    },
+    {
+      "id": "appDriveReadStats",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/drive/stats",
+      "summary": "Read drive statistics",
+      "successResponseSchema": "DriveStatsEnvelope"
+    },
+    {
+      "id": "appDriveReadFileContent",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/drive/files/:itemId/content",
+      "summary": "Read drive file content",
+      "successResponseSchema": "DriveFileContentEnvelope"
+    },
+    {
+      "id": "appDriveUpdateFileContent",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/drive/files/:itemId/content",
+      "summary": "Update drive file content",
+      "requestBodySchema": "MagicStudioDriveUpdateFileContentRequest",
+      "successResponseSchema": "DriveFileContentEnvelope"
+    },
+    {
+      "id": "appDriveCreateFolder",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/folders",
+      "summary": "Create a drive folder",
+      "requestBodySchema": "MagicStudioDriveCreateFolderRequest",
+      "successResponseSchema": "DriveItemEnvelope"
+    },
+    {
+      "id": "appDriveUploadFile",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/uploads",
+      "summary": "Upload a drive file payload",
+      "requestBodySchema": "MagicStudioDriveUploadFileRequest",
+      "successResponseSchema": "DriveItemEnvelope"
+    },
+    {
+      "id": "appDriveImportFile",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/imports/file",
+      "summary": "Import a local file into drive",
+      "requestBodySchema": "MagicStudioDriveImportFileRequest",
+      "successResponseSchema": "DriveItemEnvelope"
+    },
+    {
+      "id": "appDriveRenameItem",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/rename",
+      "summary": "Rename a drive item",
+      "requestBodySchema": "MagicStudioDriveRenameRequest",
+      "successResponseSchema": "DriveItemEnvelope"
+    },
+    {
+      "id": "appDriveMoveItems",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/move",
+      "summary": "Move drive items",
+      "requestBodySchema": "MagicStudioDriveMoveRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appDriveDeleteItems",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/delete",
+      "summary": "Move drive items to trash",
+      "requestBodySchema": "MagicStudioDriveDeleteRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appDriveRestoreItems",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/restore",
+      "summary": "Restore drive items from trash",
+      "requestBodySchema": "MagicStudioDriveRestoreRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appDriveEmptyTrash",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/trash/empty",
+      "summary": "Empty drive trash",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appDriveFavoriteItem",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/drive/favorites",
+      "summary": "Update drive favorite state",
+      "requestBodySchema": "MagicStudioDriveFavoriteRequest",
+      "successResponseSchema": "DriveItemEnvelope"
+    },
+    {
+      "id": "appFilmProjectsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects",
+      "summary": "List film projects",
+      "successResponseSchema": "MagicStudioFilmProjectListEnvelope"
+    },
+    {
+      "id": "appFilmProjectsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects",
+      "summary": "Create a film project snapshot",
+      "requestBodySchema": "MagicStudioFilmProjectCreateRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmPresetsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/presets",
+      "summary": "List canonical film presets",
+      "successResponseSchema": "MagicStudioFilmPresetListEnvelope"
+    },
+    {
+      "id": "appFilmPresetsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/presets",
+      "summary": "Create a custom canonical film preset",
+      "requestBodySchema": "MagicStudioFilmPresetWriteRequest",
+      "successResponseSchema": "MagicStudioFilmPresetEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/templates",
+      "summary": "List canonical film templates",
+      "successResponseSchema": "MagicStudioFilmTemplateListEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/templates",
+      "summary": "Create a canonical reusable film template",
+      "requestBodySchema": "MagicStudioFilmTemplateWriteRequest",
+      "successResponseSchema": "MagicStudioFilmTemplateEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/templates/:templateId",
+      "summary": "Read a canonical film template",
+      "successResponseSchema": "MagicStudioFilmTemplateEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/film/templates/:templateId",
+      "summary": "Update a canonical film template snapshot",
+      "requestBodySchema": "MagicStudioFilmTemplateWriteRequest",
+      "successResponseSchema": "MagicStudioFilmTemplateEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesInstantiate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/templates/:templateId/instantiate",
+      "summary": "Instantiate a canonical film template into a new film project",
+      "requestBodySchema": "MagicStudioFilmTemplateInstantiateRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmTemplatesDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/film/templates/:templateId",
+      "summary": "Delete a canonical film template",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsCreateTemplateSnapshot",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/template-snapshots",
+      "summary": "Create a canonical reusable film template snapshot from a film project",
+      "requestBodySchema": "MagicStudioFilmTemplateSnapshotRequest",
+      "successResponseSchema": "MagicStudioFilmTemplateEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId",
+      "summary": "Read a film project",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadProjectGraph",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/project-graph",
+      "summary": "Read the canonical film project graph",
+      "successResponseSchema": "MagicStudioProjectGraphDocumentEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadAssetInventory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/asset-inventory",
+      "summary": "Read the canonical film asset inventory and topology summary",
+      "successResponseSchema": "MagicStudioFilmAssetInventoryResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsListPublishes",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes",
+      "summary": "List canonical film publish history records",
+      "successResponseSchema": "MagicStudioFilmPublishRecordListEnvelope"
+    },
+    {
+      "id": "appFilmProjectsListReviewQueue",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/queue",
+      "summary": "List canonical film review queue items for a project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewQueueItemListEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewPortfolioDashboard",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/portfolio-dashboard",
+      "summary": "Read the canonical cross-publish review portfolio dashboard for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewPortfolioDashboardResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewReviewerCapacity",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/reviewer-capacity",
+      "summary": "Read the canonical reviewer capacity and SLA exposure projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewReviewerCapacityResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewDecisionFreshness",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/decision-freshness",
+      "summary": "Read the canonical project-level decision freshness projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewDecisionFreshnessResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewGovernanceDrift",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/governance-drift",
+      "summary": "Read the canonical project-level governance drift supervision projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewGovernanceDriftResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewEscalationForecast",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/escalation-forecast",
+      "summary": "Read the canonical cross-publish escalation forecast and approval throughput projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewEscalationForecastResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewDependencyGraph",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/dependency-graph",
+      "summary": "Read the canonical cross-publish review dependency graph for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewDependencyGraphResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewInterventionPlan",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/intervention-plan",
+      "summary": "Read the canonical cross-publish review intervention plan for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewInterventionPlanResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewRecoveryOrchestration",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/recovery-orchestration",
+      "summary": "Read the canonical dependency-driven review recovery orchestration plan for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewRecoveryOrchestrationResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewApprovalBurnDown",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/approval-burn-down",
+      "summary": "Read the canonical approval burn-down and intervention outcome projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewApprovalBurnDownResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewEffectivenessBaseline",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/effectiveness-baseline",
+      "summary": "Read the canonical review effectiveness baseline projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewEffectivenessBaselineResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewInterventionExecutionHistory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/intervention-execution-history",
+      "summary": "Read the canonical intervention execution evidence and realized outcome history for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewInterventionExecutionHistoryResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadReviewInterventionOutcomes",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/reviews/intervention-outcomes",
+      "summary": "Read the canonical intervention outcome learning projection for a film project",
+      "successResponseSchema": "MagicStudioFilmProjectReviewInterventionOutcomesResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId",
+      "summary": "Read a canonical film publish record",
+      "successResponseSchema": "MagicStudioFilmPublishRecordEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewState",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/state",
+      "summary": "Read canonical film publish review state",
+      "successResponseSchema": "MagicStudioFilmPublishReviewStateEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewTimeline",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/timeline",
+      "summary": "Read the canonical audit timeline for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewTimelineResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewRounds",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/rounds",
+      "summary": "Read canonical review-round projections for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewRoundsResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewAnchors",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/anchors",
+      "summary": "Read canonical review-anchor aggregations for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewAnchorsResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewActivity",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/activity",
+      "summary": "Read the canonical actor activity projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewActivityResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewAnchorResponsibility",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/anchor-responsibility",
+      "summary": "Read the canonical open-anchor responsibility and escalation projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewAnchorResponsibilityResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewReviewerBacklog",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/reviewer-backlog",
+      "summary": "Read the canonical reviewer backlog and SLA projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewReviewerBacklogResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewDecisionMatrix",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/decision-matrix",
+      "summary": "Read the canonical round-aware reviewer decision matrix for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewDecisionMatrixResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewWorklist",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/reviewer-worklist",
+      "summary": "Read the canonical reviewer worklist projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewWorklistResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewReadiness",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/readiness",
+      "summary": "Read the canonical approval-readiness projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewReadinessResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewReviewerAttention",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/reviewer-attention",
+      "summary": "Read the canonical reviewer attention queue for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewReviewerAttentionResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewReviewerCoverage",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/reviewer-coverage",
+      "summary": "Read the canonical reviewer coverage projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewReviewerCoverageResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewOperationsDashboard",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/operations-dashboard",
+      "summary": "Read the canonical review-operations dashboard for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewOperationsDashboardResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewStaleDecisions",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/stale-decisions",
+      "summary": "Read the canonical stale-decision and drift projection for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewStaleDecisionResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishReviewLatencyAnalytics",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/latency-analytics",
+      "summary": "Read the canonical review latency and throughput analytics for a film publish review bundle",
+      "successResponseSchema": "MagicStudioFilmPublishReviewLatencyAnalyticsResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsApprovePublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/approve",
+      "summary": "Approve a canonical film publish review bundle",
+      "requestBodySchema": "MagicStudioFilmPublishApproveRequest",
+      "successResponseSchema": "MagicStudioFilmPublishApproveResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRequestPublishChanges",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/request-changes",
+      "summary": "Request changes for a canonical film publish review bundle",
+      "requestBodySchema": "MagicStudioFilmPublishRequestChangesRequest",
+      "successResponseSchema": "MagicStudioFilmPublishRequestChangesResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsCreatePublishReviewComment",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/comments",
+      "summary": "Add a canonical review comment to a film publish bundle",
+      "requestBodySchema": "MagicStudioFilmPublishReviewCommentRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReviewCommentResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsSubmitPublishReview",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/submit",
+      "summary": "Submit a canonical film publish bundle into review or resubmit after changes",
+      "requestBodySchema": "MagicStudioFilmPublishReviewSubmitRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReviewSubmitResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsConsensusPublishReview",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/consensus",
+      "summary": "Record a canonical consensus checkpoint for a film publish review bundle",
+      "requestBodySchema": "MagicStudioFilmPublishReviewConsensusRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReviewConsensusResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsSetPublishReviewAssignments",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/assignments",
+      "summary": "Set canonical review assignments for a film publish bundle",
+      "requestBodySchema": "MagicStudioFilmPublishReviewAssignmentsRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReviewAssignmentsResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsResolvePublishReviewComment",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reviews/comments/:commentId/resolve",
+      "summary": "Resolve a canonical review comment on a film publish bundle",
+      "requestBodySchema": "MagicStudioFilmPublishReviewCommentResolveRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReviewCommentResolveResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReopenPublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/reopen",
+      "summary": "Reopen a canonical film publish review bundle",
+      "requestBodySchema": "MagicStudioFilmPublishReopenRequest",
+      "successResponseSchema": "MagicStudioFilmPublishReopenResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRestorePublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/restore",
+      "summary": "Restore a canonical film publish snapshot into the working project",
+      "requestBodySchema": "MagicStudioFilmPublishRestoreRequest",
+      "successResponseSchema": "MagicStudioFilmPublishRestoreResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsDeletePublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId",
+      "summary": "Delete a canonical film publish bundle and archive",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsReadPublishArtifactContent",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/film/projects/:projectId/publishes/:publishId/artifacts/:artifactKind/content",
+      "summary": "Read canonical film publish artifact content",
+      "successResponseSchema": "MagicStudioFilmPublishArtifactContentEnvelope"
+    },
+    {
+      "id": "appFilmProjectsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/film/projects/:projectId",
+      "summary": "Update a film project snapshot",
+      "requestBodySchema": "MagicStudioFilmProjectUpdateRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/film/projects/:projectId",
+      "summary": "Delete a film project",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appFilmAnalysisScript",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/analysis/script",
+      "summary": "Analyze a film script into canonical film entities",
+      "requestBodySchema": "MagicStudioFilmAnalysisRequest",
+      "successResponseSchema": "MagicStudioFilmScriptAnalysisResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsStandardizeScript",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/standardize-script",
+      "summary": "Standardize canonical film script content before analysis or storyboard work",
+      "requestBodySchema": "MagicStudioFilmScriptStandardizeRequest",
+      "successResponseSchema": "MagicStudioFilmScriptStandardizeResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsPrepareAnalysis",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/prepare-analysis",
+      "summary": "Prepare canonical film analysis by standardizing script content and refreshing analysis entities",
+      "requestBodySchema": "MagicStudioFilmPrepareAnalysisRequest",
+      "successResponseSchema": "MagicStudioFilmPrepareAnalysisResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRebuildStoryboard",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/rebuild-storyboard",
+      "summary": "Rebuild the canonical film storyboard from standardized script and refreshed analysis",
+      "requestBodySchema": "MagicStudioFilmRebuildStoryboardRequest",
+      "successResponseSchema": "MagicStudioFilmRebuildStoryboardResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsCreateSceneBreakdown",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/create-scene-breakdown",
+      "summary": "Create and persist the canonical film scene breakdown for pre-production planning",
+      "requestBodySchema": "MagicStudioFilmCreateSceneBreakdownRequest",
+      "successResponseSchema": "MagicStudioFilmCreateSceneBreakdownResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsGenerateShotVariants",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/generate-shot-variants",
+      "summary": "Generate and persist canonical pre-production shot variant plans from the scene breakdown",
+      "requestBodySchema": "MagicStudioFilmGenerateShotVariantsRequest",
+      "successResponseSchema": "MagicStudioFilmGenerateShotVariantsResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsCreateShootingPlan",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/create-shooting-plan",
+      "summary": "Create and persist the canonical location-aware shooting plan from pre-production data",
+      "requestBodySchema": "MagicStudioFilmCreateShootingPlanRequest",
+      "successResponseSchema": "MagicStudioFilmCreateShootingPlanResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsGenerateStoryboard",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/storyboard/generate",
+      "summary": "Generate canonical storyboard shots for a film project",
+      "requestBodySchema": "MagicStudioFilmStoryboardGenerateRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsSyncShots",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/shots/sync",
+      "summary": "Normalize and synchronize film shots",
+      "requestBodySchema": "MagicStudioFilmShotSyncRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsBindAsset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/assets/bind",
+      "summary": "Bind a canonical asset to a film project entity",
+      "requestBodySchema": "MagicStudioFilmAssetBindRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsExportPackage",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/export/package",
+      "summary": "Build a canonical export package for a film project",
+      "requestBodySchema": "MagicStudioFilmExportPackageRequest",
+      "successResponseSchema": "MagicStudioFilmExportPackageEnvelope"
+    },
+    {
+      "id": "appFilmProjectsPublishStoryboard",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/publish/storyboard",
+      "summary": "Publish a canonical storyboard review bundle for a film project",
+      "requestBodySchema": "MagicStudioFilmStoryboardPublishRequest",
+      "successResponseSchema": "MagicStudioFilmStoryboardPublishResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsImportPackage",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/import/package",
+      "summary": "Import a canonical film project package or JSON snapshot",
+      "requestBodySchema": "MagicStudioFilmImportPackageRequest",
+      "successResponseSchema": "MagicStudioFilmImportPackageEnvelope"
+    },
+    {
+      "id": "appFilmProjectsValidate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/validate",
+      "summary": "Validate a canonical film project snapshot",
+      "requestBodySchema": "MagicStudioFilmProjectValidateRequest",
+      "successResponseSchema": "MagicStudioFilmProjectValidationEnvelope"
+    },
+    {
+      "id": "appFilmAnalysisCharacters",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/analysis/characters",
+      "summary": "Extract film characters from script content",
+      "requestBodySchema": "MagicStudioFilmAnalysisRequest",
+      "successResponseSchema": "MagicStudioFilmCharacterListEnvelope"
+    },
+    {
+      "id": "appFilmAnalysisProps",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/analysis/props",
+      "summary": "Extract film props from script content",
+      "requestBodySchema": "MagicStudioFilmAnalysisRequest",
+      "successResponseSchema": "MagicStudioFilmPropListEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRunAuthoringBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/batch",
+      "summary": "Run canonical film authoring batch commands",
+      "requestBodySchema": "MagicStudioFilmAuthoringBatchRequest",
+      "successResponseSchema": "MagicStudioFilmAuthoringBatchResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRefreshAnalysis",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/authoring/refresh-analysis",
+      "summary": "Refresh canonical film analysis from script content and optionally rebuild storyboard shots",
+      "requestBodySchema": "MagicStudioFilmRefreshAnalysisRequest",
+      "successResponseSchema": "MagicStudioFilmRefreshAnalysisResultEnvelope"
+    },
+    {
+      "id": "appFilmProjectsApplyPreset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/apply-preset",
+      "summary": "Apply a canonical film preset to project settings",
+      "requestBodySchema": "MagicStudioFilmPresetApplyRequest",
+      "successResponseSchema": "MagicStudioFilmProjectEnvelope"
+    },
+    {
+      "id": "appFilmProjectsRelinkAssets",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/film/projects/:projectId/assets/relink",
+      "summary": "Relink canonical film asset locators after import or storage migration",
+      "requestBodySchema": "MagicStudioFilmAssetRelinkRequest",
+      "successResponseSchema": "MagicStudioFilmAssetRelinkResultEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/projects",
+      "summary": "List MagicCut projects",
+      "successResponseSchema": "MagicStudioMagicCutProjectListEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/projects",
+      "summary": "Create a MagicCut project snapshot",
+      "requestBodySchema": "MagicStudioMagicCutProjectCreateRequest",
+      "successResponseSchema": "MagicStudioMagicCutProjectEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/projects/:projectId",
+      "summary": "Read a MagicCut project",
+      "successResponseSchema": "MagicStudioMagicCutProjectEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/magiccut/projects/:projectId",
+      "summary": "Update a MagicCut project snapshot",
+      "requestBodySchema": "MagicStudioMagicCutProjectUpdateRequest",
+      "successResponseSchema": "MagicStudioMagicCutProjectEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/magiccut/projects/:projectId",
+      "summary": "Delete a MagicCut project",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appMagicCutProjectsDuplicate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/projects/:projectId/duplicate",
+      "summary": "Duplicate a MagicCut project",
+      "requestBodySchema": "MagicStudioMagicCutProjectDuplicateRequest",
+      "successResponseSchema": "MagicStudioMagicCutProjectEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/templates",
+      "summary": "List MagicCut templates",
+      "successResponseSchema": "MagicStudioMagicCutTemplateListEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/templates",
+      "summary": "Create a MagicCut template",
+      "requestBodySchema": "MagicStudioMagicCutTemplateSaveRequest",
+      "successResponseSchema": "MagicStudioMagicCutTemplateEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/templates/:templateId",
+      "summary": "Read a MagicCut template",
+      "successResponseSchema": "MagicStudioMagicCutTemplateEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/magiccut/templates/:templateId",
+      "summary": "Update a MagicCut template snapshot",
+      "requestBodySchema": "MagicStudioMagicCutTemplateSaveRequest",
+      "successResponseSchema": "MagicStudioMagicCutTemplateEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesInstantiate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/templates/:templateId/instantiate",
+      "summary": "Instantiate a MagicCut template as a new project",
+      "requestBodySchema": "MagicStudioMagicCutTemplateInstantiateRequest",
+      "successResponseSchema": "MagicStudioMagicCutProjectEnvelope"
+    },
+    {
+      "id": "appMagicCutTemplatesDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/magiccut/templates/:templateId",
+      "summary": "Delete a MagicCut template",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appMagicCutReadRenderCapabilities",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/render-capabilities",
+      "summary": "Read MagicCut render capabilities",
+      "successResponseSchema": "MagicStudioMagicCutRenderCapabilitiesEnvelope"
+    },
+    {
+      "id": "appMagicCutListRenders",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/renders",
+      "summary": "List MagicCut render jobs",
+      "successResponseSchema": "MagicStudioMagicCutRenderJobListEnvelope"
+    },
+    {
+      "id": "appMagicCutCreateRender",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/projects/:projectId/renders",
+      "summary": "Create a MagicCut render job",
+      "requestBodySchema": "MagicStudioMagicCutRenderCreateRequest",
+      "successResponseSchema": "MagicStudioMagicCutRenderJobEnvelope"
+    },
+    {
+      "id": "appMagicCutReadRender",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/renders/:renderId",
+      "summary": "Read a MagicCut render job",
+      "successResponseSchema": "MagicStudioMagicCutRenderJobEnvelope"
+    },
+    {
+      "id": "appMagicCutCancelRender",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/magiccut/renders/:renderId/cancel",
+      "summary": "Cancel a MagicCut render job",
+      "successResponseSchema": "MagicStudioMagicCutRenderJobEnvelope"
+    },
+    {
+      "id": "appMagicCutListRenderArtifacts",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/renders/:renderId/artifacts",
+      "summary": "List MagicCut render artifacts",
+      "successResponseSchema": "MagicStudioMagicCutRenderArtifactListEnvelope"
+    },
+    {
+      "id": "appMagicCutReadRenderArtifactContent",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/magiccut/renders/:renderId/artifacts/:artifactId/content",
+      "summary": "Read MagicCut render artifact content",
+      "successResponseSchema": "MagicStudioMagicCutRenderArtifactContentEnvelope"
+    },
+    {
+      "id": "appNotesWorkspaceSnapshot",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notes/workspace-snapshot",
+      "summary": "Read note workspace snapshot",
+      "successResponseSchema": "NoteWorkspaceSnapshotEnvelope"
+    },
+    {
+      "id": "appNotesList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notes",
+      "summary": "List active notes",
+      "successResponseSchema": "NoteSummaryListEnvelope"
+    },
+    {
+      "id": "appNotesCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes",
+      "summary": "Create a note",
+      "requestBodySchema": "MagicStudioNoteCreateRequest",
+      "successResponseSchema": "NoteEnvelope"
+    },
+    {
+      "id": "appNotesListTrashed",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notes/trashed",
+      "summary": "List trashed notes",
+      "successResponseSchema": "NoteSummaryListEnvelope"
+    },
+    {
+      "id": "appNotesRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/notes/:noteId",
+      "summary": "Read a note",
+      "successResponseSchema": "NoteEnvelope"
+    },
+    {
+      "id": "appNotesUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/notes/:noteId",
+      "summary": "Update a note",
+      "requestBodySchema": "MagicStudioNoteUpdateRequest",
+      "successResponseSchema": "NoteEnvelope"
+    },
+    {
+      "id": "appNotesCreateFolder",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/folders",
+      "summary": "Create a note folder",
+      "requestBodySchema": "MagicStudioNoteFolderCreateRequest",
+      "successResponseSchema": "NoteFolderEnvelope"
+    },
+    {
+      "id": "appNotesRenameFolder",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/notes/folders/:folderId",
+      "summary": "Rename a note folder",
+      "requestBodySchema": "MagicStudioNoteFolderRenameRequest",
+      "successResponseSchema": "NoteFolderEnvelope"
+    },
+    {
+      "id": "appNotesDeleteFolder",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/notes/folders/:folderId",
+      "summary": "Delete an empty note folder",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotesTrash",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/:noteId/trash",
+      "summary": "Move a note to trash",
+      "successResponseSchema": "NoteEnvelope"
+    },
+    {
+      "id": "appNotesRestore",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/:noteId/restore",
+      "summary": "Restore a note from trash",
+      "successResponseSchema": "NoteEnvelope"
+    },
+    {
+      "id": "appNotesDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/notes/:noteId",
+      "summary": "Permanently delete a note",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotesClearTrash",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/trash/clear",
+      "summary": "Permanently clear the note trash",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotesMoveFolder",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/folders/:folderId/move",
+      "summary": "Move a note folder",
+      "requestBodySchema": "MagicStudioNoteFolderMoveRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotesMove",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/:noteId/move",
+      "summary": "Move a note",
+      "requestBodySchema": "MagicStudioNoteMoveRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appNotesPublish",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/notes/:noteId/publish",
+      "summary": "Publish a note through the canonical notes API",
+      "requestBodySchema": "MagicStudioNotePublishRequest",
+      "successResponseSchema": "PublishResultEnvelope"
+    },
+    {
+      "id": "appPortalFeedsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds",
+      "summary": "Create a canonical portal feed",
+      "requestBodySchema": "MagicStudioPortalFeedCreateRequest",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsListFeatured",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/portal/feeds/featured",
+      "summary": "List canonical featured portal feeds",
+      "successResponseSchema": "MagicStudioPortalFeedListEnvelope"
+    },
+    {
+      "id": "appPortalFeedsListDiscover",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/portal/feeds/discover",
+      "summary": "List canonical discover portal feeds",
+      "successResponseSchema": "MagicStudioPortalFeedListEnvelope"
+    },
+    {
+      "id": "appPortalFeedsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/portal/feeds/:feedId",
+      "summary": "Read a canonical portal feed",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsLike",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds/:feedId/like",
+      "summary": "Like a canonical portal feed",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsUnlike",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds/:feedId/unlike",
+      "summary": "Unlike a canonical portal feed",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsCollect",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds/:feedId/collect",
+      "summary": "Collect a canonical portal feed",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsUncollect",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds/:feedId/uncollect",
+      "summary": "Remove a canonical portal feed from collection",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsShare",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/portal/feeds/:feedId/share",
+      "summary": "Share a canonical portal feed",
+      "successResponseSchema": "MagicStudioPortalFeedEnvelope"
+    },
+    {
+      "id": "appPortalFeedsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/portal/feeds/:feedId",
+      "summary": "Delete a canonical portal feed",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appTradeTasksListAvailable",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/tasks/available",
+      "summary": "List canonical marketplace tasks available to the current user",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskListEnvelope"
+    },
+    {
+      "id": "appTradeTasksListPublished",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/tasks/published",
+      "summary": "List canonical marketplace tasks published by the current user",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskListEnvelope"
+    },
+    {
+      "id": "appTradeTasksListAccepted",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/tasks/accepted",
+      "summary": "List canonical marketplace tasks accepted by the current user",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskListEnvelope"
+    },
+    {
+      "id": "appTradeTasksRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/tasks/:taskId",
+      "summary": "Read a canonical marketplace task",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskEnvelope"
+    },
+    {
+      "id": "appTradeTasksAccept",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/tasks/:taskId/accept",
+      "summary": "Accept a canonical marketplace task for the current user",
+      "requestBodySchema": "MagicStudioTradeTaskAcceptRequest",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskEnvelope"
+    },
+    {
+      "id": "appTradeTasksSubmit",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/tasks/:taskId/submit",
+      "summary": "Submit a canonical marketplace task delivery",
+      "requestBodySchema": "MagicStudioTradeTaskSubmitRequest",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskEnvelope"
+    },
+    {
+      "id": "appTradeTasksApprove",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/tasks/:taskId/approve",
+      "summary": "Approve or reopen a canonical marketplace task delivery",
+      "requestBodySchema": "MagicStudioTradeTaskApproveRequest",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskEnvelope"
+    },
+    {
+      "id": "appTradeTasksCancel",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/tasks/:taskId/cancel",
+      "summary": "Cancel or release a canonical marketplace task",
+      "successResponseSchema": "MagicStudioTradeMarketplaceTaskEnvelope"
+    },
+    {
+      "id": "appTradeOrdersList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/orders",
+      "summary": "List canonical trade orders for the current user",
+      "successResponseSchema": "MagicStudioTradeOrderListEnvelope"
+    },
+    {
+      "id": "appTradeOrdersRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/orders/:orderId",
+      "summary": "Read a canonical trade order",
+      "successResponseSchema": "MagicStudioTradeOrderEnvelope"
+    },
+    {
+      "id": "appTradeOrdersCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/orders",
+      "summary": "Create a canonical trade order",
+      "requestBodySchema": "MagicStudioTradeOrderCreateRequest",
+      "successResponseSchema": "MagicStudioTradeOrderEnvelope"
+    },
+    {
+      "id": "appTradeOrdersUpdateStatus",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/orders/:orderId/status",
+      "summary": "Update a canonical trade order status",
+      "requestBodySchema": "MagicStudioTradeOrderStatusUpdateRequest",
+      "successResponseSchema": "MagicStudioTradeOrderEnvelope"
+    },
+    {
+      "id": "appTradeOrdersCancel",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/orders/:orderId/cancel",
+      "summary": "Cancel a canonical pending-payment trade order",
+      "requestBodySchema": "MagicStudioTradeOrderCancelRequest",
+      "successResponseSchema": "MagicStudioTradeOrderEnvelope"
+    },
+    {
+      "id": "appTradeOrdersDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/trade/orders/:orderId",
+      "summary": "Delete a completed, cancelled, or refunded canonical trade order",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appTradeOrdersReadStatistics",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/orders/statistics",
+      "summary": "Read canonical trade order statistics for the current user",
+      "successResponseSchema": "MagicStudioTradeOrderStatisticsEnvelope"
+    },
+    {
+      "id": "appTradePaymentsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/payments",
+      "summary": "List canonical trade payments for the current user",
+      "successResponseSchema": "MagicStudioTradePaymentListEnvelope"
+    },
+    {
+      "id": "appTradePaymentsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/payments/:paymentId",
+      "summary": "Read a canonical trade payment",
+      "successResponseSchema": "MagicStudioTradePaymentEnvelope"
+    },
+    {
+      "id": "appTradePaymentsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/payments",
+      "summary": "Initiate a canonical trade payment",
+      "requestBodySchema": "MagicStudioTradePaymentCreateRequest",
+      "successResponseSchema": "MagicStudioTradePaymentActionResultEnvelope"
+    },
+    {
+      "id": "appTradePaymentsRefund",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/payments/:paymentId/refund",
+      "summary": "Refund a canonical successful trade payment",
+      "requestBodySchema": "MagicStudioTradePaymentRefundRequest",
+      "successResponseSchema": "MagicStudioTradePaymentEnvelope"
+    },
+    {
+      "id": "appTradePaymentsRecharge",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/trade/payments/recharge",
+      "summary": "Recharge the canonical trade wallet",
+      "requestBodySchema": "MagicStudioTradePaymentRechargeRequest",
+      "successResponseSchema": "MagicStudioTradePaymentActionResultEnvelope"
+    },
+    {
+      "id": "appTradeWalletRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/wallet",
+      "summary": "Read the canonical trade wallet for the current user",
+      "successResponseSchema": "MagicStudioTradeWalletEnvelope"
+    },
+    {
+      "id": "appTradeTransactionsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/trade/transactions",
+      "summary": "List canonical trade wallet transactions for the current user",
+      "successResponseSchema": "MagicStudioTradeTransactionListEnvelope"
+    },
+    {
+      "id": "appVipPlansList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/vip/plans",
+      "summary": "List canonical VIP plans",
+      "successResponseSchema": "MagicStudioVipPlanListEnvelope"
+    },
+    {
+      "id": "appVipReadStatus",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/vip/status",
+      "summary": "Read canonical VIP status for the current user",
+      "successResponseSchema": "MagicStudioVipStatusEnvelope"
+    },
+    {
+      "id": "appVipPurchase",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/vip/purchase",
+      "summary": "Purchase or extend a canonical VIP subscription",
+      "requestBodySchema": "MagicStudioVipPurchaseRequest",
+      "successResponseSchema": "MagicStudioVipPurchaseResultEnvelope"
+    },
+    {
+      "id": "appVipSubscriptionsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/vip/subscriptions",
+      "summary": "List canonical VIP subscriptions for the current user",
+      "successResponseSchema": "MagicStudioVipSubscriptionListEnvelope"
+    },
+    {
+      "id": "appVipSubscriptionsCancel",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/vip/subscriptions/:subscriptionId/cancel",
+      "summary": "Cancel a canonical VIP subscription",
+      "requestBodySchema": "MagicStudioVipSubscriptionCancelRequest",
+      "successResponseSchema": "MagicStudioVipSubscriptionEnvelope"
+    },
+    {
+      "id": "appAuthLogin",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/login",
+      "summary": "Authenticate with username and password",
+      "requestBodySchema": "MagicStudioAuthLoginRequest",
+      "successResponseSchema": "AuthSessionEnvelope"
+    },
+    {
+      "id": "appAuthLoginWithPhone",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/login/phone",
+      "summary": "Authenticate with phone and verification code",
+      "requestBodySchema": "MagicStudioAuthPhoneLoginRequest",
+      "successResponseSchema": "AuthSessionEnvelope"
+    },
+    {
+      "id": "appAuthRegister",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/register",
+      "summary": "Register a new local identity account",
+      "requestBodySchema": "MagicStudioAuthRegisterRequest",
+      "successResponseSchema": "AuthSessionEnvelope"
+    },
+    {
+      "id": "appAuthLogout",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/logout",
+      "summary": "Clear the current authenticated session",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appAuthRefreshToken",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/refresh-token",
+      "summary": "Refresh the current authenticated session",
+      "requestBodySchema": "MagicStudioAuthRefreshTokenRequest",
+      "successResponseSchema": "AuthSessionEnvelope"
+    },
+    {
+      "id": "appAuthReadSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/auth/session",
+      "summary": "Read the current authenticated session state",
+      "successResponseSchema": "AuthSessionStateEnvelope"
+    },
+    {
+      "id": "appAuthSendVerifyCode",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/verify-code/send",
+      "summary": "Issue a local verification code",
+      "requestBodySchema": "MagicStudioAuthSendVerifyCodeRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appAuthCheckVerifyCode",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/verify-code/check",
+      "summary": "Validate a local verification code",
+      "requestBodySchema": "MagicStudioAuthCheckVerifyCodeRequest",
+      "successResponseSchema": "AuthVerificationCodeCheckResultEnvelope"
+    },
+    {
+      "id": "appAuthRequestPasswordReset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/password-reset/request",
+      "summary": "Request a password reset verification code",
+      "requestBodySchema": "MagicStudioAuthPasswordResetRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appAuthResetPassword",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/password-reset/confirm",
+      "summary": "Reset a password with a verified code",
+      "requestBodySchema": "MagicStudioAuthPasswordResetConfirmRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appAuthCreateQrCode",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/auth/qr-code",
+      "summary": "Create a login QR code payload",
+      "successResponseSchema": "AuthQrCodePayloadEnvelope"
+    },
+    {
+      "id": "appAuthReadQrCodeStatus",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/auth/qr-code/:qrKey",
+      "summary": "Read login QR code status",
+      "successResponseSchema": "AuthQrCodeStatusResultEnvelope"
+    },
+    {
+      "id": "appUserReadProfile",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/profile",
+      "summary": "Read the current user profile",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserUpdateProfile",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/user/profile",
+      "summary": "Update the current user profile",
+      "requestBodySchema": "MagicStudioUserProfileUpdateRequest",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserUploadAvatar",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/avatar",
+      "summary": "Upload a current user avatar payload",
+      "requestBodySchema": "MagicStudioUserAvatarUploadRequest",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserReadSettings",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/settings",
+      "summary": "Read the current user settings",
+      "successResponseSchema": "UserSettingsEnvelope"
+    },
+    {
+      "id": "appUserUpdateSettings",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/user/settings",
+      "summary": "Update the current user settings",
+      "requestBodySchema": "MagicStudioUserSettingsUpdateRequest",
+      "successResponseSchema": "UserSettingsEnvelope"
+    },
+    {
+      "id": "appUserChangePassword",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/password/change",
+      "summary": "Change the current user password",
+      "requestBodySchema": "MagicStudioUserPasswordChangeRequest",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appUserListAddresses",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/addresses",
+      "summary": "List the current user addresses",
+      "successResponseSchema": "UserAddressListEnvelope"
+    },
+    {
+      "id": "appUserReadDefaultAddress",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/addresses/default",
+      "summary": "Read the current user default address",
+      "successResponseSchema": "UserAddressOptionalEnvelope"
+    },
+    {
+      "id": "appUserCreateAddress",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/addresses",
+      "summary": "Create a current user address",
+      "requestBodySchema": "MagicStudioUserAddressCreateRequest",
+      "successResponseSchema": "UserAddressEnvelope"
+    },
+    {
+      "id": "appUserUpdateAddress",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/user/addresses/:addressId",
+      "summary": "Update a current user address",
+      "requestBodySchema": "MagicStudioUserAddressUpdateRequest",
+      "successResponseSchema": "UserAddressEnvelope"
+    },
+    {
+      "id": "appUserDeleteAddress",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/addresses/:addressId",
+      "summary": "Delete a current user address",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appUserSetDefaultAddress",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/addresses/:addressId/default",
+      "summary": "Set the current user default address",
+      "successResponseSchema": "UserAddressEnvelope"
+    },
+    {
+      "id": "appUserReadLoginHistory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/history/login",
+      "summary": "List current user login history records",
+      "successResponseSchema": "UserLoginHistoryEntryListEnvelope"
+    },
+    {
+      "id": "appUserReadGenerationHistory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/history/generation",
+      "summary": "List current user generation history records",
+      "successResponseSchema": "UserGenerationHistoryEntryListEnvelope"
+    },
+    {
+      "id": "appUserListSessions",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/sessions",
+      "summary": "List the current user security sessions",
+      "successResponseSchema": "UserSecuritySessionListEnvelope"
+    },
+    {
+      "id": "appUserRevokeSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/sessions/:sessionId",
+      "summary": "Revoke a current user security session",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appUserListDevices",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/devices",
+      "summary": "List the current user trusted devices",
+      "successResponseSchema": "UserTrustedDeviceListEnvelope"
+    },
+    {
+      "id": "appUserRevokeDevice",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/devices/:deviceId",
+      "summary": "Revoke a current user trusted device",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appUserReadTwoFactorStatus",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/two-factor",
+      "summary": "Read the current user two-factor status",
+      "successResponseSchema": "UserTwoFactorStatusEnvelope"
+    },
+    {
+      "id": "appUserSetupTwoFactor",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/two-factor/setup",
+      "summary": "Start current user TOTP two-factor setup",
+      "requestBodySchema": "MagicStudioUserTwoFactorSetupRequest",
+      "successResponseSchema": "UserTwoFactorSetupEnvelope"
+    },
+    {
+      "id": "appUserVerifyTwoFactor",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/two-factor/verify",
+      "summary": "Verify and enable current user TOTP two-factor setup",
+      "requestBodySchema": "MagicStudioUserTwoFactorVerifyRequest",
+      "successResponseSchema": "UserTwoFactorStatusEnvelope"
+    },
+    {
+      "id": "appUserDisableTwoFactor",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/two-factor",
+      "summary": "Disable current user two-factor authentication",
+      "successResponseSchema": "UserTwoFactorStatusEnvelope"
+    },
+    {
+      "id": "appUserListBindings",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/user/bindings",
+      "summary": "List current user account bindings",
+      "successResponseSchema": "UserBindingListEnvelope"
+    },
+    {
+      "id": "appUserBindEmail",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/bind/email",
+      "summary": "Bind an email to the current user",
+      "requestBodySchema": "MagicStudioUserBindEmailRequest",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserUnbindEmail",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/bind/email",
+      "summary": "Unbind the current user email",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserBindPhone",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/bind/phone",
+      "summary": "Bind a phone number to the current user",
+      "requestBodySchema": "MagicStudioUserBindPhoneRequest",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserUnbindPhone",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/bind/phone",
+      "summary": "Unbind the current user phone number",
+      "successResponseSchema": "UserProfileEnvelope"
+    },
+    {
+      "id": "appUserBindThirdParty",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/user/bind/:platform",
+      "summary": "Bind a third-party account to the current user",
+      "requestBodySchema": "MagicStudioUserThirdPartyBindRequest",
+      "successResponseSchema": "UserBindingEnvelope"
+    },
+    {
+      "id": "appUserUnbindThirdParty",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/user/bind/:platform",
+      "summary": "Unbind a third-party account from the current user",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appGenerationListTasks",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/tasks",
+      "summary": "List canonical generation tasks across image, video, audio, music, sfx, character, and speech products",
+      "successResponseSchema": "MagicStudioGenerationTaskListEnvelope"
+    },
+    {
+      "id": "appGenerationReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/tasks/:taskId",
+      "summary": "Read a canonical generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationDeleteTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/generation/tasks/:taskId",
+      "summary": "Delete a canonical generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationCancelTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/tasks/:taskId/cancel",
+      "summary": "Cancel a canonical generation task when the underlying product supports cancellation",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationImagesCreateTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/images/tasks",
+      "summary": "Create an image generation task",
+      "requestBodySchema": "MagicStudioImageGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationImagesCreateVariation",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/images/variations",
+      "summary": "Create an image variation task",
+      "requestBodySchema": "MagicStudioImageGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationImagesCreateEdit",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/images/edits",
+      "summary": "Create an image edit task",
+      "requestBodySchema": "MagicStudioImageEditRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationImagesCreateUpscale",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/images/upscales",
+      "summary": "Create an image upscale task",
+      "requestBodySchema": "MagicStudioImageUpscaleRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationImagesEnhancePrompt",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/images/prompt/enhance",
+      "summary": "Enhance an image generation prompt",
+      "requestBodySchema": "MagicStudioGenerationPromptEnhanceRequest",
+      "successResponseSchema": "MagicStudioGenerationPromptEnhanceResultEnvelope"
+    },
+    {
+      "id": "appGenerationImagesReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/images/tasks/:taskId",
+      "summary": "Read an image generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCreateTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/tasks",
+      "summary": "Create a video generation task",
+      "requestBodySchema": "MagicStudioVideoGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCreateImageToVideo",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/image-to-video",
+      "summary": "Create an image-to-video generation task",
+      "requestBodySchema": "MagicStudioVideoGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCreateExtend",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/extend",
+      "summary": "Create a video extend task",
+      "requestBodySchema": "MagicStudioVideoGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCreateStyleTransfer",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/style-transfer",
+      "summary": "Create a video style transfer task",
+      "requestBodySchema": "MagicStudioVideoGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCreateLipSync",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/lip-sync",
+      "summary": "Create a video lip-sync task",
+      "requestBodySchema": "MagicStudioVideoGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosEnhancePrompt",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/prompt/enhance",
+      "summary": "Enhance a video generation prompt",
+      "requestBodySchema": "MagicStudioGenerationPromptEnhanceRequest",
+      "successResponseSchema": "MagicStudioGenerationPromptEnhanceResultEnvelope"
+    },
+    {
+      "id": "appGenerationVideosReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/videos/tasks/:taskId",
+      "summary": "Read a video generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationVideosCancelTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/videos/tasks/:taskId/cancel",
+      "summary": "Cancel a video generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationAudioCreateTextToSpeech",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/audio/text-to-speech",
+      "summary": "Create an audio text-to-speech generation task",
+      "requestBodySchema": "MagicStudioAudioGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationAudioCreateTranscription",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/audio/transcriptions",
+      "summary": "Create an audio transcription task",
+      "requestBodySchema": "MagicStudioAudioGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationAudioCreateTranslation",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/audio/translations",
+      "summary": "Create an audio translation task",
+      "requestBodySchema": "MagicStudioAudioGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationAudioReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/audio/tasks/:taskId",
+      "summary": "Read an audio generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationMusicCreateTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/music/tasks",
+      "summary": "Create a music generation task",
+      "requestBodySchema": "MagicStudioMusicGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationMusicCreateSimilar",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/music/similar",
+      "summary": "Create a similar-music generation task",
+      "requestBodySchema": "MagicStudioMusicSimilarRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationMusicCreateRemix",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/music/remix",
+      "summary": "Create a music remix task",
+      "requestBodySchema": "MagicStudioMusicRemixRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationMusicCreateExtend",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/music/extend",
+      "summary": "Create a music extend task",
+      "requestBodySchema": "MagicStudioMusicExtendRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationMusicReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/music/tasks/:taskId",
+      "summary": "Read a music generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationSfxCreateTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/sfx/tasks",
+      "summary": "Create a sound-effect generation task",
+      "requestBodySchema": "MagicStudioSfxGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationSfxListTasks",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/sfx/tasks",
+      "summary": "List sound-effect generation tasks",
+      "successResponseSchema": "MagicStudioGenerationTaskListEnvelope"
+    },
+    {
+      "id": "appGenerationSfxListCategories",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/sfx/categories",
+      "summary": "List sound-effect generation categories",
+      "successResponseSchema": "MagicStudioSfxCategoryListEnvelope"
+    },
+    {
+      "id": "appGenerationSfxReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/sfx/tasks/:taskId",
+      "summary": "Read a sound-effect generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationSfxCancelTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/sfx/tasks/:taskId/cancel",
+      "summary": "Cancel a sound-effect generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationCharactersCreateTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/characters/tasks",
+      "summary": "Create a character generation task",
+      "requestBodySchema": "MagicStudioCharacterGenerationRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationCharactersListTasks",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/characters/tasks",
+      "summary": "List character generation tasks",
+      "successResponseSchema": "MagicStudioGenerationTaskListEnvelope"
+    },
+    {
+      "id": "appGenerationCharactersReadTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/characters/tasks/:taskId",
+      "summary": "Read a character generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationCharactersCancelTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/generation/characters/tasks/:taskId/cancel",
+      "summary": "Cancel a character generation task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appGenerationCatalogListModels",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/catalog/models",
+      "summary": "List canonical generation catalog models",
+      "successResponseSchema": "MagicStudioGenerationCatalogModelListEnvelope"
+    },
+    {
+      "id": "appGenerationCatalogListStyles",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/catalog/styles",
+      "summary": "List canonical generation catalog styles",
+      "successResponseSchema": "MagicStudioGenerationCatalogStyleListEnvelope"
+    },
+    {
+      "id": "appGenerationCatalogListProviders",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/catalog/providers",
+      "summary": "List canonical generation catalog providers",
+      "successResponseSchema": "MagicStudioGenerationCatalogProviderListEnvelope"
+    },
+    {
+      "id": "appGenerationCatalogListVoices",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/generation/catalog/voices",
+      "summary": "List canonical generation catalog voices",
+      "successResponseSchema": "MagicStudioVoiceSpeakerListEnvelope"
+    },
+    {
+      "id": "appVoicesListMarket",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/market",
+      "summary": "List market voice speakers",
+      "successResponseSchema": "MagicStudioVoiceSpeakerListEnvelope"
+    },
+    {
+      "id": "appVoicesListWorkspace",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/workspace",
+      "summary": "List workspace voice speakers",
+      "successResponseSchema": "MagicStudioVoiceSpeakerListEnvelope"
+    },
+    {
+      "id": "appVoicesListCustom",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/custom",
+      "summary": "List custom voice speakers",
+      "successResponseSchema": "MagicStudioVoiceSpeakerListEnvelope"
+    },
+    {
+      "id": "appVoicesCreateCustom",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/custom",
+      "summary": "Create a custom voice speaker",
+      "requestBodySchema": "MagicStudioCustomVoiceCreateRequest",
+      "successResponseSchema": "MagicStudioVoiceSpeakerEnvelope"
+    },
+    {
+      "id": "appVoicesUpdateCustom",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/voices/custom/:speakerId",
+      "summary": "Update a custom voice speaker",
+      "requestBodySchema": "MagicStudioCustomVoiceUpdateRequest",
+      "successResponseSchema": "MagicStudioVoiceSpeakerEnvelope"
+    },
+    {
+      "id": "appVoicesDeleteCustom",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/voices/custom/:speakerId",
+      "summary": "Delete a custom voice speaker",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appVoicesReadSpeaker",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/:speakerId",
+      "summary": "Read a voice speaker",
+      "successResponseSchema": "MagicStudioVoiceSpeakerEnvelope"
+    },
+    {
+      "id": "appVoicesListCloneTasks",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/clone-tasks",
+      "summary": "List voice clone tasks",
+      "successResponseSchema": "MagicStudioVoiceCloneTaskListEnvelope"
+    },
+    {
+      "id": "appVoicesCreateCloneTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/clone-tasks",
+      "summary": "Create a voice clone task",
+      "requestBodySchema": "MagicStudioVoiceCloneTaskCreateRequest",
+      "successResponseSchema": "MagicStudioVoiceCloneTaskEnvelope"
+    },
+    {
+      "id": "appVoicesReadCloneTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/clone-tasks/:taskId",
+      "summary": "Read a voice clone task",
+      "successResponseSchema": "MagicStudioVoiceCloneTaskEnvelope"
+    },
+    {
+      "id": "appVoicesDeleteCloneTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/voices/clone-tasks/:taskId",
+      "summary": "Delete a voice clone task",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appVoicesCancelCloneTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/clone-tasks/:taskId/cancel",
+      "summary": "Cancel a voice clone task",
+      "successResponseSchema": "MagicStudioVoiceCloneTaskEnvelope"
+    },
+    {
+      "id": "appVoicesUpdatePreview",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/:speakerId/preview",
+      "summary": "Update a voice speaker preview",
+      "requestBodySchema": "MagicStudioVoicePreviewRequest",
+      "successResponseSchema": "MagicStudioVoiceSpeakerEnvelope"
+    },
+    {
+      "id": "appVoicesListSpeechTasks",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/speech/tasks",
+      "summary": "List voice speech tasks",
+      "successResponseSchema": "MagicStudioGenerationTaskListEnvelope"
+    },
+    {
+      "id": "appVoicesCreateSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/speech/tasks",
+      "summary": "Create a voice speech task",
+      "requestBodySchema": "MagicStudioVoiceSpeechTaskCreateRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appVoicesReadSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/voices/speech/tasks/:taskId",
+      "summary": "Read a voice speech task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appVoicesUpdateSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/voices/speech/tasks/:taskId",
+      "summary": "Update a voice speech task",
+      "requestBodySchema": "MagicStudioVoiceSpeechTaskUpdateRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appVoicesUpsertSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/voices/speech/tasks/:taskId",
+      "summary": "Upsert a voice speech task",
+      "requestBodySchema": "MagicStudioVoiceSpeechTaskUpsertRequest",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appVoicesDeleteSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/voices/speech/tasks/:taskId",
+      "summary": "Delete a voice speech task",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appVoicesCancelSpeechTask",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/voices/speech/tasks/:taskId/cancel",
+      "summary": "Cancel a voice speech task",
+      "successResponseSchema": "MagicStudioGenerationTaskEnvelope"
+    },
+    {
+      "id": "appCapabilitiesReadSummary",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/capabilities/summary",
+      "summary": "Read the canonical Magic Studio capability summary",
+      "successResponseSchema": "MagicStudioAppCapabilitySummaryEnvelope"
+    },
+    {
+      "id": "appCapabilitiesListDomains",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/capabilities/domains",
+      "summary": "List canonical Magic Studio capability domains",
+      "successResponseSchema": "MagicStudioAppCapabilityDomainListEnvelope"
+    },
+    {
+      "id": "appCapabilitiesListExecution",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/capabilities/execution",
+      "summary": "List canonical Magic Studio execution capabilities",
+      "successResponseSchema": "MagicStudioAppExecutionCapabilityListEnvelope"
+    },
+    {
+      "id": "appCreationReadCapabilities",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/capabilities",
+      "summary": "Read canonical Magic Studio creation capabilities for a target",
+      "successResponseSchema": "MagicStudioCreationCapabilitiesEnvelope"
+    },
+    {
+      "id": "appCreationListBatches",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/batches",
+      "summary": "List canonical Magic Studio creation batches",
+      "successResponseSchema": "MagicStudioCreationBatchListEnvelope"
+    },
+    {
+      "id": "appCreationCreateBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/batches",
+      "summary": "Create a canonical Magic Studio creation batch",
+      "requestBodySchema": "MagicStudioCreateCreationBatchRequest",
+      "successResponseSchema": "MagicStudioCreationBatchEnvelope"
+    },
+    {
+      "id": "appCreationReadBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/batches/:batchId",
+      "summary": "Read a canonical Magic Studio creation batch",
+      "successResponseSchema": "MagicStudioCreationBatchEnvelope"
+    },
+    {
+      "id": "appCreationUpdateBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/creation/batches/:batchId",
+      "summary": "Update a canonical Magic Studio creation batch",
+      "requestBodySchema": "MagicStudioUpdateCreationBatchRequest",
+      "successResponseSchema": "MagicStudioCreationBatchEnvelope"
+    },
+    {
+      "id": "appCreationDeleteBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/batches/:batchId",
+      "summary": "Delete a canonical Magic Studio creation batch",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appCreationMaterializeBatch",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/batches/:batchId/materialize",
+      "summary": "Materialize a canonical Magic Studio creation batch item into the current creation session",
+      "requestBodySchema": "MagicStudioMaterializeCreationBatchRequest",
+      "successResponseSchema": "MagicStudioCreationBatchMaterializationEnvelope"
+    },
+    {
+      "id": "appCreationUpdateBatchItemStatus",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/batches/:batchId/items/:itemId/status",
+      "summary": "Update canonical lifecycle state for a Magic Studio creation batch item",
+      "requestBodySchema": "MagicStudioUpdateCreationBatchItemStatusRequest",
+      "successResponseSchema": "MagicStudioCreationBatchEnvelope"
+    },
+    {
+      "id": "appCreationListPresets",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/presets",
+      "summary": "List canonical Magic Studio creation presets",
+      "successResponseSchema": "MagicStudioCreationPresetListEnvelope"
+    },
+    {
+      "id": "appCreationCreatePreset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/presets",
+      "summary": "Create a canonical Magic Studio creation preset",
+      "requestBodySchema": "MagicStudioCreateCreationPresetRequest",
+      "successResponseSchema": "MagicStudioCreationPresetEnvelope"
+    },
+    {
+      "id": "appCreationReadPreset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/presets/:presetId",
+      "summary": "Read a canonical Magic Studio creation preset",
+      "successResponseSchema": "MagicStudioCreationPresetEnvelope"
+    },
+    {
+      "id": "appCreationUpdatePreset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/creation/presets/:presetId",
+      "summary": "Update a canonical Magic Studio creation preset",
+      "requestBodySchema": "MagicStudioUpdateCreationPresetRequest",
+      "successResponseSchema": "MagicStudioCreationPresetEnvelope"
+    },
+    {
+      "id": "appCreationDeletePreset",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/presets/:presetId",
+      "summary": "Delete a canonical Magic Studio creation preset",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appCreationListTemplates",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/templates",
+      "summary": "List canonical Magic Studio creation templates",
+      "successResponseSchema": "MagicStudioCreationTemplateListEnvelope"
+    },
+    {
+      "id": "appCreationCreateTemplate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/templates",
+      "summary": "Create a canonical Magic Studio creation template",
+      "requestBodySchema": "MagicStudioCreateCreationTemplateRequest",
+      "successResponseSchema": "MagicStudioCreationTemplateEnvelope"
+    },
+    {
+      "id": "appCreationReadTemplate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/templates/:templateId",
+      "summary": "Read a canonical Magic Studio creation template",
+      "successResponseSchema": "MagicStudioCreationTemplateEnvelope"
+    },
+    {
+      "id": "appCreationUpdateTemplate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/creation/templates/:templateId",
+      "summary": "Update a canonical Magic Studio creation template",
+      "requestBodySchema": "MagicStudioUpdateCreationTemplateRequest",
+      "successResponseSchema": "MagicStudioCreationTemplateEnvelope"
+    },
+    {
+      "id": "appCreationDeleteTemplate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/templates/:templateId",
+      "summary": "Delete a canonical Magic Studio creation template",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appCreationApplyTemplate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/templates/:templateId/apply",
+      "summary": "Apply a canonical Magic Studio creation template into the current creation session",
+      "requestBodySchema": "MagicStudioApplyCreationTemplateRequest",
+      "successResponseSchema": "MagicStudioCreationSessionEnvelope"
+    },
+    {
+      "id": "appCreationListHistory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/history",
+      "summary": "List canonical Magic Studio creation history entries",
+      "successResponseSchema": "MagicStudioCreationHistoryEntryListEnvelope"
+    },
+    {
+      "id": "appCreationReadHistoryEntry",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/history/:entryId",
+      "summary": "Read a canonical Magic Studio creation history entry",
+      "successResponseSchema": "MagicStudioCreationHistoryEntryEnvelope"
+    },
+    {
+      "id": "appCreationUpsertHistoryEntry",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/creation/history",
+      "summary": "Upsert a canonical Magic Studio imported creation history entry",
+      "requestBodySchema": "MagicStudioUpsertCreationHistoryEntryRequest",
+      "successResponseSchema": "MagicStudioCreationHistoryEntryEnvelope"
+    },
+    {
+      "id": "appCreationFavoriteHistoryEntry",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/history/:entryId/favorite",
+      "summary": "Set favorite state for a canonical Magic Studio creation history entry",
+      "requestBodySchema": "MagicStudioCreationHistoryFavoriteRequest",
+      "successResponseSchema": "MagicStudioCreationHistoryEntryEnvelope"
+    },
+    {
+      "id": "appCreationDeleteHistoryEntry",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/history/:entryId",
+      "summary": "Delete a canonical Magic Studio creation history entry",
+      "successResponseSchema": "MagicStudioCreationHistoryEntryEnvelope"
+    },
+    {
+      "id": "appCreationClearHistory",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/history",
+      "summary": "Clear canonical Magic Studio creation history entries",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appCreationCreateSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/sessions",
+      "summary": "Create the current canonical Magic Studio creation handoff session",
+      "requestBodySchema": "MagicStudioCreateCreationSessionRequest",
+      "successResponseSchema": "MagicStudioCreationSessionEnvelope"
+    },
+    {
+      "id": "appCreationReadCurrentSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/creation/sessions/current",
+      "summary": "Read the current canonical Magic Studio creation handoff session",
+      "successResponseSchema": "MagicStudioCreationSessionSnapshotEnvelope"
+    },
+    {
+      "id": "appCreationConsumeCurrentSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/creation/sessions/current/consume",
+      "summary": "Consume the current canonical Magic Studio creation handoff session",
+      "successResponseSchema": "MagicStudioCreationSessionSnapshotEnvelope"
+    },
+    {
+      "id": "appCreationClearCurrentSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/creation/sessions/current",
+      "summary": "Clear the current canonical Magic Studio creation handoff session",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appChatListSessions",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/chat/sessions",
+      "summary": "List canonical chat sessions",
+      "successResponseSchema": "ChatSessionListEnvelope"
+    },
+    {
+      "id": "appChatCreateSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/chat/sessions",
+      "summary": "Create a canonical chat session",
+      "requestBodySchema": "MagicStudioChatSessionCreateRequest",
+      "successResponseSchema": "ChatSessionEnvelope"
+    },
+    {
+      "id": "appChatReadSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/chat/sessions/:sessionId",
+      "summary": "Read a canonical chat session",
+      "successResponseSchema": "ChatSessionEnvelope"
+    },
+    {
+      "id": "appChatUpdateSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/chat/sessions/:sessionId",
+      "summary": "Update a canonical chat session",
+      "requestBodySchema": "MagicStudioChatSessionUpdateRequest",
+      "successResponseSchema": "ChatSessionEnvelope"
+    },
+    {
+      "id": "appChatDeleteSession",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/chat/sessions/:sessionId",
+      "summary": "Delete a canonical chat session",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appChatReadTranscript",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/chat/sessions/:sessionId/transcript",
+      "summary": "Read a canonical chat transcript",
+      "successResponseSchema": "ChatTranscriptEnvelope"
+    },
+    {
+      "id": "appChatUpdateTranscript",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PUT",
+      "path": "/api/app/v1/chat/sessions/:sessionId/transcript",
+      "summary": "Replace a canonical chat transcript",
+      "requestBodySchema": "MagicStudioChatTranscriptUpdateRequest",
+      "successResponseSchema": "ChatTranscriptEnvelope"
+    },
+    {
+      "id": "appPresentationsList",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/presentations",
+      "summary": "List canonical presentations",
+      "successResponseSchema": "MagicStudioPresentationListEnvelope"
+    },
+    {
+      "id": "appPresentationsCreate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/presentations",
+      "summary": "Create a canonical presentation",
+      "requestBodySchema": "MagicStudioPresentationCreateRequest",
+      "successResponseSchema": "MagicStudioPresentationEnvelope"
+    },
+    {
+      "id": "appPresentationsRead",
+      "surface": "app",
+      "authMode": "user",
+      "method": "GET",
+      "path": "/api/app/v1/presentations/:presentationId",
+      "summary": "Read a canonical presentation",
+      "successResponseSchema": "MagicStudioPresentationEnvelope"
+    },
+    {
+      "id": "appPresentationsUpdate",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/presentations/:presentationId",
+      "summary": "Update a canonical presentation",
+      "requestBodySchema": "MagicStudioPresentationUpdateRequest",
+      "successResponseSchema": "MagicStudioPresentationEnvelope"
+    },
+    {
+      "id": "appPresentationsDelete",
+      "surface": "app",
+      "authMode": "user",
+      "method": "DELETE",
+      "path": "/api/app/v1/presentations/:presentationId",
+      "summary": "Delete a canonical presentation",
+      "successResponseSchema": "MagicStudioOperationOkResultEnvelope"
+    },
+    {
+      "id": "appPresentationsCreateSlide",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/presentations/:presentationId/slides",
+      "summary": "Append a slide to a canonical presentation",
+      "requestBodySchema": "MagicStudioPresentationSlideCreateRequest",
+      "successResponseSchema": "MagicStudioPresentationEnvelope"
+    },
+    {
+      "id": "appPresentationsUpdateSlide",
+      "surface": "app",
+      "authMode": "user",
+      "method": "PATCH",
+      "path": "/api/app/v1/presentations/:presentationId/slides/:slideId",
+      "summary": "Update a canonical presentation slide",
+      "requestBodySchema": "MagicStudioPresentationSlideUpdateRequest",
+      "successResponseSchema": "MagicStudioPresentationEnvelope"
+    },
+    {
+      "id": "appPromptOptimize",
+      "surface": "app",
+      "authMode": "user",
+      "method": "POST",
+      "path": "/api/app/v1/prompt/optimize",
+      "summary": "Optimize a prompt for a Magic Studio generation workflow",
+      "requestBodySchema": "MagicStudioPromptOptimizeRequest",
+      "successResponseSchema": "MagicStudioPromptOptimizeResultEnvelope"
+    },
+    {
+      "id": "adminDeploymentsList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/deployments",
+      "summary": "List deployment records",
+      "successResponseSchema": "MagicStudioServerDeploymentRecordListEnvelope"
+    },
+    {
+      "id": "adminRuntimeAuditsRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/runtime/audits",
+      "summary": "Read runtime audit",
+      "successResponseSchema": "MagicStudioAdminRuntimeAuditEnvelope"
+    },
+    {
+      "id": "adminJobsMetricsRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/jobs/metrics",
+      "summary": "Read job metrics",
+      "successResponseSchema": "MagicStudioAdminJobMetricsEnvelope"
+    },
+    {
+      "id": "adminPolicyAuditsRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/policy/audits",
+      "summary": "Read policy audit",
+      "successResponseSchema": "MagicStudioAdminPolicyAuditEnvelope"
+    },
+    {
+      "id": "adminStorageProvidersList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/storage/providers",
+      "summary": "List storage providers",
+      "successResponseSchema": "MagicStudioAdminStorageProviderListEnvelope"
+    },
+    {
+      "id": "adminExecutionProvidersList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/execution/providers",
+      "summary": "List execution providers",
+      "successResponseSchema": "MagicStudioAdminExecutionProviderListEnvelope"
+    },
+    {
+      "id": "adminExecutionProvidersRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/execution/providers/:providerKey",
+      "summary": "Read execution provider governance detail",
+      "successResponseSchema": "MagicStudioAdminExecutionProviderDetailEnvelope"
+    },
+    {
+      "id": "adminExecutionProvidersReconcile",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/execution/providers/:providerKey/reconcile",
+      "summary": "Reconcile execution provider governance state",
+      "requestBodySchema": "MagicStudioAdminExecutionProviderReconcileRequest",
+      "successResponseSchema": "MagicStudioAdminExecutionProviderDetailEnvelope"
+    },
+    {
+      "id": "adminExecutionProvidersReadHealth",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/execution/providers/health",
+      "summary": "List execution provider health records",
+      "successResponseSchema": "MagicStudioAdminExecutionProviderHealthListEnvelope"
+    },
+    {
+      "id": "adminExecutionFailuresList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/execution/failures",
+      "summary": "List execution failures",
+      "successResponseSchema": "MagicStudioAdminExecutionFailureListEnvelope"
+    },
+    {
+      "id": "adminExecutionFailuresAcknowledge",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/execution/failures/:failureId/acknowledge",
+      "summary": "Acknowledge execution failure",
+      "requestBodySchema": "MagicStudioAdminExecutionFailureAcknowledgeRequest",
+      "successResponseSchema": "MagicStudioAdminExecutionFailureEnvelope"
+    },
+    {
+      "id": "adminExecutionFailuresRetry",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/execution/failures/:failureId/retry",
+      "summary": "Retry execution failure governance evaluation",
+      "requestBodySchema": "MagicStudioAdminExecutionFailureRetryRequest",
+      "successResponseSchema": "MagicStudioAdminExecutionFailureRetryResultEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionRunsList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/workspace-release-retention/runs",
+      "summary": "List workspace release retention runs",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionRunListEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionRunsCreate",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/workspace-release-retention/runs",
+      "summary": "Create a workspace release retention run",
+      "requestBodySchema": "MagicStudioAdminWorkspaceReleaseRetentionRunRequest",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionRunDetailEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionRunsRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/workspace-release-retention/runs/:runId",
+      "summary": "Read workspace release retention run detail",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionRunDetailEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionSchedulesList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/workspace-release-retention/schedules",
+      "summary": "List workspace release retention schedules",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleListEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionSchedulesCreate",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/workspace-release-retention/schedules",
+      "summary": "Create a workspace release retention schedule",
+      "requestBodySchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleCreateRequest",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionSchedulesRead",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/governance/workspace-release-retention/schedules/:scheduleId",
+      "summary": "Read workspace release retention schedule",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionSchedulesUpdate",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "PATCH",
+      "path": "/api/admin/v1/governance/workspace-release-retention/schedules/:scheduleId",
+      "summary": "Update workspace release retention schedule",
+      "requestBodySchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleUpdateRequest",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleEnvelope"
+    },
+    {
+      "id": "adminWorkspaceReleaseRetentionSchedulesTrigger",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/governance/workspace-release-retention/schedules/:scheduleId/trigger",
+      "summary": "Trigger workspace release retention schedule",
+      "requestBodySchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleTriggerRequest",
+      "successResponseSchema": "MagicStudioAdminWorkspaceReleaseRetentionScheduleTriggerResultEnvelope"
+    },
+    {
+      "id": "adminPluginsList",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "GET",
+      "path": "/api/admin/v1/plugins",
+      "summary": "List plugin governance records",
+      "successResponseSchema": "MagicStudioAdminPluginRecordListEnvelope"
+    },
+    {
+      "id": "adminPluginsEnable",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/plugins/:pluginId/enable",
+      "summary": "Enable a plugin",
+      "successResponseSchema": "MagicStudioAdminPluginRecordEnvelope"
+    },
+    {
+      "id": "adminPluginsDisable",
+      "surface": "admin",
+      "authMode": "admin",
+      "method": "POST",
+      "path": "/api/admin/v1/plugins/:pluginId/disable",
+      "summary": "Disable a plugin",
+      "successResponseSchema": "MagicStudioAdminPluginRecordEnvelope"
+    }
+  ]
+}

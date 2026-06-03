@@ -1,1 +1,1 @@
-export { Button, type ButtonProps } from 'sdkwork-react-commons';
+export { Button, type ButtonProps } from 'sdkwork-magic-studio-commons';

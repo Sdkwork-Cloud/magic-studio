@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Heart, Image as ImageIcon, Clapperboard, Eye } from 'lucide-react';
-import { GalleryItem } from 'sdkwork-react-commons';
+import { GalleryItem } from 'sdkwork-magic-studio-commons';
 
 interface GalleryCardProps {
     item: GalleryItem;

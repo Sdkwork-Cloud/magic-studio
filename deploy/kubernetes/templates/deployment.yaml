@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+      annotations:
+        checksum/runtime-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: magic-studio-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: MAGIC_STUDIO_SERVER_HOST
+              value: {{ .Values.server.host | quote }}
+            - name: MAGIC_STUDIO_SERVER_PORT
+              value: {{ .Values.server.port | quote }}
+            - name: MAGIC_STUDIO_SERVER_RUNTIME_MODE
+              value: {{ .Values.server.runtimeMode | quote }}
+            - name: MAGIC_STUDIO_SERVER_DATA_ROOT
+              value: {{ .Values.server.dataRoot | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_MODE
+              value: {{ .Values.userCenter.mode | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_PROVIDER_KEY
+              value: {{ .Values.userCenter.providerKey | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_APP_ID
+              value: {{ .Values.userCenter.appId | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_LOCAL_API_BASE_PATH
+              value: {{ .Values.userCenter.localApiBasePath | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_SQLITE_PATH
+              value: {{ .Values.userCenter.sqlitePath | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-runtime" .Release.Name) .Values.secrets.existingSecret }}
+                  key: MAGIC_STUDIO_USER_CENTER_DATABASE_URL
+                  optional: true
+            - name: MAGIC_STUDIO_USER_CENTER_SCHEMA_NAME
+              value: {{ .Values.userCenter.schemaName | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_TABLE_PREFIX
+              value: {{ .Values.userCenter.tablePrefix | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_APP_API_BASE_URL
+              value: {{ .Values.userCenter.appApiBaseUrl | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_EXTERNAL_BASE_URL
+              value: {{ .Values.userCenter.externalBaseUrl | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_SECRET_ID
+              value: {{ .Values.userCenter.secretId | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-runtime" .Release.Name) .Values.secrets.existingSecret }}
+                  key: MAGIC_STUDIO_USER_CENTER_SHARED_SECRET
+                  optional: true
+            - name: MAGIC_STUDIO_USER_CENTER_AUTHORIZATION_HEADER_NAME
+              value: {{ .Values.userCenter.authorizationHeaderName | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_ACCESS_TOKEN_HEADER_NAME
+              value: {{ .Values.userCenter.accessTokenHeaderName | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_REFRESH_TOKEN_HEADER_NAME
+              value: {{ .Values.userCenter.refreshTokenHeaderName | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_SESSION_HEADER_NAME
+              value: {{ .Values.userCenter.sessionHeaderName | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_AUTHORIZATION_SCHEME
+              value: {{ .Values.userCenter.authorizationScheme | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_ALLOW_AUTHORIZATION_FALLBACK_TO_ACCESS_TOKEN
+              value: {{ .Values.userCenter.allowAuthorizationFallbackToAccessToken | quote }}
+            - name: MAGIC_STUDIO_USER_CENTER_HANDSHAKE_FRESHNESS_WINDOW_MS
+              value: {{ .Values.userCenter.handshakeFreshnessWindowMs | quote }}
+          livenessProbe:
+            httpGet:
+              path: /api/core/v1/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /api/core/v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

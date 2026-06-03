@@ -1,32 +1,42 @@
 # Asset Center Package Planning (High-Standard Baseline)
 
+## Authority
+
+This document is a package-ownership and rollout reference subordinate to:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/asset-center-unified-architecture.md`
+- `docs/framework-standard-architecture.md`
+
+It does not override the canonical host/runtime/storage standards.
+
 ## 1. Package Responsibility Matrix
 
 | Package | Layer Role | Owns | Must Not Own |
 |---|---|---|---|
-| `@sdkwork/react-types` | Canonical schema | all domain DTO/model contracts | runtime logic, storage calls |
-| `@sdkwork/react-fs` | Infrastructure abstraction | VFS interfaces + browser/tauri providers | business/domain rules |
-| `@sdkwork/react-assets` (`asset-center/*`) | Domain + application kernel | asset aggregate behavior, query/write governance | UI page composition |
-| `@sdkwork/react-assets` (`components/*`) | Shared asset UI | asset picker/list/generation shell | canonical model mutation rules |
+| `@sdkwork/magic-studio-types` | Canonical schema | all domain DTO/model contracts | runtime logic, storage calls |
+| `@sdkwork/magic-studio-fs` | Infrastructure abstraction | VFS interfaces + browser/desktop providers | business/domain rules |
+| `@sdkwork/magic-studio-assets` (`asset-center/*`) | Domain + application kernel | asset aggregate behavior, query/write governance | UI page composition |
+| `@sdkwork/magic-studio-assets` (`components/*`) | Shared asset UI | asset picker/list/generation shell | canonical model mutation rules |
 | business packages (`notes/canvas/image/video/audio/music/voice/magiccut/...`) | Domain features | business workflows + domain interaction | direct storage/index internals |
 
 ## 2. Allowed Dependency Direction
 
 Strict direction:
 
-`business package -> @sdkwork/react-assets -> @sdkwork/react-fs + @sdkwork/react-types`
+`business package -> @sdkwork/magic-studio-assets -> @sdkwork/magic-studio-fs + @sdkwork/magic-studio-types`
 
-`business package -> @sdkwork/react-types` is allowed for pure typing.
+`business package -> @sdkwork/magic-studio-types` is allowed for pure typing.
 
 Forbidden direction:
 
-- `business package -> @sdkwork/react-fs` direct data persistence bypass
+- `business package -> @sdkwork/magic-studio-fs` direct data persistence bypass
 - `business package -> asset-center/infrastructure/*` direct import
 - cross-business direct imports for persistence/query behavior
 
 ## 3. Asset-Center Internal Subpackages
 
-`@sdkwork/react-assets/src/asset-center` is split as:
+`@sdkwork/magic-studio-assets/src/asset-center` is split as:
 
 - `domain`
   - command/query input models
@@ -39,7 +49,7 @@ Forbidden direction:
 - `ports`
   - VFS/index/url/analyzer interfaces
 - `infrastructure`
-  - browser+tauri VFS bridge
+  - browser+desktop VFS bridge
   - json index repository
   - URL resolver/analyzer implementations
 
@@ -65,11 +75,11 @@ Read/query standard:
 ## 4.1 Portal Orchestration Boundary (Mandatory)
 
 Portal-to-studio handoff is treated as an application-layer orchestration concern and
-must stay inside `@sdkwork/react-assets/asset-center/application`.
+must stay inside `@sdkwork/magic-studio-assets/asset-center/application`.
 
 Rules:
 
-1. `portal-video` can only call shared orchestration APIs from `@sdkwork/react-assets`
+1. `portal-video` can only call shared orchestration APIs from `@sdkwork/magic-studio-assets`
 2. `portal-video` must not import state/services from `video/image/audio/music/character` packages
 3. downstream studio pages must consume launch context through `consumePortalLaunchSession(target)`
 4. launch attachments must use canonical pointer contract:
@@ -134,11 +144,11 @@ Completed high-priority write/query migrations:
 - assets shared picker/store runtime now domain-scoped (`AssetStoreProvider.domain`) and unified import/query paths no longer rely on legacy `assetService` fallback
 - `ChooseAssetModal` now supports native multi-selection with explicit selection state, avoiding business-side manual one-by-one picking
 - shared asset grid/voice playback and image reference resolution have moved to assetId-first URL resolving (`resolveAssetUrlByAssetIdFirst`)
-- shared asset URL resolver consolidation (`assetId`-first resolver exported from `@sdkwork/react-assets`, reused by film/magiccut/portal helpers)
+- shared asset URL resolver consolidation (`assetId`-first resolver exported from `@sdkwork/magic-studio-assets`, reused by film/magiccut/portal helpers)
 - film overview/preview/scene read-path convergence (`hasResolvableAssetReference` + resolver-based rendering) and auto-generation write-path convergence for character/location/prop panels (`importFilmAssetFromUrl`)
 
 Pending high-priority items:
 
 - audio/music remaining UI flows that still carry non-asset-center URL-only assumptions
 - portal-video generation-result persistence + indexing migration to unified asset-center query/write path
-- align all portal/session consumers to use `@sdkwork/react-types` as single source of truth
+- align all portal/session consumers to use `@sdkwork/magic-studio-types` as single source of truth

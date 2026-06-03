@@ -1,0 +1,224 @@
+
+import {
+    ROUTES,
+    useRouter,
+} from '@sdkwork/magic-studio-core/router'
+import {
+    getPlatformRuntime,
+    isDesktopShellRuntimeKind,
+} from '@sdkwork/magic-studio-core/platform'
+import React, { useState } from 'react';
+import { 
+    Home, Compass, FolderOpen, Video, Image as ImageIcon, 
+    Music, 
+    Sparkles, Crown, Volume2, Mic, ChevronRight,
+    Layout, BookOpen, Scissors, Settings, LogOut,
+    Zap, Smile, Wand2, Download, Cloud
+} from 'lucide-react';
+
+import { useTranslation } from '@sdkwork/magic-studio-i18n';
+import { PricingModal } from '@sdkwork/magic-studio-vip/pricing-modal';
+
+export const PortalSidebar: React.FC = () => {
+    // Use useRouter safely - it returns default values if not wrapped in RouterProvider
+    const routerContext = useRouter();
+    const navigate = routerContext?.navigate || (() => {});
+    const currentPath = routerContext?.currentPath || '/';
+    const { t } = useTranslation();
+    const [showPricing, setShowPricing] = useState(false);
+    const isDesktopRuntime = isDesktopShellRuntimeKind(getPlatformRuntime().system.kind());
+    const brandName = t('appShell.brand');
+    const brandTagline = t('appShell.tagline');
+
+    interface NavItem {
+        id: string;
+        label: string;
+        icon: typeof Home;
+        route: string;
+        badge?: string;
+        accent?: string;
+    }
+
+    interface NavGroup {
+        title: string | null;
+        items: NavItem[];
+    }
+
+    const NAV_GROUPS: NavGroup[] = [
+        {
+            title: null,
+            items: [
+                { id: 'home', label: t('sidebar.home'), icon: Home, route: ROUTES.PORTAL },
+                { id: 'discover', label: t('sidebar.discover'), icon: Compass, route: ROUTES.PORTAL_DISCOVER },
+                { id: 'assets', label: t('sidebar.assets'), icon: FolderOpen, route: ROUTES.ASSETS },
+                { id: 'drive', label: t('sidebar.drive'), icon: Cloud, route: ROUTES.DRIVE },
+            ]
+        },
+        {
+            title: t('sidebar.group_studio'),
+            items: [
+                { id: 'quick-short', label: t('sidebar.quick_short'), icon: Zap, route: ROUTES.FILM, badge: t('market.nav.badges.hot'), accent: 'text-orange-400' },
+                { id: 'magic-cut', label: t('sidebar.magic_cut'), icon: Scissors, route: ROUTES.MAGIC_CUT, badge: t('market.nav.badges.new'), accent: 'text-red-400' },
+                { id: 'canvas', label: t('canvas.title'), icon: Layout, route: ROUTES.CANVAS, badge: t('market.nav.badges.beta'), accent: 'text-blue-400' },
+                { id: 'notes', label: t('sidebar.notes'), icon: BookOpen, route: ROUTES.NOTES },
+                { id: 'prompt', label: t('sidebar.prompt_optimizer'), icon: Wand2, route: ROUTES.PROMPT, badge: t('market.nav.badges.new'), accent: 'text-purple-400' },
+            ]
+        },
+        {
+            title: t('sidebar.group_generators'),
+            items: [
+                { id: 'video', label: t('sidebar.video'), icon: Video, route: ROUTES.VIDEO },
+                { id: 'image', label: t('sidebar.image'), icon: ImageIcon, route: ROUTES.IMAGE },
+                { id: 'human', label: t('sidebar.human'), icon: Smile, route: ROUTES.CHARACTER },
+            ]
+        },
+        {
+            title: t('sidebar.group_audio'),
+            items: [
+                { id: 'music', label: t('sidebar.music'), icon: Music, route: ROUTES.MUSIC },
+                { id: 'speech', label: t('sidebar.speech'), icon: Volume2, route: ROUTES.AUDIO },
+                { id: 'voice', label: t('sidebar.voice'), icon: Mic, route: ROUTES.VOICE },
+            ]
+        }
+    ];
+
+    return (
+        <div className="w-[260px] h-full bg-[#050505] flex flex-col border-r border-[#1a1a1a] relative z-50 select-none">
+            <div className="flex-none p-6 pb-4 cursor-pointer group" onClick={() => navigate(ROUTES.HOME)}>
+                 <div className="flex items-center gap-3">
+                     <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300 ring-1 ring-white/10">
+                         <div className="absolute inset-0 rounded-lg bg-white/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                         <Sparkles size={16} className="text-white relative z-10" fill="currentColor" />
+                     </div>
+                     <div className="flex flex-col justify-center">
+                         <span className="text-lg font-bold text-white tracking-tight leading-none">{brandName}</span>
+                         <span className="text-[9px] text-gray-500 font-medium tracking-[0.2em] mt-0.5 group-hover:text-indigo-400 transition-colors">{brandTagline}</span>
+                     </div>
+                 </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-3 pb-6 custom-scrollbar space-y-8">
+                {NAV_GROUPS.map((group, groupIdx) => (
+                    <div key={groupIdx} className="space-y-1">
+                        {group.title && (
+                            <div className="px-3 mb-2 flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">{group.title}</span>
+                                <div className="h-px bg-[#1a1a1a] flex-1" />
+                            </div>
+                        )}
+                        
+                        {group.items.map(item => {
+                            const isActive = currentPath === item.route;
+                            const Icon = item.icon;
+                            
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => navigate(item.route)}
+                                    className={`
+                                        w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group/item relative
+                                        ${isActive 
+                                            ? 'bg-[#1e1e20] text-white shadow-sm ring-1 ring-white/5' 
+                                            : 'text-gray-500 hover:text-gray-200 hover:bg-[#1a1a1c]'
+                                        }
+                                    `}
+                                >
+                                    {isActive && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-r-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                                    )}
+
+                                    <Icon 
+                                        size={18} 
+                                        className={`transition-colors ${isActive ? (item.accent || 'text-indigo-400') : 'text-gray-500 group-hover/item:text-gray-400'}`} 
+                                        strokeWidth={isActive ? 2 : 1.5}
+                                    />
+                                    <span className="flex-1 text-left truncate">{item.label}</span>
+                                    
+                                    {item.badge && (
+                                        <span className={`
+                                            text-[9px] font-bold px-1.5 py-0.5 rounded border 
+                                            ${isActive 
+                                                ? 'bg-[#2a2a2c] text-white border-white/10' 
+                                                : 'bg-[#1a1a1c] text-gray-500 border-[#27272a] group-hover/item:text-gray-300'
+                                            }
+                                        `}>
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex-none p-4 pt-0">
+                {!isDesktopRuntime && (
+                    <button
+                        onClick={() => navigate(ROUTES.DOWNLOAD)}
+                        className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 border border-blue-400/50 hover:border-blue-300 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative z-10 w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                            <Download size={20} className="text-white group-hover:scale-110 transition-transform" />
+                        </div>
+                        <div className="relative z-10 flex-1 text-left">
+                            <div className="text-sm font-bold">{t('sidebar.download_app_title')}</div>
+                            <div className="text-[10px] text-blue-100/80">{t('sidebar.download_app_subtitle')}</div>
+                        </div>
+                        <ChevronRight size={16} className="relative z-10 opacity-70 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                )}
+
+                <div 
+                    className="relative overflow-hidden rounded-xl bg-gradient-to-b from-[#1a1a1c] to-[#111] border border-white/5 p-4 group cursor-pointer hover:border-white/10 transition-all duration-300 mb-4 shadow-lg"
+                    onClick={() => setShowPricing(true)}
+                >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-3xl rounded-full group-hover:bg-indigo-500/10 transition-colors" />
+                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-purple-500/5 blur-2xl rounded-full group-hover:bg-purple-500/10 transition-colors" />
+                    
+                    <div className="flex items-start justify-between relative z-10 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-[#252526] flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform shadow-inner">
+                            <Crown size={14} className="text-yellow-500 fill-yellow-500/20" />
+                        </div>
+                        <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-gray-400 group-hover:text-white transition-colors">
+                            {t('market.nav.badges.pro')}
+                        </div>
+                    </div>
+                    
+                    <div className="relative z-10">
+                        <div className="text-xs font-bold text-white mb-0.5">{t('sidebar.upgrade_title')}</div>
+                        <div className="text-[10px] text-gray-500 leading-relaxed mb-3 line-clamp-2">
+                            {t('sidebar.upgrade_desc')}
+                        </div>
+                        
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setShowPricing(true); }}
+                            className="w-full py-1.5 bg-white text-black text-[10px] font-bold rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center gap-1 shadow-md group-hover:shadow-lg hover:scale-[1.02] active:scale-95 duration-200"
+                        >
+                            {t('market.nav.upgrade_now')} <ChevronRight size={10} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between px-1">
+                    <button 
+                        onClick={() => navigate(ROUTES.SETTINGS)}
+                        className="flex items-center gap-1.5 text-[10px] text-gray-600 hover:text-gray-300 transition-colors p-1 rounded hover:bg-[#1a1a1c]"
+                    >
+                        <Settings size={12} /> {t('sidebar.settings')}
+                    </button>
+                    <div className="w-px h-3 bg-[#1a1a1c]" />
+                    <button 
+                        onClick={() => navigate(ROUTES.LOGIN)}
+                        className="flex items-center gap-1.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors p-1 rounded hover:bg-[#1a1a1c]"
+                    >
+                        <LogOut size={12} /> {t('sidebar.sign_in')}
+                    </button>
+                </div>
+            </div>
+
+            {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
+        </div>
+    );
+};

@@ -1,0 +1,466 @@
+// Film project type definitions
+// All film-related types are defined here to avoid circular dependencies
+
+import type { BaseEntity } from './base.types';
+import type { ProjectGraphDocument } from './project-graph.types';
+
+// ============================================================================
+// Enums and Type Aliases
+// ============================================================================
+
+export type FilmProjectStatus =
+  | 'DRAFT'
+  | 'ANALYZING'
+  | 'SCRIPT_READY'
+  | 'STORYBOARD_READY'
+  | 'GENERATING'
+  | 'COMPLETED';
+
+export type FilmCharacterType =
+  | 'HUMAN'
+  | 'PET'
+  | 'ANIMAL'
+  | 'ROBOT'
+  | 'OTHER';
+
+export type FilmCharacterStatus = 'ACTIVE' | 'DISABLED' | 'DELETED';
+
+export type FilmVideoStatus =
+  | 'PENDING'
+  | 'GENERATING'
+  | 'SUCCESS'
+  | 'FAILED';
+
+export type FilmViewMode =
+  | 'overview'
+  | 'script'
+  | 'characters'
+  | 'props'
+  | 'locations'
+  | 'storyboard'
+  | 'timeline'
+  | 'preview';
+
+export type FilmSceneBreakdownStatus = 'READY' | 'NEEDS_REVIEW';
+
+export type FilmSceneBreakdownFlag =
+  | 'missing-location'
+  | 'missing-characters'
+  | 'missing-props'
+  | 'missing-storyboard';
+
+export type FilmShotVariantStrategy = 'cinematic' | 'coverage' | 'performance';
+
+// ============================================================================
+// Film Project
+// ============================================================================
+
+export interface FilmProject extends BaseEntity {
+  type: 'FILM_PROJECT';
+  name: string;
+  description?: string;
+  status: FilmProjectStatus;
+  input: FilmUserInput;
+  script: FilmScript;
+  characters: FilmCharacter[];
+  props: FilmProp[];
+  locations: FilmLocation[];
+  scenes: FilmScene[];
+  shots: FilmShot[];
+  media: FilmMediaResource[];
+  settings: FilmSettings;
+  preProduction?: FilmPreProduction;
+  projectGraph?: ProjectGraphDocument;
+}
+
+export interface FilmTemplateMetadata {
+  name: string;
+  description?: string;
+  category?: string;
+  thumbnailUrl?: string;
+  builtIn: boolean;
+  tags: string[];
+}
+
+export interface FilmTemplate extends BaseEntity, FilmTemplateMetadata {
+  type: 'FILM_TEMPLATE';
+  projectData: FilmProject;
+}
+
+export interface FilmUserInput extends BaseEntity {
+  type: 'FILM_USER_INPUT';
+  text: string;
+  language: string;
+}
+
+// ============================================================================
+// Film Script
+// ============================================================================
+
+export interface FilmScript extends BaseEntity {
+  type: 'FILM_SCRIPT';
+  title: string;
+  genres: string[];
+  styles: string[];
+  content: string;
+  standardized: boolean;
+  duration?: number;
+  version: string;
+}
+
+// ============================================================================
+// Film Character
+// ============================================================================
+
+export interface FilmCharacter extends BaseEntity {
+  type: 'FILM_CHARACTER';
+  name: string;
+  characterType: FilmCharacterType;
+  refAssets: FilmAssetMediaResource[];
+  faceImage?: FilmImageMediaResource;
+  threeViewImage?: FilmImageMediaResource;
+  gridViewImage?: FilmImageMediaResource;
+  agentId?: string;
+  speakerId?: string;
+  description?: string;
+  status: FilmCharacterStatus;
+  personality?: FilmCharacterPersonality;
+  appearance?: FilmCharacterAppearance;
+  interactionSettings?: FilmCharacterInteractionSettings;
+}
+
+export interface FilmCharacterPersonality {
+  traits: string[];
+  background?: string;
+  motivation?: string;
+}
+
+export interface FilmCharacterAppearance {
+  gender?: string;
+  age?: string;
+  ageGroup?: string;
+  height?: string;
+  build?: string;
+  hair?: string;
+  hairColor?: string;
+  eyes?: string;
+  clothing?: string;
+  accessories?: string[];
+  features?: string[];
+}
+
+export interface FilmCharacterInteractionSettings {
+  greeting?: string;
+  tone?: string;
+  formality?: string;
+  voiceId?: string;
+}
+
+// ============================================================================
+// Film Location
+// ============================================================================
+
+export interface FilmLocation extends BaseEntity {
+  type: 'FILM_LOCATION';
+  name: string;
+  description?: string;
+  tags: string[];
+  atmosphereTags?: string[];
+  visualDescription?: string;
+  image?: FilmImageMediaResource;
+  faceImage?: FilmImageMediaResource;
+  threeViewImage?: FilmImageMediaResource;
+  gridViewImage?: FilmImageMediaResource;
+  refAssets?: FilmAssetMediaResource[];
+  indoor?: boolean;
+  timeOfDay?: string;
+}
+
+// ============================================================================
+// Film Prop
+// ============================================================================
+
+export interface FilmProp extends BaseEntity {
+  type: 'FILM_PROP';
+  name: string;
+  description?: string;
+  tags: string[];
+  faceImage?: FilmImageMediaResource;
+  threeViewImage?: FilmImageMediaResource;
+  gridViewImage?: FilmImageMediaResource;
+  refAssets?: FilmAssetMediaResource[];
+}
+
+// ============================================================================
+// Film Scene
+// ============================================================================
+
+export interface FilmScene extends BaseEntity {
+  type: 'FILM_SCENE';
+  sceneNumber: number;
+  index?: number;
+  summary: string;
+  locationId?: string;
+  locationUuid?: string;
+  characterIds?: string[];
+  characterUuids?: string[];
+  propUuids?: string[];
+  moodTags?: string[];
+  visualPrompt?: string;
+}
+
+export interface FilmSceneBreakdownEntityRef {
+  id?: string;
+  uuid?: string;
+  name: string;
+}
+
+export interface FilmSceneBreakdownItem {
+  sceneId?: string;
+  sceneUuid: string;
+  sceneNumber: number;
+  title: string;
+  summary: string;
+  timeOfDay?: string;
+  location?: FilmSceneBreakdownEntityRef | null;
+  characters: FilmSceneBreakdownEntityRef[];
+  props: FilmSceneBreakdownEntityRef[];
+  shotCount: number;
+  shotNumbers: number[];
+  shotUuids: string[];
+  moodTags: string[];
+  visualPrompt?: string;
+  continuityNotes: string[];
+  productionFlags: FilmSceneBreakdownFlag[];
+  status: FilmSceneBreakdownStatus;
+}
+
+export interface FilmSceneBreakdownSummary {
+  sceneCount: number;
+  readyCount: number;
+  needsReviewCount: number;
+  totalShotCount: number;
+  scenesWithoutLocationCount: number;
+  scenesWithoutCharactersCount: number;
+  scenesWithoutPropsCount: number;
+  scenesWithoutShotsCount: number;
+}
+
+export interface FilmShotVariantShot {
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  prompt: string;
+  duration: number;
+  framing?: string;
+  focusSubjects: string[];
+  basedOnShotUuid?: string;
+}
+
+export interface FilmShotVariantPlan {
+  id: string;
+  sceneId?: string;
+  sceneUuid: string;
+  sceneNumber: number;
+  title: string;
+  strategy: FilmShotVariantStrategy;
+  label: string;
+  rationale: string;
+  sourceShotUuids: string[];
+  shots: FilmShotVariantShot[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface FilmShotVariantSummary {
+  sceneCount: number;
+  variantPlanCount: number;
+  totalShotCount: number;
+  strategies: FilmShotVariantStrategy[];
+}
+
+export interface FilmShootingPlanScene {
+  sceneId?: string;
+  sceneUuid: string;
+  sceneNumber: number;
+  title: string;
+  location?: FilmSceneBreakdownEntityRef | null;
+  timeOfDay?: string;
+  characters: FilmSceneBreakdownEntityRef[];
+  props: FilmSceneBreakdownEntityRef[];
+  shotCount: number;
+  estimatedMinutes: number;
+  variantPlanIds: string[];
+  availableStrategies: FilmShotVariantStrategy[];
+  preferredStrategy?: FilmShotVariantStrategy;
+  productionFlags: FilmSceneBreakdownFlag[];
+}
+
+export interface FilmShootingPlanDay {
+  id: string;
+  dayNumber: number;
+  title: string;
+  location?: FilmSceneBreakdownEntityRef | null;
+  timeOfDay?: string;
+  sceneCount: number;
+  shotCount: number;
+  estimatedMinutes: number;
+  strategies: FilmShotVariantStrategy[];
+  characters: FilmSceneBreakdownEntityRef[];
+  props: FilmSceneBreakdownEntityRef[];
+  scenes: FilmShootingPlanScene[];
+  rationale: string;
+}
+
+export interface FilmShootingPlanSummary {
+  dayCount: number;
+  scheduledSceneCount: number;
+  scheduledShotCount: number;
+  estimatedMinutes: number;
+  locationCount: number;
+  companyMoveCount: number;
+  variantBackedSceneCount: number;
+}
+
+export interface FilmPreProduction {
+  updatedAt: number;
+  summary: FilmSceneBreakdownSummary;
+  sceneBreakdown: FilmSceneBreakdownItem[];
+  shotVariants?: FilmShotVariantPlan[];
+  shotVariantsSummary?: FilmShotVariantSummary;
+  shootingPlan?: FilmShootingPlanDay[];
+  shootingPlanSummary?: FilmShootingPlanSummary;
+}
+
+// ============================================================================
+// Film Shot
+// ============================================================================
+
+export interface FilmShot extends BaseEntity {
+  type: 'FILM_SHOT';
+  shotNumber: number;
+  index?: number;
+  sceneId?: string;
+  sceneUuid?: string;
+  locationUuid?: string;
+  description: string;
+  dialogue?: FilmDialogue;
+  duration: number;
+  generation?: FilmShotGeneration;
+  assets?: FilmAssetMediaResource[];
+  characterIds?: string[];
+}
+
+export interface FilmDialogue {
+  items?: FilmDialogueItem[];
+}
+
+export interface FilmDialogueItem {
+  id: string;
+  characterId: string;
+  text: string;
+}
+
+export interface FilmShotGeneration {
+  status?: FilmGenerationStatus;
+  prompt?: string;
+  video?: FilmVideoResource;
+  assets?: FilmAssetMediaResource[];
+  product?: string;
+  modelId?: string;
+  base?: string;
+}
+
+export type FilmGenerationStatus = 'PENDING' | 'GENERATING' | 'SUCCESS' | 'FAILED';
+
+// ============================================================================
+// Film Settings
+// ============================================================================
+
+export interface FilmSettings extends BaseEntity {
+  theme?: string;
+  style?: string;
+  aspect?: string;
+  aspectRatio?: string;
+  resolution?: string;
+  fps?: number;
+  quality?: string;
+}
+
+// ============================================================================
+// Film Video
+// ============================================================================
+
+export interface FilmVideo extends BaseEntity {
+  type: 'FILM_VIDEO';
+  name: string;
+  status: FilmVideoStatus;
+  url?: string;
+}
+
+// ============================================================================
+// Media Resources (Film-specific)
+// ============================================================================
+
+export interface FilmMediaResource extends BaseEntity {
+  type: FilmMediaType;
+  url: string;
+  thumbnailUrl?: string;
+  duration?: number;
+  size?: number;
+  width?: number;
+  height?: number;
+  format?: string;
+}
+
+export interface FilmFileMediaResource extends FilmMediaResource {
+  fileId?: string;
+  fileName?: string;
+}
+
+export interface FilmVideoMediaResource extends FilmFileMediaResource {
+  type: 'video';
+  coverUrl?: string;
+  fps?: number;
+  bitrate?: number;
+}
+
+export interface FilmImageMediaResource extends FilmFileMediaResource {
+  type: 'image';
+  aspectRatio?: number;
+}
+
+export interface FilmAudioMediaResource extends FilmFileMediaResource {
+  type: 'audio';
+  bitrate?: number;
+  sampleRate?: number;
+}
+
+export interface FilmAssetMediaResource extends Omit<FilmFileMediaResource, 'type'> {
+  type?: 'image' | 'video' | 'audio';
+  assetId?: string;
+  assetType?: FilmAssetType;
+  scene?: string;
+  image?: FilmImageMediaResource;
+}
+
+export type FilmMediaType = 'image' | 'video' | 'audio' | 'voice' | 'music' | 'speech';
+
+export type FilmAssetType = 'image' | 'video' | 'audio' | 'music' | 'voice' | 'document' | 'other';
+
+export interface FilmVideoResource {
+  url?: string;
+  thumbnailUrl?: string;
+  duration?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface FilmScriptAnalysisResult {
+  characters: FilmCharacter[];
+  locations: FilmLocation[];
+  props: FilmProp[];
+  scenes: FilmScene[];
+  shots: FilmShot[];
+}

@@ -15,8 +15,8 @@
 ### Task 1: Lock detach-audio semantics with tests
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/tests/timelineOperationService.test.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/services/TimelineOperationService.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/timelineOperationService.test.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/services/TimelineOperationService.ts`
 
 - [ ] **Step 1: Write the failing test**
 - [ ] **Step 2: Run the focused test to verify it fails for missing link metadata**
@@ -28,8 +28,8 @@
 ### Task 2: Add a pure linked-move resolver
 
 **Files:**
-- Create: `packages/sdkwork-react-magiccut/src/domain/timeline/linkedMove.ts`
-- Create: `packages/sdkwork-react-magiccut/tests/linkedMove.test.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/src/domain/timeline/linkedMove.ts`
+- Create: `packages/sdkwork-magic-studio-magiccut/tests/linkedMove.test.ts`
 
 - [ ] **Step 1: Write failing tests for linked move plans and collision detection**
 - [ ] **Step 2: Run the focused tests to verify they fail**
@@ -39,9 +39,9 @@
 ### Task 3: Wire linked move plans into live drag commits
 
 **Files:**
-- Modify: `packages/sdkwork-react-magiccut/src/components/Timeline/canvas/hooks/useClipDrag.ts`
-- Modify: `packages/sdkwork-react-magiccut/src/components/Timeline/canvas/TimelineCanvas.tsx`
-- Modify: `packages/sdkwork-react-magiccut/src/store/magicCutStore.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Timeline/canvas/hooks/useClipDrag.ts`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/components/Timeline/canvas/TimelineCanvas.tsx`
+- Modify: `packages/sdkwork-magic-studio-magiccut/src/store/magicCutStore.tsx`
 
 - [ ] **Step 1: Extend the store with grouped clip move support**
 - [ ] **Step 2: Pass linked-selection state into the drag hook**
@@ -53,8 +53,8 @@
 ### Task 4: Regressions and package verification
 
 **Files:**
-- Test: `packages/sdkwork-react-magiccut/tests/*.test.ts`
+- Test: `packages/sdkwork-magic-studio-magiccut/tests/*.test.ts`
 
-- [ ] **Step 1: Run `pnpm --filter @sdkwork/react-magiccut test`**
-- [ ] **Step 2: Run `pnpm --filter @sdkwork/react-magiccut build`**
-- [ ] **Step 3: Run `pnpm --filter @sdkwork/react-magiccut typecheck` and record workspace-external failures if they remain**
+- [ ] **Step 1: Run `pnpm --filter @sdkwork/magic-studio-magiccut test`**
+- [ ] **Step 2: Run `pnpm --filter @sdkwork/magic-studio-magiccut build`**
+- [ ] **Step 3: Run `pnpm --filter @sdkwork/magic-studio-magiccut typecheck` and record workspace-external failures if they remain**

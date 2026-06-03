@@ -2,7 +2,7 @@
 
 ## Scope
 - App: `apps/magic-studio-v2`
-- Package: `packages/sdkwork-react-auth`
+- Package: `packages/sdkwork-magic-studio-auth`
 - Focus:
   - `src/services/appAuthService.ts`
   - `src/services/useAppSdkClient.ts`
@@ -15,13 +15,13 @@
   - direct HTTP calls bypassing SDK
 
 ## Findings Before Fix
-1. `react-auth` service layer had no explicit business adapter seam.
+1. `magic-studio-auth` service layer had no explicit business adapter seam.
    - Missing `createServiceAdapterController` or `set/get/reset*Adapter` export contract.
    - Impact: failed encapsulation-policy seam check.
 
 ## Rectification
 1. Added auth business adapter seam:
-   - File: `packages/sdkwork-react-auth/src/services/appAuthBusinessService.ts`
+   - File: `packages/sdkwork-magic-studio-auth/src/services/appAuthBusinessService.ts`
    - Uses `createServiceAdapterController` with `appAuthService` as local adapter.
    - Exposes:
      - `appAuthBusinessService`
@@ -29,7 +29,7 @@
      - `getAppAuthBusinessAdapter`
      - `resetAppAuthBusinessAdapter`
 2. Exported business seam from service entry:
-   - File: `packages/sdkwork-react-auth/src/services/index.ts`
+   - File: `packages/sdkwork-magic-studio-auth/src/services/index.ts`
 
 ## Verification Evidence
 1. Encapsulation audit:
@@ -40,7 +40,7 @@
      - `Packages missing root services export: 0`
      - `Packages with violations: 0`
 2. Typecheck status:
-   - Command: `pnpm --filter @sdkwork/react-auth typecheck`
+   - Command: `pnpm --filter @sdkwork/magic-studio-auth typecheck`
    - Result: blocked by existing workspace dependency resolution issue in SDK package:
      - missing `@sdkwork/sdk-common` declarations in `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
    - Assessment: not introduced by this auth seam change.

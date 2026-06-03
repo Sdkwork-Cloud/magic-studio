@@ -1,0 +1,47 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const configDirectory = dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    lib: {
+      entry: resolve(configDirectory, 'src/index.ts'),
+      name: '@sdkwork/magic-studio-core',
+      formats: ['es'],
+      fileName: 'index'
+    },
+    rollupOptions: {
+      external: [
+        /^@sdkwork\//,
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'zustand',
+        '@google/genai',
+        '@tauri-apps/api',
+        '@tauri-apps/plugin-*',
+        '@sdkwork/magic-studio-commons',
+        '@sdkwork/magic-studio-fs'
+      ],
+      output: {
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+          'react/jsx-runtime': 'jsxRuntime',
+          zustand: 'zustand',
+          '@google/genai': 'GoogleGenAI',
+          '@tauri-apps/api': 'TauriApi',
+          '@sdkwork/magic-studio-commons': 'SdkworkMagicStudioCommons',
+          '@sdkwork/magic-studio-fs': 'SdkworkMagicStudioFs'
+        }
+      }
+    },
+    sourcemap: true,
+    minify: false,
+  },
+});
+

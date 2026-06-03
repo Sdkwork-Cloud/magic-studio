@@ -10,9 +10,9 @@
 
 Use this path for any business capability backed by `spring-ai-plus-app-api`:
 
-`src shell / feature package / store -> packages/sdkwork-react-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+`src shell / feature package / store -> packages/sdkwork-magic-studio-core/src/sdk/useAppSdkClient.ts -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
 
-The wrapper lives in `packages/sdkwork-react-core`, not in each individual package.
+The wrapper lives in `packages/sdkwork-magic-studio-core`, not in each individual package.
 
 ## Local And Native Path
 

@@ -2,33 +2,90 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
-  GIT_APP_SDK_CHECKOUT,
+  GIT_APPBASE_CHECKOUT,
+  GIT_APPBASE_PC_REACT_ENTRY,
   GIT_APP_SDK_ENTRY,
+  GIT_AUTH_PC_REACT_ENTRY,
+  GIT_CORE_PC_REACT_ENTRY,
   GIT_SDK_COMMON_CHECKOUT,
   GIT_SDK_COMMON_ENTRY,
   GIT_SDK_ROOT,
+  GIT_SEARCH_PC_REACT_ENTRY,
+  GIT_SPRING_AI_PLUS2_CHECKOUT,
+  GIT_UI_CHECKOUT,
+  GIT_UI_PC_REACT_ENTRY,
+  GIT_USER_CENTER_CORE_PC_REACT_ENTRY,
+  GIT_USER_CENTER_PC_REACT_ENTRY,
+  GIT_USER_CENTER_VALIDATION_PC_REACT_ENTRY,
+  GIT_USER_PC_REACT_ENTRY,
 } from './sdk-mode.mjs';
 
 const SDK_SOURCES = [
   {
-    name: 'app-sdk',
-    checkoutDir: GIT_APP_SDK_CHECKOUT,
-    entry: GIT_APP_SDK_ENTRY,
+    name: 'spring-ai-plus2',
+    checkoutDir: GIT_SPRING_AI_PLUS2_CHECKOUT,
+    entries: [GIT_APP_SDK_ENTRY, GIT_CORE_PC_REACT_ENTRY],
+    sparsePaths: [
+      'spring-ai-plus-business/apps/sdkwork-core',
+      'spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app',
+    ],
+    submodulePaths: ['spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app'],
     url:
-      process.env.MAGIC_STUDIO_APP_SDK_GIT_URL ??
-      'https://github.com/Sdkwork-Cloud/sdkwork-sdk-app.git',
-    ref: process.env.MAGIC_STUDIO_APP_SDK_GIT_REF ?? 'main',
+      process.env.MAGIC_STUDIO_SPRING_AI_PLUS2_GIT_URL ??
+      'git@github.com:Sdkwork-Cloud/spring-ai-plus2.git',
+    ref: process.env.MAGIC_STUDIO_SPRING_AI_PLUS2_GIT_REF ?? 'main',
   },
   {
     name: 'sdk-common',
     checkoutDir: GIT_SDK_COMMON_CHECKOUT,
-    entry: GIT_SDK_COMMON_ENTRY,
+    entries: [GIT_SDK_COMMON_ENTRY],
+    sparsePaths: ['sdkwork-sdk-common-typescript'],
     url:
       process.env.MAGIC_STUDIO_SDK_COMMON_GIT_URL ??
-      'https://github.com/Sdkwork-Cloud/sdkwork-sdk-commons.git',
+      'git@github.com:Sdkwork-Cloud/sdkwork-sdk-commons.git',
     ref: process.env.MAGIC_STUDIO_SDK_COMMON_GIT_REF ?? 'main',
   },
+  {
+    name: 'sdkwork-ui',
+    checkoutDir: GIT_UI_CHECKOUT,
+    entries: [GIT_UI_PC_REACT_ENTRY],
+    sparsePaths: ['sdkwork-ui-pc-react'],
+    url:
+      process.env.MAGIC_STUDIO_SDKWORK_UI_GIT_URL ??
+      'git@github.com:Sdkwork-Cloud/sdkwork-ui.git',
+    ref: process.env.MAGIC_STUDIO_SDKWORK_UI_GIT_REF ?? 'main',
+  },
+  {
+    name: 'sdkwork-appbase',
+    checkoutDir: GIT_APPBASE_CHECKOUT,
+    entries: [
+      GIT_APPBASE_PC_REACT_ENTRY,
+      GIT_SEARCH_PC_REACT_ENTRY,
+      GIT_AUTH_PC_REACT_ENTRY,
+      GIT_USER_PC_REACT_ENTRY,
+      GIT_USER_CENTER_CORE_PC_REACT_ENTRY,
+      GIT_USER_CENTER_PC_REACT_ENTRY,
+      GIT_USER_CENTER_VALIDATION_PC_REACT_ENTRY,
+    ],
+    sparsePaths: [
+      'packages/pc-react/foundation/sdkwork-appbase-pc-react',
+      'packages/pc-react/foundation/sdkwork-search-pc-react',
+      'packages/pc-react/iam/sdkwork-auth-pc-react',
+      'packages/pc-react/iam/sdkwork-user-pc-react',
+      'packages/pc-react/iam/sdkwork-user-center-core-pc-react',
+      'packages/pc-react/iam/sdkwork-user-center-pc-react',
+      'packages/pc-react/iam/sdkwork-user-center-validation-pc-react',
+    ],
+    url:
+      process.env.MAGIC_STUDIO_SDKWORK_APPBASE_GIT_URL ??
+      'git@github.com:Sdkwork-Cloud/sdkwork-appbase.git',
+    ref: process.env.MAGIC_STUDIO_SDKWORK_APPBASE_GIT_REF ?? 'main',
+  },
 ];
+
+const shouldRefresh = /^(1|true|yes)$/i.test(
+  (process.env.MAGIC_STUDIO_GIT_SDK_REFRESH ?? '').trim()
+);
 
 function runGit(args, cwd) {
   const result = spawnSync('git', args, {
@@ -57,24 +114,87 @@ function readGitOutput(args, cwd) {
   return result.stdout.trim();
 }
 
-function syncCheckout(source) {
-  const gitDir = path.join(source.checkoutDir, '.git');
+function hasAllEntries(source) {
+  return source.entries.every((entry) => fs.existsSync(entry));
+}
 
-  if (!fs.existsSync(gitDir)) {
-    fs.rmSync(source.checkoutDir, { recursive: true, force: true });
-    runGit(
-      ['clone', '--depth', '1', '--branch', source.ref, source.url, source.checkoutDir],
-      GIT_SDK_ROOT
-    );
-  } else {
+function configureSparseCheckout(source) {
+  if (!Array.isArray(source.sparsePaths) || source.sparsePaths.length === 0) {
+    return;
+  }
+
+  runGit(['sparse-checkout', 'init', '--cone'], source.checkoutDir);
+  runGit(['sparse-checkout', 'set', '--skip-checks', ...source.sparsePaths], source.checkoutDir);
+}
+
+function syncSubmodules(source) {
+  if (!Array.isArray(source.submodulePaths) || source.submodulePaths.length === 0) {
+    return;
+  }
+
+  runGit(['submodule', 'sync', '--', ...source.submodulePaths], source.checkoutDir);
+  runGit(
+    ['submodule', 'update', '--init', '--depth', '1', '--', ...source.submodulePaths],
+    source.checkoutDir
+  );
+}
+
+function cloneCheckout(source) {
+  fs.rmSync(source.checkoutDir, { recursive: true, force: true });
+  runGit(
+    [
+      'clone',
+      '--depth',
+      '1',
+      '--filter',
+      'blob:none',
+      '--branch',
+      source.ref,
+      '--sparse',
+      source.url,
+      source.checkoutDir,
+    ],
+    GIT_SDK_ROOT
+  );
+  configureSparseCheckout(source);
+  syncSubmodules(source);
+}
+
+function refreshCheckout(source) {
+  if (shouldRefresh) {
     runGit(['remote', 'set-url', 'origin', source.url], source.checkoutDir);
     runGit(['fetch', '--depth', '1', 'origin', source.ref], source.checkoutDir);
     runGit(['reset', '--hard', 'FETCH_HEAD'], source.checkoutDir);
     runGit(['clean', '-fdx'], source.checkoutDir);
+    configureSparseCheckout(source);
+    syncSubmodules(source);
+  }
+}
+
+function syncCheckout(source) {
+  const gitDir = path.join(source.checkoutDir, '.git');
+  const hasGitCheckout = fs.existsSync(gitDir);
+  const hasEntry = hasAllEntries(source);
+
+  if (hasGitCheckout && !shouldRefresh && hasEntry) {
+    console.log(
+      `[sdk:git] ${source.name} => reuse existing checkout (${source.checkoutDir})`
+    );
+    return;
   }
 
-  if (!fs.existsSync(source.entry)) {
-    throw new Error(`SDK source entry not found for ${source.name}: ${source.entry}`);
+  if (!hasGitCheckout || !hasEntry) {
+    cloneCheckout(source);
+  } else if (shouldRefresh) {
+    refreshCheckout(source);
+  }
+
+  if (!hasAllEntries(source)) {
+    throw new Error(
+      `SDK source entries not found for ${source.name}:\n${source.entries
+        .filter((entry) => !fs.existsSync(entry))
+        .join('\n')}`
+    );
   }
 
   const revision = readGitOutput(['rev-parse', '--short', 'HEAD'], source.checkoutDir);

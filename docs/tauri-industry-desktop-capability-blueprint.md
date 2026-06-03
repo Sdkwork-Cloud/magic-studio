@@ -1,355 +1,226 @@
 # Tauri Industry Desktop Capability Blueprint
 
+## Authority
+
+This document is a specialized desktop-shell capability reference subordinate to:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/tauri-rust-framework-architecture.md`
+
+It does not define Magic Studio V2 business/backend ownership. If a capability must exist in both standalone server deployment and desktop mode, it belongs in `packages/sdkwork-magic-studio-server/src-host`, not in the shell blueprint.
+
 ## Goal
 
-Define a reusable desktop capability framework for Tauri + Rust that can support multiple industry software categories:
+Define a reusable desktop shell blueprint for Tauri + Rust applications that need native host affordances without turning the desktop shell into a second backend.
 
-- Digital Content Creation (video, image, audio, 3D)
-- Engineering/CAD/Simulation tools
-- Enterprise productivity clients
-- Financial/trading terminals
-- Operational/industrial control consoles
-- Developer tooling products
+This blueprint is intentionally server-first:
 
-This blueprint focuses on what should be abstracted at the framework layer so business modules only consume stable capabilities.
+- the canonical Rust business kernel stays host-neutral
+- the desktop host stays thin, explicit, and replaceable
+- frontend business flows keep one typed API contract across standalone server and desktop deployment
 
-## Design Principles
+## Host Placement Standard
 
-1. Capability first: every desktop primitive is wrapped as a service, never used directly from commands or UI.
-2. Contract stability: command/event protocols should be stable even when implementation is replaced.
-3. Local-first by default: critical workflows must continue offline.
-4. Security by architecture: permission, secret, and audit are first-class modules.
-5. Observable operations: every long task must be traceable, cancellable, and measurable.
-6. Multi-app reuse: same framework package should support many products with minimal branching.
+The first architectural question is always ownership.
 
-## Capability Domains (Industry View)
+| Capability kind | Owner | Examples |
+| --- | --- | --- |
+| Shell-only native host capability | `src-tauri` | window/app lifecycle, desktop plugins, PTY, shell command existence checks, shell event wiring |
+| Shared business capability | `packages/sdkwork-magic-studio-server/src-host` | filesystem/workspace behavior, media, compression, database, migrations, jobs, governance, deployment, toolkits |
+| Shared frontend runtime contract | `@sdkwork/magic-studio-types`, `@sdkwork/magic-studio-core`, `@sdkwork/magic-studio-server` | runtime kinds, platform capability adapters, typed server discovery, typed clients |
 
-### 1. Runtime Kernel
+Rules:
 
-Scope:
+1. If the same behavior must work in standalone server deployment and desktop mode, it is not a shell capability.
+2. `src-tauri` may expose only the native affordances that exist because the host form is desktop.
+3. Frontend product code must consume shell behavior through typed runtime/platform boundaries, not direct `@tauri-apps/*` imports or ad hoc invoke strings.
 
-- App lifecycle
-- dependency injection container
-- capability registration
-- environment/profile bootstrap
+## Shell-Only Capability Domains
 
-Service candidates:
-
-- `RuntimeService`
-- `LifecycleService`
-- `FeatureFlagService`
-
-Current state in repo:
-
-- Partially done (`AppContext`, unified `run_blocking`, service-based commands).
-
-### 2. Security and Compliance
+### 1. Host Runtime and Bootstrap
 
 Scope:
 
-- Command allowlist
-- file/path permission policy
-- secret storage and key management
-- data encryption at rest
-- audit logging and tamper evidence
+- app startup/shutdown
+- embedded server startup orchestration
+- native plugin initialization
+- minimal shell dependency injection
 
-Service candidates:
+Magic Studio V2 current shape:
 
-- `PolicyService`
-- `SecretService`
-- `CryptoService`
-- `AuditService`
+- `main.rs` boots Tauri plugins and starts the embedded canonical Rust server
+- `framework/context.rs` wires only `SystemService` and `PtyService`
+- `framework/runtime.rs` owns the blocking adapter used by shell commands
 
-Industry drivers:
-
-- Finance/enterprise/healthcare require policy + audit as baseline.
-
-Current state:
-
-- `PolicyService` baseline has been implemented with command/path validation and frontend SDK access.
-- `SecretService` / `CryptoService` / `AuditService` are still pending.
-
-### 3. System Integration
+### 2. Window and Desktop Integration
 
 Scope:
 
-- OS/runtime info
-- shell/process management
-- protocol/deep link registration
-- tray/menu/hotkeys
-- startup/login item control
+- window lifecycle
+- native menu/tray/deep link integration
+- dialog/notification/clipboard/opener/updater wiring
+- single-instance and shell UX affordances
 
-Service candidates:
+This layer is desktop-specific because it exists only due to the native host container. It must not become a product-business transport layer.
 
-- `SystemService` (already present)
-- `ProcessService`
-- `DesktopIntegrationService`
-
-Current state:
-
-- Basic `SystemService` done; integration layer not yet standardized.
-
-### 4. File and Workspace Plane
+### 3. Terminal and Process Plane
 
 Scope:
 
-- workspace root strategy
-- file operations and guardrails
-- file watcher/indexing
-- snapshot/restore
-- large asset cache governance
+- PTY/session lifecycle
+- shell output event streaming
+- shell command existence probing for UX flows
 
-Service candidates:
+Magic Studio V2 current shape:
 
-- `FileSystemService` (already present)
+- closed native command set: `create_pty`, `start_pty`, `write_pty`, `resize_pty`, `kill_pty`, `sync_pty_sessions`, `system_command_exists`
+- shell event ownership and command registration live in `src-tauri/src/shell/mod.rs`
+
+### 4. Shell Diagnostics and Supportability
+
+Scope:
+
+- shell startup diagnostics
+- shell-specific logs/crash hooks
+- host health visibility for embedded-server startup
+
+This domain is allowed only when the diagnostics describe shell/runtime state. Product-job and product-governance observability remain server-owned.
+
+### 5. Optional Desktop-Only Extension Plane
+
+Scope:
+
+- desktop-only extensions that negotiate with native shell capabilities
+- plugin sandboxing that protects the native host boundary
+
+This domain is optional and future-facing. It is valid only when the extension model is genuinely desktop-only and does not duplicate shared business APIs.
+
+## Business Capability Domains That Must Stay Out Of The Shell
+
+The following capability families may appear in a generic product blueprint, but for Magic Studio V2 they are kernel-owned, not shell-owned:
+
+### 1. File and Workspace Plane
+
+Kernel-owned examples:
+
+- `FileSystemService`
 - `WorkspaceService`
 - `FileWatcherService`
 - `CacheService`
 
-Current state:
+Reason:
 
-- Basic FS done, workspace conventions exist in frontend toolkit; watcher/index/snapshot not unified.
+- workspace, managed assets, and deterministic file behavior must remain equivalent between standalone server deployment and desktop-hosted deployment
 
-### 5. Data Persistence Plane
+### 2. Data Persistence and Migration Plane
 
-Scope:
+Kernel-owned examples:
 
-- SQLite access abstraction
-- schema migration/versioning
-- transaction strategy
-- kv + relational hybrid patterns
-- optional search index (fts/vector)
-
-Service candidates:
-
-- `DatabaseService` (already present)
+- `DatabaseService`
 - `MigrationService`
 - `IndexService`
 
-Current state:
+Reason:
 
-- SQL execution/query/batch done.
-- `MigrationService` baseline is now implemented (versioned apply/status + idempotent conflict checks).
-- Query governance and index strategy remain.
+- persistence, migrations, and schema/version policy are shared business concerns, not shell-local behavior
 
-### 6. Job and Workflow Orchestration Plane
+### 3. Job, Workflow, and Media Plane
 
-Scope:
+Kernel-owned examples:
 
-- queue/scheduler
-- retries/backoff
-- cancellation and timeout
-- priority and concurrency limits
-- progress and stage events
-
-Service candidates:
-
-- `JobService` (already present)
-- `WorkflowService` (DAG/step orchestration)
-- `ResourceQuotaService`
-
-Current state:
-
-- Job submit/get/list/cancel + progress events + ffmpeg cancellation done.
-- Missing: queue policy, quotas, workflow graph model.
-
-### 7. Media and Compute Plane
-
-Scope:
-
-- ffmpeg/ffprobe orchestration
-- image/video/audio operations
-- recording/screen capture
-- hardware acceleration strategy
-
-Service candidates:
-
-- `MediaService` (already present)
-- `ToolkitService` (already present)
+- `JobService`
+- `WorkflowService`
+- `MediaService`
+- `ToolkitService`
 - `GpuAccelerationService`
 
-Current state:
+Reason:
 
-- Core media operations and toolkit commands are present.
-- Missing: capability presets, GPU policy, media pipeline templating.
+- long-running business workflows must keep one contract, one error model, and one ownership model across desktop and server deployment
 
-### 8. Device and Peripheral Plane
+### 4. Governance, Network, and Sync Plane
 
-Scope:
+Kernel-owned examples:
 
-- camera/microphone/screen
-- serial/USB/HID/Bluetooth
-- optional scanner/printer/pro cards
-
-Service candidates:
-
-- `DeviceService`
-- `CaptureService`
-- `PeripheralService`
-
-Industry drivers:
-
-- Manufacturing, healthcare, and kiosk products depend on this layer.
-
-### 9. Network and Sync Plane
-
-Scope:
-
-- HTTP/WebSocket
-- offline queue and replay
-- background sync
-- conflict resolution strategy
-
-Service candidates:
-
+- `PolicyService`
+- `AuditService`
 - `NetworkService`
 - `SyncService`
 - `OfflineQueueService`
 
-Current state:
+Reason:
 
-- Network exists mostly via plugin/runtime; sync policy is not frameworkized yet.
+- these concerns affect product behavior, governance, and deployment semantics across host forms
 
-### 10. UI Bridge Plane
+## Recommended Magic Studio Shell Layout
 
-Scope:
+Desktop shell code should stay close to the current Magic Studio V2 shape:
 
-- typed command envelope
-- typed event envelope
-- error and telemetry contracts
+```text
+src-tauri/src/
+  main.rs
+  embedded_server.rs
+  framework/
+    context.rs
+    error.rs
+    runtime.rs
+    services/
+      system.rs
+      pty.rs
+  shell/
+    mod.rs
+    pty.rs
+    session.rs
+    commands/
+      mod.rs
+      pty.rs
+      system.rs
+```
 
-Service candidates:
+Rules:
 
-- `CommandGateway`
-- `EventGateway`
+- private shell implementation ownership stays under `src-tauri/src/shell/**`
+- do not reintroduce sibling top-level `commands/`, `pty/`, or `session/` namespaces
+- do not add `framework/services/filesystem.rs`, `media.rs`, `database.rs`, `migration.rs`, `jobs.rs`, or `toolkit.rs` to `src-tauri`
 
-Current state:
+## Packaging Strategy
 
-- command thin adapters are in place; typed shared schema governance should be strengthened.
+The shell framework should package around host-native boundaries, not around business domains:
 
-### 11. Observability and Supportability
+1. `framework/` owns shell support primitives such as context, errors, blocking adapters, and shell-only services.
+2. `shell/` owns the closed native command vocabulary, shell event naming, PTY/session internals, and invoke registration.
+3. Canonical business domains live in Rust server crates/packages, not in Tauri shell modules.
+4. Frontend packages consume shell behavior through `@sdkwork/magic-studio-core/platform` and canonical runtime helpers.
 
-Scope:
+## Priority Roadmap
 
-- structured logs
-- metrics
-- tracing spans
-- crash reporting and dump
-- health diagnostics
+### P0 (Mandatory Hardening)
 
-Service candidates:
+1. Keep the native shell command surface closed and explicitly registered in one owner.
+2. Keep `AppContext` limited to shell-native services only.
+3. Ensure desktop startup remains server-first: embedded server ready before business flows initialize.
+4. Keep plugin access behind platform/runtime adapters instead of leaking `@tauri-apps/*` into feature packages.
 
-- `LogService`
-- `MetricsService`
-- `TraceService`
-- `CrashService`
+### P1 (Desktop Productization)
 
-Industry value:
+1. Standardize desktop-only UX integrations such as tray, deep links, and native menus when the product truly needs them.
+2. Add shell diagnostics that help debug embedded-server startup and PTY lifecycle without duplicating business telemetry.
+3. Harden shell update/release flows without coupling them to business API ownership.
 
-- Greatly reduces MTTR in production and enterprise delivery.
+### P2 (Platform Expansion)
 
-### 12. Delivery and Update Plane
+1. Introduce desktop-only extension hosting only if it is sandboxed and clearly separated from business APIs.
+2. Add advanced device/peripheral support only when the capability is truly desktop-native and not required in standalone server deployment.
 
-Scope:
+## Acceptance Criteria For A Shell-Grade Capability
 
-- updater strategy and channels
-- rollback safety
-- compatibility checks
-- data migration hooks during upgrade
+A capability belongs in the desktop shell only when all of the following are true:
 
-Service candidates:
+1. It exists because the host form is desktop.
+2. Standalone server deployment does not need a parallel implementation of the same business behavior.
+3. The command/event surface is small, typed, and centrally owned.
+4. The owning Rust modules stay inside the shell namespace and remain auditable.
+5. Frontend consumption happens through typed runtime/platform adapters rather than direct native imports.
+6. The capability does not create a second owner for business routes, DTOs, policy, storage, jobs, or workflows.
 
-- `UpdateService`
-- `ReleasePolicyService`
-
-Current state:
-
-- updater plugin is wired; policy layer is not abstracted.
-
-### 13. Extension and Plugin Plane
-
-Scope:
-
-- external module contracts
-- capability negotiation
-- sandboxed extension runtime
-- version compatibility matrix
-
-Service candidates:
-
-- `ExtensionHostService`
-- `CapabilityRegistryService`
-
-Industry value:
-
-- Enables ecosystem and long-term platformization.
-
-## Priority Roadmap (Recommended)
-
-### P0 (Immediate, framework hardening)
-
-1. `PolicyService` for command/path allowlist + secure defaults.
-2. `MigrationService` for sqlite schema versioning and upgrade safety.
-3. `WorkflowService` on top of JobService for multi-step media pipelines.
-4. `Log/Metrics` minimum observability envelope for job/command executions.
-
-### P1 (Productization)
-
-1. `WorkspaceService` + `CacheService` with deterministic local artifact policy.
-2. `DeviceService` baseline (recording devices + permission probing).
-3. `SyncService` offline queue and replay mechanism.
-4. typed command/event schema generation for frontend SDK consistency.
-
-### P2 (Platform scale)
-
-1. extension/plugin host and capability registry.
-2. GPU/acceleration strategy abstraction.
-3. enterprise compliance pack (audit, encryption, retention policy).
-
-## Capability Packaging Strategy
-
-Recommended crate/module layout under `src-tauri/src/framework/services`:
-
-- `core` (runtime, lifecycle, policy)
-- `system` (system, process, integration)
-- `data` (fs, workspace, db, cache, migration)
-- `media` (media, toolkit, device, capture)
-- `workflow` (job, workflow, quota)
-- `infra` (network, sync, observability, update)
-- `ext` (extension host, capability registry)
-
-Each service should expose:
-
-1. Trait contract
-2. default implementation
-3. command mapping adapter
-4. event names and payload types
-5. error code dictionary
-
-## Existing vs Target (Quick Gap Summary)
-
-Already strong:
-
-- service-oriented architecture
-- command thin adapters
-- sqlite/ffmpeg/compression abstractions
-- job progress and cancellation
-
-Needs next focus:
-
-- security policy layer
-- schema migration governance
-- workflow-level orchestration
-- observability baseline
-- sync/offline strategy
-
-## Acceptance Criteria for "Industry-Grade" Framework
-
-A capability module is considered framework-grade only when it has:
-
-1. Stable trait contract
-2. command/event adapter
-3. deterministic error codes
-4. cancellation/timeout semantics (if long-running)
-5. observability hooks
-6. test strategy (unit + integration surface)
+If any one of these checks fails, the capability belongs in the canonical Rust server instead of the Tauri shell.

@@ -107,6 +107,8 @@ Cargo.lock
 # ==================== Desktop App ====================
 # Electron
 release/
+!docs/release/
+!docs/release/*.md
 app/dist/
 electron-builder.yml
 
@@ -140,15 +142,18 @@ scripts
 !scripts/
 scripts/*
 !scripts/audit-service-encapsulation.mjs
+!scripts/service-encapsulation-policy.mjs
 !scripts/validate-service-encapsulation-policy.mjs
 !scripts/check-service-policy-review-gate.mjs
 !scripts/sdk-mode.mjs
 !scripts/prepare-git-sdk-sources.mjs
 !scripts/run-app-build.mjs
+!scripts/run-vitest-safe.mjs
 !scripts/run-vite-dev.mjs
 !scripts/check-desktop-bundle-self-contained.mjs
 !scripts/check-release-api-target.mjs
 !scripts/app-mode.mjs
+!scripts/zip-project.mjs
 !scripts/__tests__/
 !scripts/__tests__/app-mode.test.ts
 !scripts/__tests__/check-release-api-target.test.ts

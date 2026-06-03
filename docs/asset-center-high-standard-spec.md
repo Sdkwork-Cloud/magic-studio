@@ -1,10 +1,22 @@
 # Asset Center High Standard Specification (V1 Baseline)
 
+## Authority
+
+This document specializes the canonical Magic Studio standards for asset-center governance and storage rules.
+
+Primary references:
+
+- `docs/magic-studio-unified-host-api-standard.md`
+- `docs/local-media-toolkit-architecture.md`
+- `docs/platform-runtime-capability-matrix.md`
+
+If this document conflicts with the canonical host/storage/runtime standards, follow those documents first.
+
 ## 1. Core Principles
 
 1. single source of truth: all digital assets are managed by `assetCenterService`
 2. domain isolation with unified model: notes/canvas/studios/magiccut/film share one canonical schema
-3. strict storage abstraction: browser vfs, tauri fs, remote url, no business-side direct fs coupling
+3. strict storage abstraction: browser vfs, desktop fs, remote url, no business-side direct fs coupling
 4. strict query contract: Spring Boot pagination request/response shape
 5. governance first: lifecycle, references, tags, versioning, statistics
 
@@ -78,17 +90,17 @@ Examples:
 Storage mode:
 
 - `browser-vfs`
-- `tauri-fs`
+- `desktop-fs`
 - `remote-url`
 - `hybrid`
 
 Locator protocol:
 
-- `assets`
-- `file`
-- `tauri`
-- `http`
-- `https`
+- `assets://`
+- `file://`
+- `desktop://`
+- `http://`
+- `https://`
 
 ## 7. Lifecycle Standard
 

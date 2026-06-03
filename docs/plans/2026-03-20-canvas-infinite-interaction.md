@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Make `sdkwork-react-canvas` infinite canvas interactions consistent, history-safe, and resilient across zoom, minimap navigation, inline editing, and group containment.
+**Goal:** Make `sdkwork-magic-studio-canvas` infinite canvas interactions consistent, history-safe, and resilient across zoom, minimap navigation, inline editing, and group containment.
 
 **Architecture:** Introduce pure viewport helpers and pure group-fit helpers, then route `CanvasBoard`, `CanvasZoomControls`, `CanvasMinimap`, `CanvasNode`, `CanvasGroupPanel`, and `canvasStore` through those shared paths. Use focused tests on pure logic so verification stays stable in the current workspace.
 
@@ -13,8 +13,8 @@
 ### Task 1: Add shared viewport helpers
 
 **Files:**
-- Create: `packages/sdkwork-react-canvas/src/utils/viewport.ts`
-- Create: `packages/sdkwork-react-canvas/src/utils/viewport.test.ts`
+- Create: `packages/sdkwork-magic-studio-canvas/src/utils/viewport.ts`
+- Create: `packages/sdkwork-magic-studio-canvas/src/utils/viewport.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -26,7 +26,7 @@ Cover:
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm test packages/sdkwork-react-canvas/src/utils/viewport.test.ts`
+Run: `pnpm test packages/sdkwork-magic-studio-canvas/src/utils/viewport.test.ts`
 
 **Step 3: Write minimal implementation**
 
@@ -34,13 +34,13 @@ Implement pure helper functions with no React dependencies.
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm test packages/sdkwork-react-canvas/src/utils/viewport.test.ts`
+Run: `pnpm test packages/sdkwork-magic-studio-canvas/src/utils/viewport.test.ts`
 
 ### Task 2: Add group-fit helper coverage
 
 **Files:**
-- Create: `packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.ts`
-- Create: `packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.test.ts`
+- Create: `packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.ts`
+- Create: `packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -52,7 +52,7 @@ Cover:
 
 **Step 2: Run test to verify it fails**
 
-Run: `pnpm test packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.test.ts`
+Run: `pnpm test packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.test.ts`
 
 **Step 3: Write minimal implementation**
 
@@ -60,14 +60,14 @@ Export pure helpers for ancestor collection and group bound recompute.
 
 **Step 4: Run test to verify it passes**
 
-Run: `pnpm test packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.test.ts`
+Run: `pnpm test packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.test.ts`
 
 ### Task 3: Route canvas interactions through shared helpers
 
 **Files:**
-- Modify: `packages/sdkwork-react-canvas/src/components/CanvasBoard.tsx`
-- Modify: `packages/sdkwork-react-canvas/src/components/CanvasMinimap.tsx`
-- Modify: `packages/sdkwork-react-canvas/src/components/CanvasZoomControls.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/components/CanvasBoard.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/components/CanvasMinimap.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/components/CanvasZoomControls.tsx`
 
 **Step 1: Replace duplicated viewport math**
 
@@ -81,14 +81,14 @@ Use active drag state plus window listeners so dragging survives pointer exit.
 
 Run:
 
-- `pnpm test packages/sdkwork-react-canvas/src/utils/viewport.test.ts`
+- `pnpm test packages/sdkwork-magic-studio-canvas/src/utils/viewport.test.ts`
 
 ### Task 4: Fix history-safe edit commits and group containment
 
 **Files:**
-- Modify: `packages/sdkwork-react-canvas/src/store/canvasStore.tsx`
-- Modify: `packages/sdkwork-react-canvas/src/components/CanvasNode.tsx`
-- Modify: `packages/sdkwork-react-canvas/src/components/CanvasGroupPanel.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/store/canvasStore.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/components/CanvasNode.tsx`
+- Modify: `packages/sdkwork-magic-studio-canvas/src/components/CanvasGroupPanel.tsx`
 
 **Step 1: Add a committed update path**
 
@@ -106,7 +106,7 @@ Finalize those interactions with actual diff-bearing updates instead of empty fi
 
 Run:
 
-- `pnpm test packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.test.ts`
+- `pnpm test packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.test.ts`
 
 ### Task 5: Verify integrated canvas package state
 
@@ -117,12 +117,12 @@ Run:
 
 Run:
 
-- `pnpm test packages/sdkwork-react-canvas/src/utils/viewport.test.ts packages/sdkwork-react-canvas/src/store/canvasGroupGeometry.test.ts packages/sdkwork-react-canvas/src/services/index.test.ts`
+- `pnpm test packages/sdkwork-magic-studio-canvas/src/utils/viewport.test.ts packages/sdkwork-magic-studio-canvas/src/store/canvasGroupGeometry.test.ts packages/sdkwork-magic-studio-canvas/src/services/index.test.ts`
 
 **Step 2: Run package build or typecheck if available**
 
 Run:
 
-- `pnpm --filter @sdkwork/react-canvas build`
+- `pnpm --filter @sdkwork/magic-studio-canvas build`
 
 If unrelated workspace issues block full success, document the exact failure and confirm the canvas-focused tests still pass.

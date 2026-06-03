@@ -8,16 +8,16 @@ Make `auth` and `notes` in `magic-studio-v2` run against the real backend SDK co
 
 ## Scope
 
-- `packages/sdkwork-react-auth`
-- `packages/sdkwork-react-notes`
-- `packages/sdkwork-react-core`
+- `packages/sdkwork-magic-studio-auth`
+- `packages/sdkwork-magic-studio-notes`
+- `packages/sdkwork-magic-studio-core`
 - app routing and session bootstrap in `src/`
 - backend auth and notes APIs if current OpenAPI/SDK coverage is incomplete
 - SDK regeneration and frontend package integration after backend changes
 
 ## Current State Summary
 
-- The app already routes `/login` to `@sdkwork/react-auth` and `/notes` to `@sdkwork/react-notes`.
+- The app already routes `/login` to `@sdkwork/magic-studio-auth` and `/notes` to `@sdkwork/magic-studio-notes`.
 - `auth` already persists session tokens and binds them into the SDK client, but it still needs contract validation against the real backend responses and runtime behavior.
 - `notes` already calls many SDK note methods, but it also contains fallback probing logic for missing SDK/backend capabilities, which indicates the current API surface is not yet trusted as complete.
 - The integration requirement is stricter than the current implementation: the final result must rely on formal backend APIs and generated SDK methods, not on permanent raw HTTP fallbacks.
@@ -36,8 +36,8 @@ This is the recommended approach because `notes` depends on authenticated calls,
 
 ### Auth
 
-- `packages/sdkwork-react-auth` remains the business-facing auth package.
-- `packages/sdkwork-react-core` remains the source of truth for SDK client initialization and session token binding.
+- `packages/sdkwork-magic-studio-auth` remains the business-facing auth package.
+- `packages/sdkwork-magic-studio-core` remains the source of truth for SDK client initialization and session token binding.
 - The backend contract must fully support:
   - username/password login
   - phone login if exposed in UI
@@ -52,7 +52,7 @@ This is the recommended approach because `notes` depends on authenticated calls,
 
 ### Notes
 
-- `packages/sdkwork-react-notes` remains the business-facing notes package.
+- `packages/sdkwork-magic-studio-notes` remains the business-facing notes package.
 - `noteService` should call generated SDK methods only for the final version.
 - Missing capabilities such as permanent delete, trash clearing, folder moving, content update, or batch operations must be formalized in backend APIs and reflected in OpenAPI.
 - `noteStore` continues to manage optimistic UI and debounced persistence, but backend confirmation must remain authoritative.
@@ -61,7 +61,7 @@ This is the recommended approach because `notes` depends on authenticated calls,
 
 ### Auth flow
 
-1. User logs in from `@sdkwork/react-auth`.
+1. User logs in from `@sdkwork/magic-studio-auth`.
 2. Backend returns auth tokens and login payload.
 3. Tokens are persisted through the SDK session helpers.
 4. The app restores profile and exposes an authenticated store state.

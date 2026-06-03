@@ -1,7 +1,7 @@
 
 import { ThemeMode, AppearanceConfig } from './types';
-import { DEFAULT_SETTINGS } from '@sdkwork/react-settings';
-import { settingsService } from '@sdkwork/react-settings';
+import { DEFAULT_SETTINGS } from '@sdkwork/magic-studio-settings/constants';
+import { settingsService } from '@sdkwork/magic-studio-settings/services';
 
 class ThemeManager {
   private mediaQuery: MediaQueryList | null = null;
@@ -30,7 +30,7 @@ class ThemeManager {
          this.applyEditorFontVariables(fullSettings.editor);
          this.applyTerminalFontVariables(fullSettings.terminal);
       }
-    } catch (e) {
+    } catch {
       this._config = DEFAULT_SETTINGS.appearance as AppearanceConfig;
     }
 

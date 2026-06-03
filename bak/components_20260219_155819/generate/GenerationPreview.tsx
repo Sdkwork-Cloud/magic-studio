@@ -12,15 +12,15 @@ import { ImageTask } from '../../modules/image/entities/image.entity';
 // Removed store dependency to allow usage in Gallery/Portal
 // import { useImageStore } from '../store/imageStore'; 
 import { PromptText } from './PromptText';
-import { platform } from 'sdkwork-react-core';
+import { platform } from 'sdkwork-magic-studio-core';
 import { ImageGridEditorModal } from '../../modules/image/components/ImageGridEditorModal';
 import { ImageCanvasEditorModal } from '../../modules/image/components/ImageCanvasEditorModal';
-import { useTranslation } from 'sdkwork-react-i18n';
+import { useTranslation } from 'sdkwork-magic-studio-i18n';
 import { useRouter } from '../../router';
 import { ROUTES } from '../../router/routes';
 import { remixService } from '../../services/remix/remixService';
-import { MediaResourceType } from 'sdkwork-react-commons';
-import { GalleryItem } from 'sdkwork-react-commons';
+import { MediaResourceType } from 'sdkwork-magic-studio-commons';
+import { GalleryItem } from 'sdkwork-magic-studio-commons';
 import { useAssetUrl } from '../../hooks/useAssetUrl'; // Added Hook
 
 export type PreviewMode = 'creation' | 'view';

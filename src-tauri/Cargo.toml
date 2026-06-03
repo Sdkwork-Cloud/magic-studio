@@ -11,28 +11,25 @@ tauri-build = { version = "2.5.6", features = [] }
 
 [dependencies]
 tauri = { version = "2.10.3", features = ["unstable"] }
-tauri-plugin-shell = "2.3.5"
 tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.6.0"
-tauri-plugin-fs = "2.4.5"
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-notification = "2.3.3"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-store = "2.4.2"
 tauri-plugin-updater = "2.10.0"
-tauri-plugin-http = "2.5.7"
 tauri-plugin-window-state = "2.4.1"
 tauri-plugin-log = "2.8.0"
 tauri-plugin-single-instance = "2.4.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-portable-pty = "0.8.1"
+portable-pty = "0.9.0"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
-uuid = { version = "1.0", features = ["v4"] }
-dirs = "5.0"
-zip = { version = "0.6", features = ["deflate"] }
-walkdir = "2.4"
-url = "2.5"
-rusqlite = { version = "0.31", features = ["bundled"] }
+uuid = { version = "1.23", features = ["v4"] }
+dirs = "6.0"
+zip = { version = "8.5", features = ["deflate"] }
+walkdir = "2.5"
+rusqlite = { version = "0.39", features = ["bundled"] }
+sdkwork-magic-studio-server = { path = "../packages/sdkwork-magic-studio-server/src-host" }
