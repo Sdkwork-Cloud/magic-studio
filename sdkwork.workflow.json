@@ -1,0 +1,138 @@
+{
+  "$schema": "../sdkwork-github-workflow/schemas/sdkwork-workflow.schema.json",
+  "schemaVersion": "2026-06-06.sdkwork.workflow.v1",
+  "app": {
+    "id": "magic-studio-v2",
+    "name": "Magic Studio",
+    "repository": "Sdkwork-Cloud/magic-studio",
+    "sourcePath": ".",
+    "configPath": "sdkwork.app.config.json"
+  },
+  "release": {
+    "artifactPrefix": "magic-studio-v2",
+    "defaultVersion": "0.1.1",
+    "changelog": {
+      "source": "auto",
+      "maxCommitSubjects": 50
+    }
+  },
+  "toolchains": {
+    "node": "22",
+    "pnpm": "10.30.2",
+    "rust": "stable"
+  },
+  "lifecycle": {
+    "preflight": [
+      {
+        "name": "Install desktop release prerequisites",
+        "shell": "pwsh",
+        "run": "$ErrorActionPreference = \"Stop\"\n$PSNativeCommandUseErrorActionPreference = $true\nif ($env:SDKWORK_PACKAGE_PLATFORM -eq \"linux\") {\n  sudo apt-get update\n  sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf libssl-dev\n} elseif ($env:SDKWORK_PACKAGE_PLATFORM -eq \"macos\") {\n  $rustTarget = if ($env:SDKWORK_PACKAGE_ARCHITECTURE -eq \"arm64\") { \"aarch64-apple-darwin\" } else { \"x86_64-apple-darwin\" }\n  rustup target add $rustTarget\n}"
+      }
+    ],
+    "install": [
+      {
+        "name": "Install workspace dependencies",
+        "run": "pnpm install --frozen-lockfile"
+      }
+    ],
+    "build": [
+      {
+        "name": "Verify release prerequisites",
+        "shell": "pwsh",
+        "env": {
+          "MAGIC_STUDIO_SDK_MODE": "git"
+        },
+        "run": "$ErrorActionPreference = \"Stop\"\n$PSNativeCommandUseErrorActionPreference = $true\npnpm run verify:release:artifacts"
+      }
+    ],
+    "package": [
+      {
+        "name": "Build selected desktop bundle",
+        "shell": "pwsh",
+        "env": {
+          "MAGIC_STUDIO_SDK_MODE": "git"
+        },
+        "run": "$ErrorActionPreference = \"Stop\"\n$PSNativeCommandUseErrorActionPreference = $true\n$args = @(\"--config\", \"src-tauri/tauri.prod.conf.json\")\nif ($env:SDKWORK_PACKAGE_PLATFORM -eq \"linux\") {\n  if ($env:SDKWORK_PACKAGE_FORMAT -eq \"deb\") {\n    $args += @(\"--bundles\", \"deb\")\n  } elseif ($env:SDKWORK_PACKAGE_FORMAT -eq \"appimage\") {\n    $args += @(\"--bundles\", \"appimage\")\n  } else {\n    throw \"Unsupported Magic Studio Linux package format $env:SDKWORK_PACKAGE_FORMAT\"\n  }\n} elseif ($env:SDKWORK_PACKAGE_PLATFORM -eq \"windows\") {\n  if ($env:SDKWORK_PACKAGE_FORMAT -ne \"exe\") {\n    throw \"Unsupported Magic Studio Windows package format $env:SDKWORK_PACKAGE_FORMAT\"\n  }\n  $args += @(\"--bundles\", \"nsis\")\n} elseif ($env:SDKWORK_PACKAGE_PLATFORM -eq \"macos\") {\n  if ($env:SDKWORK_PACKAGE_FORMAT -ne \"dmg\") {\n    throw \"Unsupported Magic Studio macOS package format $env:SDKWORK_PACKAGE_FORMAT\"\n  }\n  $rustTarget = if ($env:SDKWORK_PACKAGE_ARCHITECTURE -eq \"arm64\") { \"aarch64-apple-darwin\" } else { \"x86_64-apple-darwin\" }\n  $args += @(\"--target\", $rustTarget, \"--bundles\", \"dmg\")\n} else {\n  throw \"Unsupported Magic Studio desktop platform $env:SDKWORK_PACKAGE_PLATFORM\"\n}\npnpm exec tauri build @args"
+      }
+    ],
+    "sign": [
+      {
+        "name": "Sign artifacts placeholder",
+        "shell": "pwsh",
+        "run": "Write-Host \"Signing policy is configured by release environment for $env:SDKWORK_PACKAGE_ID\""
+      }
+    ],
+    "sbom": [
+      {
+        "name": "SBOM placeholder",
+        "shell": "pwsh",
+        "run": "Write-Host \"SBOM generation is not required for $env:SDKWORK_PACKAGE_ID\""
+      }
+    ],
+    "validate": [
+      {
+        "name": "Validate selected desktop bundle",
+        "shell": "pwsh",
+        "run": "$ErrorActionPreference = \"Stop\"\n$artifactGlob = switch ($env:SDKWORK_PACKAGE_ID) {\n  \"linux-debian-x64-desktop-deb\" { \"src-tauri/target/release/bundle/deb/*.deb\" }\n  \"linux-x64-desktop-appimage\" { \"src-tauri/target/release/bundle/appimage/*.AppImage\" }\n  \"windows-x64-desktop-exe\" { \"src-tauri/target/release/bundle/nsis/*.exe\" }\n  \"macos-arm64-desktop-dmg\" { \"src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  \"macos-x64-desktop-dmg\" { \"src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  default { throw \"Unsupported Magic Studio package id $env:SDKWORK_PACKAGE_ID\" }\n}\n$artifacts = Get-ChildItem -Path $artifactGlob -File -ErrorAction SilentlyContinue\nif (-not $artifacts) {\n  throw \"Missing built artifact for $env:SDKWORK_PACKAGE_ID matching $artifactGlob\"\n}\nforeach ($artifact in $artifacts) {\n  if ($artifact.Length -le 0) {\n    throw \"Built artifact is empty: $($artifact.FullName)\"\n  }\n  Write-Host \"Validated $($artifact.FullName)\"\n}"
+      }
+    ]
+  },
+  "targets": [
+    {
+      "id": "linux-debian-x64-desktop-deb",
+      "profile": "desktop",
+      "platform": "linux",
+      "distribution": "debian",
+      "architecture": "x64",
+      "formats": ["deb"],
+      "runner": "ubuntu-22.04",
+      "outputGlobs": ["src-tauri/target/release/bundle/deb/*.deb"]
+    },
+    {
+      "id": "linux-x64-desktop-appimage",
+      "profile": "desktop",
+      "platform": "linux",
+      "architecture": "x64",
+      "formats": ["appimage"],
+      "runner": "ubuntu-22.04",
+      "outputGlobs": ["src-tauri/target/release/bundle/appimage/*.AppImage"]
+    },
+    {
+      "id": "windows-x64-desktop-exe",
+      "profile": "desktop",
+      "platform": "windows",
+      "architecture": "x64",
+      "formats": ["exe"],
+      "runner": "windows-latest",
+      "outputGlobs": ["src-tauri/target/release/bundle/nsis/*.exe"]
+    },
+    {
+      "id": "macos-arm64-desktop-dmg",
+      "profile": "desktop",
+      "platform": "macos",
+      "architecture": "arm64",
+      "formats": ["dmg"],
+      "runner": "macos-latest",
+      "outputGlobs": ["src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg"]
+    },
+    {
+      "id": "macos-x64-desktop-dmg",
+      "profile": "desktop",
+      "platform": "macos",
+      "architecture": "x64",
+      "formats": ["dmg"],
+      "runner": "macos-15-intel",
+      "outputGlobs": ["src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg"]
+    }
+  ],
+  "security": {
+    "artifactAttestations": true,
+    "sbomRequired": false,
+    "signingRequired": false
+  },
+  "publish": {
+    "workflowArtifact": true,
+    "githubRelease": true,
+    "retentionDays": 30
+  }
+}
