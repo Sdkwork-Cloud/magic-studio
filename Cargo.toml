@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "packages/sdkwork-magic-studio-server/src-host",
+    "packages/sdkwork-ai-sdk-rust",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+
+[workspace.dependencies]
+# SDKWork workspace members - declared once at workspace root
+sdkwork-magic-studio-server = { path = "packages/sdkwork-magic-studio-server/src-host" }
+sdkwork-ai-sdk = { path = "packages/sdkwork-ai-sdk-rust" }
