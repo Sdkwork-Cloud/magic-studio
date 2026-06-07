@@ -14,8 +14,6 @@ node_modules
 
 # Build outputs
 dist
-!packages/sdkwork-app-sdk/dist/
-!packages/sdkwork-app-sdk/dist/**
 !packages/sdkwork-sdk-common/dist/
 !packages/sdkwork-sdk-common/dist/**
 dist-zip

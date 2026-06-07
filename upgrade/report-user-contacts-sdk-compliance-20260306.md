@@ -8,7 +8,7 @@
   - `src/services/userCenterService.ts`
   - `src/pages/ProfilePage.tsx` (contacts section)
 - SDK baseline:
-  - `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+  - `application-root product app SDK TypeScript family`
 
 ## Rule Baseline
 - Mandatory architecture: `Page -> Service -> SDK`

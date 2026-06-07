@@ -15,11 +15,11 @@
 ### Task 1: Define Storage Policy Settings and Default MagicStudio Roots
 
 **Files:**
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/entities/settings.entity.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/constants.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/services/settingsService.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/store/settingsStore.tsx`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/tests/materialStorageSettings.test.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/entities/settings.entity.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/constants.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/services/settingsService.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/store/settingsStore.tsx`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/tests/materialStorageSettings.test.ts`
 
 **Step 1: Write the failing test**
 
@@ -76,14 +76,14 @@ git commit -m "feat: define MagicStudio storage policy settings"
 ### Task 2: Centralize MagicStudio Path Resolution and Legacy Migration
 
 **Files:**
-- Create: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/magicStudioPaths.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/runtimeMagicStudioStorage.ts`
-- Create: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/magicStudioMigration.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/toolkit/createPlatformToolKit.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/web.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/desktop.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/__tests__/magicStudioPaths.test.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/__tests__/magicStudioMigration.test.ts`
+- Create: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/magicStudioPaths.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/runtimeMagicStudioStorage.ts`
+- Create: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/magicStudioMigration.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/toolkit/createPlatformToolKit.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/web.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/platform/desktop.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/__tests__/magicStudioPaths.test.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/storage/__tests__/magicStudioMigration.test.ts`
 
 **Step 1: Write the failing path test**
 
@@ -176,13 +176,13 @@ git commit -m "feat: centralize MagicStudio path resolution"
 ### Task 3: Route Asset-Center Persistence Through Project-Managed Directories
 
 **Files:**
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/infrastructure/BrowserTauriAssetVfs.ts`
-- Create: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/magicStudioAssetLayout.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/AssetCenterService.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/assetCenterAdapters.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/services/assetService.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/tests/magicStudioAssetLayout.test.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-assets/tests/assetCenterProjectManagedImport.test.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/infrastructure/BrowserTauriAssetVfs.ts`
+- Create: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/magicStudioAssetLayout.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/AssetCenterService.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/asset-center/application/assetCenterAdapters.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/src/services/assetService.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/tests/magicStudioAssetLayout.test.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-assets/tests/assetCenterProjectManagedImport.test.ts`
 
 **Step 1: Write the failing layout test**
 
@@ -283,10 +283,10 @@ git commit -m "feat: store managed assets in MagicStudio project directories"
 ### Task 4: Make Magic Cut Desktop Imports Local-First
 
 **Files:**
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/src/store/magicCutStore.tsx`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-core/src/utils/uploadHelper.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/src/domain/assets/magicCutAssetState.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/tests/localFirstImport.test.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/src/store/magicCutStore.tsx`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-core/src/utils/uploadHelper.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/src/domain/assets/magicCutAssetState.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-magiccut/tests/localFirstImport.test.ts`
 
 **Step 1: Write the failing Magic Cut test**
 
@@ -345,12 +345,12 @@ git commit -m "feat: make Magic Cut desktop imports local-first"
 ### Task 5: Add Settings UI for Root Overrides and Material Mode
 
 **Files:**
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/data/definitions.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/pages/SettingsPage.tsx`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/components/StorageSettings.tsx`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-i18n/src/locales/en/settings.ts`
-- Modify: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-i18n/src/locales/zh-CN/settings.ts`
-- Test: `D:/javasource/spring-ai-plus/spring-ai-plus-business/apps/magic-studio-v2/packages/sdkwork-magic-studio-settings/tests/materialStorageSettingsUi.test.tsx`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/data/definitions.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/pages/SettingsPage.tsx`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/src/components/StorageSettings.tsx`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-i18n/src/locales/en/settings.ts`
+- Modify: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-i18n/src/locales/zh-CN/settings.ts`
+- Test: `<workspace-root>/magic-studio-v2/packages/sdkwork-magic-studio-settings/tests/materialStorageSettingsUi.test.tsx`
 
 **Step 1: Write the failing UI test**
 

@@ -101,7 +101,7 @@
 改造方式：
 
 - 修改前端桥接
-- 如 app-sdk 源契约缺失，再回到 `spring-ai-plus-app-api` 闭环补齐
+- 如 app-sdk 源契约缺失，再回到 `retired Spring app API authority` 闭环补齐
 
 状态：
 

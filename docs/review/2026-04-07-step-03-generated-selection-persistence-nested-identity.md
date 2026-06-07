@@ -93,7 +93,7 @@
 - `packages/sdkwork-magic-studio-assets/tests/chooseAssetIdentity.test.tsx`
 
 当前不再卡在 alias，而是暴露出更深层 blocker�?
-- `@sdkwork/app-sdk` 子导�?`./http/client` 未在当前 node 条件下导�?- `indexedDB is not defined`
+- `retired generic app SDK` 子导�?`./http/client` 未在当前 node 条件下导�?- `indexedDB is not defined`
 - `packages/sdkwork-magic-studio-core/src/platform/web.ts` �?node 环境下触�?web 平台初始�?
 这说明本轮已经真实推进了测试基础设施，但消费�?node/web 平台隔离仍有后续清障空间�?
 ## 检查点结果
@@ -113,7 +113,7 @@
 - 说明：本轮只是第四个局部闭环，Step 03 仍未整步完成�?
 ## 风险 / Blocker
 
-- `ChooseAsset` 相关测试已暴露出新的 node/web 平台隔离问题�?  - `indexedDB` �?node 环境不可�?  - `@sdkwork/app-sdk` 某些子路径在当前条件导出不完�?- `Film / MagicCut / Canvas` 导入链路中的嵌套 identity 收敛仍待继续推进�?- `generatedOutcome` 若存在仅在更深嵌�?metadata 中持�?identity 的场景，未来也可能需要对齐同类解析�?
+- `ChooseAsset` 相关测试已暴露出新的 node/web 平台隔离问题�?  - `indexedDB` �?node 环境不可�?  - `retired generic app SDK` 某些子路径在当前条件导出不完�?- `Film / MagicCut / Canvas` 导入链路中的嵌套 identity 收敛仍待继续推进�?- `generatedOutcome` 若存在仅在更深嵌�?metadata 中持�?identity 的场景，未来也可能需要对齐同类解析�?
 ## 下一轮建�?
 优先级建议：
 

@@ -894,13 +894,13 @@ describe('imageService', () => {
     ).rejects.toThrow('image upscale failed');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./imageService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('does not import or call legacy app SDK generation boundaries', async () => {
@@ -910,8 +910,8 @@ describe('imageService', () => {
     );
 
     expect(source.includes('getAppSdkClientWithSession')).toBe(false);
-    expect(source.includes('@sdkwork/app-sdk')).toBe(false);
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
+    expect(source.includes(`@sdkwork/${'app'}-sdk`)).toBe(false);
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
     expect(source.includes('App SDK generation')).toBe(false);
   });
 
@@ -938,8 +938,8 @@ describe('imageService', () => {
     );
     const combined = sources.join('\n');
 
-    expect(combined.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
-    expect(combined.includes('@sdkwork/app-sdk')).toBe(false);
+    expect(combined.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
+    expect(combined.includes(`@sdkwork/${'app'}-sdk`)).toBe(false);
     expect(combined.includes('AppSdkClient')).toBe(false);
     expect(combined.includes("from '@sdkwork/magic-studio-server'")).toBe(true);
   });

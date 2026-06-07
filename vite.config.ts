@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 import { configDefaults } from 'vitest/config';
 import {
   EXTERNAL_APPBASE_PC_REACT_ENTRY,
-  EXTERNAL_APP_SDK_ENTRY,
   EXTERNAL_AUTH_PC_REACT_ENTRY,
   EXTERNAL_CORE_PC_REACT_ENTRY,
   EXTERNAL_SDK_COMMON_ENTRY,
@@ -19,7 +18,6 @@ import {
   EXTERNAL_USER_CENTER_VALIDATION_PC_REACT_ENTRY,
   EXTERNAL_USER_PC_REACT_ENTRY,
   GIT_APPBASE_PC_REACT_ENTRY,
-  GIT_APP_SDK_ENTRY,
   GIT_AUTH_PC_REACT_ENTRY,
   GIT_CORE_PC_REACT_ENTRY,
   GIT_SDK_COMMON_ENTRY,
@@ -134,7 +132,6 @@ const resolveSdkAliases = () => {
   const entryMap =
     sdkMode === 'source'
       ? {
-          app: EXTERNAL_APP_SDK_ENTRY,
           common: EXTERNAL_SDK_COMMON_ENTRY,
           core: EXTERNAL_CORE_PC_REACT_ENTRY,
           ui: EXTERNAL_UI_PC_REACT_ENTRY,
@@ -148,7 +145,6 @@ const resolveSdkAliases = () => {
         }
       : sdkMode === 'git'
         ? {
-            app: GIT_APP_SDK_ENTRY,
             common: GIT_SDK_COMMON_ENTRY,
             core: GIT_CORE_PC_REACT_ENTRY,
             ui: GIT_UI_PC_REACT_ENTRY,
@@ -174,13 +170,10 @@ const resolveSdkAliases = () => {
     );
   }
 
-  const appRoot = resolveEntryRoot(entryMap.app);
   const coreRoot = resolveEntryRoot(entryMap.core);
   const uiRoot = resolveEntryRoot(entryMap.ui);
 
   return [
-    { find: /^@sdkwork\/app-sdk\/(.+)$/, replacement: `${appRoot}/$1` },
-    { find: '@sdkwork/app-sdk', replacement: entryMap.app },
     { find: '@sdkwork/sdk-common', replacement: entryMap.common },
     { find: '@sdkwork/core-pc-react/app', replacement: path.resolve(coreRoot, 'app/index.ts') },
     { find: '@sdkwork/core-pc-react/env', replacement: path.resolve(coreRoot, 'env/index.ts') },

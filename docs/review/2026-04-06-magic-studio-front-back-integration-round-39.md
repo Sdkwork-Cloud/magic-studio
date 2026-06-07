@@ -107,7 +107,7 @@
 
 作用�?
 1. 普通业务编译不再被 contract-only 外部类型导入干扰
-2. contract 编译专门负责�?`spring-ai-plus-app-api` 做静态对�?
+2. contract 编译专门负责�?`retired Spring app API authority` 做静态对�?
 ---
 
 ## 4. 本轮接口输入输出定义

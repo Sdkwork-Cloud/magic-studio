@@ -4,7 +4,7 @@
 
 - Application: `apps/magic-studio-v2`
 - Target rule: Service -> SDK only for backend interaction
-- SDK package: `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+- SDK package: `application-root product app SDK TypeScript family`
 
 ## This Round Changes
 

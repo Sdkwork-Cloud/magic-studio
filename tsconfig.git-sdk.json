@@ -219,24 +219,7 @@
       "@sdkwork/magic-studio-user/i18n": [
         "packages/sdkwork-magic-studio-user/src/i18n/index.ts"
       ],
-      "@sdkwork/core-pc-react": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/index.ts"
-      ],
-      "@sdkwork/core-pc-react/app": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/app/index.ts"
-      ],
-      "@sdkwork/core-pc-react/env": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/env/index.ts"
-      ],
-      "@sdkwork/core-pc-react/hooks": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/hooks/index.ts"
-      ],
-      "@sdkwork/core-pc-react/preferences": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/preferences/index.ts"
-      ],
-      "@sdkwork/core-pc-react/runtime": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/runtime/index.ts"
-      ],
+ 
       "@sdkwork/auth-pc-react": [
         ".sdk-git-sources/sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts"
       ],
@@ -247,7 +230,7 @@
         ".sdk-git-sources/sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts"
       ],
       "@sdkwork/search-pc-react": [
-        ".sdk-git-sources/sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
+        ".sdk-git-sources/sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
       ],
       "@sdkwork/ui-pc-react": [
         ".sdk-git-sources/sdkwork-ui/sdkwork-ui-pc-react/src/index.ts"
@@ -560,18 +543,6 @@
       ],
       "@sdkwork/magic-studio-trade": [
         "packages/sdkwork-magic-studio-trade/src/index.ts"
-      ],
-      "@sdkwork/app-sdk": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"
-      ],
-      "@sdkwork/app-sdk/api/*": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/api/*"
-      ],
-      "@sdkwork/app-sdk/http/*": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/http/*"
-      ],
-      "@sdkwork/app-sdk/types/*": [
-        ".sdk-git-sources/spring-ai-plus2/spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/types/*"
       ],
       "@sdkwork/sdk-common": [
         ".sdk-git-sources/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts"

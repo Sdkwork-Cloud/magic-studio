@@ -137,7 +137,7 @@
 
 - Canvas 仍未完成导入链路的同�?canonical identity 收敛�?- `ChooseAsset` 相关更大范围验证仍暴露：
   - `indexedDB is not defined`
-  - `@sdkwork/app-sdk` 子导出缺�?  - node 环境误触�?web 平台初始�?- Step 03 仍未完成删除前反向引用治理与更完整的跨引擎主引用切换�?
+  - `retired generic app SDK` 子导出缺�?  - node 环境误触�?web 平台初始�?- Step 03 仍未完成删除前反向引用治理与更完整的跨引擎主引用切换�?
 ## 下一轮建�?
 优先级建议：
 

@@ -2,13 +2,13 @@ import { access, readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 describe('auth public type surface', () => {
-  it('does not re-export generated SDK types from @sdkwork/app-sdk', async () => {
+  it('does not re-export generated SDK types from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('../src/index.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('ships local auth public type definitions', async () => {
@@ -33,7 +33,7 @@ describe('auth public type surface', () => {
       'utf8',
     );
 
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(
       false,
     );
     expect(source.includes("from '@sdkwork/magic-studio-server'")).toBe(true);

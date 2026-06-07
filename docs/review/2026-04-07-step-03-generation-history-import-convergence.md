@@ -135,7 +135,7 @@ node scripts/ensure-workspace-node-modules.mjs
 
 结果�?
 - `FAIL`
-- 错误�?  - `Missing node_modules\.modules.yaml; run pnpm install in D:\javasource\spring-ai-plus\spring-ai-plus-business\apps\magic-studio-v2.`
+- 错误�?  - `Missing node_modules\.modules.yaml; run pnpm install in <workspace-root>\magic-studio-v2.`
 
 ### 3. fresh typecheck 状�?
 结论�?

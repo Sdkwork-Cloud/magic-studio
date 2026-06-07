@@ -2,7 +2,7 @@
 
 日期�?026-04-06  
 范围：`apps/magic-studio-v2`  
-本轮目标：在媒体模块测试与契约全绿的基础上，继续审查运行时边界，确认当前应用是否还存在绕�?`client.xxx -> @sdkwork/magic-studio-core -> @sdkwork/app-sdk -> spring-ai-plus-app-api` 的旁路实�? 
+本轮目标：在媒体模块测试与契约全绿的基础上，继续审查运行时边界，确认当前应用是否还存在绕�?`client.xxx -> @sdkwork/magic-studio-core -> retired generic app SDK -> retired Spring app API authority` 的旁路实�? 
 排除范围：`notes`
 
 ---
@@ -11,7 +11,7 @@
 
 在排�?`notes` 的前提下，本轮未发现 `magic-studio-v2` 当前前后端对接范围内存在新的业务后端旁路�?
 结论分项如下�?
-1. 当前运行时代码中，未发现新的硬编码业务后端路�?`/app/v3/api`�?2. 当前运行时代码中，未发现新的 `axios` 调用�?3. 当前运行时代码中，未发现新的手写业务鉴权头注入�?4. 当前运行时代码中，未发现 feature/package 层直接消�?`@sdkwork/app-sdk` 生成 SDK 的新问题；共�?SDK 入口仍集中在 `sdkwork-magic-studio-core`�?5. 扫描命中�?`fetch(...)` 均属于外部资源、blob、URL 资源内容下载、本地导出物 externalize，未发现直接请求业务后端接口的旁路�?6. SDK 合规脚本仍然只报告别的应�?`apps/sdkwork-chat-pc-react` �?7 个历史违规，未发�?`magic-studio-v2` 新违规�?
+1. 当前运行时代码中，未发现新的硬编码业务后端路�?`/app/v3/api`�?2. 当前运行时代码中，未发现新的 `axios` 调用�?3. 当前运行时代码中，未发现新的手写业务鉴权头注入�?4. 当前运行时代码中，未发现 feature/package 层直接消�?`retired generic app SDK` 生成 SDK 的新问题；共�?SDK 入口仍集中在 `sdkwork-magic-studio-core`�?5. 扫描命中�?`fetch(...)` 均属于外部资源、blob、URL 资源内容下载、本地导出物 externalize，未发现直接请求业务后端接口的旁路�?6. SDK 合规脚本仍然只报告别的应�?`apps/sdkwork-chat-pc-react` �?7 个历史违规，未发�?`magic-studio-v2` 新违规�?
 ---
 
 ## 2. 审查结果
@@ -38,7 +38,7 @@
    - `assetService.ts`
    - `assetSdkQueryService.ts`
 3. 这两处已确认继续走统一资产导入链路，不会绕开 `client.upload / client.assetCenter` 标准�?
-### 2.2 直接引入 `@sdkwork/app-sdk` 审查
+### 2.2 直接引入 `retired generic app SDK` 审查
 
 命中如下�?
 1. `packages/sdkwork-magic-studio-core/src/sdk/*`
@@ -47,10 +47,10 @@
 4. `packages/sdkwork-magic-studio-notes/src/services/noteService.ts`
 
 判断�?
-1. `sdkwork-magic-studio-core` 中的 `@sdkwork/app-sdk` 引入属于共享 SDK 包装层，符合标准�?2. `*.contract-typecheck.ts` 中的引入属于契约守卫文件，符合标准�?3. `prompt/execute.md` 为文档，不属于运行时代码�?4. `packages/sdkwork-magic-studio-notes/src/services/noteService.ts`
-   - 仍存在直�?type import `@sdkwork/app-sdk`，并�?raw HTTP fallback�?   - 但该模块已被用户明确排除，不在本轮修复范围内�?
+1. `sdkwork-magic-studio-core` 中的 `retired generic app SDK` 引入属于共享 SDK 包装层，符合标准�?2. `*.contract-typecheck.ts` 中的引入属于契约守卫文件，符合标准�?3. `prompt/execute.md` 为文档，不属于运行时代码�?4. `packages/sdkwork-magic-studio-notes/src/services/noteService.ts`
+   - 仍存在直�?type import `retired generic app SDK`，并�?raw HTTP fallback�?   - 但该模块已被用户明确排除，不在本轮修复范围内�?
 结论�?
-1. 排除 `notes` 后，当前运行时代码未发现新的 feature/package 直连 `@sdkwork/app-sdk` 问题�?
+1. 排除 `notes` 后，当前运行时代码未发现新的 feature/package 直连 `retired generic app SDK` 问题�?
 ### 2.3 手写业务路径与原�?HTTP 回退审查
 
 结果�?
@@ -88,8 +88,8 @@ pnpm run build:git-sdk
 当前维持�?
 1. feature/store/service
 2. `@sdkwork/magic-studio-core` 共享 SDK wrapper
-3. `@sdkwork/app-sdk`
-4. `spring-ai-plus-app-api`
+3. `retired generic app SDK`
+4. `retired Spring app API authority`
 
 判断�?
 1. 图片、音频、视频、SFX、voice-speaker 当前远端业务能力仍对齐共�?SDK 标准�?
@@ -117,6 +117,6 @@ pnpm run build:git-sdk
 ## 5. 剩余问题与下一�?
 ### 5.1 剩余问题
 
-1. `notes` 仍有直接 `@sdkwork/app-sdk` type import �?raw HTTP fallback，但这是用户已明确排除的范围�?2. 全仓 SDK 合规脚本仍有 `sdkwork-chat-pc-react` 的历史违规，不属于当前应用�?
+1. `notes` 仍有直接 `retired generic app SDK` type import �?raw HTTP fallback，但这是用户已明确排除的范围�?2. 全仓 SDK 合规脚本仍有 `sdkwork-chat-pc-react` 的历史违规，不属于当前应用�?
 ### 5.2 下一步建�?
 1. 若继续扩展本应用范围，可以把 `notes` 纳入下一轮，按同样标准清理到 `client.xxx` 共享 SDK 路径�?2. 若继续做全仓合规闭环，下一轮应切到 `sdkwork-chat-pc-react` 处理 `file.service.ts` �?`FETCH_BACKEND` 和手写鉴权头问题�?

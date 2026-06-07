@@ -42,7 +42,7 @@
 2. Typecheck status:
    - Command: `pnpm --filter @sdkwork/magic-studio-auth typecheck`
    - Result: blocked by existing workspace dependency resolution issue in SDK package:
-     - missing `@sdkwork/sdk-common` declarations in `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+     - missing `@sdkwork/sdk-common` declarations in `application-root product app SDK TypeScript family`
    - Assessment: not introduced by this auth seam change.
 
 ## SDK / Backend Upgrade Need

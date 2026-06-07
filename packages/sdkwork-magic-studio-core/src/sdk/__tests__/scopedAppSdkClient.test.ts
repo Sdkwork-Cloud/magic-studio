@@ -11,9 +11,17 @@ const createClientMock = vi.fn((config: { baseUrl: string; tenantId?: string }) 
   __config: config,
 }));
 
-vi.mock('@sdkwork/app-sdk', () => ({
-  createClient: createClientMock,
-}));
+async function loadSdkClientModule() {
+  const runtimeModule = await import('@sdkwork/core-pc-react/runtime');
+  runtimeModule.resetPcReactRuntime({
+    clearStorage: false,
+    clearConfiguration: true,
+  });
+  runtimeModule.configurePcReactRuntime({
+    appClientFactory: createClientMock,
+  });
+  return import('../useAppSdkClient');
+}
 
 describe('createScopedAppSdkClient', () => {
   beforeEach(() => {
@@ -27,7 +35,7 @@ describe('createScopedAppSdkClient', () => {
   });
 
   it('creates a scoped client without mutating the global singleton config', async () => {
-    const sdkClientModule = await import('../useAppSdkClient');
+    const sdkClientModule = await loadSdkClientModule();
 
     sdkClientModule.initAppSdkClient({
       baseUrl: 'https://default.example.com',
@@ -60,7 +68,7 @@ describe('createScopedAppSdkClient', () => {
     vi.stubEnv('VITE_TENANT_ACCESS_TOKEN', 'tenant-access-token');
     vi.stubEnv('VITE_PLATFORM', 'desktop');
 
-    const sdkClientModule = await import('../useAppSdkClient');
+    const sdkClientModule = await loadSdkClientModule();
     const config = sdkClientModule.createAppSdkClientConfig();
 
     expect(config.baseUrl).toBe('https://api-tenant.sdkwork.com');
@@ -77,7 +85,7 @@ describe('createScopedAppSdkClient', () => {
       },
     });
 
-    const sdkClientModule = await import('../useAppSdkClient');
+    const sdkClientModule = await loadSdkClientModule();
     const client = sdkClientModule.initAppSdkClient({
       baseUrl: 'https://default.example.com',
     });

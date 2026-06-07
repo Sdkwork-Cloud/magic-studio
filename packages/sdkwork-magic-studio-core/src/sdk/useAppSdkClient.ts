@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import type {
-  SdkworkAppConfig,
-  SdkworkAppClient as GeneratedAppSdkClient,
-} from '@sdkwork/app-sdk';
+import {
+  createDriveAppClient,
+  type SdkworkDriveAppClient,
+} from '@sdkwork/drive-app-sdk';
 import {
   applyAppClientSessionTokens,
   createScopedAppClient,
@@ -25,48 +25,27 @@ import {
   readAppSdkEnv,
   type AppSdkEnvResolvedConfig,
 } from './appSdkEnv';
+import type {
+  AppSdkClient,
+  AppSdkCoverPromptSuggestionsRequest,
+  AppSdkCoverPromptSuggestionsResponse,
+  AppSdkGenerationModule,
+  MagicStudioGenerationModule,
+  SdkworkAppConfig,
+} from './appSdkPort';
 
 export type { AppRuntimeEnv } from './appSdkEnv';
+export type {
+  AppSdkClient,
+  AppSdkCoverPromptSuggestionsRequest,
+  AppSdkCoverPromptSuggestionsResponse,
+  AppSdkGenerationModule,
+} from './appSdkPort';
 
 export type AppSdkClientConfig = AppSdkEnvResolvedConfig;
 
 type CoreAppClient = ReturnType<typeof getAppClient>;
-type GeneratedGenerationModule = GeneratedAppSdkClient['generation'];
-
-export interface AppSdkCoverPromptSuggestionsRequest {
-  context: string;
-  count?: number;
-  language?: string;
-  styleHints?: string[];
-}
-
-export interface AppSdkCoverPromptSuggestionsResponse {
-  code?: number;
-  data?: {
-    prompts?: string[];
-  };
-  message?: string;
-  msg?: string;
-}
-
-export type AppSdkGenerationModule = GeneratedGenerationModule & {
-  getCoverPromptSuggestions(
-    request: AppSdkCoverPromptSuggestionsRequest,
-  ): Promise<AppSdkCoverPromptSuggestionsResponse>;
-};
-
-export type AppSdkClient = Omit<GeneratedAppSdkClient, 'generation'> & {
-  readonly generation: AppSdkGenerationModule;
-  readonly assets: GeneratedAppSdkClient['asset'];
-  readonly notes: GeneratedAppSdkClient['note'];
-  readonly projects: GeneratedAppSdkClient['project'];
-  readonly payments: GeneratedAppSdkClient['payment'];
-  readonly orders: GeneratedAppSdkClient['order'];
-  readonly coupons: GeneratedAppSdkClient['coupon'];
-  readonly settings: GeneratedAppSdkClient['setting'];
-  readonly workspaces: GeneratedAppSdkClient['workspace'];
-  readonly analytics: GeneratedAppSdkClient['analytic'];
-};
+export type DriveAppSdkClient = SdkworkDriveAppClient;
 
 export interface AppSdkSessionTokens {
   authToken?: string;
@@ -98,10 +77,10 @@ const normalizeStringList = (values: unknown): string[] => {
 };
 
 function decorateGenerationCompatAliases(
-  generation: GeneratedGenerationModule,
+  generation: MagicStudioGenerationModule,
 ): AppSdkGenerationModule {
   const generationWithCompat = generation as Partial<AppSdkGenerationModule>
-    & GeneratedGenerationModule;
+    & MagicStudioGenerationModule;
 
   if (typeof generationWithCompat.getCoverPromptSuggestions !== 'function') {
     Object.defineProperty(generationWithCompat, 'getCoverPromptSuggestions', {
@@ -204,6 +183,33 @@ export function getAppSdkClientWithSession(overrides: Partial<SdkworkAppConfig> 
   return Object.keys(overrides).length > 0
     ? ensureAppSdkClientCompat(createScopedAppClient(overrides))
     : ensureAppSdkClientCompat(getAppClientWithSession());
+}
+
+const applyDriveAppSdkSessionTokens = (
+  client: SdkworkDriveAppClient,
+  tokens: AppSdkSessionTokens,
+): void => {
+  if (tokens.authToken?.trim()) {
+    client.setAuthToken(tokens.authToken.trim().replace(/^Bearer\s+/iu, ''));
+  }
+  if (tokens.accessToken?.trim()) {
+    client.setAccessToken(tokens.accessToken.trim().replace(/^Bearer\s+/iu, ''));
+  }
+};
+
+export function getDriveAppSdkClientWithSession(
+  overrides: Partial<SdkworkAppConfig> = {},
+): DriveAppSdkClient {
+  const sessionTokens = readAppSdkSessionTokens();
+  const client = createDriveAppClient(
+    createAppSdkClientConfig({
+      ...overrides,
+      authToken: overrides.authToken ?? sessionTokens.authToken,
+      accessToken: overrides.accessToken ?? sessionTokens.accessToken,
+    }),
+  );
+  applyDriveAppSdkSessionTokens(client, sessionTokens);
+  return client;
 }
 
 const serializeAppSdkOverrides = (overrides: Partial<SdkworkAppConfig>): string =>

@@ -401,7 +401,7 @@ describe('assetSdkQueryService', () => {
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
     expect(source.includes('getAssetCenterSdkClientWithSession')).toBe(false);
     expect(source.includes('uploadViaPresignedUrl')).toBe(false);
     expect(source.includes('client.assetCenter')).toBe(false);

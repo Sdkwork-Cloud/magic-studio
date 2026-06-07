@@ -108,7 +108,7 @@
 - 说明：本轮只�?`Step 03` 的第三个局部闭环，距离整步完成仍有明显差距�?
 ## 风险 / Blocker
 
-- `persistGeneratedSelectionAsset(...)` 同类嵌套身份缺口仍值得继续推进，但本轮没有把它和已有测试基础设施 blocker 混在一起�?- `Film / MagicCut / Canvas` 生成结果导入链路仍需继续对齐 `assetId / primaryResourceId / resourceViewId` 写回协议�?- 全仓库级 `@sdkwork/app-sdk/*` �?`@sdkwork/magic-studio-core/services` 测试/类型解析问题仍会影响更大范围的自动验证闭环�?
+- `persistGeneratedSelectionAsset(...)` 同类嵌套身份缺口仍值得继续推进，但本轮没有把它和已有测试基础设施 blocker 混在一起�?- `Film / MagicCut / Canvas` 生成结果导入链路仍需继续对齐 `assetId / primaryResourceId / resourceViewId` 写回协议�?- 全仓库级 `retired generic app SDK/*` �?`@sdkwork/magic-studio-core/services` 测试/类型解析问题仍会影响更大范围的自动验证闭环�?
 ## 下一轮建�?
 优先级建议如下：
 

@@ -3,7 +3,7 @@
 ## Module
 - App: `apps/magic-studio-v2`
 - Package: `packages/sdkwork-magic-studio-portal-video`
-- SDK baseline: `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+- SDK baseline: `application-root product app SDK TypeScript family`
 
 ## Findings (Before)
 1. `DiscoverPage` used static `DISCOVER_ITEMS`.

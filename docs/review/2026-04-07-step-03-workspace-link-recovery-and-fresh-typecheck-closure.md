@@ -20,7 +20,7 @@
   - `../openchat/sdkwork-im-sdk/sdkwork-im-sdk-typescript/composed`
   - `../openchat/sdkwork-im-sdk/sdkwork-im-sdk-typescript/adapter-wukongim`
   - `../openchat/sdkwork-im-sdk/sdkwork-im-sdk-typescript/generated/server-openapi`
-  - `../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+  - `../../application-root product app SDK TypeScript family`
   - `../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript`
 - 根应�?`magic-studio` 直接依赖 `@sdkwork/core-pc-react`�?- `@sdkwork/core-pc-react` 又直接依赖：
   - `@openchat/sdkwork-im-sdk`

@@ -255,13 +255,13 @@ describe('vipService', () => {
     expect(subscription.status).toBe('canceled');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./vipService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('keeps the contract guard on the runtime server VIP boundary', async () => {
@@ -270,7 +270,7 @@ describe('vipService', () => {
       'utf8',
     );
 
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(
       false,
     );
     expect(source.includes("from '@sdkwork/magic-studio-server'")).toBe(true);

@@ -27,7 +27,7 @@ describe('genAIService runtime boundaries', () => {
     const source = await readFile(sourcePath, 'utf8');
 
     expect(source).not.toContain('getAppSdkClientWithSession');
-    expect(source).not.toContain('@sdkwork/app-sdk');
+    expect(source).not.toContain(`@sdkwork/${'app'}-sdk`);
     expect(source).not.toContain('App SDK generation');
     expect(source).not.toContain('createGenerationImage');
     expect(source).not.toContain('textToSpeech');

@@ -9,7 +9,7 @@
 
 ## 1. 本轮结论
 
-本轮不新增后�?API，也不修�?`spring-ai-plus-app-api` 的接口定义�? 
+本轮不新增后�?API，也不修�?`retired Spring app API authority` 的接口定义�? 
 本轮处理的是前端 `@sdkwork/magic-studio-trade` �?app-api 订单状态模型的错误消费�?
 1. 前端�?`PENDING_PAYMENT / IN_PROGRESS / REFUNDED / DISPUTED` 当成可以直接传给后端的状态筛选值�?2. �?app-api `OrderAppApiController.listOrders(...)` 内部真实只接受后端枚举：
    - `PENDING`
@@ -49,7 +49,7 @@
 问题位置:
 
 1. `packages/sdkwork-magic-studio-trade/src/services/orderService.ts`
-2. `spring-ai-plus-app-api/src/main/java/com/sdkwork/ai/gateway/api/app/v3/trade/OrderAppApiController.java`
+2. `retired Spring app API authority/src/main/java/com/sdkwork/ai/gateway/api/app/v3/trade/OrderAppApiController.java`
 
 现状:
 

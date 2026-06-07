@@ -1,7 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-    type SdkworkAppConfig,
-} from '@sdkwork/app-sdk';
+import type { SdkworkAppConfig } from './appSdkPort';
 import {
     getAppSdkClientConfig,
     getAppSdkClientWithSession,

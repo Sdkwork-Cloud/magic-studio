@@ -2,14 +2,14 @@
 
 日期�?026-04-06  
 范围：`apps/magic-studio-v2`  
-本轮目标：修�?`trade` 模块交易流水查询�?`spring-ai-plus-app-api` 钱包交易契约不一致的问题�? 
+本轮目标：修�?`trade` 模块交易流水查询�?`retired Spring app API authority` 钱包交易契约不一致的问题�? 
 排除范围：`notes`
 
 ---
 
 ## 1. 本轮结论
 
-本轮没有新增后端 API，也没有修改 `spring-ai-plus-app-api` 的接口定义�?
+本轮没有新增后端 API，也没有修改 `retired Spring app API authority` 的接口定义�?
 本轮处理的是一个前后端契约错位问题，类型明确如下：
 
 1. 修改现有前端方法：`packages/sdkwork-magic-studio-trade/src/services/paymentService.ts#getTransactionList`

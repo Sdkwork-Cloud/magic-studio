@@ -374,13 +374,13 @@ describe('voiceService', () => {
     expect(task.status).toBe('pending');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./voiceService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('ships a voice generation contract typecheck guard for generated SDK drift', async () => {

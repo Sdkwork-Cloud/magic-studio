@@ -2,7 +2,7 @@
 
 ## 1. 背景
 
-Magic Studio 已切换到 `sdkwork-sdk-app/sdkwork-app-sdk-typescript` 最新 SDK，但在接入登录、注册、验证码、忘记密码、二维码登录时，仍存在需要业务层手动兼容的问题：
+Magic Studio 已切换到 `retired generic app SDK output/product-app-sdk-typescript` 最新 SDK，但在接入登录、注册、验证码、忘记密码、二维码登录时，仍存在需要业务层手动兼容的问题：
 
 1. Auth 能力分散在 `login/register/logout/refresh/phone/sms/auth/qr/password` 多个模块，业务侧需要自行拼接统一鉴权流程。
 2. 返回结构以 `PlusApiResult<T>` 为主，业务侧需手动解包 `data`。
@@ -50,5 +50,5 @@ SDK 需额外导出以下兼容别名（不破坏现有类型）：
 
 1. 本文档：`/upgrade/upgrade-auth-v1.3.0-20260303-223000.md`
 2. OpenAPI 更新：`/upgrade/upgrade-auth-v1.3.0-20260303-223000-openapi.yaml`
-3. SDK 规范补充：`/sdkwork-sdk-app/SDK_UPGRADE.md`
-4. TypeScript API 需求补充：`/sdkwork-sdk-app/TYPESCRIPT_API_REQUIREMENTS.md`
+3. SDK 规范补充：`/retired generic app SDK output/SDK_UPGRADE.md`
+4. TypeScript API 需求补充：`/retired generic app SDK output/TYPESCRIPT_API_REQUIREMENTS.md`

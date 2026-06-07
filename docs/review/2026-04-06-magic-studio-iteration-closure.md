@@ -2,7 +2,7 @@
 
 日期�?026-04-06  
 范围：`apps/magic-studio-v2`  
-目标：收敛当前应用内的工程级阻塞，确�?`client.xxx -> @sdkwork/app-sdk -> spring-ai-plus-app-api` 对接链路未回退，并把剩余风险、修复方案、后续计划落到文档�?
+目标：收敛当前应用内的工程级阻塞，确�?`client.xxx -> retired generic app SDK -> retired Spring app API authority` 对接链路未回退，并把剩余风险、修复方案、后续计划落到文档�?
 ---
 
 ## 1. 当前结论
@@ -77,7 +77,7 @@
 
 本轮继续遵循以下固定约束�?
 1. 所有远端业务交互统一走：
-   - `feature/service -> useAppSdkClient / client.xxx -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+   - `feature/service -> useAppSdkClient / client.xxx -> retired generic app SDK -> retired Spring app API authority`
 2. 不修�?generated SDK 产物来“修类型”�?3. 不修�?DB / migration / schema�?4. 不处�?`notes` 业务功能本身�?5. 上传链路继续采用 S3 标准预签�?URL�?   - `client.upload.getPresignedUrl`
    - 前端直传 `PUT presignedUrl`
    - 透传服务端要求的 `headers`

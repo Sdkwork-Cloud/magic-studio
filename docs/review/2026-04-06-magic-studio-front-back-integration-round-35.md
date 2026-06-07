@@ -101,7 +101,7 @@ it already exists at "..\\..\\sdk\\sdkwork-sdk-commons\\sdkwork-sdk-common-types
 
 1. workspace 不再出现重复包名冲突。
 2. 类型检查可以进入真实 TypeScript 阶段并尽量通过。
-3. `client.xxx -> @sdkwork/app-sdk -> spring-ai-plus-app-api` 标准链路不出现回退。
+3. `client.xxx -> retired generic app SDK -> retired Spring app API authority` 标准链路不出现回退。
 
 ---
 

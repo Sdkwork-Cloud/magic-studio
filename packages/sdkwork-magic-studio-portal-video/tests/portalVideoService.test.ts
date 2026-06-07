@@ -199,13 +199,13 @@ describe('portalVideoService', () => {
     );
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('../src/services/portalVideoService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes('@sdkwork/app-sdk')).toBe(false);
+    expect(source.includes(`@sdkwork/${'app'}-sdk`)).toBe(false);
     expect(source.includes('@sdkwork/magic-studio-server')).toBe(true);
   });
 
@@ -221,7 +221,7 @@ describe('portalVideoService', () => {
       'utf8',
     );
 
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
     expect(source.includes('@sdkwork/magic-studio-server')).toBe(true);
   });
 

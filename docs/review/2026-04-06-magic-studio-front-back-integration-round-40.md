@@ -2,14 +2,14 @@
 
 日期�?026-04-06  
 范围：`apps/magic-studio-v2`  
-本轮目标：补�?`notifications` �?`trade` 两个远端业务包的 contract guard 闭环，确保它们继续稳定对�?`client.xxx -> @sdkwork/magic-studio-core -> @sdkwork/app-sdk -> spring-ai-plus-app-api` 标准  
+本轮目标：补�?`notifications` �?`trade` 两个远端业务包的 contract guard 闭环，确保它们继续稳定对�?`client.xxx -> @sdkwork/magic-studio-core -> retired generic app SDK -> retired Spring app API authority` 标准  
 排除范围：`notes`
 
 ---
 
 ## 1. 本轮结论
 
-本轮未新增或修改任何后端业务 API，也没有修改 `spring-ai-plus-app-api` 的输入输出契约�?
+本轮未新增或修改任何后端业务 API，也没有修改 `retired Spring app API authority` 的输入输出契约�?
 本轮完成的是前端共享 SDK 消费边界的进一步收口：
 
 1. `@sdkwork/magic-studio-notifications` 新增独立 `typecheck:contract`

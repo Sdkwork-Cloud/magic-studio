@@ -42,7 +42,7 @@
 
 ## Frontend Integration
 
-- Add a new service in `@sdkwork/magic-studio-assets` to fetch creation capabilities from `@sdkwork/app-sdk`.
+- Add a new service in `@sdkwork/magic-studio-assets` to fetch creation capabilities from `retired generic app SDK`.
 - Export normalized frontend types aligned with the creation chatinput.
 - Replace hardcoded or local-only capability defaults with SDK-backed loading paths where creation entry points consume them.
 

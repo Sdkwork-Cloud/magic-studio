@@ -99,7 +99,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sdkwork/app-sdk": "workspace:*",
+    "@sdkwork/drive-app-sdk": "workspace:*",
     "@sdkwork/ui-pc-react": "workspace:*",
     "@sdkwork/core-pc-react": "workspace:*",
     "@sdkwork/magic-studio-assets": "workspace:*",

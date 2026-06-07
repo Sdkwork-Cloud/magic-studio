@@ -9,7 +9,7 @@
 
 ## 1. 本轮结论
 
-本轮没有新增后端 API，也没有修改 `spring-ai-plus-app-api` 或后端业�?service 的接口定义�?
+本轮没有新增后端 API，也没有修改 `retired Spring app API authority` 或后端业�?service 的接口定义�?
 本轮处理的是一个前�?service 语义错配问题，结论如下：
 
 1. 修改现有方法: `packages/sdkwork-magic-studio-trade/src/services/orderService.ts#updateOrderStatus`

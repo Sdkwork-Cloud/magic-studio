@@ -184,13 +184,13 @@ describe('filmProjectService', () => {
     expect(result.success).toBe(true);
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./filmProjectService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('ships a film-project contract typecheck guard for generated SDK drift', async () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import path from 'node:path';
 import {
   resolveCargoBinDir,
   resolveCargoTargetDir,
@@ -88,13 +89,15 @@ describe('tauri-path', () => {
 
   it('falls back to a workspace-local cargo target dir when the default cache root is not writable', () => {
     const createdDirectories: Array<{ target: string; options: { recursive: true } }> = [];
+    const workspaceRoot = path.join('D:', 'workspace', 'magic-studio-v2');
+    const fallbackCargoTarget = path.join(workspaceRoot, '.cache', 'tauri', 'cargo-target');
     const env = withTauriBuildEnv(
       {
         PATH: 'C:\\Windows\\System32',
         LOCALAPPDATA: 'C:\\Users\\admin\\AppData\\Local',
       },
       {
-        cwd: 'D:\\javasource\\spring-ai-plus\\spring-ai-plus-business\\apps\\magic-studio-v2',
+        cwd: workspaceRoot,
         homeDir: 'C:\\Users\\admin',
         platform: 'win32',
         existsSync: (target) => target === 'C:\\Users\\admin\\.cargo\\bin\\cargo.exe',
@@ -111,16 +114,14 @@ describe('tauri-path', () => {
     );
 
     expect(env.PATH).toBe('C:\\Users\\admin\\.cargo\\bin;C:\\Windows\\System32');
-    expect(env.CARGO_TARGET_DIR).toBe(
-      'D:\\javasource\\spring-ai-plus\\spring-ai-plus-business\\apps\\magic-studio-v2\\.cache\\tauri\\cargo-target'
-    );
+    expect(env.CARGO_TARGET_DIR).toBe(fallbackCargoTarget);
     expect(createdDirectories).toEqual([
       {
-        target: 'D:\\javasource\\spring-ai-plus\\spring-ai-plus-business\\apps\\magic-studio-v2\\.cache\\tauri\\cargo-target',
+        target: fallbackCargoTarget,
         options: { recursive: true },
       },
       {
-        target: 'D:\\javasource\\spring-ai-plus\\spring-ai-plus-business\\apps\\magic-studio-v2\\.cache\\tauri\\cargo-target\\.magic-studio-write-check',
+        target: path.join(fallbackCargoTarget, '.magic-studio-write-check'),
         options: { recursive: true },
       },
     ]);

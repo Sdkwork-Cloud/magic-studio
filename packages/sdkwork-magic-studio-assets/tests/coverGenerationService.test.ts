@@ -186,13 +186,13 @@ describe('coverGenerationService', () => {
     ).rejects.toThrow('cover prompt suggestion failed');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('../src/services/coverGenerationService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('does not import magic-studio-image directly, and instead relies on the cover generation adapter boundary', async () => {

@@ -1,6 +1,6 @@
 {
   "infrastructurePackages": [
-    "sdkwork-app-sdk-typescript",
+    "product-app-sdk-typescript",
     "sdkwork-magic-studio-types"
   ],
   "seamExemptPackages": [
@@ -19,7 +19,7 @@
     "packages\\/sdkwork-magic-studio-core\\/src\\/sdk\\/useAppSdkClient\\.ts$",
     "packages\\/sdkwork-magic-studio-core\\/src\\/sdk\\/uploadViaPresignedUrl\\.ts$",
     "packages\\/sdkwork-magic-studio-core\\/src\\/ai\\/genAIService\\.ts$",
-    "packages\\/sdkwork-app-sdk-typescript\\/"
+    "packages\\/product-app-sdk-typescript\\/"
   ],
   "interactionRules": [
     {

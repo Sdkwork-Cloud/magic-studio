@@ -22,7 +22,7 @@
 ## 2. 本轮接口输入/输出说明
 
 说明�?
-1. 本轮没有修改 `spring-ai-plus-app-api` 的业务接口定义�?2. 本轮没有改任何前后端业务 API 的请求参数和响应结构�?3. 本轮新增的是前端包内的工程适配边界，用来消除循环依赖和包导出缺口�?
+1. 本轮没有修改 `retired Spring app API authority` 的业务接口定义�?2. 本轮没有改任何前后端业务 API 的请求参数和响应结构�?3. 本轮新增的是前端包内的工程适配边界，用来消除循环依赖和包导出缺口�?
 ### 2.1 未变更的前后端业务接�?
 | 类型 | 方法/API | 输入 | 输出 | 本轮处理 |
 | --- | --- | --- | --- | --- |
@@ -172,7 +172,7 @@ pnpm run check:sdk-standard
 ## 6. 当前状态判�?
 本轮之后，`magic-studio-v2` 当前状态如下：
 
-1. 共享 SDK 入口仍然保持统一标准�?   - `feature/service -> @sdkwork/magic-studio-core -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+1. 共享 SDK 入口仍然保持统一标准�?   - `feature/service -> @sdkwork/magic-studio-core -> retired generic app SDK -> retired Spring app API authority`
 2. 上传链路仍然保持 S3 预签�?URL 标准�?3. 图片、音频、视频、音乐、音效、角色、voice-speaker 等媒体能力所在的主要工程阻塞已清理�?4. `notes` 仍未纳入本应用当前处理范围，符合既定边界�?
 ---
 

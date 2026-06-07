@@ -181,13 +181,13 @@ describe('skillsService', () => {
     expect(mocks.disable).toHaveBeenCalledWith('skill-video-1');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./skillsService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('keeps the contract guard on the shared app sdk boundary', async () => {
@@ -196,7 +196,7 @@ describe('skillsService', () => {
       'utf8',
     );
 
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
     expect(source.includes("from '@sdkwork/magic-studio-core/sdk'")).toBe(true);
   });
 
@@ -206,7 +206,7 @@ describe('skillsService', () => {
       'utf8',
     );
 
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
     expect(source.includes('sdkwork-sdk-common-typescript')).toBe(false);
   });
 

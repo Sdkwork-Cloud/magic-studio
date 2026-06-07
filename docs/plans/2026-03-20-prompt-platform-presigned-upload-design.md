@@ -6,7 +6,7 @@
 
 ## Context
 
-- The official SDK already exposes a dedicated `PromptApi` with prompt library and prompt history operations in `@sdkwork/app-sdk/dist/api/prompt.d.ts`.
+- The official SDK already exposes a dedicated `PromptApi` with prompt library and prompt history operations in `retired generic app SDK/dist/api/prompt.d.ts`.
 - The frontend core layer currently maps `sdk.prompt` and `usePrompt` to `generation` instead of the SDK's real `prompt` module.
 - Existing server upload logic is partially unified:
   - `packages/sdkwork-magic-studio-core/src/sdk/uploadViaPresignedUrl.ts` already performs presigned PUT uploads and metadata registration.

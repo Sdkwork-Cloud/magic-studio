@@ -271,7 +271,7 @@
         "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts"
       ],
       "@sdkwork/search-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
+        "../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
       ],
       "@sdkwork/ui-pc-react": [
         "../sdkwork-ui/sdkwork-ui-pc-react/src/index.ts"
@@ -639,20 +639,8 @@
       "@sdkwork/magic-studio-trade": [
         "packages/sdkwork-magic-studio-trade/src/index.ts"
       ],
-      "@sdkwork/app-sdk": [
-        "../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts"
-      ],
-      "@sdkwork/app-sdk/api/*": [
-        "../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/api/*"
-      ],
-      "@sdkwork/app-sdk/http/*": [
-        "../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/http/*"
-      ],
-      "@sdkwork/app-sdk/types/*": [
-        "../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/types/*"
-      ],
       "@sdkwork/sdk-common": [
-        "../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts"
+        "../sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts"
       ],
       "react-router-dom": [
         "src/shims/react-router-dom.tsx"

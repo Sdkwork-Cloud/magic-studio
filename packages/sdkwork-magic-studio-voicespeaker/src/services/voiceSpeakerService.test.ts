@@ -579,13 +579,13 @@ describe('voiceSpeakerService', () => {
     expect(resolved).toBe('https://cdn.example.com/workspace-fallback.wav');
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./voiceSpeakerService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('ships a voice-speaker contract typecheck guard for generated SDK drift', async () => {

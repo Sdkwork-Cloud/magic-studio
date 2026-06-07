@@ -7,7 +7,7 @@ import type {
   PromptVO,
   QueryParams,
   SdkworkAppConfig,
-} from '@sdkwork/app-sdk';
+} from './appSdkPort';
 import { createScopedAppSdkClient, getAppSdkClientWithSession } from './useAppSdkClient';
 
 const SUCCESS_CODES = new Set(['0', '200', '2000']);

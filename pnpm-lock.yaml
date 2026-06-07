@@ -278,12 +278,12 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript
       '@sdkwork/core-pc-react':
         specifier: workspace:*
         version: link:../sdkwork-core/sdkwork-core-pc-react
+      '@sdkwork/drive-app-sdk':
+        specifier: workspace:*
+        version: link:../sdkwork-drive/sdks/sdkwork-drive-app-sdk/sdkwork-drive-app-sdk-typescript
       '@sdkwork/magic-studio-assets':
         specifier: workspace:*
         version: link:packages/sdkwork-magic-studio-assets
@@ -388,7 +388,7 @@ importers:
         version: link:packages/sdkwork-magic-studio-workspace
       '@sdkwork/sdk-common':
         specifier: workspace:*
-        version: link:../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript
+        version: link:../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
       '@sdkwork/ui-pc-react':
         specifier: workspace:*
         version: link:../sdkwork-ui/sdkwork-ui-pc-react
@@ -646,32 +646,23 @@ importers:
         specifier: ^4.1.2
         version: 4.1.5(@types/node@25.6.0)(jsdom@29.0.2)(vite@8.0.10(@types/node@25.6.0)(jiti@2.6.1))
 
-  ../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript:
-    devDependencies:
-      '@types/node':
-        specifier: ^25.6.0
-        version: 25.6.0
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.59.2
-        version: 8.59.3(@typescript-eslint/parser@8.59.3(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3))(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3)
-      '@typescript-eslint/parser':
-        specifier: ^8.59.2
-        version: 8.59.3(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3)
-      eslint:
-        specifier: ^10.3.0
-        version: 10.3.0(jiti@2.6.1)
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.3
-      vite:
-        specifier: ^8.0.3
-        version: 8.0.10(@types/node@25.6.0)(jiti@2.6.1)
+  ../craw-chat/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript:
+    dependencies:
+      '@sdkwork/im-sdk-generated':
+        specifier: link:./generated/server-openapi
+        version: link:generated/server-openapi
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
+      ws:
+        specifier: ^8.18.1
+        version: 8.19.0
 
-  ../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript:
+  ../craw-chat/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript/generated/server-openapi:
     dependencies:
       '@sdkwork/sdk-common':
         specifier: ^1.0.2
-        version: 1.0.2
+        version: 1.0.3
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -683,14 +674,34 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
 
+  ../sdkwork-appbase/packages/common/foundation/sdkwork-cache-core:
+    devDependencies:
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  ../sdkwork-appbase/packages/common/foundation/sdkwork-runtime-bootstrap:
+    devDependencies:
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
   ../sdkwork-appbase/packages/common/iam/sdkwork-iam-contracts:
     devDependencies:
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
 
+  ../sdkwork-appbase/packages/common/iam/sdkwork-iam-rpc-contracts: {}
+
   ../sdkwork-appbase/packages/common/iam/sdkwork-iam-runtime:
     dependencies:
+      '@sdkwork/appbase-app-sdk':
+        specifier: workspace:*
+        version: link:../../../../sdks/sdkwork-appbase-app-sdk/sdkwork-appbase-app-sdk-typescript/generated/server-openapi
+      '@sdkwork/appbase-backend-sdk':
+        specifier: workspace:*
+        version: link:../../../../sdks/sdkwork-appbase-backend-sdk/sdkwork-appbase-backend-sdk-typescript/generated/server-openapi
       '@sdkwork/iam-contracts':
         specifier: workspace:*
         version: link:../sdkwork-iam-contracts
@@ -700,6 +711,12 @@ importers:
       '@sdkwork/iam-service':
         specifier: workspace:*
         version: link:../sdkwork-iam-service
+      '@sdkwork/runtime-bootstrap':
+        specifier: workspace:*
+        version: link:../../foundation/sdkwork-runtime-bootstrap
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
     devDependencies:
       typescript:
         specifier: ^6.0.2
@@ -733,28 +750,20 @@ importers:
       '@sdkwork/iam-sdk-ports':
         specifier: workspace:*
         version: link:../sdkwork-iam-sdk-ports
+      '@sdkwork/runtime-bootstrap':
+        specifier: workspace:*
+        version: link:../../foundation/sdkwork-runtime-bootstrap
     devDependencies:
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
 
   ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react:
+    dependencies:
+      '@sdkwork/runtime-bootstrap':
+        specifier: workspace:*
+        version: link:../../../common/foundation/sdkwork-runtime-bootstrap
     devDependencies:
-      '@sdkwork/core-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-core/sdkwork-core-pc-react
-      '@sdkwork/ui-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-ui/sdkwork-ui-pc-react
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.3
-
-  ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-command-pc-react:
-    devDependencies:
-      '@sdkwork/core-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-core/sdkwork-core-pc-react
       '@sdkwork/ui-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-ui/sdkwork-ui-pc-react
@@ -772,18 +781,6 @@ importers:
         version: 17.0.7(i18next@26.1.0(typescript@6.0.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
 
   ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-router-pc-react:
-    devDependencies:
-      '@sdkwork/core-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-core/sdkwork-core-pc-react
-      '@sdkwork/ui-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-ui/sdkwork-ui-pc-react
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.3
-
-  ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react:
     devDependencies:
       '@sdkwork/core-pc-react':
         specifier: workspace:*
@@ -821,12 +818,15 @@ importers:
 
   ../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react:
     dependencies:
-      '@sdkwork/appbase-pc-react':
-        specifier: workspace:*
-        version: link:../../foundation/sdkwork-appbase-pc-react
       '@sdkwork/i18n-pc-react':
         specifier: workspace:*
         version: link:../../foundation/sdkwork-i18n-pc-react
+      '@sdkwork/iam-sdk-adapter':
+        specifier: workspace:*
+        version: link:../../../common/iam/sdkwork-iam-sdk-adapter
+      '@sdkwork/runtime-bootstrap':
+        specifier: workspace:*
+        version: link:../../../common/foundation/sdkwork-runtime-bootstrap
       lucide-react:
         specifier: 'catalog:'
         version: 1.7.0(react@19.2.4)
@@ -837,9 +837,6 @@ importers:
       '@sdkwork/core-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-core/sdkwork-core-pc-react
-      '@sdkwork/ui-pc-react':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-ui/sdkwork-ui-pc-react
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
@@ -952,9 +949,12 @@ importers:
       '@sdkwork/appbase-pc-react':
         specifier: workspace:*
         version: link:../../foundation/sdkwork-appbase-pc-react
+      '@sdkwork/runtime-bootstrap':
+        specifier: workspace:*
+        version: link:../../../common/foundation/sdkwork-runtime-bootstrap
       '@sdkwork/search-pc-react':
         specifier: workspace:*
-        version: link:../../foundation/sdkwork-search-pc-react
+        version: link:../../../../../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react
     devDependencies:
       '@sdkwork/core-pc-react':
         specifier: workspace:*
@@ -966,17 +966,43 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
 
+  ../sdkwork-appbase/sdks/sdkwork-appbase-app-sdk/sdkwork-appbase-app-sdk-typescript/generated/server-openapi:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.37
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.3
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  ../sdkwork-appbase/sdks/sdkwork-appbase-backend-sdk/sdkwork-appbase-backend-sdk-typescript/generated/server-openapi:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.37
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.3
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
   ../sdkwork-core/sdkwork-core-pc-react:
     dependencies:
-      '@sdkwork/app-sdk':
-        specifier: ^1.0.34
-        version: 1.0.34
-      '@sdkwork/im-sdk':
-        specifier: ^0.1.1
-        version: 0.1.1
-      '@sdkwork/rtc-sdk':
-        specifier: ^0.1.1
-        version: 0.1.1(@sdkwork/im-sdk@0.1.1)
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.3
+        version: 1.0.3
     devDependencies:
       '@testing-library/react':
         specifier: ^16.3.2
@@ -1008,6 +1034,83 @@ importers:
       vitest:
         specifier: ^4.1.2
         version: 4.1.5(@types/node@25.6.0)(jsdom@29.0.2)(vite@8.0.10(@types/node@25.6.0)(jiti@2.6.1))
+
+  ../sdkwork-drive/sdks/sdkwork-drive-app-sdk/sdkwork-drive-app-sdk-typescript:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.3
+        version: 1.0.3
+    devDependencies:
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  ../sdkwork-sdk-commons/sdkwork-sdk-common-typescript:
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.59.2
+        version: 8.59.3(@typescript-eslint/parser@8.59.3(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3))(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.59.2
+        version: 8.59.3(eslint@10.3.0(jiti@2.6.1))(typescript@6.0.3)
+      eslint:
+        specifier: ^10.3.0
+        version: 10.3.0(jiti@2.6.1)
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vite:
+        specifier: ^8.0.3
+        version: 8.0.10(@types/node@25.6.0)(jiti@2.6.1)
+
+  ../sdkwork-search/packages/common/search/sdkwork-search-contracts: {}
+
+  ../sdkwork-search/packages/common/search/sdkwork-search-service:
+    dependencies:
+      '@sdkwork/search-contracts':
+        specifier: workspace:*
+        version: link:../sdkwork-search-contracts
+
+  ../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react:
+    dependencies:
+      '@sdkwork/search-contracts':
+        specifier: workspace:*
+        version: link:../../../common/search/sdkwork-search-contracts
+
+  ../sdkwork-search/sdks/sdkwork-search-app-sdk/sdkwork-search-app-sdk-typescript/generated/server-openapi:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.37
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.3
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  ../sdkwork-search/sdks/sdkwork-search-backend-sdk/sdkwork-search-backend-sdk-typescript/generated/server-openapi:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: ^1.0.2
+        version: 1.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.37
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.3
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
 
   ../sdkwork-ui/sdkwork-ui-pc-react:
     dependencies:
@@ -1065,6 +1168,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@sdkwork/drive-app-sdk':
+        specifier: workspace:*
+        version: link:../../sdkwork-drive/sdks/sdkwork-drive-app-sdk/sdkwork-drive-app-sdk-typescript
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1176,7 +1282,7 @@ importers:
         version: link:../sdkwork-magic-studio-types
       '@sdkwork/sdk-common':
         specifier: workspace:*
-        version: link:../../../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript
+        version: link:../../../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -1625,12 +1731,12 @@ importers:
       '@google/genai':
         specifier: 'catalog:'
         version: 1.50.1
-      '@sdkwork/app-sdk':
-        specifier: workspace:*
-        version: link:../../../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript
       '@sdkwork/core-pc-react':
         specifier: workspace:*
         version: link:../../../sdkwork-core/sdkwork-core-pc-react
+      '@sdkwork/drive-app-sdk':
+        specifier: workspace:*
+        version: link:../../../sdkwork-drive/sdks/sdkwork-drive-app-sdk/sdkwork-drive-app-sdk-typescript
       '@sdkwork/magic-studio-commons':
         specifier: workspace:*
         version: link:../sdkwork-magic-studio-commons
@@ -2644,7 +2750,7 @@ importers:
         version: link:../sdkwork-magic-studio-workspace
       '@sdkwork/sdk-common':
         specifier: workspace:*
-        version: link:../../../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript
+        version: link:../../../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
       classnames:
         specifier: 'catalog:'
         version: 2.5.1
@@ -4513,26 +4619,8 @@ packages:
   '@rushstack/ts-command-line@5.3.3':
     resolution: {integrity: sha512-c+ltdcvC7ym+10lhwR/vWiOhsrm/bP3By2VsFcs5qTKv+6tTmxgbVrtJ5NdNjANiV5TcmOZgUN+5KYQ4llsvEw==}
 
-  '@sdkwork/app-sdk@1.0.34':
-    resolution: {integrity: sha512-eBp1xD+TaS5JGLWGQr1l1WAmOfDLIZmPlCy3uwVl6x7Dc4z5DzJlRjRtvUe51mxEth5mvShAWY/BAyN7hPupsg==}
-
-  '@sdkwork/im-sdk@0.1.1':
-    resolution: {integrity: sha512-OsgYx4BWifWiRr8O7XbsVRb024kx9j66RFkAjmODiotqoNuunDwovrbU2tlB4hiiH3EV2VmIUVWIMVsGFLA+nw==}
-    hasBin: true
-
-  '@sdkwork/rtc-sdk@0.1.1':
-    resolution: {integrity: sha512-jD091QmvNztOczPKRqaQNPfh7vcitlQ3i8cIrTLP/cv+K9as87fFjXPMJNIq836E9u1Ld7Sm4zvC5xcCSYzPhw==}
-    peerDependencies:
-      '@sdkwork/im-sdk': ^0.1.1
-      '@volcengine/rtc': ^4.68.3
-    peerDependenciesMeta:
-      '@sdkwork/im-sdk':
-        optional: true
-      '@volcengine/rtc':
-        optional: true
-
-  '@sdkwork/sdk-common@1.0.2':
-    resolution: {integrity: sha512-mjKQCRQBty8x2B1eM/sMiQwj46xvGucwSal2tymyAoF/vupsU3kzYcTSVLH3eVyAXON9U8gJwa7vRNAk13LWRQ==}
+  '@sdkwork/sdk-common@1.0.3':
+    resolution: {integrity: sha512-EGCm742ya1VL9hZ+9SVVArUxieFxIwQ3MMpt8Tv6Vc++U5ug4qG2TBUQ/hKAeJIwhL5Tvbhs6Tzy31P8fBO/cQ==}
     engines: {node: '>=18.0.0'}
 
   '@shikijs/core@2.5.0':
@@ -9410,23 +9498,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@sdkwork/app-sdk@1.0.34':
-    dependencies:
-      '@sdkwork/sdk-common': 1.0.2
-
-  '@sdkwork/im-sdk@0.1.1':
-    dependencies:
-      '@sdkwork/sdk-common': 1.0.2
-      ws: 8.19.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@sdkwork/rtc-sdk@0.1.1(@sdkwork/im-sdk@0.1.1)':
-    optionalDependencies:
-      '@sdkwork/im-sdk': 0.1.1
-
-  '@sdkwork/sdk-common@1.0.2': {}
+  '@sdkwork/sdk-common@1.0.3': {}
 
   '@shikijs/core@2.5.0':
     dependencies:
@@ -10339,8 +10411,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.59.0(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@6.0.3)
-      '@typescript-eslint/types': 8.59.0
+      '@typescript-eslint/tsconfig-utils': 8.59.3(typescript@6.0.3)
+      '@typescript-eslint/types': 8.59.3
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:

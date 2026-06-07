@@ -247,7 +247,7 @@
         "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts"
       ],
       "@sdkwork/search-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
+        "../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
       ],
       "@sdkwork/ui-pc-react": [
         "../sdkwork-ui/sdkwork-ui-pc-react/src/index.ts"
@@ -560,18 +560,6 @@
       ],
       "@sdkwork/magic-studio-trade": [
         "packages/sdkwork-magic-studio-trade/src/index.ts"
-      ],
-      "@sdkwork/app-sdk": [
-        "node_modules/@sdkwork/app-sdk/dist/index.d.ts"
-      ],
-      "@sdkwork/app-sdk/api/*": [
-        "node_modules/@sdkwork/app-sdk/dist/api/*"
-      ],
-      "@sdkwork/app-sdk/http/*": [
-        "node_modules/@sdkwork/app-sdk/dist/http/*"
-      ],
-      "@sdkwork/app-sdk/types/*": [
-        "node_modules/@sdkwork/app-sdk/dist/types/*"
       ],
       "@sdkwork/sdk-common": [
         "node_modules/@sdkwork/sdk-common/dist/index.d.ts"

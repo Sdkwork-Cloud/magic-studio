@@ -4,7 +4,7 @@
 
 ## Goal
 
-Make `auth` and `notes` in `magic-studio-v2` run against the real backend SDK contract end to end. If the current backend or generated SDK is missing required methods, add the backend API, refresh OpenAPI, regenerate `@sdkwork/app-sdk`, then update the frontend until the flows are stable.
+Make `auth` and `notes` in `magic-studio-v2` run against the real backend SDK contract end to end. If the current backend or generated SDK is missing required methods, add the backend API, refresh OpenAPI, regenerate `retired generic app SDK`, then update the frontend until the flows are stable.
 
 ## Scope
 

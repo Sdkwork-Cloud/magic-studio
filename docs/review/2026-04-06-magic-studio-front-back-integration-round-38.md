@@ -11,7 +11,7 @@
 
 排除 `notes` 后，当前 `magic-studio-v2` 应用内已检查到的远端业务模块没有发现新的对接偏航�?
 当前结论�?
-1. 没有发现 feature/package 运行时代码直接绕�?`@sdkwork/magic-studio-core` 去消�?`@sdkwork/app-sdk`�?2. 没有发现新的业务后端硬编码路径或手写鉴权头�?3. 非媒体远端业务包 `auth / skills / user / vip` �?contract typecheck 全部通过�?4. 这些非媒体远端业务包的现�?service 级测试也全部通过�?5. 配合上一轮媒体模块的全量测试、构建、SDK 合规扫描，可以认定：
+1. 没有发现 feature/package 运行时代码直接绕�?`@sdkwork/magic-studio-core` 去消�?`retired generic app SDK`�?2. 没有发现新的业务后端硬编码路径或手写鉴权头�?3. 非媒体远端业务包 `auth / skills / user / vip` �?contract typecheck 全部通过�?4. 这些非媒体远端业务包的现�?service 级测试也全部通过�?5. 配合上一轮媒体模块的全量测试、构建、SDK 合规扫描，可以认定：
    - 当前应用在排�?`notes` 后，前后端对接主链路处于稳定状态�?
 ---
 
@@ -37,18 +37,18 @@
 
 判断�?
 1. 这些包已经明确建立了“共�?SDK 契约守卫”机制�?2. 当前应用的远端业务边界治理不是只覆盖媒体模块，而是已经扩展到多个远端业务域�?
-### 2.2 直接引入 `@sdkwork/app-sdk` 审查
+### 2.2 直接引入 `retired generic app SDK` 审查
 
 排除项：
 
 1. `sdkwork-magic-studio-core`
-2. `sdkwork-app-sdk`
+2. `product-app-sdk`
 3. `notes`
 4. `*.contract-typecheck.ts`
 
 扫描结果�?
-1. 运行时代码中没有发现新的 `from '@sdkwork/app-sdk'`
-2. 没有发现新的 `@sdkwork/app-sdk/api`
+1. 运行时代码中没有发现新的 `from 'retired generic app SDK'`
+2. 没有发现新的 `retired generic app SDK/api`
 3. 没有发现新的 `createAppSdkClient` / `SdkworkAppClient` 直接使用
 
 剩余命中�?
@@ -132,7 +132,7 @@ pnpm exec vitest run packages/sdkwork-magic-studio-auth/tests packages/sdkwork-m
 ### 5.1 `notes`
 
 现状�?
-1. `notes` 仍有直接 type import `@sdkwork/app-sdk`
+1. `notes` 仍有直接 type import `retired generic app SDK`
 2. `notes` 仍保�?raw HTTP fallback 逻辑
 
 说明�?

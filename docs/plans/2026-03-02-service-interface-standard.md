@@ -45,7 +45,7 @@
    - `@tauri-apps/api/core.invoke(...)`
 2. 基础设施例外（允许保留）：
    - `@sdkwork/magic-studio-core/src/platform/web.ts`
-   - `@sdkwork/app-sdk-typescript/*`
+   - `@sdkwork/product-app-sdk-typescript/*`
 
 ## 6. SDK 接入预留标准
 

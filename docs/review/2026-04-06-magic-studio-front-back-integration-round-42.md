@@ -2,14 +2,14 @@
 
 日期�?026-04-06  
 范围：`apps/magic-studio-v2`  
-本轮目标：修�?`trade` 支付弹窗�?`spring-ai-plus-app-api` 真实合同不一致的问题，收敛前端假能力，确保订单支付只走当前服务端真实支持的方�? 
+本轮目标：修�?`trade` 支付弹窗�?`retired Spring app API authority` 真实合同不一致的问题，收敛前端假能力，确保订单支付只走当前服务端真实支持的方�? 
 排除范围：`notes`
 
 ---
 
 ## 1. 本轮结论
 
-本轮没有新增或修改任何后�?API，也没有修改 `spring-ai-plus-app-api` 的接口定义�?
+本轮没有新增或修改任何后�?API，也没有修改 `retired Spring app API authority` 的接口定义�?
 本轮修复的是一个前后端合同错配问题�?
 1. `PaymentDialog` 暴露�?`BALANCE / POINTS / CREDIT_CARD` 等前端支付方�?2. 同时还暴露了 `useBalance / usePoints` 勾选项
 3. �?`client.orders.pay -> OrderPayForm -> OrderAppApiController.payOrder -> PlusPaymentService.createPayment`
@@ -285,6 +285,6 @@ pnpm run check:sdk-standard
    - 核对 cash history 与前�?`Transaction` 字段映射
 3. `updateOrderStatus`
    - 核对 `PAID / COMPLETED / REFUNDED / CANCELLED` 的动作边�?4. 如果后续确需支持余额/积分支付
-   - 先补 `spring-ai-plus-app-api` 合同
+   - 先补 `retired Spring app API authority` 合同
    - 再补后端服务能力
    - 最后回�?`trade` 重新开放对应前端入�?

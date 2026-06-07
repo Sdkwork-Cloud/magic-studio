@@ -6,7 +6,7 @@
 
 **Architecture:** Stabilize authentication first so the session client is reliable, then audit and formalize the notes contract. Frontend services must end on generated SDK methods rather than long-term raw HTTP probing.
 
-**Tech Stack:** React, TypeScript, pnpm workspace, generated `@sdkwork/app-sdk`, app-specific React packages, backend OpenAPI generation, Vite, Tauri
+**Tech Stack:** React, TypeScript, pnpm workspace, generated `retired generic app SDK`, app-specific React packages, backend OpenAPI generation, Vite, Tauri
 
 ---
 
@@ -118,7 +118,7 @@ Expected: backend compiles successfully.
 
 Export the latest `/v3/api-docs/app` snapshot used by the SDK generator.
 
-**Step 5: Regenerate `@sdkwork/app-sdk`**
+**Step 5: Regenerate `retired generic app SDK`**
 
 Run the workspace SDK generation flow and confirm the new methods exist.
 

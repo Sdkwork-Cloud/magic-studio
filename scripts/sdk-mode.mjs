@@ -7,17 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-export const EXTERNAL_APP_SDK_CHECKOUT = path.resolve(
-  repoRoot,
-  '../../spring-ai-plus-app-api/sdkwork-sdk-app'
-);
-export const EXTERNAL_APP_SDK_ENTRY = path.resolve(
-  EXTERNAL_APP_SDK_CHECKOUT,
-  'sdkwork-app-sdk-typescript/src/index.ts'
-);
 export const EXTERNAL_SDK_COMMON_CHECKOUT = path.resolve(
   repoRoot,
-  '../../sdk/sdkwork-sdk-commons'
+  '../sdkwork-sdk-commons'
 );
 export const EXTERNAL_SDK_COMMON_ENTRY = path.resolve(
   EXTERNAL_SDK_COMMON_CHECKOUT,
@@ -37,7 +29,7 @@ export const EXTERNAL_APPBASE_PC_REACT_ENTRY = path.resolve(
 );
 export const EXTERNAL_SEARCH_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts'
+  '../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts'
 );
 export const EXTERNAL_AUTH_PC_REACT_ENTRY = path.resolve(
   repoRoot,
@@ -61,26 +53,19 @@ export const EXTERNAL_USER_CENTER_VALIDATION_PC_REACT_ENTRY = path.resolve(
 );
 
 export const GIT_SDK_ROOT = path.resolve(repoRoot, '.sdk-git-sources');
-export const GIT_SPRING_AI_PLUS2_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'spring-ai-plus2');
+export const GIT_CORE_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'sdkwork-core');
 export const GIT_SDK_COMMON_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'sdkwork-sdk-commons');
 export const GIT_UI_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'sdkwork-ui');
 export const GIT_APPBASE_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'sdkwork-appbase');
+export const GIT_SEARCH_CHECKOUT = path.resolve(GIT_SDK_ROOT, 'sdkwork-search');
 
-export const GIT_APP_SDK_CHECKOUT = path.resolve(
-  GIT_SPRING_AI_PLUS2_CHECKOUT,
-  'spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app'
-);
-export const GIT_APP_SDK_ENTRY = path.resolve(
-  GIT_APP_SDK_CHECKOUT,
-  'sdkwork-app-sdk-typescript/src/index.ts'
-);
 export const GIT_SDK_COMMON_ENTRY = path.resolve(
   GIT_SDK_COMMON_CHECKOUT,
   'sdkwork-sdk-common-typescript/src/index.ts'
 );
 export const GIT_CORE_PC_REACT_ENTRY = path.resolve(
-  GIT_SPRING_AI_PLUS2_CHECKOUT,
-  'spring-ai-plus-business/apps/sdkwork-core/sdkwork-core-pc-react/src/index.ts'
+  GIT_CORE_CHECKOUT,
+  'sdkwork-core-pc-react/src/index.ts'
 );
 export const GIT_UI_PC_REACT_ENTRY = path.resolve(
   GIT_UI_CHECKOUT,
@@ -91,7 +76,7 @@ export const GIT_APPBASE_PC_REACT_ENTRY = path.resolve(
   'packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts'
 );
 export const GIT_SEARCH_PC_REACT_ENTRY = path.resolve(
-  GIT_APPBASE_CHECKOUT,
+  GIT_SEARCH_CHECKOUT,
   'packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts'
 );
 export const GIT_AUTH_PC_REACT_ENTRY = path.resolve(
@@ -118,7 +103,6 @@ export const GIT_USER_CENTER_VALIDATION_PC_REACT_ENTRY = path.resolve(
 const SUPPORTED_SDK_MODES = new Set(['source', 'git', 'npm']);
 
 const SOURCE_MODE_ENTRIES = [
-  EXTERNAL_APP_SDK_ENTRY,
   EXTERNAL_SDK_COMMON_ENTRY,
   EXTERNAL_CORE_PC_REACT_ENTRY,
   EXTERNAL_UI_PC_REACT_ENTRY,
@@ -132,7 +116,6 @@ const SOURCE_MODE_ENTRIES = [
 ];
 
 const GIT_MODE_ENTRIES = [
-  GIT_APP_SDK_ENTRY,
   GIT_SDK_COMMON_ENTRY,
   GIT_CORE_PC_REACT_ENTRY,
   GIT_UI_PC_REACT_ENTRY,

@@ -15,7 +15,7 @@ export {
 
 import {
     type SdkworkAppConfig,
-} from '@sdkwork/app-sdk';
+} from './appSdkPort';
 import {
     type AppSdkClient,
     createAppSdkClientConfig,

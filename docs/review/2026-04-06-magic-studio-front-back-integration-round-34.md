@@ -10,10 +10,10 @@
 ## 1. 本轮结论
 
 本轮完成了一个完整的前后端对接闭环，结论如下�?
-1. `magic-studio-v2` 媒体能力链路继续遵循统一标准�?   `feature/service -> @sdkwork/magic-studio-core -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+1. `magic-studio-v2` 媒体能力链路继续遵循统一标准�?   `feature/service -> @sdkwork/magic-studio-core -> retired generic app SDK -> retired Spring app API authority`
 2. 已修复两处导致回归测试失真的测试夹具问题�?   - `@sdkwork/magic-studio-core` 被完�?mock，间接打�?`LocalStorageService`
-   - `imageService.test.ts` mock 了错误的 `@sdkwork/magic-studio-assets` 根入口，而真实实现走子路�?3. 已修�?workspace 层面的共�?SDK 声明问题�?   - `pnpm-workspace.yaml` 已纳入共�?`@sdkwork/app-sdk` 源路�?   - 已排除本�?vendored `packages/sdkwork-app-sdk` 参与 workspace 解析，避免同名包漂移
-   - `node_modules/@sdkwork/app-sdk` 已重新链接到 `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+   - `imageService.test.ts` mock 了错误的 `@sdkwork/magic-studio-assets` 根入口，而真实实现走子路�?3. 已修�?workspace 层面的共�?SDK 声明问题�?   - `pnpm-workspace.yaml` 已纳入共�?`retired generic app SDK` 源路�?   - 已排除本�?vendored `packages/product-app-sdk` 参与 workspace 解析，避免同名包漂移
+   - `node_modules/retired generic app SDK` 已重新链接到 `application-root product app SDK TypeScript family`
 4. 本应用的 SDK 合规红灯已消除；当前剩余合规问题全部位于别的应用 `apps/sdkwork-chat-pc-react`
 
 ---
@@ -60,15 +60,15 @@
 `apps/magic-studio-v2/pnpm-workspace.yaml:1:SHARED_SDK_SOURCE_MISSING_WORKSPACE`
 
 根因�?
-1. `pnpm-workspace.yaml` 未包含共�?app sdk 源路径�?2. workspace 里仍通过 `packages/*` 把本�?vendored `packages/sdkwork-app-sdk` 纳入了解析面�?3. 这与统一标准冲突，也会继续放大本�?vendored dist 与共享源码之间的漂移风险�?
+1. `pnpm-workspace.yaml` 未包含共�?app sdk 源路径�?2. workspace 里仍通过 `packages/*` 把本�?vendored `packages/product-app-sdk` 纳入了解析面�?3. 这与统一标准冲突，也会继续放大本�?vendored dist 与共享源码之间的漂移风险�?
 修复�?
 1. �?`pnpm-workspace.yaml` 中加入：
-   - `../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+   - `../../application-root product app SDK TypeScript family`
    - `../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript`
-2. 同时排除�?   - `!packages/sdkwork-app-sdk`
+2. 同时排除�?   - `!packages/product-app-sdk`
 3. 执行�?   - `pnpm install --lockfile-only`
    - `pnpm install`
-4. 验证结果�?   - `node_modules/@sdkwork/app-sdk` 已指向共�?app sdk
+4. 验证结果�?   - `node_modules/retired generic app SDK` 已指向共�?app sdk
    - `node_modules/@sdkwork/sdk-common` 已指向共�?sdk-common
 
 ---
@@ -119,9 +119,9 @@
    - `@sdkwork/magic-studio-core` 改为 partial mock
 3. `pnpm-workspace.yaml`
    - 纳入共享 app sdk、sdk-common
-   - 排除本地 vendored `packages/sdkwork-app-sdk`
+   - 排除本地 vendored `packages/product-app-sdk`
 4. `pnpm-lock.yaml`
-   - 经过 `pnpm install` 后，`@sdkwork/app-sdk` 解析目标切换到共�?app sdk 源包
+   - 经过 `pnpm install` 后，`retired generic app SDK` 解析目标切换到共�?app sdk 源包
 
 ---
 
@@ -168,8 +168,8 @@ pnpm install
 ```
 
 结果�?
-1. 两个命令均成功�?2. `pnpm install` 输出确认�?   - `@sdkwork/app-sdk 1.0.53 <- ..\\..\\spring-ai-plus-app-api\\sdkwork-sdk-app\\sdkwork-app-sdk-typescript`
-3. `node_modules` 链接结果�?   - `node_modules/@sdkwork/app-sdk -> spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+1. 两个命令均成功�?2. `pnpm install` 输出确认�?   - `retired generic app SDK 1.0.53 <- ..\\..\\retired Spring app API authority\\retired generic app SDK output\\product-app-sdk-typescript`
+3. `node_modules` 链接结果�?   - `node_modules/retired generic app SDK -> application-root product app SDK TypeScript family`
    - `node_modules/@sdkwork/sdk-common -> sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript`
 
 ### 5.5 合规扫描
@@ -187,7 +187,7 @@ node ../scripts/check-sdk-compliance.mjs --strict --report=docs/review/sdk-compl
 
 ## 6. 当前剩余风险
 
-1. `packages/sdkwork-app-sdk` 目录仍然保留在仓库里，但已不再参�?workspace 解析�?   - 这是可控状态�?   - 下一轮可以考虑把它标记为归档目录，或在确认没有外部依赖后移除�?2. 上传链路本轮没有改代码�?   - 既有标准仍应保持为：
+1. `packages/product-app-sdk` 目录仍然保留在仓库里，但已不再参�?workspace 解析�?   - 这是可控状态�?   - 下一轮可以考虑把它标记为归档目录，或在确认没有外部依赖后移除�?2. 上传链路本轮没有改代码�?   - 既有标准仍应保持为：
      `client.upload.getPresignedUrl -> PUT presignedUrl -> client.upload.registerPresigned`
    - 本轮未重新做上传专项端到端回归�?3. 全局 SDK 合规扫描仍有跨应用遗留红灯�?   - 当前都在 `sdkwork-chat-pc-react`
    - 不影响本轮对 `magic-studio-v2` 的结�?
@@ -196,4 +196,4 @@ node ../scripts/check-sdk-compliance.mjs --strict --report=docs/review/sdk-compl
 ## 7. 下一步计�?
 建议按以下顺序继续：
 
-1. �?`magic-studio-v2` 补一轮上传链路专项回归，重点验证 S3 预签�?URL 上传和注册闭环�?2. 清理 `packages/sdkwork-app-sdk` 的遗留定位，避免后续协作者误把它重新纳入 workspace�?3. 如果继续做全局 SDK 标准化，再单开一轮处�?`apps/sdkwork-chat-pc-react` �?`file.service.ts` 手写鉴权头和 `fetch` 问题�?
+1. �?`magic-studio-v2` 补一轮上传链路专项回归，重点验证 S3 预签�?URL 上传和注册闭环�?2. 清理 `packages/product-app-sdk` 的遗留定位，避免后续协作者误把它重新纳入 workspace�?3. 如果继续做全局 SDK 标准化，再单开一轮处�?`apps/sdkwork-chat-pc-react` �?`file.service.ts` 手写鉴权头和 `fetch` 问题�?

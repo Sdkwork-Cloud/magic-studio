@@ -1,4 +1,4 @@
-import type { SdkworkAppConfig } from '@sdkwork/app-sdk';
+import type { SdkworkAppConfig } from './appSdkPort';
 import {
   normalizePublicAppPlatformValue,
   type PublicAppPlatform,

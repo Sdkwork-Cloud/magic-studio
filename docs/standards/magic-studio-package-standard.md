@@ -96,7 +96,7 @@ Rules:
 
 - directory name and `package.json#name` must match exactly
 - new Magic Studio packages must not use `@sdkwork/react-*`
-- vendor workspace packages such as `@sdkwork/app-sdk` and `@sdkwork/sdk-common` are out of scope for the product naming rule
+- vendor workspace packages such as `retired generic app SDK` and `@sdkwork/sdk-common` are out of scope for the product naming rule
 
 ## Manifest Rules
 

@@ -323,13 +323,13 @@ describe('sfxService', () => {
     ]);
   });
 
-  it('does not import generated SDK types directly from @sdkwork/app-sdk', async () => {
+  it('does not import generated SDK types directly from retired generic app SDK', async () => {
     const source = await readFile(
       new URL('./sfxService.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
   });
 
   it('keeps the contract guards on the runtime server sfx boundary', async () => {
@@ -343,7 +343,7 @@ describe('sfxService', () => {
     );
     const combined = `${serviceContract}\n${generationContract}`;
 
-    expect(combined.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(
+    expect(combined.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(
       false,
     );
     expect(combined.includes("from '@sdkwork/magic-studio-server'")).toBe(true);

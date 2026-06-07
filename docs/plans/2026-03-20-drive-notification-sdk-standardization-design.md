@@ -4,9 +4,9 @@
 
 **Goal:** Complete SDK-based service integration verification for `sdkwork-magic-studio-drive` and `sdkwork-magic-studio-notifications`, then remove remaining service-encapsulation blockers across `magic-studio-v2`.
 
-**Architecture:** Keep business packages calling backend capabilities only through local `src/services` adapters backed by `@sdkwork/app-sdk` or approved runtime service seams. Avoid direct browser storage or runtime bridge access in feature code and tests. Use project audit scripts as the enforcement gate after targeted package verification.
+**Architecture:** Keep business packages calling backend capabilities only through local `src/services` adapters backed by `retired generic app SDK` or approved runtime service seams. Avoid direct browser storage or runtime bridge access in feature code and tests. Use project audit scripts as the enforcement gate after targeted package verification.
 
-**Tech Stack:** React, TypeScript, pnpm workspace, Vitest, `@sdkwork/app-sdk`, custom service adapter controller pattern.
+**Tech Stack:** React, TypeScript, pnpm workspace, Vitest, `retired generic app SDK`, custom service adapter controller pattern.
 
 ---
 

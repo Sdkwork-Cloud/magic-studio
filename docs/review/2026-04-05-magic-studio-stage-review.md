@@ -8,7 +8,7 @@
 当前应用已经完成一�?`sdkwork-magic-studio-auth` 公开契约收口，但 `git sdk` 构建链路仍未打通，主要阻塞集中在以下两类问题：
 
 1. 远端业务 SDK 对接类型漂移
-   - 业务包直接用 `ReturnType<typeof getAppSdkClientWithSession>['xxx']` �?`AppSdkClient['xxx']` 深索引具体方法�?   - 当前编译面下，这些深索引�?vendored `@sdkwork/app-sdk` 实际导出存在不稳定或漂移，导致某些真实存在的方法在业务包编译时“看不见”�?   - 典型点：`assetCenter`、`generation.getCoverPromptSuggestions`、`generation.lipSyncVideo`、`voiceSpeaker.cloneSpeaker`、`voiceSpeaker.createGeneration`、`account.createRechargeCash`�?
+   - 业务包直接用 `ReturnType<typeof getAppSdkClientWithSession>['xxx']` �?`AppSdkClient['xxx']` 深索引具体方法�?   - 当前编译面下，这些深索引�?vendored `retired generic app SDK` 实际导出存在不稳定或漂移，导致某些真实存在的方法在业务包编译时“看不见”�?   - 典型点：`assetCenter`、`generation.getCoverPromptSuggestions`、`generation.lipSyncVideo`、`voiceSpeaker.cloneSpeaker`、`voiceSpeaker.createGeneration`、`account.createRechargeCash`�?
 2. 业务请求参数未按当前契约收敛
    - `QueryParams` 当前只能安全承载标量值，不应该直接塞数组�?   - 部分请求体沿用了旧字段或不稳定字段组合，导致与当�?SDK 表单契约不完全一致�?   - 典型点：`sort/types/origins/tags/status` 数组、视频能力请求体、语音生成请求体、预签名上传响应头读取�?
 更新结论�?
@@ -18,7 +18,7 @@
 
 已完成：
 
-- 去掉 `packages/sdkwork-magic-studio-auth/src/index.ts` �?`@sdkwork/app-sdk` 的直接类�?re-export�?- 新增本地公开契约�?  - `packages/sdkwork-magic-studio-auth/src/contracts/authPublicTypes.ts`
+- 去掉 `packages/sdkwork-magic-studio-auth/src/index.ts` �?`retired generic app SDK` 的直接类�?re-export�?- 新增本地公开契约�?  - `packages/sdkwork-magic-studio-auth/src/contracts/authPublicTypes.ts`
 - 新增 contract guard�?  - `packages/sdkwork-magic-studio-auth/src/authPublicTypes.contract-typecheck.ts`
 - 修复 `auth` 包测试边界和 vite alias�?
 已验证：
@@ -30,7 +30,7 @@
 
 ### 2.2 当前回合已确认的事实
 
-- `packages/sdkwork-app-sdk` 在当前应用内�?vendored `dist` 包，不是直接消费 `spring-ai-plus-app-api` 源码�?- vendored SDK �?`dist` 可见以下真实能力�?  - `assetCenter`
+- `packages/product-app-sdk` 在当前应用内�?vendored `dist` 包，不是直接消费 `retired Spring app API authority` 源码�?- vendored SDK �?`dist` 可见以下真实能力�?  - `assetCenter`
   - `generation.getCoverPromptSuggestions`
   - `generation.lipSyncVideo`
   - `voiceSpeaker.cloneSpeaker`
@@ -74,7 +74,7 @@
 
 远端业务统一收敛到：
 
-`feature/service -> @sdkwork/magic-studio-core/src/sdk/useAppSdkClient -> @sdkwork/app-sdk -> spring-ai-plus-app-api`
+`feature/service -> @sdkwork/magic-studio-core/src/sdk/useAppSdkClient -> retired generic app SDK -> retired Spring app API authority`
 
 禁止继续扩散以下模式�?
 - 业务包内原生 `fetch`

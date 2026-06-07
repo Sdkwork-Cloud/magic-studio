@@ -9,7 +9,7 @@
 
 ## 1. 本轮结论
 
-本轮没有新增后端 API，也没有修改 `spring-ai-plus-app-api` 或后端业�?service 的接口定义�?
+本轮没有新增后端 API，也没有修改 `retired Spring app API authority` 或后端业�?service 的接口定义�?
 本轮处理的是一个前端下单合同错位问题，根因不是单一字段，而是三层同时错位�?
 1. 前端把业务能力类型直接当成后端交�?`orderType`
 2. 前端默认发送的 `contentType = GENERATION` 不是后端合法 `PlusContentType`

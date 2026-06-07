@@ -28,7 +28,7 @@ Status: Iteration Passed (v2.7 candidate, pending policy confirmation)
 4. Infrastructure exceptions
 - Allowed direct platform interaction:
   - `packages/sdkwork-magic-studio-core/src/platform/**`
-  - `packages/sdkwork-app-sdk-typescript/**`
+  - `packages/product-app-sdk-typescript/**`
 - These are boundary adapters by design.
 
 ## 3. Required File Contract Per Feature Package

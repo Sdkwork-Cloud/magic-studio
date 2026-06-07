@@ -6,7 +6,7 @@
 
 **Architecture:** The work starts in `@sdkwork/magic-studio-core` by repairing the official SDK prompt facade and adding a scoped SDK client factory that does not mutate the global singleton. Prompt library/history flows are then normalized in a shared core service and surfaced through `PromptTextInput`, while all server-side file uploads are routed through the existing `uploadViaPresignedUrl` kernel so asset, drive, and storage-provider uploads share one presigned URL implementation.
 
-**Tech Stack:** TypeScript, React, Vitest, Vite, `@sdkwork/app-sdk`, Tiptap, shared SDKWork package exports.
+**Tech Stack:** TypeScript, React, Vitest, Vite, `retired generic app SDK`, Tiptap, shared SDKWork package exports.
 
 ---
 

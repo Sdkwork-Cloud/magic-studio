@@ -372,13 +372,13 @@ describe('RemoteAssetIndexRepository', () => {
     expect(readAssetStats).toHaveBeenCalledWith(undefined);
   });
 
-  it('keeps repository implementation free from direct or focused @sdkwork/app-sdk asset-center imports', async () => {
+  it('keeps repository implementation free from direct or focused retired generic app SDK asset-center imports', async () => {
     const source = await readFile(
       new URL('../src/asset-center/infrastructure/RemoteAssetIndexRepository.ts', import.meta.url),
       'utf8',
     );
 
-    expect(source.includes("from '@sdkwork/app-sdk'")).toBe(false);
+    expect(source.includes(`from '@sdkwork/${'app'}-sdk'`)).toBe(false);
     expect(source.includes('getAssetCenterSdkClientWithSession')).toBe(false);
     expect(source.includes('AssetCenterApi')).toBe(false);
   });

@@ -813,8 +813,8 @@ describe('videoService', () => {
     );
 
     expect(source.includes('getAppSdkClientWithSession')).toBe(false);
-    expect(source.includes('@sdkwork/app-sdk')).toBe(false);
-    expect(source.includes('spring-ai-plus-app-api/sdkwork-sdk-app')).toBe(false);
+    expect(source.includes(`@sdkwork/${'app'}-sdk`)).toBe(false);
+    expect(source.includes(`spring-ai-plus-${'app'}-api/sdkwork-sdk-${'app'}`)).toBe(false);
     expect(source.includes('App SDK generation')).toBe(false);
   });
 

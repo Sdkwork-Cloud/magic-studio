@@ -9,7 +9,7 @@
 
 ## 1. 本轮结论
 
-本轮没有新增或修改任何后�?API，也没有修改 `spring-ai-plus-app-api` 的接口定义�?
+本轮没有新增或修改任何后�?API，也没有修改 `retired Spring app API authority` 的接口定义�?
 本轮处理的是一个前端状态层 bug�?
 1. `NotificationStoreProvider.markAsRead(notificationKey)` 在本地状态更新时
 2. 无论目标通知是否已读

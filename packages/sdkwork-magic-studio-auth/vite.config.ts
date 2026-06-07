@@ -8,14 +8,9 @@ import { fileURLToPath } from 'node:url';
 const configDirectory = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(configDirectory, '../..');
 const workspaceRequire = createRequire(resolve(workspaceRoot, 'package.json'));
-const appSdkEntry = resolve(
-  workspaceRoot,
-  '../../spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript/src/index.ts',
-);
-const appSdkRoot = dirname(appSdkEntry);
 const sdkCommonEntry = resolve(
   workspaceRoot,
-  '../../sdk/sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts',
+  '../sdkwork-sdk-commons/sdkwork-sdk-common-typescript/src/index.ts',
 );
 const corePcReactRoot = resolve(
   workspaceRoot,
@@ -58,14 +53,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: [
-      {
-        find: /^@sdkwork\/app-sdk\/(.+)$/,
-        replacement: `${appSdkRoot}/$1`,
-      },
-      {
-        find: '@sdkwork/app-sdk',
-        replacement: appSdkEntry,
-      },
       {
         find: '@sdkwork/sdk-common',
         replacement: sdkCommonEntry,
@@ -124,7 +111,7 @@ export default defineConfig({
       },
       {
         find: '@sdkwork/search-pc-react',
-        replacement: resolve(configDirectory, '../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts'),
+        replacement: resolve(configDirectory, '../../../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts'),
       },
       {
         find: '@sdkwork/ui-pc-react',

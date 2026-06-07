@@ -4,7 +4,7 @@
 - Application: `apps/magic-studio-v2`
 - Module: `packages/sdkwork-magic-studio-skills`
 - Required architecture: `Service -> SDK` only
-- SDK baseline: `spring-ai-plus-app-api/sdkwork-sdk-app/sdkwork-app-sdk-typescript`
+- SDK baseline: `application-root product app SDK TypeScript family`
 
 ## Initial Findings
 1. `SkillsPage` used static local dataset (`AGENT_SKILLS`) instead of backend SDK data.

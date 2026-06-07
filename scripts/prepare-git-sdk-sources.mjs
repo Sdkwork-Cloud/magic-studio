@@ -4,14 +4,14 @@ import { spawnSync } from 'node:child_process';
 import {
   GIT_APPBASE_CHECKOUT,
   GIT_APPBASE_PC_REACT_ENTRY,
-  GIT_APP_SDK_ENTRY,
   GIT_AUTH_PC_REACT_ENTRY,
   GIT_CORE_PC_REACT_ENTRY,
+  GIT_SEARCH_CHECKOUT,
   GIT_SDK_COMMON_CHECKOUT,
   GIT_SDK_COMMON_ENTRY,
   GIT_SDK_ROOT,
   GIT_SEARCH_PC_REACT_ENTRY,
-  GIT_SPRING_AI_PLUS2_CHECKOUT,
+  GIT_CORE_CHECKOUT,
   GIT_UI_CHECKOUT,
   GIT_UI_PC_REACT_ENTRY,
   GIT_USER_CENTER_CORE_PC_REACT_ENTRY,
@@ -22,18 +22,14 @@ import {
 
 const SDK_SOURCES = [
   {
-    name: 'spring-ai-plus2',
-    checkoutDir: GIT_SPRING_AI_PLUS2_CHECKOUT,
-    entries: [GIT_APP_SDK_ENTRY, GIT_CORE_PC_REACT_ENTRY],
-    sparsePaths: [
-      'spring-ai-plus-business/apps/sdkwork-core',
-      'spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app',
-    ],
-    submodulePaths: ['spring-ai-plus-business/spring-ai-plus-app-api/sdkwork-sdk-app'],
+    name: 'sdkwork-core',
+    checkoutDir: GIT_CORE_CHECKOUT,
+    entries: [GIT_CORE_PC_REACT_ENTRY],
+    sparsePaths: ['sdkwork-core-pc-react'],
     url:
-      process.env.MAGIC_STUDIO_SPRING_AI_PLUS2_GIT_URL ??
-      'git@github.com:Sdkwork-Cloud/spring-ai-plus2.git',
-    ref: process.env.MAGIC_STUDIO_SPRING_AI_PLUS2_GIT_REF ?? 'main',
+      process.env.MAGIC_STUDIO_SDKWORK_CORE_GIT_URL ??
+      'git@github.com:Sdkwork-Cloud/sdkwork-core.git',
+    ref: process.env.MAGIC_STUDIO_SDKWORK_CORE_GIT_REF ?? 'main',
   },
   {
     name: 'sdk-common',
@@ -60,7 +56,6 @@ const SDK_SOURCES = [
     checkoutDir: GIT_APPBASE_CHECKOUT,
     entries: [
       GIT_APPBASE_PC_REACT_ENTRY,
-      GIT_SEARCH_PC_REACT_ENTRY,
       GIT_AUTH_PC_REACT_ENTRY,
       GIT_USER_PC_REACT_ENTRY,
       GIT_USER_CENTER_CORE_PC_REACT_ENTRY,
@@ -69,7 +64,6 @@ const SDK_SOURCES = [
     ],
     sparsePaths: [
       'packages/pc-react/foundation/sdkwork-appbase-pc-react',
-      'packages/pc-react/foundation/sdkwork-search-pc-react',
       'packages/pc-react/iam/sdkwork-auth-pc-react',
       'packages/pc-react/iam/sdkwork-user-pc-react',
       'packages/pc-react/iam/sdkwork-user-center-core-pc-react',
@@ -80,6 +74,16 @@ const SDK_SOURCES = [
       process.env.MAGIC_STUDIO_SDKWORK_APPBASE_GIT_URL ??
       'git@github.com:Sdkwork-Cloud/sdkwork-appbase.git',
     ref: process.env.MAGIC_STUDIO_SDKWORK_APPBASE_GIT_REF ?? 'main',
+  },
+  {
+    name: 'sdkwork-search',
+    checkoutDir: GIT_SEARCH_CHECKOUT,
+    entries: [GIT_SEARCH_PC_REACT_ENTRY],
+    sparsePaths: ['packages/pc-react/foundation/sdkwork-search-pc-react'],
+    url:
+      process.env.MAGIC_STUDIO_SDKWORK_SEARCH_GIT_URL ??
+      'git@github.com:Sdkwork-Cloud/sdkwork-search.git',
+    ref: process.env.MAGIC_STUDIO_SDKWORK_SEARCH_GIT_REF ?? 'main',
   },
 ];
 

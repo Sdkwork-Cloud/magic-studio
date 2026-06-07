@@ -940,9 +940,9 @@
 ### Added
 - 新增 `docs/review/2026-04-07-step-03-asset-center-sdk-root-export-convergence.md`，沉淀 Step 03 第十六轮 shared wrapper 收敛�?review 证据�?- 新增 `docs/release/2026-04-07-v0.1.20-迭代记录.md`，记录本轮真实根因、实现、验证与后续建议�?
 ### Changed
-- 更新 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`，停止直接依�?`@sdkwork/app-sdk/api/*`、`@sdkwork/app-sdk/http/*`、`@sdkwork/app-sdk/types/*`，改为从 `@sdkwork/app-sdk` 根导出统一消费 `createAssetCenterApi`、`createUploadApi`、`createHttpClient` 与相关类型�?- 更新 `tests/assetsFocusedSdkClientBoundary.node.test.mjs`，将 shared wrapper 边界从“依�?subpath exports”收敛为“依赖真实可解析�?generated SDK root export”，同时继续禁止 `createClient(...)` 回退�?- 更新 `docs/release/VERSION.md`，将当前执行状态推进到 `v0.1.20`�?
+- 更新 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`，停止直接依�?`retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`，改为从 `retired generic app SDK` 根导出统一消费 `createAssetCenterApi`、`createUploadApi`、`createHttpClient` 与相关类型�?- 更新 `tests/assetsFocusedSdkClientBoundary.node.test.mjs`，将 shared wrapper 边界从“依�?subpath exports”收敛为“依赖真实可解析�?generated SDK root export”，同时继续禁止 `createClient(...)` 回退�?- 更新 `docs/release/VERSION.md`，将当前执行状态推进到 `v0.1.20`�?
 ### Fixed
-- 修复 `assetCenterClient.ts` �?npm mode / node_modules Junction / `tsc --ignoreConfig` 下因 `@sdkwork/app-sdk/*` subpath exports 缺失而导致的 Canvas 定向 typecheck 阻塞�?- 修复一次“本�?mirror 已修、真实解析包未修”的�?GREEN 风险，把问题收敛到真正参与解析的 shared SDK 包路径�?
+- 修复 `assetCenterClient.ts` �?npm mode / node_modules Junction / `tsc --ignoreConfig` 下因 `retired generic app SDK subpath` subpath exports 缺失而导致的 Canvas 定向 typecheck 阻塞�?- 修复一次“本�?mirror 已修、真实解析包未修”的�?GREEN 风险，把问题收敛到真正参与解析的 shared SDK 包路径�?
 ### Refactored
 - �?focused asset-center shared wrapper 收敛�?shared app SDK 根导出，同时保持只组合资产中心与上传能力，不回退�?broad generated client singleton�?
 ### Performance
@@ -953,7 +953,7 @@
 - Red:
   - `node tests/assetsFocusedSdkClientBoundary.node.test.mjs`
   - 结果：`7 tests | 1 failed`
-  - 失败点：`assetCenterClient.ts` 仍依�?unresolved `@sdkwork/app-sdk/*` subpath exports
+  - 失败点：`assetCenterClient.ts` 仍依�?unresolved `retired generic app SDK subpath` subpath exports
 - Green:
   - `node tests/assetsFocusedSdkClientBoundary.node.test.mjs`
   - 结果：`7 tests passed`
@@ -961,7 +961,7 @@
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageImport.ts packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageAttachment.ts packages/sdkwork-magic-studio-canvas/src/components/CanvasNode.tsx`
   - 结果：`PASS`
 - Runtime verification:
-  - `node --input-type=module -e "const sdk = await import('@sdkwork/app-sdk'); console.log(typeof sdk.createAssetCenterApi, typeof sdk.createUploadApi, typeof sdk.createHttpClient);"`
+  - `node --input-type=module -e "const sdk = await import('retired generic app SDK'); console.log(typeof sdk.createAssetCenterApi, typeof sdk.createUploadApi, typeof sdk.createHttpClient);"`
   - 结果：`function function function`
 - Regression:
   - `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-assets/tests/assetCenterProjectManagedImport.test.ts --config tests/vitest.codex.config.mjs --configLoader native --pool threads --exclude ".worktrees/**"`
@@ -977,7 +977,7 @@
 ### Release Notes
 - 本轮继续停留�?`Step 03`，但焦点从“尝试补 shared SDK subpath exports”收敛为“让 Magic Studio shared wrapper 不再依赖当前无法解析�?subpath exports”�?- 该调整直接恢复了 Canvas 主路径的定向编译能力，并保住了已�?asset-center 主干回归链路�?
 ### Known Risks
-- 外部共享 `@sdkwork/app-sdk` 契约源当前仍未补�?`./api/*`、`./http/*`、`./types/*` exports；本轮只是解�?Magic Studio 当前主路�?blocker，不是源头治理完成�?- 如果后续新代码再次直接导�?`@sdkwork/app-sdk/*`，问题仍可能复发�?- `ChooseAsset` node/web �?persisted reference 收口仍未完成，`Step 03` 不能宣告结束�?
+- 外部共享 `retired generic app SDK` 契约源当前仍未补�?`./api/*`、`./http/*`、`./types/*` exports；本轮只是解�?Magic Studio 当前主路�?blocker，不是源头治理完成�?- 如果后续新代码再次直接导�?`retired generic app SDK subpath`，问题仍可能复发�?- `ChooseAsset` node/web �?persisted reference 收口仍未完成，`Step 03` 不能宣告结束�?
 ## [v0.1.19] - 2026-04-07
 
 ### Added
@@ -1016,7 +1016,7 @@
   - 结果：`PASS`
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageImport.ts packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageAttachment.ts packages/sdkwork-magic-studio-canvas/src/components/CanvasNode.tsx`
   - 结果：`FAIL`
-  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `@sdkwork/app-sdk/api/asset-center`、`@sdkwork/app-sdk/api/upload`、`@sdkwork/app-sdk/http/client`、`@sdkwork/app-sdk/types/common`
+  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`
 
 ### Docs
 - 更新 `docs/release/VERSION.md`
@@ -1029,7 +1029,7 @@
 
 ### Known Risks
 - `ChooseAsset` node/web �?persisted reference 收口仍未完成，Step 03 不能宣告结束
-- 共享 `@sdkwork/app-sdk/*` 类型声明缺失仍阻�?Canvas 主题定向 `tsc`
+- 共享 `retired generic app SDK subpath` 类型声明缺失仍阻�?Canvas 主题定向 `tsc`
 - 当前 reference metadata 刷新采用浅合并策略；若未来出现显式“删除某�?metadata 字段”的需求，需要补充更明确的更新协�?
 ## [v0.1.18] - 2026-04-07
 
@@ -1070,7 +1070,7 @@
 - Typecheck blocker:
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageImport.ts packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageAttachment.ts packages/sdkwork-magic-studio-canvas/src/components/CanvasNode.tsx`
   - 结果：`FAIL`
-  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `@sdkwork/app-sdk/api/asset-center`、`@sdkwork/app-sdk/api/upload`、`@sdkwork/app-sdk/http/client`、`@sdkwork/app-sdk/types/common`
+  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`
 
 ### Docs
 - 更新 `docs/release/CHANGELOG.md`
@@ -1084,7 +1084,7 @@
 - 同一 project 下同一 asset 被多�?board/element 复用时，当前 `bindReference(...)` 仍以 `(domain, entityType, entityId, relation, slot)` 去重，无法表达多份细粒度上下文；该问题已记录为后续架构约束风险，不作为本轮新回归
 - Canvas 其他导入入口�?`ChooseAsset` 消费链仍可能存在同类 persisted reference 盲区
 - `ChooseAsset` �?node/web 平台隔离尚未完成
-- 共享 `@sdkwork/app-sdk/*` 类型声明缺失仍阻塞定�?`tsc`
+- 共享 `retired generic app SDK subpath` 类型声明缺失仍阻塞定�?`tsc`
 
 ## [v0.1.17] - 2026-04-07
 
@@ -1121,7 +1121,7 @@
 - Typecheck blocker:
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-canvas/src/utils/canvasReferenceImageImport.ts packages/sdkwork-magic-studio-canvas/src/components/CanvasNode.tsx`
   - 结果：`FAIL`
-  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `@sdkwork/app-sdk/api/asset-center`、`@sdkwork/app-sdk/api/upload`、`@sdkwork/app-sdk/http/client`、`@sdkwork/app-sdk/types/common`
+  - blocker：`packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts` 缺少 `retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`、`retired generic app SDK subpath`
 
 ### Docs
 - 更新 `docs/release/CHANGELOG.md`
@@ -1134,7 +1134,7 @@
 ### Known Risks
 - Canvas 其他导入入口�?`ChooseAsset` 消费链仍可能存在同类 persisted reference 盲区
 - `ChooseAsset` �?node/web 平台隔离尚未完成
-- 共享 `@sdkwork/app-sdk/*` 类型声明缺失仍阻塞定�?`tsc`
+- 共享 `retired generic app SDK subpath` 类型声明缺失仍阻塞定�?`tsc`
 
 ## [v0.1.16] - 2026-04-07
 
@@ -1167,7 +1167,7 @@
 - Typecheck blocker:
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-magiccut/src/utils/magicCutTrackCoverImport.ts packages/sdkwork-magic-studio-magiccut/src/components/Timeline/MagicCutTrackHeader.tsx`
   - 结果：`FAIL`
-  - blocker：共�?`@sdkwork/app-sdk/*` 类型声明缺失，阻塞在 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`
+  - blocker：共�?`retired generic app SDK subpath` 类型声明缺失，阻塞在 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`
 
 ### Docs
 - 更新 `docs/release/CHANGELOG.md`
@@ -1177,7 +1177,7 @@
 ### Release Notes
 - 本轮�?`Step 03` 从“Film 导入 helper 会登记项目级引用”继续推进到“MagicCut TrackCover helper 也会登记项目级引用”，使删除保护能力首次扩展到 TrackCover 主干�?
 ### Known Risks
-- 当前仍只有项目级 persisted reference，尚未扩展到 Track / Clip 级实体引用模型�?- Canvas、其他上传入口仍可能存在同类引用登记盲区�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出与 node/web 平台隔离问题仍未关闭�?- 共享 `@sdkwork/app-sdk/*` 类型声明缺失仍阻塞定�?`tsc`�?
+- 当前仍只有项目级 persisted reference，尚未扩展到 Track / Clip 级实体引用模型�?- Canvas、其他上传入口仍可能存在同类引用登记盲区�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出与 node/web 平台隔离问题仍未关闭�?- 共享 `retired generic app SDK subpath` 类型声明缺失仍阻塞定�?`tsc`�?
 ## [v0.1.15] - 2026-04-07
 
 ### Added
@@ -1215,7 +1215,7 @@
 ### Release Notes
 - 本轮�?`Step 03` 从“MagicCut 项目导入会登记项目级引用”继续推进到“Film 导入 helper 也会登记项目级引用”，使删除保护能力首次从 MagicCut 扩展�?Film 导入主干�?
 ### Known Risks
-- 当前仍只有项目级 persisted reference，尚未扩展到 `shot / scene / character / prop` 级别实体引用模型�?- Canvas、TrackCover、其他上传入口仍可能存在同类引用登记盲区�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出与 node/web 平台隔离问题仍未关闭�?
+- 当前仍只有项目级 persisted reference，尚未扩展到 `shot / scene / character / prop` 级别实体引用模型�?- Canvas、TrackCover、其他上传入口仍可能存在同类引用登记盲区�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出与 node/web 平台隔离问题仍未关闭�?
 ## [v0.1.14] - 2026-04-07
 
 ### Added
@@ -1282,7 +1282,7 @@
 ### Release Notes
 - 当前版本标志着 Step 03 已把删除治理从“仅校验路径安全”推进到“同时校验引用安全”，为后续统一回收、反向引用审计和恢复策略继续收敛奠定核心服务边界�?
 ### Known Risks
-- 当前阻断能力依赖 `asset.references` 已被正确登记；仍未登记引用关系的业务旁路需要后续继续审计�?- 上层调用方对阻断错误的提示文案与交互反馈仍未全部统一�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出与 node/web 平台隔离问题仍未关闭�?
+- 当前阻断能力依赖 `asset.references` 已被正确登记；仍未登记引用关系的业务旁路需要后续继续审计�?- 上层调用方对阻断错误的提示文案与交互反馈仍未全部统一�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出与 node/web 平台隔离问题仍未关闭�?
 ## [v0.1.12] - 2026-04-07
 
 ### Added
@@ -1311,7 +1311,7 @@
 ### Release Notes
 - 当前版本标志着 Step 03 已把 Canvas canonical identity 收敛从“生成引用侧可回退 metadata”继续推进到“本地上传导入入口一落盘就具�?top-level canonical identity”，进一步减�?Canvas 侧对嵌套 metadata 身份的长期依赖�?
 ### Known Risks
-- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出与 node/web 平台隔离问题仍未关闭�?- Step 03 仍未完成删除前反向引用治理�?- Canvas 更广泛消费侧是否全部优先读取 top-level canonical identity，仍需继续审计�?
+- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出与 node/web 平台隔离问题仍未关闭�?- Step 03 仍未完成删除前反向引用治理�?- Canvas 更广泛消费侧是否全部优先读取 top-level canonical identity，仍需继续审计�?
 ## [v0.1.11] - 2026-04-07
 
 ### Added
@@ -1343,7 +1343,7 @@
 ### Release Notes
 - 当前版本标志着 Step 03 已把 canonical identity 收敛从共享层、Film、MagicCut 继续推进�?Canvas 生成引用主干，开始系统性消�?Canvas 侧的身份漂移�?
 ### Known Risks
-- `Canvas` 导入链路中的同类 nested identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
+- `Canvas` 导入链路中的同类 nested identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
 ## [v0.1.10] - 2026-04-07
 
 ### Added
@@ -1372,7 +1372,7 @@
 ### Release Notes
 - 当前版本标志着 Step 03 已把嵌套 canonical identity 收敛从共享层继续推进到第二条消费引擎导入链路，开始系统性消�?MagicCut 侧的重复导入与身份漂移�?
 ### Known Risks
-- `Canvas` 导入链路中的同类嵌套 identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
+- `Canvas` 导入链路中的同类嵌套 identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
 ## [v0.1.9] - 2026-04-07
 
 ### Added
@@ -1400,7 +1400,7 @@
 ### Release Notes
 - 当前版本标志着 Step 03 已把嵌套 canonical identity 收敛从共享层继续推进�?Film 引擎导入链路，开始系统性消除消费引擎侧的重复导入与身份漂移�?
 ### Known Risks
-- `MagicCut / Canvas` 导入链路中的同类嵌套 identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`@sdkwork/app-sdk` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
+- `MagicCut / Canvas` 导入链路中的同类嵌套 identity 缺口仍未完成�?- `ChooseAsset` 暴露出的 `indexedDB`、`retired generic app SDK` 子导出和 node/web 平台隔离问题仍未处理�?- Step 03 仍未完成整步闭环�?
 ## [v0.1.8] - 2026-04-07
 
 ### Added
@@ -1423,13 +1423,13 @@
   - 结果：`1 failed`
   - 原因：嵌�?identity 未被复用，误入重新导入分�?- Green / Regression�?  - `pnpm.cmd exec vitest run packages/sdkwork-magic-studio-assets/tests/generatedSelectionAsset.test.ts packages/sdkwork-magic-studio-assets/tests/generatedSelectionAssetPersistence.test.ts packages/sdkwork-magic-studio-assets/tests/generatedOutcomeAssetPersistence.test.ts --config tests/vitest.codex.config.mjs --configLoader native --pool threads --exclude ".worktrees/**"`
   - 结果：`3 files, 12 tests passed`
-- 扩展验证尝试�?  - `ChooseAsset` 相关测试当前已不再受 alias 阻断，但暴露出更深层 node/web 平台隔离�?`@sdkwork/app-sdk` 子导出问题，未在本轮处理�?
+- 扩展验证尝试�?  - `ChooseAsset` 相关测试当前已不再受 alias 阻断，但暴露出更深层 node/web 平台隔离�?`retired generic app SDK` 子导出问题，未在本轮处理�?
 ### Docs
 - 本轮已补�?review、version、changelog �?release 记录闭环�?
 ### Release Notes
 - 当前版本标志着 Step 03 已从“共享投影入口识别嵌�?canonical identity”继续推进到“共享持久化入口识别嵌套 canonical identity”，同时 codex 自动化验证链也从 alias 阻断推进到更深层平台隔离问题�?
 ### Known Risks
-- `ChooseAsset` 测试暴露出的 `indexedDB` / `@sdkwork/app-sdk` 子导�?/ web 平台初始化问题仍未处理�?- `Film / MagicCut / Canvas` 导入链路中的同类嵌套 identity 收敛仍待继续推进�?- Step 03 仍未完成整步闭环�?
+- `ChooseAsset` 测试暴露出的 `indexedDB` / `retired generic app SDK` 子导�?/ web 平台初始化问题仍未处理�?- `Film / MagicCut / Canvas` 导入链路中的同类嵌套 identity 收敛仍待继续推进�?- Step 03 仍未完成整步闭环�?
 ## [v0.1.7] - 2026-04-07
 
 ### Added
@@ -1476,7 +1476,7 @@
 - 执行文件级类型校验尝试：
   - `pnpm.cmd exec tsc --skipLibCheck --ignoreConfig --noEmit --jsx react-jsx --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-assets/src/asset-center/application/assetUrlResolver.ts`
   - 结果：`FAIL`
-  - blocker：共�?`@sdkwork/app-sdk/*` 类型声明缺失，阻塞在 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`
+  - blocker：共�?`retired generic app SDK subpath` 类型声明缺失，阻塞在 `packages/sdkwork-magic-studio-core/src/sdk/assetCenterClient.ts`
 
 ### Docs
 - 本轮已补�?review、version、changelog �?release 记录闭环�?
@@ -1535,7 +1535,7 @@
   - 结果：`3 files, 6 tests passed`
 - 执行了定向单文件编译验证�?  - `pnpm.cmd exec tsc --ignoreConfig --noEmit --module ESNext --moduleResolution bundler --target ES2022 --lib ES2022,DOM packages/sdkwork-magic-studio-editor/src/services/projectService.ts`
   - 结果：`PASS`
-- 包级 `tsc -p` 仍被共享 `@sdkwork/app-sdk/*` 类型缺失阻塞，未在本轮内清除�?
+- 包级 `tsc -p` 仍被共享 `retired generic app SDK subpath` 类型缺失阻塞，未在本轮内清除�?
 ### Docs
 - 本轮已补�?Step 02 �?review、version、changelog �?release 记录闭环�?
 ### Release Notes

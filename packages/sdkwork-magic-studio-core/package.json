@@ -106,8 +106,8 @@
   },
   "dependencies": {
     "@google/genai": "catalog:",
-    "@sdkwork/app-sdk": "workspace:*",
     "@sdkwork/core-pc-react": "workspace:*",
+    "@sdkwork/drive-app-sdk": "workspace:*",
     "@sdkwork/magic-studio-server": "workspace:*",
     "@sdkwork/magic-studio-types": "workspace:*",
     "@sdkwork/magic-studio-fs": "workspace:*",
