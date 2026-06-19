@@ -73,56 +73,86 @@
       {
         "name": "Validate selected desktop bundle",
         "shell": "pwsh",
-        "run": "$ErrorActionPreference = \"Stop\"\n$artifactGlob = switch ($env:SDKWORK_PACKAGE_ID) {\n  \"linux-debian-x64-desktop-deb\" { \"src-tauri/target/release/bundle/deb/*.deb\" }\n  \"linux-x64-desktop-appimage\" { \"src-tauri/target/release/bundle/appimage/*.AppImage\" }\n  \"windows-x64-desktop-exe\" { \"src-tauri/target/release/bundle/nsis/*.exe\" }\n  \"macos-arm64-desktop-dmg\" { \"src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  \"macos-x64-desktop-dmg\" { \"src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  default { throw \"Unsupported Magic Studio package id $env:SDKWORK_PACKAGE_ID\" }\n}\n$artifacts = Get-ChildItem -Path $artifactGlob -File -ErrorAction SilentlyContinue\nif (-not $artifacts) {\n  throw \"Missing built artifact for $env:SDKWORK_PACKAGE_ID matching $artifactGlob\"\n}\nforeach ($artifact in $artifacts) {\n  if ($artifact.Length -le 0) {\n    throw \"Built artifact is empty: $($artifact.FullName)\"\n  }\n  Write-Host \"Validated $($artifact.FullName)\"\n}"
+        "run": "$ErrorActionPreference = \"Stop\"\n$artifactGlob = switch ($env:SDKWORK_PACKAGE_ID) {\n  \"linux-debian-x64-standalone-desktop-deb\" { \"src-tauri/target/release/bundle/deb/*.deb\" }\n  \"linux-x64-standalone-desktop-appimage\" { \"src-tauri/target/release/bundle/appimage/*.AppImage\" }\n  \"windows-x64-standalone-desktop-exe\" { \"src-tauri/target/release/bundle/nsis/*.exe\" }\n  \"macos-arm64-standalone-desktop-dmg\" { \"src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  \"macos-x64-standalone-desktop-dmg\" { \"src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg\" }\n  default { throw \"Unsupported Magic Studio package id $env:SDKWORK_PACKAGE_ID\" }\n}\n$artifacts = Get-ChildItem -Path $artifactGlob -File -ErrorAction SilentlyContinue\nif (-not $artifacts) {\n  throw \"Missing built artifact for $env:SDKWORK_PACKAGE_ID matching $artifactGlob\"\n}\nforeach ($artifact in $artifacts) {\n  if ($artifact.Length -le 0) {\n    throw \"Built artifact is empty: $($artifact.FullName)\"\n  }\n  Write-Host \"Validated $($artifact.FullName)\"\n}"
       }
     ]
   },
   "targets": [
     {
-      "id": "linux-debian-x64-desktop-deb",
+      "id": "linux-debian-x64-standalone-desktop-deb",
       "profile": "desktop",
       "platform": "linux",
       "distribution": "debian",
       "architecture": "x64",
-      "formats": ["deb"],
+      "formats": [
+        "deb"
+      ],
       "runner": "ubuntu-22.04",
-      "outputGlobs": ["src-tauri/target/release/bundle/deb/*.deb"]
+      "outputGlobs": [
+        "src-tauri/target/release/bundle/deb/*.deb"
+      ],
+      "deploymentProfile": "standalone",
+      "runtimeTarget": "desktop"
     },
     {
-      "id": "linux-x64-desktop-appimage",
+      "id": "linux-x64-standalone-desktop-appimage",
       "profile": "desktop",
       "platform": "linux",
       "architecture": "x64",
-      "formats": ["appimage"],
+      "formats": [
+        "appimage"
+      ],
       "runner": "ubuntu-22.04",
-      "outputGlobs": ["src-tauri/target/release/bundle/appimage/*.AppImage"]
+      "outputGlobs": [
+        "src-tauri/target/release/bundle/appimage/*.AppImage"
+      ],
+      "deploymentProfile": "standalone",
+      "runtimeTarget": "desktop"
     },
     {
-      "id": "windows-x64-desktop-exe",
+      "id": "windows-x64-standalone-desktop-exe",
       "profile": "desktop",
       "platform": "windows",
       "architecture": "x64",
-      "formats": ["exe"],
+      "formats": [
+        "exe"
+      ],
       "runner": "windows-latest",
-      "outputGlobs": ["src-tauri/target/release/bundle/nsis/*.exe"]
+      "outputGlobs": [
+        "src-tauri/target/release/bundle/nsis/*.exe"
+      ],
+      "deploymentProfile": "standalone",
+      "runtimeTarget": "desktop"
     },
     {
-      "id": "macos-arm64-desktop-dmg",
+      "id": "macos-arm64-standalone-desktop-dmg",
       "profile": "desktop",
       "platform": "macos",
       "architecture": "arm64",
-      "formats": ["dmg"],
+      "formats": [
+        "dmg"
+      ],
       "runner": "macos-latest",
-      "outputGlobs": ["src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg"]
+      "outputGlobs": [
+        "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg"
+      ],
+      "deploymentProfile": "standalone",
+      "runtimeTarget": "desktop"
     },
     {
-      "id": "macos-x64-desktop-dmg",
+      "id": "macos-x64-standalone-desktop-dmg",
       "profile": "desktop",
       "platform": "macos",
       "architecture": "x64",
-      "formats": ["dmg"],
+      "formats": [
+        "dmg"
+      ],
       "runner": "macos-15-intel",
-      "outputGlobs": ["src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg"]
+      "outputGlobs": [
+        "src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg"
+      ],
+      "deploymentProfile": "standalone",
+      "runtimeTarget": "desktop"
     }
   ],
   "security": {
