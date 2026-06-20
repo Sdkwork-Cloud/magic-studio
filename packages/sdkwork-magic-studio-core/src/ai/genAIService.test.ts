@@ -10,7 +10,7 @@ describe('genAIService runtime boundaries', () => {
 
   it('keeps media generation out of the core AI service boundary', async () => {
     vi.stubEnv('API_KEY', '');
-    vi.stubEnv('VITE_API_KEY', '');
+    vi.stubEnv('GEMINI_API_KEY', '');
 
     const { genAIService } = await import('./genAIService');
 
@@ -31,6 +31,6 @@ describe('genAIService runtime boundaries', () => {
     expect(source).not.toContain('App SDK generation');
     expect(source).not.toContain('createGenerationImage');
     expect(source).not.toContain('textToSpeech');
-    expect(source).not.toContain('enhanceGenerationPrompt');
+    expect(source).not.toContain('VITE_API_KEY');
   });
 });

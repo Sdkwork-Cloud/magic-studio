@@ -27,21 +27,22 @@ function readReferenceEnv(relativePath: string) {
 describe('env access token alignment', () => {
   backendReferenceIt('uses the backend reference dev access token for non-production envs', () => {
     const referenceDev = readReferenceEnv('.env.development');
-    const expectedToken = referenceDev.VITE_ACCESS_TOKEN;
+    const expectedToken = referenceDev.SDKWORK_ACCESS_TOKEN ?? referenceDev.VITE_ACCESS_TOKEN;
     const envNames = ['.env.development', '.env.test', '.env.staging'];
 
     for (const envName of envNames) {
       const env = readEnv(envName);
-      expect(env.VITE_ACCESS_TOKEN).toBe(expectedToken);
       expect(env.SDKWORK_ACCESS_TOKEN).toBe(expectedToken);
+      expect(env.VITE_ACCESS_TOKEN).toBeUndefined();
     }
   });
 
   backendReferenceIt('keeps production access token aligned to the backend production env', () => {
     const referenceProd = readReferenceEnv('.env.production');
     const env = readEnv('.env.production');
+    const expectedToken = referenceProd.SDKWORK_ACCESS_TOKEN ?? referenceProd.VITE_ACCESS_TOKEN;
 
-    expect(env.VITE_ACCESS_TOKEN).toBe(referenceProd.VITE_ACCESS_TOKEN);
-    expect(env.SDKWORK_ACCESS_TOKEN).toBe(referenceProd.VITE_ACCESS_TOKEN);
+    expect(env.SDKWORK_ACCESS_TOKEN).toBe(expectedToken);
+    expect(env.VITE_ACCESS_TOKEN).toBeUndefined();
   });
 });

@@ -232,7 +232,6 @@ export default defineConfig(({ mode }) => {
   );
   const compatibilityAccessToken = firstNonEmptyValue(
     env.SDKWORK_ACCESS_TOKEN,
-    env.VITE_ACCESS_TOKEN
   );
   const compatibilityTimeout = firstNonEmptyValue(env.SDKWORK_TIMEOUT, env.VITE_TIMEOUT);
   const compatibilityPlatform = firstNonEmptyValue(env.SDKWORK_PLATFORM, env.VITE_PLATFORM);

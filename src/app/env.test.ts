@@ -13,7 +13,7 @@ describe('buildEnvConfig', () => {
       VITE_APP_ENV: 'staging',
       VITE_OWNER_MODE: 'tenant',
       VITE_TENANT_API_BASE_URL: 'https://tenant.example.com///',
-      VITE_TENANT_ACCESS_TOKEN: 'tenant-access-token',
+      SDKWORK_ACCESS_TOKEN: 'tenant-access-token',
       VITE_TIMEOUT: '32000',
       VITE_WS_URL: 'wss://socket.example.com/ws',
       VITE_IM_API_BASE_URL: 'https://im.example.com',
@@ -55,7 +55,7 @@ describe('buildEnvConfig', () => {
       VITE_APP_ENV: 'production',
       VITE_OWNER_MODE: 'root',
       VITE_ROOT_API_BASE_URL: 'https://root.example.com/api/',
-      VITE_ROOT_ACCESS_TOKEN: 'root-access-token',
+      SDKWORK_ACCESS_TOKEN: 'root-access-token',
       VITE_TIMEOUT: '18000',
     });
 
@@ -114,7 +114,7 @@ describe('buildEnvConfig', () => {
     vi.stubEnv('VITE_APP_ENV', 'development');
     vi.stubEnv('VITE_OWNER_MODE', 'root');
     vi.stubEnv('VITE_ROOT_API_BASE_URL', 'https://server.example.com/api/');
-    vi.stubEnv('VITE_ACCESS_TOKEN', 'server-access-token');
+    vi.stubEnv('SDKWORK_ACCESS_TOKEN', 'server-access-token');
     vi.stubEnv('VITE_PLATFORM', 'web');
     vi.stubGlobal('window', {
       __sdkworkPlatformRuntime: {

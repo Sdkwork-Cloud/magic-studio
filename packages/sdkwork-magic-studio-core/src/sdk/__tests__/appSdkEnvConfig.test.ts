@@ -23,7 +23,7 @@ describe('createAppSdkClientConfigFromEnv', () => {
     const config = createAppSdkClientConfigFromEnv({
       VITE_APP_ENV: 'development',
       VITE_API_BASE_URL: 'https://primary.example.com///',
-      VITE_ACCESS_TOKEN: accessToken,
+      SDKWORK_ACCESS_TOKEN: accessToken,
       VITE_TIMEOUT: '15000',
       VITE_TENANT_ID: 'tenant-env-ignored',
       SDKWORK_TENANT_ID: 'tenant-legacy-ignored',
@@ -72,7 +72,7 @@ describe('createAppSdkClientConfigFromEnv', () => {
       {
         VITE_APP_ENV: 'production',
         VITE_API_BASE_URL: 'https://env.example.com',
-        VITE_ACCESS_TOKEN: 'env-token',
+        SDKWORK_ACCESS_TOKEN: 'env-token',
         VITE_TIMEOUT: '5000',
       },
       {
@@ -133,20 +133,11 @@ describe('createAppSdkClientConfigFromEnv', () => {
 });
 
 describe('resolveAppSdkAccessTokenFromEnv', () => {
-  it('returns the primary token before compatibility fallbacks', () => {
+  it('returns SDKWORK_ACCESS_TOKEN from private env', () => {
     expect(
       resolveAppSdkAccessTokenFromEnv({
-        VITE_ACCESS_TOKEN: 'primary-token',
-        SDKWORK_ACCESS_TOKEN: 'compat-token',
+        SDKWORK_ACCESS_TOKEN: 'deployment-token',
       })
-    ).toBe('primary-token');
-  });
-
-  it('falls back to compatibility token when primary token is absent', () => {
-    expect(
-      resolveAppSdkAccessTokenFromEnv({
-        SDKWORK_ACCESS_TOKEN: 'compat-token',
-      })
-    ).toBe('compat-token');
+    ).toBe('deployment-token');
   });
 });

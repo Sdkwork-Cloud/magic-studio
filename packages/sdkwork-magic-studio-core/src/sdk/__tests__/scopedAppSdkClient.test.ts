@@ -64,7 +64,7 @@ describe('createScopedAppSdkClient', () => {
     vi.stubEnv('VITE_OWNER_MODE', 'tenant');
     vi.stubEnv('VITE_API_BASE_URL', 'https://api-root.sdkwork.com');
     vi.stubEnv('VITE_TENANT_API_BASE_URL', 'https://api-tenant.sdkwork.com/');
-    vi.stubEnv('VITE_ACCESS_TOKEN', 'root-access-token');
+    vi.stubEnv('SDKWORK_ACCESS_TOKEN', 'root-access-token');
     vi.stubEnv('VITE_TENANT_ACCESS_TOKEN', 'tenant-access-token');
     vi.stubEnv('VITE_PLATFORM', 'desktop');
 

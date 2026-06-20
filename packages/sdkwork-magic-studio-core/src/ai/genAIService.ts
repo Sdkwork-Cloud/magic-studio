@@ -1,9 +1,20 @@
 import { GoogleGenAI, type Content } from '@google/genai';
 
-const readEnv = (): Record<string, string | undefined> =>
-  (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+function readGeminiApiKey(): string {
+  const processEnv = (
+    globalThis as typeof globalThis & {
+      process?: { env?: Record<string, string | undefined> };
+    }
+  ).process?.env;
 
-const API_KEY = readEnv().API_KEY || readEnv().VITE_API_KEY || '';
+  return (
+    processEnv?.GEMINI_API_KEY?.trim()
+    || processEnv?.API_KEY?.trim()
+    || ''
+  );
+}
+
+const API_KEY = readGeminiApiKey();
 
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
