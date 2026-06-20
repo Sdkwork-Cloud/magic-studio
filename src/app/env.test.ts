@@ -14,7 +14,6 @@ describe('buildEnvConfig', () => {
       VITE_OWNER_MODE: 'tenant',
       VITE_TENANT_API_BASE_URL: 'https://tenant.example.com///',
       VITE_TENANT_ACCESS_TOKEN: 'tenant-access-token',
-      VITE_TENANT_ID: 'tenant-001',
       VITE_TIMEOUT: '32000',
       VITE_WS_URL: 'wss://socket.example.com/ws',
       VITE_IM_API_BASE_URL: 'https://im.example.com',

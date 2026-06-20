@@ -5,55 +5,61 @@ import {
   resolveAppSdkAccessTokenFromEnv,
 } from '../appSdkEnv';
 
+function createTestAccessToken(claims: Record<string, unknown>): string {
+  const body = btoa(JSON.stringify(claims)).replace(/=+$/g, '');
+  return `header.${body}.signature`;
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe('createAppSdkClientConfigFromEnv', () => {
-  it('rejects legacy tauri aliases and falls through to canonical public platform values', () => {
+  it('derives tenant and organization identity from access token claims instead of env ids', () => {
+    const accessToken = createTestAccessToken({
+      tenant_id: 'tenant-from-token',
+      organization_id: 'org-from-token',
+    });
     const config = createAppSdkClientConfigFromEnv({
       VITE_APP_ENV: 'development',
       VITE_API_BASE_URL: 'https://primary.example.com///',
-      VITE_APP_API_BASE_URL: 'https://legacy-app.example.com',
-      SDKWORK_API_BASE_URL: 'https://legacy-sdk.example.com',
-      VITE_ACCESS_TOKEN: 'primary-token',
-      SDKWORK_ACCESS_TOKEN: 'legacy-token',
+      VITE_ACCESS_TOKEN: accessToken,
       VITE_TIMEOUT: '15000',
-      SDKWORK_TIMEOUT: '9000',
-      VITE_TENANT_ID: 'tenant-primary',
-      SDKWORK_TENANT_ID: 'tenant-legacy',
-      VITE_ORGANIZATION_ID: 'org-primary',
-      SDKWORK_ORGANIZATION_ID: 'org-legacy',
-      VITE_PLATFORM: 'tauri',
-      SDKWORK_PLATFORM: 'web',
+      VITE_TENANT_ID: 'tenant-env-ignored',
+      SDKWORK_TENANT_ID: 'tenant-legacy-ignored',
+      VITE_ORGANIZATION_ID: 'org-env-ignored',
+      SDKWORK_ORGANIZATION_ID: 'org-legacy-ignored',
+      VITE_PLATFORM: 'web',
     });
 
     expect(config).toMatchObject({
       env: 'development',
       baseUrl: 'https://primary.example.com',
-      accessToken: 'primary-token',
+      accessToken,
       timeout: 15000,
-      tenantId: 'tenant-primary',
-      organizationId: 'org-primary',
+      tenantId: 'tenant-from-token',
+      organizationId: 'org-from-token',
       platform: 'web',
     });
   });
 
   it('falls back to compatibility keys and supports test mode', () => {
+    const accessToken = createTestAccessToken({
+      tenant_id: 'tenant-test',
+      organization_id: 'org-test',
+    });
     const config = createAppSdkClientConfigFromEnv({
       VITE_APP_ENV: 'test',
       SDKWORK_API_BASE_URL: 'https://compat.example.com/',
-      SDKWORK_ACCESS_TOKEN: 'compat-token',
+      SDKWORK_ACCESS_TOKEN: accessToken,
       SDKWORK_TIMEOUT: '32000',
-      SDKWORK_TENANT_ID: 'tenant-test',
-      SDKWORK_ORGANIZATION_ID: 'org-test',
       SDKWORK_PLATFORM: 'desktop',
     });
 
     expect(config).toMatchObject({
       env: 'test',
       baseUrl: 'https://compat.example.com',
-      accessToken: 'compat-token',
+      accessToken,
       timeout: 32000,
       tenantId: 'tenant-test',
       organizationId: 'org-test',

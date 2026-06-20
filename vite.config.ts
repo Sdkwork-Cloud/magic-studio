@@ -235,11 +235,6 @@ export default defineConfig(({ mode }) => {
     env.VITE_ACCESS_TOKEN
   );
   const compatibilityTimeout = firstNonEmptyValue(env.SDKWORK_TIMEOUT, env.VITE_TIMEOUT);
-  const compatibilityTenantId = firstNonEmptyValue(env.SDKWORK_TENANT_ID, env.VITE_TENANT_ID);
-  const compatibilityOrganizationId = firstNonEmptyValue(
-    env.SDKWORK_ORGANIZATION_ID,
-    env.VITE_ORGANIZATION_ID
-  );
   const compatibilityPlatform = firstNonEmptyValue(env.SDKWORK_PLATFORM, env.VITE_PLATFORM);
   return {
     server: {
@@ -265,8 +260,6 @@ export default defineConfig(({ mode }) => {
       'process.env.SDKWORK_API_BASE_URL': JSON.stringify(compatibilityApiBaseUrl),
       'process.env.SDKWORK_ACCESS_TOKEN': JSON.stringify(compatibilityAccessToken),
       'process.env.SDKWORK_TIMEOUT': JSON.stringify(compatibilityTimeout),
-      'process.env.SDKWORK_TENANT_ID': JSON.stringify(compatibilityTenantId),
-      'process.env.SDKWORK_ORGANIZATION_ID': JSON.stringify(compatibilityOrganizationId),
       'process.env.SDKWORK_PLATFORM': JSON.stringify(compatibilityPlatform),
     },
     build: {
