@@ -98,3 +98,13 @@ When architecture changes:
 2. Update `docs/standards/magic-studio-package-standard.md` if the change affects package naming, manifests, build/typecheck policy, or tsconfig inheritance rules.
 3. Update specialized standards only after the canonical rule is clear.
 4. Update boundary tests or audit scripts that lock the documentation authority model.
+
+## Canon Documents
+
+| Document | Path |
+| --- | --- |
+| Product PRD | [product/prd/PRD.md](product/prd/PRD.md) |
+| Technical architecture | [architecture/tech/TECH_ARCHITECTURE.md](architecture/tech/TECH_ARCHITECTURE.md) |
+
+- [docs/product/prd/PRD.md](product/prd/PRD.md)
+- [docs/architecture/tech/TECH_ARCHITECTURE.md](architecture/tech/TECH_ARCHITECTURE.md)

@@ -226,7 +226,7 @@ impl ServerContract {
             ],
             "paths": paths,
             "components": load_embedded_openapi_components(),
-            "x-sdkwork-api-gateway": self.gateway_summary()
+            "x-sdkwork-api-cloud-gateway": self.gateway_summary()
         })
     }
 }

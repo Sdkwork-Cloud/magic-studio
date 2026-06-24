@@ -1004,7 +1004,7 @@ export function createMagicStudioServerOpenApiDocument() {
     ],
     paths,
     components: MAGIC_STUDIO_SERVER_OPENAPI_COMPONENTS,
-    'x-sdkwork-api-gateway': createMagicStudioServerGatewaySummary(),
+    'x-sdkwork-api-cloud-gateway': createMagicStudioServerGatewaySummary(),
   };
 }
 

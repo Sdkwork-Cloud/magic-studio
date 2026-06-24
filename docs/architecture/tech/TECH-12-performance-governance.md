@@ -1,0 +1,92 @@
+> Migrated from `docs/step/12-性能预算与观测治理.md` on 2026-06-24.
+> Owner: SDKWork maintainers
+
+# Step 12 - 性能预算与观测治�?
+## 1. 目标与范�?
+�?step 用于把性能从“体感优化”推进到“预算化治理”，让启动、路由、Canvas、MagicCut、导入、导出等关键链路具备可量化门禁�?
+### 1.1 执行输入
+
+- `docs/架构/11-性能架构与优化标�?md`
+- `docs/架构/15` 中架�?`Step 11`
+- 关键文件�?  - `docs/架构/11-性能架构与优化标�?md`
+  - `scripts/check-performance-budget.mjs`
+  - `scripts/check-iam-route-css-budget.mjs`
+  - `scripts/check-desktop-bundle-self-contained.mjs`
+  - `packages/sdkwork-magic-studio-canvas/src/components/CanvasBoard.tsx`
+  - `packages/sdkwork-magic-studio-magiccut/src/components/MagicCutEditor.tsx`
+  - `src/app/bootstrap.ts`
+
+### 1.2 本步非目�?
+- 不在�?step 内完成所有深度性能优化
+- 不在�?step 内对所有页面逐一微调
+
+### 1.3 最小输�?
+- 预算矩阵
+- 关键观测�?- 预算检查脚�?- 构建与关键页面门�?
+## 2. 架构对齐
+
+- `docs/架构/06`
+- `docs/架构/11`
+- `docs/架构/15` �?`Step 11`
+
+## 3. 当前现状
+
+当前已有懒加载、路由预算检查、Canvas 空间裁剪等优化，但仍缺统一预算矩阵�?Go/No-Go 门禁�?
+## 4. 设计
+
+### 4.1 预算对象
+
+至少包括�?
+- 启动
+- 路由加载
+- Canvas 交互
+- MagicCut 编辑
+- 导入
+- 导出
+
+### 4.2 观测原则
+
+- 预算必须有脚本化检�?- 指标必须能在 CI 和本地重复验�?
+## 5. 实施落地规划
+
+1. 固定预算矩阵
+2. 在关键路径补观测�?3. 扩展预算检查脚�?4. 将预算检查纳入发布前门禁
+
+## 6. 测试计划
+
+- 构建产物预算
+- 路由 / 样式预算
+- 关键编辑器交互预�?- 桌面包自包含验证
+
+## 7. 结果验证
+
+```bash
+pnpm build
+node scripts/check-performance-budget.mjs
+pnpm verify:iam-route-css-budget
+```
+
+## 8. 检查点
+
+- `CP12-1`：预算矩阵冻�?- `CP12-2`：关键观测点接入
+- `CP12-3`：预算脚本通过
+- `CP12-4`：性能门禁可进入总验�?
+## 9. 推荐并行执行
+
+- step 级：可与 `Step 10-11` 并行
+- 子任务级：预算矩阵、观测埋点、脚本校验可并行；预算阈值单 owner
+
+## 10. 风险与回�?
+风险�?
+- 预算设定过高没有约束�?- 预算设定过低导致频繁阻断
+
+回滚�?
+- 允许调整阈�?- 不允许删除预算门�?
+## 11. 完成定义
+
+- 性能进入预算、观测、门禁三件套治理
+
+## 12. 下一步准入条�?
+- `Step 13` 可将性能预算作为发布门禁的一部分
+
+

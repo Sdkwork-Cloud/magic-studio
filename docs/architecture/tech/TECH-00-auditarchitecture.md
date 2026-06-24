@@ -1,0 +1,226 @@
+> Migrated from `docs/架构/00-当前实现审计与架构事实基线.md` on 2026-06-24.
+> Owner: SDKWork maintainers
+
+# 00. 当前实现审计与架构事实基�?
+> Historical snapshot only. This document records an earlier audit baseline and is not the current architecture authority.
+>
+> Current standards:
+> - `docs/magic-studio-unified-host-api-standard.md`
+> - `docs/tauri-rust-framework-architecture.md`
+> - `docs/platform-runtime-capability-matrix.md`
+
+## 1. 文档目的
+
+本文件不是理想态设计文档，而是 `magic-studio-v2` 当前真实实现的架构事实基线。它的作用有三个�?
+1. 给本目录后续 `01-15` 文档提供统一事实来源，避免架构文档脱离代码现实�?2. 为研发、架构、产品、测试、发布提供同一套现状判断和短板清单�?3. 作为后续实施、验收、行业对标和演进路线的输入基线�?
+本文件重点基于当前仓库中的真实代码与配置，而不是口头需求推断�?
+## 2. 审计范围与证据来�?
+本次事实基线主要基于以下实现入口抽样建立�?
+| 证据类型 | 关键文件 | 说明 |
+| --- | --- | --- |
+| 应用脚本与工程治�?| `package.json` `pnpm-workspace.yaml` | 确认技术栈、测试构建命令、工作区结构 |
+| 应用入口与路�?| `src/app/App.tsx` `src/router/registry.tsx` | 确认产品页面矩阵、布局模式、懒加载策略 |
+| 资产中心 | `packages/sdkwork-magic-studio-assets/src/asset-center/application/AssetCenterService.ts` | 确认统一资产导入、注册、索引、删除、定位逻辑 |
+| 项目图谱类型 | `packages/sdkwork-magic-studio-types/src/project-graph.types.ts` | 确认�?`canvas / film / magiccut` 的统一工程模型已具备类型基础 |
+| AI 主干 | `packages/sdkwork-magic-studio-core/src/ai/genAIService.ts` | 确认 SDK 主路径与模型直连路径并存的现�?|
+| 插件主干 | `packages/sdkwork-magic-studio-plugins/src/services/pluginsBusinessService.ts` | 确认插件业务层仍为空适配�?|
+| 项目发布主干 | `packages/sdkwork-magic-studio-editor/src/services/projectService.ts` | 确认同步与发布仍�?mock |
+| Film 创作 | `packages/sdkwork-magic-studio-film/src/pages/FilmEditorPage.tsx` | 确认影视化工作台�?Copilot 面板已形成独立编辑器外壳 |
+| MagicCut 创作 | `packages/sdkwork-magic-studio-magiccut/src/components/MagicCutEditor.tsx` | 确认时间线编辑、播放器、资源面板、属性面板、导出模态存�?|
+| Canvas 创作 | `packages/sdkwork-magic-studio-canvas/src/components/CanvasBoard.tsx` | 确认节点画布、Quadtree 裁剪、连接、选择、分组、缩放等交互存在 |
+| 桌面运行�?| `src-tauri/capabilities/default.json` `src-tauri/src/framework/services/policy.rs` | 确认当前权限面和策略服务现状 |
+
+## 3. 当前产品事实判断
+
+### 3.1 产品定位事实
+
+从当前页面、包结构和运行时能力来看，Magic Studio V2 不是单一“AI 视频生成页”，而是一个桌面优先、多模态、工程化的视频创作平台�?
+其产品定位已经体现出以下事实�?
+- 既有内容生成能力，也有内容组织、编辑、导出、发布能力�?- 既有消费级入口，也有专业创作模式�?- 既覆盖单点工具，也尝试形成统一工作区、工程、资产、桌面能力主干�?- 已经具备平台化扩展方向，包括 `plugins`、`skills`、`trade`、`settings` 等�?
+### 3.2 路由与页面矩阵事�?
+`src/router/registry.tsx` 显示当前路由矩阵已覆盖：
+
+- 首页、登录、设置、个人中心、定价等平台基础页面
+- `image / video / music / sfx / voice / audio / character` 多模态生成页与聊天页
+- `editor / assets / drive / notes` 工程与内容管理页
+- `canvas / magic-cut / film / prompt / chat / chat-ppt` 高级创作与对话编辑页
+- `portal / ai-tools / discover / community / theater / download-app` 门户与分发页
+- `plugins / skills / task-market / my-tasks` 平台扩展与生态页
+
+这意味着系统已经具备“平台工作台 + 多模态工作室 + 专业创作模式 + 平台扩展入口”的总体产品雏形�?
+## 4. 需求与能力实现事实
+
+### 4.1 当前已被代码证实的核心需�?
+| 需求域 | 当前实现事实 | 判断 |
+| --- | --- | --- |
+| 多模态内容生�?| 路由和包结构中已存在图像、视频、音乐、音效、语音、音频、角色等独立能力�?| 已实现广度，深度仍待统一治理 |
+| 专业创作模式 | `film`、`magic-cut`、`canvas` 均为独立工作台而非单个表单�?| 已形成差异化能力 |
+| 工程化管�?| `workspace`、`editor`、`assets`、`drive`、`notes` 等域存在 | 已具备工程化底座 |
+| 对话式编�?| `chat`、`prompt`、`chat-ppt` 已纳入路由与包结�?| 已具备入口，动作化闭环仍待加�?|
+| 本地优先运行 | Tauri 运行时、文件系统、作业、媒体、策略服务均已存�?| 已具备桌面强能力基础 |
+| 插件与生态扩�?| 插件页面和服务入口存在，IDE 配置也出现插件与技能注册表路径 | 方向明确，运行时未闭�?|
+
+### 4.2 当前未闭环或实现不足的关键需�?
+| 需求域 | 当前短板事实 | 风险 |
+| --- | --- | --- |
+| 项目交付闭环 | `projectService.ts` 中的 `syncToGitHub` �?`publishApp` 仍是 mock | 无法形成真实工程同步与发布闭�?|
+| 插件运行�?| `pluginsBusinessService.ts` 为空适配�?| 插件体系停留�?UI / 页面�?|
+| AI 统一治理 | `genAIService.ts` 同时存在 SDK 路径�?`@google/genai` 直连流式聊天/文章能力 | 容易形成双主干与治理分裂 |
+| 桌面最小权�?| `src-tauri/capabilities/default.json` �?`fs:scope` 允许 `**`，且 `shell/process/http` 均默认开�?| 不满足行业领先级安全标准 |
+| 统一项目协议闭环 | `project-graph.types.ts` 已存在统一模型，但项目服务与三引擎之间尚未被单一服务完全收敛 | 容易形成模式孤岛 |
+
+## 5. 设计与实现逻辑事实
+
+### 5.1 前端总体设计
+
+当前前端架构具备明显的平台化设计特征�?
+- 采用 `React 19 + TypeScript + Vite + pnpm workspace + Turbo`�?- 页面、布局、状态、业务服务、类型模型存在较清晰分层�?- `src/app/App.tsx` �?`src/router/registry.tsx` 采用统一路由装配与按需懒加载，说明对启动性能和模块隔离已有意识�?- 布局层区�?`main / generation / creation / vibe / magic-cut / notes / blank / none`，说明系统并不是单一视觉壳，而是面向不同工作模式设计了独立工作台框架�?
+### 5.2 模块规划事实
+
+当前 `packages/*` 已形成清晰的业务拆分�?
+- 基础能力：`magic-studio-core`、`magic-studio-commons`、`magic-studio-types`、`magic-studio-fs`、`magic-studio-i18n`
+- 工程与资产：`magic-studio-workspace`、`magic-studio-editor`、`magic-studio-assets`、`magic-studio-drive`、`magic-studio-notes`
+- 生成能力：`magic-studio-image`、`magic-studio-video`、`magic-studio-music`、`magic-studio-sfx`、`magic-studio-audio`、`magic-studio-voicespeaker`、`magic-studio-character`
+- 创作模式：`magic-studio-canvas`、`magic-studio-film`、`magic-studio-magiccut`、`magic-studio-chatppt`
+- 对话与扩展：`magic-studio-chat`、`magic-studio-prompt`、`magic-studio-plugins`、`magic-studio-skills`、`magic-studio-trade`
+
+这说明当前系统已经明显不是“按页面散装开发”，而是在向领域包和平台包分治�?
+### 5.3 组件化与交互设计事实
+
+�?`FilmEditorPage.tsx`、`MagicCutEditor.tsx`、`CanvasBoard.tsx` 可见�?
+- `Film` 已形成头部导航、左侧工程导航、中间工作区、右�?Copilot 的三栏工作台模型�?- `MagicCut` 已形成资源区、播放器、属性区、时间线区、导出模态、模板保存等完整编辑器骨架�?- `Canvas` 已形成节点渲染、分组面板、连接层、缩略图、缩放控件、上下文菜单、抽屉面板、框选与多选等高级交互�?
+这说明当前组件化不是基础 UI 组件复用层面，而是已经进入“专业工作台组件系统”阶段�?
+### 5.4 数据与存储设计事�?
+`AssetCenterService.ts` 已经证明资产中心不是一个简单文件上传壳，而是具备�?
+- 统一资产身份生成
+- 统一 primary resource / payload 结构
+- 本地受管目录写入
+- 远程 URL / 本地文件 / Blob / 二进制数据的统一导入
+- 索引、分页查询、统计、重命名、引用绑定、删除回�?- �?`workspaceId / projectId / domain / assetId` 绑定的目录策�?
+同时，`project-graph.types.ts` 已经定义了：
+
+- `workspace / project / sequence / scene / shot / timeline / track / clip / publish-target`
+- `canvas / film / magiccut / unified` �?- 资产源、镜头源、轨道、发布目标、surface binding
+
+这意味着系统的数据架构方向是正确的，已经具备统一工程主干的类型基础�?
+## 6. 技术架构与技术选型事实
+
+### 6.1 技术选型结论
+
+当前技术选型总体合理，且明显偏向桌面优先、工程化和跨模式复用�?
+| 维度 | 当前选型 | 专业判断 |
+| --- | --- | --- |
+| 前端框架 | `React + TypeScript` | 适合大型交互式创作工�?|
+| 构建体系 | `Vite + Turbo + pnpm workspace` | 适合多包单仓协作与快速反�?|
+| 运行�?| `Tauri 2 + Rust` | 适合本地文件、媒体、作业、进程等强桌面能�?|
+| 状态与领域模型 | `zustand`、按�?store、共�?types | 适合复杂编辑器场景，但需要继续约束主干协�?|
+| AI 接入 | `retired generic app SDK` + `@google/genai` | 当前具备能力，但需要进一步统一治理 |
+| UI 组件 | Radix、TipTap、xterm、Monaco �?| 说明产品目标不是轻量营销页，而是专业工作�?|
+| 媒体与文件处�?| Tauri 插件、`mediabunny`、本地能力服�?| 与视频创作工具定位匹�?|
+
+### 6.2 桌面运行时结�?
+Rust �?`policy.rs` 已经说明运行时不是完全裸露的�?
+- 已具备路径校验、命令校验、阻断规则、快照能�?- 已定义系统路径黑名单和危险命令黑名单
+- 已具�?`allow_dangerous_commands / allow_system_paths` 等环境级控制开�?
+这说明系统已经具备安全治理意识，但能力配置层仍然过宽，形成“有策略服务，但权限面仍太大”的矛盾状态�?
+## 7. 性能事实判断
+
+从实现细节可以确认，当前系统已有明显性能设计意识�?
+- 路由�?`lazy` �?`Suspense`
+- `CanvasBoard` 中使�?`QuadTree` 做空间索引和视口裁剪
+- `CanvasBoard` 对拖拽过程使�?DOM transient update，减�?React 高频重渲�?- `MagicCutEditor` �?`CanvasBoard` 已存在编辑器级键盘交互和区域拆分，说明工作台是围绕持续交互优化而非一次性提交表�?
+但同时，代码与脚本也显示�?
+- 已有构建制品�?CSS 路由预算检查脚�?- 仍缺统一的系统级性能预算矩阵
+- 仍缺针对 `Film / MagicCut / Canvas / 导出 / 启动` 的统一性能门禁
+
+结论：当前性能设计已达到“有意识优化”，但还未达到“预算化治理”�?
+## 8. 安全事实判断
+
+### 8.1 已有基础
+
+- Tauri 运行时存在策略服务，不是完全无约束本地调用�?- 系统已对危险命令和系统路径有阻断逻辑�?- 工程中已有大量校验脚本和一致性验证命令�?
+### 8.2 明显短板
+
+- `default.json` �?`fs:scope = **` 说明当前文件系统权限仍过宽�?- `shell`、`process`、`http` 等权限默认放开，发布版最小权限原则尚未达标�?- 插件体系尚未形成 manifest、权限、沙箱、生命周期闭环�?- AI 存在直连模型路径，密钥、成本、审计和合规边界仍需继续收敛�?
+结论：安全能力方向正确，但当前等级最多到 `L2-L3`，离行业领先还有明显距离�?
+## 9. 测试、安装、部署、发布事�?
+�?`package.json` 脚本可确认：
+
+- 已存�?`typecheck`、`test`、`vitest`、Node 测试
+- 已存在服务封装审计与 review gate
+- 已存�?SDK 模式一致性、模式样式一致性、发布制品、自包含包、Tauri 嵌入资源等校�?- 已存�?`tauri:build`、`tauri:bundle`、`tauri:bundle:verified`
+
+这说明当前并不是“没有测试与发布体系”，而是�?
+- 工程级自动化门禁基础已经较强
+- 但业务级 E2E 主链路验收矩阵仍需进一步加�?- 尤其�?`Film / MagicCut / Canvas / Chat-Action / 插件` 这些跨域链路上，需要更明确的发布阻断标�?
+## 10. 当前整体成熟度评�?
+| 维度 | 当前等级 | 判断说明 |
+| --- | --- | --- |
+| 产品范围 | `L4` | 覆盖面很强，已超过多数单点创作工�?|
+| 模块化与工程治理 | `L4` | 包级边界明显，脚本和工作区治理较成熟 |
+| 创作引擎 | `L3-L4` | 三大引擎外壳与交互已成形，但统一主干尚需收敛 |
+| 数据与资产主�?| `L4` | 资产中心与项目图谱类型基础已具�?|
+| AI 架构 | `L3` | 主路径可用，但双路径并存导致治理不足 |
+| 安全治理 | `L2-L3` | 有策略服务，但默认权限面偏大 |
+| 测试与发�?| `L3-L4` | 自动化基础较好，但端到端业务门禁仍需补齐 |
+| 插件生�?| `L2` | 页面和注册方向已出现，但运行时闭环不�?|
+
+## 11. 与本目录 01-15 的关�?
+本文件是全目录的事实入口，后续章节承担不同责任：
+
+| 文档 | 责任 |
+| --- | --- |
+| `01-03` | 解释产品范围、功能矩阵、核心流�?|
+| `04-06` | 解释模块边界、数据主干、前端组件化与工作台设计 |
+| `07-08` | 解释桌面运行时和 AI 主干 |
+| `09` | 解释三大创作引擎设计 |
+| `10-13` | 解释工程治理、性能、安全、测试发布标�?|
+| `14` | 给出行业对标与评估路�?|
+| `15` | 给出真正可执行的落地 step、并行计划与门禁 |
+
+因此�?
+- 如果要看“当前代码事实”，先读本文件�?- 如果要看“标准与目标”，继续�?`01-14`�?- 如果要看“怎么落地”，直接�?`15`�?
+## 12. 最终专业结�?
+Magic Studio V2 当前最有价值的判断，不是“功能很多”，而是�?
+1. 它已经具备成为行业领先视频创作平台的真实底座，而不是停留在概念验证�?2. 它的最大优势是多模态能力、专业创作模式、本地优先工程底座和桌面强能力已经同时存在�?3. 它当前最大的短板不是再少一个页面，而是主干闭环还未完全收敛�?   - 项目交付仍有 mock
+   - 插件运行时仍未闭�?   - AI 治理仍双路径并存
+   - 桌面权限仍偏�?4. 如果严格按照本目�?`15-架构落地步骤-并行实施计划.md` 推进，上述短板是可以系统性补齐的�?
+结论上，Magic Studio V2 已经是一个“平台雏形清晰、工程底座较强、差异化引擎已出现”的产品，而不是简单的视频工具集合。下一阶段工作的重点应从“继续堆功能”切换为“收敛主干、补齐闭环、建立门禁、提升行业级标准”�?
+## 13. 2026-04-07 Step 01 基线冻结回写
+
+本轮�?`docs/step/01-现状基线冻结与差距审�?md` 对当前仓库执行了基线冻结，新增了两个必须进入单一事实来源的现实判断：
+
+### 13.1 当前实施环境事实
+
+- 当前分支�?`main`，且工作区存在大面积已修改与未跟踪文件�?- 这不是产品能力事实，但它是当前实施风险事实�?- 结论：进�?`Step 02-05` 的共享主干代码实施前，必须先完成写集 owner 冻结，并避免在当前脏工作区上直接抢改共享文件�?
+### 13.2 共享主干高风险事实再确认
+
+经再次核对，以下文件仍然是当前最关键的共享主干风险点�?
+| 文件 | 当前事实 | 影响 |
+| --- | --- | --- |
+| `packages/sdkwork-magic-studio-editor/src/services/projectService.ts` | `syncToGitHub`、`publishApp` 仍为 mock | 阻塞工程同步、发布与真实交付闭环 |
+| `packages/sdkwork-magic-studio-core/src/ai/genAIService.ts` | 仍直接依�?`@google/genai`，并保留 `streamChat`、`streamArticle` 直连流式主路�?| 阻塞 AI 主路径统一治理与动作层统一 |
+| `src-tauri/capabilities/default.json` | 仍保留过宽文件系统范围与默认 `shell/process/http` 能力 | 阻塞桌面最小权限与正式发布门禁 |
+| `src-tauri/src/framework/services/policy.rs` | 已有策略层，但尚未与 capability 收敛形成闭环 | 安全治理方向正确但未真正收口 |
+| `packages/sdkwork-magic-studio-plugins/src/services/pluginsBusinessService.ts` | 仍为空适配�?| 插件运行时仍停留在入口壳�?|
+
+### 13.3 Step 01 冻结后的 owner 建议
+
+为避免后续并行抢改，当前建议把共享文�?owner 冻结为：
+
+| 共享文件 | 当前 owner | 后续移交 |
+| --- | --- | --- |
+| `projectService.ts` | Lane A / `Step 02` | `Step 11` 发布 owner |
+| `genAIService.ts` | Lane C / `Step 04` | `Step 09` 动作层仅经协议消�?|
+| `default.json` | Lane D / `Step 05` | `Step 10` `Step 11` 仅允许受控借写 |
+| `policy.rs` | Lane D / `Step 05` | `Step 10` `Step 11` 仅允许受控借写 |
+| `pluginsBusinessService.ts` | Lane D2 / `Step 10` | 无，在插件运行时冻结前不开放共享改�?|
+
+### 13.4 Step 01 结论
+
+当前基线已经足以支持�?
+- `Step 02-05` 进入共享主干实施准备
+- `Step 06-09` 暂停等待共享协议冻结
+- `Step 10-11` 明确�?`Step 05` �?`Step 02` 的前置约�?
+但当前基线也明确表明�?
+- 还不能在当前脏工作区里直接推进共享主干代码改�?- 还不能把已有 mock、直连模型路径、宽权限或空适配器误判为“仅剩优化项�?
