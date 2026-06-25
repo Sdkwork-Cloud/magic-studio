@@ -298,13 +298,13 @@
         "src/shims/sdkwork-ui-settings.tsx"
       ],
       "@sdkwork/user-center-core-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-core-pc-react/src/index.ts"
+        "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-core-pc-react/src/index.ts"
       ],
       "@sdkwork/user-center-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-pc-react/src/index.ts"
+        "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-pc-react/src/index.ts"
       ],
       "@sdkwork/user-center-validation-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-validation-pc-react/src/index.ts"
+        "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-validation-pc-react/src/index.ts"
       ],
       "@sdkwork/magic-studio-vip/pages": [
         "packages/sdkwork-magic-studio-vip/src/pages/index.ts"
@@ -1195,10 +1195,10 @@
         "packages/sdkwork-magic-studio-trade/src/index.ts"
       ],
       "sdkwork-auth-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts"
+        "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react/src/index.ts"
       ],
       "sdkwork-user-pc-react": [
-        "../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-pc-react/src/index.ts"
+        "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-pc-react/src/index.ts"
       ],
       "@sdkwork/magic-studio-commons/algorithms": [
         "packages/sdkwork-magic-studio-commons/src/algorithms/index.ts"

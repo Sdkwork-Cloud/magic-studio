@@ -64,11 +64,11 @@ const SDK_SOURCES = [
     ],
     sparsePaths: [
       'packages/pc-react/foundation/sdkwork-appbase-pc-react',
-      'packages/pc-react/iam/sdkwork-auth-pc-react',
-      'packages/pc-react/iam/sdkwork-user-pc-react',
-      'packages/pc-react/iam/sdkwork-user-center-core-pc-react',
-      'packages/pc-react/iam/sdkwork-user-center-pc-react',
-      'packages/pc-react/iam/sdkwork-user-center-validation-pc-react',
+      'apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react',
+      'apps/sdkwork-iam-pc/packages/sdkwork-user-pc-react',
+      'apps/sdkwork-iam-pc/packages/sdkwork-user-center-core-pc-react',
+      'apps/sdkwork-iam-pc/packages/sdkwork-user-center-pc-react',
+      'apps/sdkwork-iam-pc/packages/sdkwork-user-center-validation-pc-react',
     ],
     url:
       process.env.MAGIC_STUDIO_SDKWORK_APPBASE_GIT_URL ??

@@ -1,1 +1,1 @@
-export * from '../../../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts';
+export * from '../../../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react/src/index.ts';

@@ -1,4 +1,4 @@
-﻿# Magic Studio V2 Performance Review Round 28
+# Magic Studio V2 Performance Review Round 28
 
 Date: 2026-04-06
 Scope: `apps/magic-studio-v2`
@@ -60,8 +60,8 @@ From local package entrypoints:
 
 Before this fix:
 
-1. `src/styles/auth.css` scanned `../../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src`
-2. `src/styles/user.css` scanned `../../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-pc-react/src`
+1. `src/styles/auth.css` scanned `../../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react/src`
+2. `src/styles/user.css` scanned `../../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-pc-react/src`
 
 ### Evidence 4. Actual class-bearing files live in local package pages/components
 

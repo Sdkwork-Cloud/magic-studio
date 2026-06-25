@@ -33,23 +33,23 @@ export const EXTERNAL_SEARCH_PC_REACT_ENTRY = path.resolve(
 );
 export const EXTERNAL_AUTH_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts'
+  '../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react/src/index.ts'
 );
 export const EXTERNAL_USER_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-pc-react/src/index.ts'
+  '../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-pc-react/src/index.ts'
 );
 export const EXTERNAL_USER_CENTER_CORE_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-core-pc-react/src/index.ts'
+  '../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-core-pc-react/src/index.ts'
 );
 export const EXTERNAL_USER_CENTER_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-pc-react/src/index.ts'
+  '../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-pc-react/src/index.ts'
 );
 export const EXTERNAL_USER_CENTER_VALIDATION_PC_REACT_ENTRY = path.resolve(
   repoRoot,
-  '../sdkwork-appbase/packages/pc-react/iam/sdkwork-user-center-validation-pc-react/src/index.ts'
+  '../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-user-center-validation-pc-react/src/index.ts'
 );
 
 export const GIT_SDK_ROOT = path.resolve(repoRoot, '.sdk-git-sources');
@@ -81,23 +81,23 @@ export const GIT_SEARCH_PC_REACT_ENTRY = path.resolve(
 );
 export const GIT_AUTH_PC_REACT_ENTRY = path.resolve(
   GIT_APPBASE_CHECKOUT,
-  'packages/pc-react/iam/sdkwork-auth-pc-react/src/index.ts'
+  'apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react/src/index.ts'
 );
 export const GIT_USER_PC_REACT_ENTRY = path.resolve(
   GIT_APPBASE_CHECKOUT,
-  'packages/pc-react/iam/sdkwork-user-pc-react/src/index.ts'
+  'apps/sdkwork-iam-pc/packages/sdkwork-user-pc-react/src/index.ts'
 );
 export const GIT_USER_CENTER_CORE_PC_REACT_ENTRY = path.resolve(
   GIT_APPBASE_CHECKOUT,
-  'packages/pc-react/iam/sdkwork-user-center-core-pc-react/src/index.ts'
+  'apps/sdkwork-iam-pc/packages/sdkwork-user-center-core-pc-react/src/index.ts'
 );
 export const GIT_USER_CENTER_PC_REACT_ENTRY = path.resolve(
   GIT_APPBASE_CHECKOUT,
-  'packages/pc-react/iam/sdkwork-user-center-pc-react/src/index.ts'
+  'apps/sdkwork-iam-pc/packages/sdkwork-user-center-pc-react/src/index.ts'
 );
 export const GIT_USER_CENTER_VALIDATION_PC_REACT_ENTRY = path.resolve(
   GIT_APPBASE_CHECKOUT,
-  'packages/pc-react/iam/sdkwork-user-center-validation-pc-react/src/index.ts'
+  'apps/sdkwork-iam-pc/packages/sdkwork-user-center-validation-pc-react/src/index.ts'
 );
 
 const SUPPORTED_SDK_MODES = new Set(['source', 'git', 'npm']);
