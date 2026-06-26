@@ -21,7 +21,7 @@ const createUploadResult = (overrides: {
     uploadItem: {
       id: 'upload-item-1',
       taskId: 'task-1',
-      tenantId: 'tenant-1',
+      tenantId: '100001',
       actorType: 'user',
       actorId: 'user-1',
       appId: 'magic-studio',
@@ -49,7 +49,7 @@ const createUploadResult = (overrides: {
     },
     uploadSession: {
       id: 'session-1',
-      tenantId: 'tenant-1',
+      tenantId: '100001',
       spaceId,
       nodeId,
       bucket: 'drive-internal',
@@ -89,7 +89,7 @@ describe('uploadViaPresignedUrl', () => {
       contentType: 'image/png',
       type: 'IMAGE',
       path: 'assets/test',
-      tenantId: 'tenant-1',
+      tenantId: '100001',
       userId: 'user-1',
       appResourceId: 'asset-draft-1',
     });
@@ -97,7 +97,7 @@ describe('uploadViaPresignedUrl', () => {
     expect(uploadByProfile).toHaveBeenCalledTimes(1);
     expect(requests[0]).toMatchObject({
       profile: 'image',
-      tenantId: 'tenant-1',
+      tenantId: '100001',
       userId: 'user-1',
       operatorId: 'user-1',
       appId: 'magic-studio',
@@ -144,7 +144,7 @@ describe('uploadViaPresignedUrl', () => {
       file: new Uint8Array([1, 2, 3, 4]),
       fileName: 'payload.bin',
       type: 'unknown',
-      tenantId: 'tenant-1',
+      tenantId: '100001',
       anonymousId: 'anon-1',
     });
 

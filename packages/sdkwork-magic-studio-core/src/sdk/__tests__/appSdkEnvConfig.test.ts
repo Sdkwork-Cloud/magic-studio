@@ -45,8 +45,8 @@ describe('createAppSdkClientConfigFromEnv', () => {
 
   it('falls back to compatibility keys and supports test mode', () => {
     const accessToken = createTestAccessToken({
-      tenant_id: 'tenant-test',
-      organization_id: 'org-test',
+      tenant_id: '100001',
+      organization_id: '0',
     });
     const config = createAppSdkClientConfigFromEnv({
       VITE_APP_ENV: 'test',
@@ -61,8 +61,8 @@ describe('createAppSdkClientConfigFromEnv', () => {
       baseUrl: 'https://compat.example.com',
       accessToken,
       timeout: 32000,
-      tenantId: 'tenant-test',
-      organizationId: 'org-test',
+      tenantId: '100001',
+      organizationId: '0',
       platform: 'desktop',
     });
   });

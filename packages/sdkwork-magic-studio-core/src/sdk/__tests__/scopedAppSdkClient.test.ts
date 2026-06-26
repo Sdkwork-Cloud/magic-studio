@@ -39,22 +39,22 @@ describe('createScopedAppSdkClient', () => {
 
     sdkClientModule.initAppSdkClient({
       baseUrl: 'https://default.example.com',
-      tenantId: 'tenant-a',
+      tenantId: '100001',
     });
 
     const scopedClient = sdkClientModule.createScopedAppSdkClient({
       baseUrl: 'https://tenant-b.example.com',
-      tenantId: 'tenant-b',
+      tenantId: '100002',
     });
 
     expect(scopedClient).toBeTruthy();
     expect(sdkClientModule.getAppSdkClientConfig()?.baseUrl).toBe('https://default.example.com');
-    expect(sdkClientModule.getAppSdkClientConfig()?.tenantId).toBe('tenant-a');
+    expect(sdkClientModule.getAppSdkClientConfig()?.tenantId).toBe('100001');
     expect(createClientMock).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         baseUrl: 'https://tenant-b.example.com',
-        tenantId: 'tenant-b',
+        tenantId: '100002',
       })
     );
   });
