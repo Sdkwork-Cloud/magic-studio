@@ -9,7 +9,6 @@ packages:
   - ../sdkwork-appbase/packages/common/foundation/*
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-i18n-pc-react
-  - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-router-pc-react
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-shell-pc-react
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-workspace-pc-react
   - ../sdkwork-search/packages/common/search/*
