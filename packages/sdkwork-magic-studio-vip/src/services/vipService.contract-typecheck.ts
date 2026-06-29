@@ -110,7 +110,7 @@ const validVipPlan = {
 
 const validVipSubscription = {
   uuid: 'subscription-basic',
-  userUuid: 'user-1',
+  userUuid: '1',
   planId: validVipPlan.id,
   tier: validVipPlan.tier,
   planName: validVipPlan.name,

@@ -224,11 +224,11 @@ const runtimeThirdPartyUnbindEnvelopeMatchesServerType: AssertAssignable<
 > = true;
 
 const validUserProfile = {
-  id: 'user-1',
-  uuid: 'user-1',
+  id: '1',
+  uuid: '1',
   createdAt: '2026-04-25T00:00:00.000Z',
   updatedAt: '2026-04-25T00:01:00.000Z',
-  userId: 'user-1',
+  userId: '1',
   username: 'alice',
   nickname: 'Alice',
   email: 'alice@example.com',

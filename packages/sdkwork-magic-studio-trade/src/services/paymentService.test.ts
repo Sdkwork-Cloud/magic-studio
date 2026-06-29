@@ -41,7 +41,7 @@ const basePayment = {
   amount: 1299,
   method: 'ALIPAY' as const,
   status: 'PROCESSING' as const,
-  userUuid: 'user-1',
+  userUuid: '1',
   createdAt: '2026-04-06T00:00:00.000Z',
   updatedAt: '2026-04-06T00:00:00.000Z',
 };
@@ -189,7 +189,7 @@ describe('paymentService', () => {
         pointsChange: 0,
         orderUuid: null,
         paymentUuid: 'payment-recharge-1',
-        userUuid: 'user-1',
+        userUuid: '1',
         description: 'wallet topup',
         remark: null,
         createdAt: '2026-04-06T10:00:00.000Z',

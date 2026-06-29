@@ -54,8 +54,8 @@ describe('userCenterService canonical server bridge', () => {
   it('reads and updates the canonical user profile through the runtime server client', async () => {
     mockServerClient.readUserProfile.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-03T13:00:00Z',
         email: 'alice@example.com',
@@ -68,8 +68,8 @@ describe('userCenterService canonical server bridge', () => {
     });
     mockServerClient.updateUserProfile.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-03T14:00:00Z',
         email: 'alice@example.com',
@@ -91,7 +91,7 @@ describe('userCenterService canonical server bridge', () => {
       phone: '18800001111',
       region: 'Shanghai',
       updatedAt: '2026-04-03T13:00:00Z',
-      userId: 'user-1',
+      userId: '1',
     });
 
     await expect(
@@ -114,7 +114,7 @@ describe('userCenterService canonical server bridge', () => {
       phone: '18800001111',
       region: 'Hangzhou',
       updatedAt: '2026-04-03T14:00:00Z',
-      userId: 'user-1',
+      userId: '1',
     });
 
     expect(mockReadDefaultPlatformRuntime).toHaveBeenCalledWith('UserCenterService');
@@ -325,43 +325,43 @@ describe('userCenterService canonical server bridge', () => {
     });
     mockServerClient.bindUserEmail.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:05:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         email: 'alice@example.com',
       },
     });
     mockServerClient.unbindUserEmail.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:06:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
       },
     });
     mockServerClient.bindUserPhone.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:07:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         phone: '18800001111',
       },
     });
     mockServerClient.unbindUserPhone.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:08:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
       },
     });
@@ -399,21 +399,21 @@ describe('userCenterService canonical server bridge', () => {
       userCenterService.bindEmail('alice@example.com', '123456'),
     ).resolves.toMatchObject({
       email: 'alice@example.com',
-      userId: 'user-1',
+      userId: '1',
     });
     await expect(userCenterService.unbindEmail()).resolves.toMatchObject({
       nickname: 'Alice',
-      userId: 'user-1',
+      userId: '1',
     });
     await expect(
       userCenterService.bindPhone('18800001111', '654321'),
     ).resolves.toMatchObject({
       phone: '18800001111',
-      userId: 'user-1',
+      userId: '1',
     });
     await expect(userCenterService.unbindPhone()).resolves.toMatchObject({
       nickname: 'Alice',
-      userId: 'user-1',
+      userId: '1',
     });
     await expect(
       userCenterService.bindThirdParty('wechat', {
@@ -446,11 +446,11 @@ describe('userCenterService canonical server bridge', () => {
   it('uploads avatars through the canonical user endpoint and returns the mapped profile', async () => {
     mockServerClient.uploadUserAvatar.mockResolvedValue({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:10:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         email: 'alice@example.com',
         avatar: 'https://example.com/uploaded-avatar.png',
@@ -469,7 +469,7 @@ describe('userCenterService canonical server bridge', () => {
       email: 'alice@example.com',
       nickname: 'Alice',
       updatedAt: '2026-04-20T12:10:00Z',
-      userId: 'user-1',
+      userId: '1',
     });
 
     expect(mockServerClient.uploadUserAvatar).toHaveBeenCalledWith({

@@ -57,7 +57,7 @@ function createSubscription(
 ): MagicStudioVipSubscription {
   return {
     uuid: 'subscription-basic',
-    userUuid: 'user-1',
+    userUuid: '1',
     planId: 'plan-basic',
     tier: 'basic',
     planName: 'Basic',

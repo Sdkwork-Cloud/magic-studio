@@ -76,8 +76,8 @@ test('reads canonical profile data through the runtime server client', async () 
   userCenterNodeState.client = {
     readUserProfile: async () => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-03T13:00:00Z',
         email: 'alice@example.com',
@@ -101,7 +101,7 @@ test('reads canonical profile data through the runtime server client', async () 
     phone: '18800001111',
     region: 'Shanghai',
     updatedAt: '2026-04-03T13:00:00Z',
-    userId: 'user-1',
+    userId: '1',
   });
 });
 
@@ -186,11 +186,11 @@ test('delegates canonical address, history, and third-party binding methods thro
     }),
     uploadUserAvatar: async () => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:10:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         email: 'alice@example.com',
         avatar: 'https://example.com/uploaded-avatar.png',
@@ -265,7 +265,7 @@ test('delegates canonical address, history, and third-party binding methods thro
     email: 'alice@example.com',
     nickname: 'Alice',
     updatedAt: '2026-04-20T12:10:00Z',
-    userId: 'user-1',
+    userId: '1',
   });
 });
 
@@ -273,43 +273,43 @@ test('supports canonical email and phone binding methods explicitly', async () =
   userCenterNodeState.client = {
     bindUserEmail: async (payload) => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:05:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         email: payload.email,
       },
     }),
     bindUserPhone: async (payload) => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:07:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
         phone: payload.phone,
       },
     }),
     unbindUserEmail: async () => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:08:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
       },
     }),
     unbindUserPhone: async () => ({
       data: {
-        id: 'user-1',
-        uuid: 'user-1',
+        id: '1',
+        uuid: '1',
         createdAt: '2026-04-03T12:00:00Z',
         updatedAt: '2026-04-20T12:09:00Z',
-        userId: 'user-1',
+        userId: '1',
         nickname: 'Alice',
       },
     }),
@@ -322,7 +322,7 @@ test('supports canonical email and phone binding methods explicitly', async () =
       email: 'alice@example.com',
       nickname: 'Alice',
       updatedAt: '2026-04-20T12:05:00Z',
-      userId: 'user-1',
+      userId: '1',
     },
   );
   await assert.deepEqual(
@@ -332,7 +332,7 @@ test('supports canonical email and phone binding methods explicitly', async () =
       nickname: 'Alice',
       phone: '18800001111',
       updatedAt: '2026-04-20T12:07:00Z',
-      userId: 'user-1',
+      userId: '1',
     },
   );
   await assert.deepEqual(
@@ -341,7 +341,7 @@ test('supports canonical email and phone binding methods explicitly', async () =
       createdAt: '2026-04-03T12:00:00Z',
       nickname: 'Alice',
       updatedAt: '2026-04-20T12:08:00Z',
-      userId: 'user-1',
+      userId: '1',
     },
   );
   await assert.deepEqual(
@@ -350,7 +350,7 @@ test('supports canonical email and phone binding methods explicitly', async () =
       createdAt: '2026-04-03T12:00:00Z',
       nickname: 'Alice',
       updatedAt: '2026-04-20T12:09:00Z',
-      userId: 'user-1',
+      userId: '1',
     },
   );
 });

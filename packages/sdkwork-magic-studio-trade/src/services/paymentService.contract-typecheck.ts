@@ -53,7 +53,7 @@ const validPayment = {
   amount: 1299,
   method: 'ALIPAY',
   status: 'PROCESSING',
-  userUuid: 'user-1',
+  userUuid: '1',
   transactionId: 'txn-1',
   channel: 'alipay',
   createdAt: '2026-04-06T00:00:00.000Z',
@@ -69,7 +69,7 @@ const validPaymentActionResult = {
 
 const validWallet = {
   uuid: 'wallet-1',
-  userUuid: 'user-1',
+  userUuid: '1',
   balance: 18800,
   frozenBalance: 0,
   points: 320,
@@ -90,7 +90,7 @@ const validTransaction = {
   balanceAfter: 18800,
   pointsChange: 0,
   paymentUuid: 'payment-1',
-  userUuid: 'user-1',
+  userUuid: '1',
   description: 'wallet topup',
   createdAt: '2026-04-06T10:00:00.000Z',
   updatedAt: '2026-04-06T10:05:00.000Z',

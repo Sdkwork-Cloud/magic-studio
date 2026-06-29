@@ -91,7 +91,7 @@ it('creates a scoped client without mutating the global singleton config', async
 
   const scoped = sdk.createScopedAppSdkClient({
     baseUrl: 'https://tenant-b.example.com',
-    tenantId: 'tenant-b',
+    tenantId: '100001',
   });
 
   expect(scoped).toBeTruthy();
