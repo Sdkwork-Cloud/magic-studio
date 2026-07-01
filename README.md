@@ -1,4 +1,5 @@
 # Magic Studio V2
+repository-kind: application
 
 ## Development
 

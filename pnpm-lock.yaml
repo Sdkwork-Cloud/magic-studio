@@ -942,7 +942,7 @@ importers:
         version: link:../../../common/foundation/sdkwork-runtime-bootstrap
       '@sdkwork/search-pc-react':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react
+        version: link:../../../../sdkwork-search/apps/sdkwork-search-pc/packages/sdkwork-search-pc-react
     devDependencies:
       '@sdkwork/core-pc-react':
         specifier: workspace:*
@@ -1054,15 +1054,15 @@ importers:
         specifier: ^8.0.3
         version: 8.0.10(@types/node@25.6.0)(jiti@2.6.1)
 
-  ../sdkwork-search/packages/common/search/sdkwork-search-contracts: {}
+  ../sdkwork-search/apps/sdkwork-search-common/packages/sdkwork-search-contracts: {}
 
-  ../sdkwork-search/packages/common/search/sdkwork-search-service:
+  ../sdkwork-search/apps/sdkwork-search-common/packages/sdkwork-search-service:
     dependencies:
       '@sdkwork/search-contracts':
         specifier: workspace:*
         version: link:../sdkwork-search-contracts
 
-  ../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react:
+  ../sdkwork-search/apps/sdkwork-search-pc/packages/sdkwork-search-pc-react:
     dependencies:
       '@sdkwork/search-contracts':
         specifier: workspace:*

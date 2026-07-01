@@ -271,7 +271,7 @@
         "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react/src/index.ts"
       ],
       "@sdkwork/search-pc-react": [
-        "../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react/src/index.ts"
+        "../sdkwork-search/apps/sdkwork-search-pc/packages/sdkwork-search-pc-react/src/index.ts"
       ],
       "@sdkwork/ui-pc-react": [
         "../sdkwork-ui/sdkwork-ui-pc-react/src/index.ts"

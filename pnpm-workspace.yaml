@@ -1,5 +1,6 @@
 packages:
-  - packages/*
+  - "apps/sdkwork-magic-studio-v2-pc"
+  - "apps/sdkwork-magic-studio-v2-pc/packages/*"
   - '!packages/sdkwork-sdk-common'
   - ../sdkwork-core/sdkwork-core-pc-react
   - ../sdkwork-ui/sdkwork-ui-pc-react
@@ -11,14 +12,14 @@ packages:
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-i18n-pc-react
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-shell-pc-react
   - ../sdkwork-appbase/packages/pc-react/foundation/sdkwork-workspace-pc-react
-  - ../sdkwork-search/packages/common/search/*
-  - ../sdkwork-search/packages/pc-react/foundation/sdkwork-search-pc-react
+  - "../sdkwork-search/apps/sdkwork-search-common/packages/*"
+  - "../sdkwork-search/apps/sdkwork-search-pc/packages/sdkwork-search-pc-react"
   - ../sdkwork-search/sdks/sdkwork-search-app-sdk/sdkwork-search-app-sdk-typescript/generated/server-openapi
   - ../sdkwork-search/sdks/sdkwork-search-backend-sdk/sdkwork-search-backend-sdk-typescript/generated/server-openapi
   - ../sdkwork-iam/apps/sdkwork-iam-common/packages/*
   - ../sdkwork-iam/apps/sdkwork-iam-pc/packages/*
-  - ../craw-chat/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript
-  - ../craw-chat/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript/generated/server-openapi
+  - "../sdkwork-im/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript"
+  - "../sdkwork-im/sdks/sdkwork-im-sdk/sdkwork-im-sdk-typescript/generated/server-openapi"
   - ../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
 
 catalog:

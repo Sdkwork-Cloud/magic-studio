@@ -1,0 +1,27 @@
+[package]
+name = "sdkwork-magic-studio-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.8"
+data-encoding = "2.6"
+hmac = "0.12"
+http-body-util = "0.1"
+dirs = "6.0"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+rusqlite = { version = "0.39", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha1 = "0.10"
+sdkwork-ai-sdk.workspace = true
+sdkwork-utils-rust.workspace = true
+time = { version = "0.3", features = ["formatting", "parsing"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tower-http = { version = "0.6", features = ["cors"] }
+walkdir = "2.5"
+zip = { version = "8.5", features = ["deflate"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

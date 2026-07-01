@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "packages/sdkwork-magic-studio-server/src-host",
-    "packages/sdkwork-ai-sdk-rust",
+    "apps/sdkwork-magic-studio-v2-pc/packages/sdkwork-magic-studio-server/src-host",
+    "apps/sdkwork-magic-studio-v2-pc/packages/sdkwork-magic-studio-server/sdkwork-ai-sdk-rust",
 ]
 
 [workspace.package]
@@ -11,5 +11,7 @@ version = "0.1.0"
 
 [workspace.dependencies]
 # SDKWork workspace members - declared once at workspace root
-sdkwork-magic-studio-server = { path = "packages/sdkwork-magic-studio-server/src-host" }
-sdkwork-ai-sdk = { path = "packages/sdkwork-ai-sdk-rust" }
+sdkwork-magic-studio-server = { path = "apps/sdkwork-magic-studio-v2-pc/packages/sdkwork-magic-studio-server/src-host" }
+sdkwork-ai-sdk = { path = "apps/sdkwork-magic-studio-v2-pc/packages/sdkwork-magic-studio-server/sdkwork-ai-sdk-rust" }
+# SDKWork platform crates
+sdkwork-utils-rust = { path = "../sdkwork-utils/packages/sdkwork-utils-rust" }
